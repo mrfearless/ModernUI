@@ -6,6 +6,9 @@ bak/
 *.ilk
 *.exp
 notes.txt
+ModernUI/Bak/*.*
+ModernUI/Help/*.*
+ModernUI/Images/*.*
 ./ModernUI/Bak/*.*
 ./ModernUI/Help/*.*
 ./ModernUI/Images/*.*
