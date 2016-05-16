@@ -1,0 +1,17 @@
+bak/
+*.bat
+*.undo
+*.obj
+*.pdb
+*.ilk
+*.exp
+notes.txt
+./ModernUI/Bak/*.*
+./ModernUI/Help/*.*
+./ModernUI/Images/*.*
+template/
+downloads/
+screenshots/
+releases/
+wiki/
+_archive/
