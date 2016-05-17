@@ -18,7 +18,6 @@
 .XMM
 .model flat,stdcall
 option casemap:none
-include \masm32\macros\macros.asm
 
 ;DEBUG32 EQU 1
 
@@ -32,13 +31,14 @@ ENDIF
 
 include windows.inc
 
-include user32.inc
-includelib user32.lib
-
 include kernel32.inc
-includelib kernel32.lib
-
+include user32.inc
+include gdi32.inc
 include gdiplus.inc
+
+includelib user32.lib
+includelib kernel32.lib
+includelib gdi32.lib
 includelib gdiplus.lib
 
 include ModernUI.inc
