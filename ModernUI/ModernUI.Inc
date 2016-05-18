@@ -35,8 +35,10 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; PUBLIC ModernUI Prototypes for users of controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUIGetProperty                   PROTO :DWORD, :DWORD                   ; hControl, dwProperty
-MUISetProperty                   PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
+MUIGetExtProperty                PROTO :DWORD, :DWORD                   ; hControl, dwProperty
+MUISetExtProperty                PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
+_MUIGetIntProperty               PROTO :DWORD, :DWORD                   ; hControl, dwProperty
+_MUISetIntProperty               PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
 
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -44,8 +46,7 @@ MUISetProperty                   PROTO :DWORD, :DWORD, :DWORD           ; hContr
 ;--------------------------------------------------------------------------------------------------------------------------------------
 _MUIGDIPlusStart                 PROTO                                  ; Wrapper for GDIPlus startup
 _MUIGDIPlusFinish                PROTO                                  ; Wrapper for GDIPlus shutdown
-_MUIGetProperty                  PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwProperty
-_MUISetProperty                  PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hControl, cbWndExtraOffset, dwProperty, dwPropertyValue
+
 _MUIAllocMemProperties           PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwSizeToAllocate
 _MUIFreeMemProperties            PROTO :DWORD, :DWORD                   ; hControl, cbWndExtraOffset
 
@@ -73,11 +74,15 @@ MUI_SETPROPERTY                 EQU WM_USER + 1799                      ; wParam
 
 
 
+; ModernUI Alpha Red Green Blue Macro
+MUI_ARGBCOLOR MACRO alpha, red, green, blue
+    EXITM < alpha SHL 24 OR red SHL 16 OR green SHL 8 OR blue >
+ENDM
 
-
-
-
-
+; ModernUI Red Green Blue Macro
+MUI_RGBCOLOR macro r:REQ,g:REQ,b:REQ
+    exitm <( ( ( ( r )  or  ( ( ( g ) )  shl  8 ) )  or  ( ( ( b ) )  shl  16 ) ) ) >
+ENDM
 
 
 

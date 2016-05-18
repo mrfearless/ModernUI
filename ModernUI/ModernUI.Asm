@@ -21,13 +21,13 @@ option casemap:none
 
 ;DEBUG32 EQU 1
 
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 
@@ -46,7 +46,8 @@ include ModernUI.inc
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-
+_MUIGetProperty                  PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwProperty
+_MUISetProperty                  PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hControl, cbWndExtraOffset, dwProperty, dwPropertyValue
 
 
 
@@ -206,51 +207,39 @@ _MUIFreeMemProperties ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; This is a public based version of the _MUIGetProperty for users of the ModernUI
-; controls to use when getting the external property value
-;
-; Gets property value and returns it in eax
+; Gets external property value and returns it in eax
 ;-------------------------------------------------------------------------------------
-MUIGetProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD
-    
-    Invoke GetWindowLong, hControl, 4 ; external properties
-    .IF eax == 0
-        ret
-    .ENDIF
-    mov ebx, eax
-    add ebx, dwProperty
-    mov eax, [ebx]
-    
+MUIGetExtProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD
+    Invoke _MUIGetProperty, hControl, 4, dwProperty ; get external properties
     ret
-
-MUIGetProperty ENDP
+MUIGetExtProperty ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; This is a public based version of the _MUISetProperty for users of the ModernUI
-; controls to use when setting external property values
-;
-; Sets property value and returns previous value in eax.
+; Sets external property value and returns previous value in eax.
 ;-------------------------------------------------------------------------------------
-MUISetProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
-    LOCAL dwPrevValue:DWORD
-    Invoke GetWindowLong, hControl, 4
-    .IF eax == 0
-        ret
-    .ENDIF    
-    mov ebx, eax
-    add ebx, dwProperty
-    mov eax, [ebx]
-    mov dwPrevValue, eax    
-    mov eax, dwPropertyValue
-    mov [ebx], eax
-    mov eax, dwPrevValue
+MUISetExtProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+    Invoke _MUISetProperty, hControl, 4, dwProperty, dwPropertyValue ; set external properties
     ret
-
-MUISetProperty ENDP
-
+MUISetExtProperty ENDP
 
 
+;-------------------------------------------------------------------------------------
+; Gets internal property value and returns it in eax
+;-------------------------------------------------------------------------------------
+_MUIGetIntProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD
+    Invoke _MUIGetProperty, hControl, 0, dwProperty ; get internal properties
+    ret
+_MUIGetIntProperty ENDP
+
+
+;-------------------------------------------------------------------------------------
+; Sets internal property value and returns previous value in eax.
+;-------------------------------------------------------------------------------------
+_MUISetIntProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+    Invoke _MUISetProperty, hControl, 0, dwProperty, dwPropertyValue ; set internal properties
+    ret
+_MUISetIntProperty ENDP
 
 
 
