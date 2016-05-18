@@ -60,6 +60,9 @@ _MUIFreeMemProperties            PROTO :DWORD, :DWORD                   ; hContr
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; LTLI ModernUI Constants
 ;--------------------------------------------------------------------------------------------------------------------------------------
+MUI_INTERNAL_PROPERTIES         EQU 0
+MUI_EXTERNAL_PROPERTIES         EQU 4
+
 
 ; ModernUI Custom Messages - each control should handle these
 MUI_GETPROPERTY                 EQU WM_USER + 1800                      ; wParam = dwProperty, lParam = NULL

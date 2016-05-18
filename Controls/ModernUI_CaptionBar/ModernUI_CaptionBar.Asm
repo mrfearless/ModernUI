@@ -51,6 +51,7 @@ _MUI_CaptionBarInit                         PROTO :DWORD
 _MUI_CaptionBarPaint					    PROTO :DWORD
 _MUI_CaptionBarReposition                   PROTO :DWORD
 _MUI_CaptionBarParentSubClassProc           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarSetSysButtonColor            PROTO :DWORD, :DWORD, :DWORD
 
 _MUI_CreateCaptionBarSysButtons             PROTO :DWORD, :DWORD, :DWORD
 _MUI_CreateSysButton                        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -66,6 +67,8 @@ MUI_CAPTIONBAR_PROPERTIES				    STRUCT
 	dwTextColor							    DD ?
 	dwTextFont							    DD ?
 	dwBackColor							    DD ?
+	dwSysButtonTextRollColor                DD ?
+	dwSysButtonBackRollColor                DD ?
 MUI_CAPTIONBAR_PROPERTIES				    ENDS
 
 ; CaptionBar Internal Poperties
@@ -136,9 +139,27 @@ szMUISysResizeGrip                          DB 'o',0                    ; Resize
 .CODE
 
 ;-------------------------------------------------------------------------------------
+; Set property for CaptionBar control
+;-------------------------------------------------------------------------------------
+MUICaptionBarSetProperty PROC PUBLIC hCaptionBar:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+    Invoke SendMessage, hCaptionBar, MUI_SETPROPERTY, dwProperty, dwPropertyValue
+    ret
+MUICaptionBarSetProperty ENDP
+
+
+;-------------------------------------------------------------------------------------
+; Get property for CaptionBar control
+;-------------------------------------------------------------------------------------
+MUICaptionBarGetProperty PROC PUBLIC hCaptionBar:DWORD, dwProperty:DWORD
+    Invoke SendMessage, hCaptionBar, MUI_GETPROPERTY, dwProperty, NULL
+    ret
+MUICaptionBarGetProperty ENDP
+
+
+;-------------------------------------------------------------------------------------
 ; MUICreateCaptionBar - Returns handle in eax of newly created control
 ;-------------------------------------------------------------------------------------
-MUICreateCaptionBar PROC PRIVATE USES EBX hWndParent:DWORD, lpszText:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+MUICreateCaptionBar PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD, dwCaptionHeight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
 	LOCAL hControl:DWORD
@@ -174,13 +195,13 @@ MUICreateCaptionBar PROC PRIVATE USES EBX hWndParent:DWORD, lpszText:DWORD, cont
     
     ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
 	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
-    Invoke CreateWindowEx, NULL, Addr szMUICaptionBarClass, lpszText, WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS, 0, 0, eax, controlheight, hWndParent, dwResourceID, hinstance, NULL
+    Invoke CreateWindowEx, NULL, Addr szMUICaptionBarClass, lpszCaptionText, WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS, 0, 0, eax, dwCaptionHeight, hWndParent, dwResourceID, hinstance, NULL
 	mov hControl, eax
 	.IF eax != NULL
 		Invoke _MUISetIntProperty, hControl, @CaptionBarStyle, dwStyle
 		Invoke _MUISetIntProperty, hControl, @CaptionBar_hCaptionBarParent, hWndParent
 		Invoke _MUI_CreateCaptionBarSysButtons, hControl, hWndParent, dwStyle
-		Invoke SetWindowText, hWndParent, lpszText
+		Invoke SetWindowText, hWndParent, lpszCaptionText
 		
 		; Subclass parent window to allow us to handle sizing stuff
         Invoke SetWindowSubclass, hWndParent, Addr _MUI_CaptionBarParentSubClassProc, 0, hControl
@@ -291,8 +312,11 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
 		Invoke MUIGetExtProperty, hWin, wParam
 		ret
 		
-	.ELSEIF eax == MUI_SETPROPERTY	
+	.ELSEIF eax == MUI_SETPROPERTY
 		Invoke MUISetExtProperty, hWin, wParam, lParam
+		
+		; also set child system button colors as well
+		Invoke _MUI_CaptionBarSetSysButtonColor, hWin, wParam, lParam
 		ret
 		
     .ENDIF
@@ -495,6 +519,15 @@ _MUI_CreateCaptionBarSysButtons PROC PRIVATE USES EBX hCaptionBar:DWORD, hCaptio
         sub eax, dwLeftOffset
         Invoke _MUI_CreateSysButton, hCaptionBar, Addr szMUISysCloseButton, eax, 0, 32d, 24d, 1
         mov hSysButtonClose, eax
+        
+        ; check if red button style is supplied, if so we override colors for this button
+        mov eax, dwStyle
+        and eax, MUICS_REDCLOSEBUTTON
+        .IF eax == MUICS_REDCLOSEBUTTON
+            Invoke MUISetExtProperty, hSysButtonClose, @SysButtonTextRollColor, MUI_RGBCOLOR(255,255,255)
+            Invoke MUISetExtProperty, hSysButtonClose, @SysButtonBackRollColor, MUI_RGBCOLOR(166,26,32)
+        .ENDIF
+        
         add dwLeftOffset, 32d
     .ELSE
         mov hSysButtonClose, 0
@@ -563,10 +596,10 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
     LOCAL dwClientWidth:DWORD
     LOCAL dwClientHeight:DWORD
     LOCAL TotalItems:DWORD
-    LOCAL hSysMinButton:DWORD
-    LOCAL hSysMaxButton:DWORD
-    LOCAL hSysResButton:DWORD
-    LOCAL hSysCloseButton:DWORD
+    LOCAL hSysButtonClose:DWORD
+    LOCAL hSysButtonMax:DWORD
+    LOCAL hSysButtonRes:DWORD
+    LOCAL hSysButtonMin:DWORD
     LOCAL dwCaptionHeight:DWORD
     LOCAL dwLeftOffset:DWORD
     LOCAL hParent:DWORD
@@ -592,22 +625,22 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
     
     mov TotalItems, 0
     Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBar_hSysButtonClose
-    mov hSysCloseButton, eax
+    mov hSysButtonClose, eax
     .IF eax != NULL
         inc TotalItems
     .ENDIF
     Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBar_hSysButtonMax
-    mov hSysMaxButton, eax
+    mov hSysButtonMax, eax
     .IF eax != NULL
         inc TotalItems
     .ENDIF
     Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBar_hSysButtonRes
-    mov hSysResButton, eax
+    mov hSysButtonRes, eax
     .IF eax != NULL
         inc TotalItems
     .ENDIF
     Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBar_hSysButtonMin
-    mov hSysMinButton, eax
+    mov hSysButtonMin, eax
     .IF eax != NULL
         inc TotalItems
     .ENDIF
@@ -617,43 +650,43 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
     ; have to move this caption bar first, so that child controls can be moved inside of the new width (cant use defer on this window)
     Invoke SetWindowPos, hCaptionBar, NULL, 0, 0, dwClientWidth, dwCaptionHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOREDRAW or SWP_NOACTIVATE or SWP_NOSENDCHANGING	 ;SWP_NOCOPYBITS	 or SWP_NOREDRAW 
 
-    .IF hSysCloseButton != NULL
+    .IF hSysButtonClose != NULL
         mov eax, dwClientWidth
         sub eax, dwLeftOffset
         .IF hDefer == NULL
-            Invoke SetWindowPos, hSysCloseButton, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	;or SWP_NOCOPYBITS
+            Invoke SetWindowPos, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	;or SWP_NOCOPYBITS
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysCloseButton, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke DeferWindowPos, hDefer, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
         .ENDIF
         add dwLeftOffset, 32d
     .ENDIF
 
-    .IF hSysMaxButton != NULL && hSysResButton != NULL
+    .IF hSysButtonMax != NULL && hSysButtonRes != NULL
         mov eax, dwClientWidth
         sub eax, dwLeftOffset
         .IF hDefer == NULL
-            Invoke SetWindowPos, hSysMaxButton, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke SetWindowPos, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysMaxButton, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke DeferWindowPos, hDefer, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
         .ENDIF
 
         mov eax, dwClientWidth
         sub eax, dwLeftOffset        
         .IF hDefer == NULL
-            Invoke SetWindowPos, hSysResButton, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke SetWindowPos, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysResButton, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke DeferWindowPos, hDefer, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
         .ENDIF        
         add dwLeftOffset, 32d
     .ENDIF
     
-    .IF hSysMinButton != NULL
+    .IF hSysButtonMin != NULL
         mov eax, dwClientWidth
         sub eax, dwLeftOffset
         .IF hDefer == NULL
-            Invoke SetWindowPos, hSysMinButton, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke SetWindowPos, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysMinButton, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke DeferWindowPos, hDefer, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
         .ENDIF
     .ENDIF
 
@@ -665,16 +698,104 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
 
     Invoke GetWindowPlacement, hParent, Addr wp
     .IF wp.showCmd == SW_SHOWNORMAL
-        Invoke ShowWindow, hSysResButton, SW_HIDE
-        Invoke ShowWindow, hSysMaxButton, SW_SHOW
+        Invoke ShowWindow, hSysButtonRes, SW_HIDE
+        Invoke ShowWindow, hSysButtonMax, SW_SHOW
     .ELSE
-        Invoke ShowWindow, hSysMaxButton, SW_HIDE
-        Invoke ShowWindow, hSysResButton, SW_SHOW
+        Invoke ShowWindow, hSysButtonMax, SW_HIDE
+        Invoke ShowWindow, hSysButtonRes, SW_SHOW
     .ENDIF
     
     ret
 
 _MUI_CaptionBarReposition ENDP
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_CaptionBarSetSysButtonColor - Sets the system button colors from the message
+; MUIM_SETPROPERTY set to the parent CaptionBar control 
+;-------------------------------------------------------------------------------------
+_MUI_CaptionBarSetSysButtonColor PROC PRIVATE USES EBX hCaptionBar:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+    LOCAL hSysButtonClose:DWORD
+    LOCAL hSysButtonMax:DWORD
+    LOCAL hSysButtonRes:DWORD
+    LOCAL hSysButtonMin:DWORD
+
+    .IF dwProperty == @CaptionBarTextFont
+        ret
+    .ENDIF
+    
+    Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBar_hSysButtonClose
+    mov hSysButtonClose, eax
+    .IF eax != NULL
+        mov eax, dwProperty
+        .IF eax == @CaptionBarTextColor
+            Invoke MUISetExtProperty, hSysButtonClose, @SysButtonTextColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBackColor
+            Invoke MUISetExtProperty, hSysButtonClose, @SysButtonBackColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBtnTxtRollColor || eax == @CaptionBarBtnBckRollColor
+            Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBarStyle
+            and eax, MUICS_REDCLOSEBUTTON
+            .IF eax == MUICS_REDCLOSEBUTTON
+                Invoke MUISetExtProperty, hSysButtonClose, @SysButtonTextRollColor, MUI_RGBCOLOR(255,255,255)
+                Invoke MUISetExtProperty, hSysButtonClose, @SysButtonBackRollColor, MUI_RGBCOLOR(166,26,32)
+            .ELSE
+                mov eax, dwProperty
+                .IF eax == @CaptionBarBtnTxtRollColor
+                    Invoke MUISetExtProperty, hSysButtonClose, @SysButtonTextRollColor, dwPropertyValue
+                .ELSEIF eax == @CaptionBarBtnBckRollColor
+                    Invoke MUISetExtProperty, hSysButtonClose, @SysButtonBackRollColor, dwPropertyValue
+                .ENDIF
+            .ENDIF   
+        .ENDIF
+    .ENDIF
+    
+    Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBar_hSysButtonMax
+    mov hSysButtonMax, eax
+    .IF eax != NULL
+        mov eax, dwProperty
+        .IF eax == @CaptionBarTextColor
+            Invoke MUISetExtProperty, hSysButtonMax, @SysButtonTextColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBackColor
+            Invoke MUISetExtProperty, hSysButtonMax, @SysButtonBackColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBtnTxtRollColor
+            Invoke MUISetExtProperty, hSysButtonMax, @SysButtonTextRollColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBtnBckRollColor
+            Invoke MUISetExtProperty, hSysButtonMax, @SysButtonBackRollColor, dwPropertyValue
+        .ENDIF
+    .ENDIF
+    
+    Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBar_hSysButtonRes
+    mov hSysButtonRes, eax
+    .IF eax != NULL
+        mov eax, dwProperty
+        .IF eax == @CaptionBarTextColor
+            Invoke MUISetExtProperty, hSysButtonRes, @SysButtonTextColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBackColor
+            Invoke MUISetExtProperty, hSysButtonRes, @SysButtonBackColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBtnTxtRollColor
+            Invoke MUISetExtProperty, hSysButtonRes, @SysButtonTextRollColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBtnBckRollColor
+            Invoke MUISetExtProperty, hSysButtonRes, @SysButtonBackRollColor, dwPropertyValue
+        .ENDIF
+    .ENDIF
+    
+    Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBar_hSysButtonMin
+    mov hSysButtonMin, eax
+    .IF eax != NULL
+        mov eax, dwProperty
+        .IF eax == @CaptionBarTextColor
+            Invoke MUISetExtProperty, hSysButtonMin, @SysButtonTextColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBackColor
+            Invoke MUISetExtProperty, hSysButtonMin, @SysButtonBackColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBtnTxtRollColor
+            Invoke MUISetExtProperty, hSysButtonMin, @SysButtonTextRollColor, dwPropertyValue
+        .ELSEIF eax == @CaptionBarBtnBckRollColor
+            Invoke MUISetExtProperty, hSysButtonMin, @SysButtonBackRollColor, dwPropertyValue
+        .ENDIF
+    .ENDIF
+    
+    ret
+_MUI_CaptionBarSetSysButtonColor ENDP
 
 
 ;-------------------------------------------------------------------------------------

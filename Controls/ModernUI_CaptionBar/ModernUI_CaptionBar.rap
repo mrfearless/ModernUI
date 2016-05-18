@@ -91,7 +91,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=32648935
+PTimer=40699897
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
 [BookMark]
@@ -111,11 +111,11 @@ GroupExpand=1,1,1,0,0,0
 1=
 2=
 [Collapse]
-1=268446016,296196
+1=134228224,2368768
 2=
 [Size]
-1=0,0,0,0,7523
-2=0,0,0,0,3058
+1=0,0,0,0,18368
+2=0,0,0,0,2563
 [Find]
 1="_SetProperty"
 2="_GetProperty"

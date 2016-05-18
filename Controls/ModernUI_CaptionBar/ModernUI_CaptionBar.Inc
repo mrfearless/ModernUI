@@ -33,7 +33,9 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_CaptionBar Prototypes for users of controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUICreateCaptionBar		PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+MUICreateCaptionBar		    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszCaptionText, dwCaptionHeight, dwResourceID, dwStyle
+MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hCaptionBar, dwProperty, dwPropertyValue
+MUICaptionBarGetProperty    PROTO :DWORD, :DWORD                            ; hCaptionBar, dwProperty
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Caption Structures
@@ -46,21 +48,22 @@ MUICreateCaptionBar		PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 ;--------------------------------------------------------------------------------------------------------------------------------------
 
 ; CaptionBar Styles
+MUICS_LEFT                  EQU 0h   ; left align caption bar text
+MUICS_CENTER                EQU 1h   ; center align caption bar text
+MUICS_NOMINBUTTON           EQU 2h   ; no minimize button
+MUICS_NOMAXBUTTON           EQU 4h   ; no maximize/restore button
+MUICS_NOCLOSEBUTTON         EQU 8h   ; no close button
+MUICS_REDCLOSEBUTTON        EQU 10h  ; close button uses win8+ red background color
 
-MUICS_LEFT              EQU 0h   ; left align caption bar text
-MUICS_CENTER            EQU 1h   ; center align caption bar text
-MUICS_NOMINBUTTON       EQU 2h   ; no minimize button
-MUICS_NOMAXBUTTON       EQU 4h   ; no maximize/restore button
-MUICS_NOCLOSEBUTTON     EQU 8h   ; no close button
-MUICS_REDCLOSEBUTTON    EQU 10h  ; close button uses win8+ red background color
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
-; ModernUI_Caption External Properties: Use with MUIGetProperty, MUISetProperty
+; ModernUI_Caption Properties: Use with MUICaptionBarSetProperty / MUICaptionBarGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
-@CaptionBarTextColor    EQU 0
-@CaptionBarTextFont	    EQU 4
-@CaptionBarBackColor    EQU 8
-
+@CaptionBarTextColor        EQU 0   ; Text color for caption text and system buttons (min/max/restore/close)
+@CaptionBarTextFont	        EQU 4   ; Font for caption text
+@CaptionBarBackColor        EQU 8   ; Background color of caption and system buttons
+@CaptionBarBtnTxtRollColor  EQU 12  ; Text color for system buttons when mouse moves over them
+@CaptionBarBtnBckRollColor  EQU 16  ; Background color for system buttons when mouse moves over them
 
 
 

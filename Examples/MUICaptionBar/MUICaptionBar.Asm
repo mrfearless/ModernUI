@@ -84,9 +84,15 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 	.IF eax == WM_INITDIALOG
 		push hWin
 		pop hWnd
-		; Init Stuff Here
-		Invoke MUICreateCaptionBar, hWin, Addr AppName, 32d, IDC_CAPTIONBAR, MUICS_LEFT
+		
+		; Create CaptionBar control
+		Invoke MUICreateCaptionBar, hWin, Addr AppName, 32d, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
 		mov hCaptionBar, eax
+		
+		; Set some properties for our CaptionBar control 
+		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackColor, MUI_RGBCOLOR(51,51,51)
+		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(228,228,228)
+		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(81,81,81)
 		
 		
 	.ELSEIF eax == WM_COMMAND
