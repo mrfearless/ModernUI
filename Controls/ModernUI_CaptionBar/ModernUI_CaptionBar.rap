@@ -67,7 +67,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=18
+MilestoneOnDateDate=19
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=17
@@ -91,7 +91,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=40699897
+PTimer=49477340
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
 [BookMark]
@@ -111,11 +111,11 @@ GroupExpand=1,1,1,0,0,0
 1=
 2=
 [Collapse]
-1=134228224,2368768
+1=67129600,136348160,34
 2=
 [Size]
-1=0,0,0,0,18368
-2=0,0,0,0,2563
+1=0,0,0,0,320
+2=0,0,0,0,2196
 [Find]
 1="_SetProperty"
 2="_GetProperty"

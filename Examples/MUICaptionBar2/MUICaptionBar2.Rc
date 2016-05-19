@@ -1,0 +1,4 @@
+#include "Res/MUICaptionBar2Mnu.rc"
+#include "Res/MUICaptionBar2Ver.rc"
+#include "Res/MUICaptionBar2Dlg.rc"
+#include "Res/MUICaptionBar2Res.rc"

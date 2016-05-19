@@ -53,7 +53,7 @@ _MUI_CaptionBarReposition                   PROTO :DWORD
 _MUI_CaptionBarParentSubClassProc           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CaptionBarSetSysButtonColor            PROTO :DWORD, :DWORD, :DWORD
 
-_MUI_CreateCaptionBarSysButtons             PROTO :DWORD, :DWORD, :DWORD
+_MUI_CreateCaptionBarSysButtons             PROTO :DWORD, :DWORD
 _MUI_CreateSysButton                        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_SysButtonWndProc                       PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_SysButtonInit                          PROTO :DWORD
@@ -73,10 +73,8 @@ MUI_CAPTIONBAR_PROPERTIES				    ENDS
 
 ; CaptionBar Internal Poperties
 _MUI_CAPTIONBAR_PROPERTIES				    STRUCT
-	dwStyle								    DD ?
 	dwEnabledState						    DD ?
 	dwMouseOver							    DD ?
-	hCaptionBarParent                       DD ?
 	hSysButtonClose                         DD ?
 	hSysButtonMax                           DD ?
 	hSysButtonRes                           DD ?
@@ -102,14 +100,12 @@ _MUI_SYSBUTTON_PROPERTIES                   ENDS
 
 .CONST
 ; CaptionBar Internal Properties
-@CaptionBarStyle						    EQU 0
-@CaptionBarEnabledState				        EQU 4
-@CaptionBarMouseOver					    EQU 8
-@CaptionBar_hCaptionBarParent               EQU 12
-@CaptionBar_hSysButtonClose                 EQU 16
-@CaptionBar_hSysButtonMax                   EQU 20
-@CaptionBar_hSysButtonRes                   EQU 24
-@CaptionBar_hSysButtonMin                   EQU 28
+@CaptionBarEnabledState				        EQU 0
+@CaptionBarMouseOver					    EQU 4
+@CaptionBar_hSysButtonClose                 EQU 8
+@CaptionBar_hSysButtonMax                   EQU 12
+@CaptionBar_hSysButtonRes                   EQU 16
+@CaptionBar_hSysButtonMin                   EQU 20
 
 ; SysButton Internal Properties
 @SysButtonFont                              EQU 0
@@ -157,18 +153,18 @@ MUICaptionBarGetProperty ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; MUICreateCaptionBar - Returns handle in eax of newly created control
+; MUIRegisterCaptionBar - Registers the ModernUI_CaptionBar control
+; can be used at start of program for use with RadASM custom control
+; Custom control class must be set as ModernUI_CaptionBar
 ;-------------------------------------------------------------------------------------
-MUICreateCaptionBar PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD, dwCaptionHeight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+MUIRegisterCaptionBar PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	LOCAL hControl:DWORD
-	LOCAL rect:RECT
 	
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
-    invoke GetClassInfoEx,hinstance,addr szMUICaptionBarClass, Addr wc 
+    invoke GetClassInfoEx, hinstance, Addr szMUICaptionBarClass, Addr wc 
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUICaptionBarClass
@@ -187,6 +183,24 @@ MUICreateCaptionBar PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD
     	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
     	Invoke RegisterClassEx, addr wc
     .ENDIF
+    ret
+
+MUIRegisterCaptionBar ENDP
+
+
+;-------------------------------------------------------------------------------------
+; MUICreateCaptionBar - Returns handle in eax of newly created control
+;-------------------------------------------------------------------------------------
+MUICreateCaptionBar PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD, dwCaptionHeight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+    LOCAL hinstance:DWORD
+	LOCAL hControl:DWORD
+	LOCAL rect:RECT
+	LOCAL dwControlStyle:DWORD
+
+    Invoke GetModuleHandle, NULL
+    mov hinstance, eax
+	
+	Invoke MUIRegisterCaptionBar
     
     Invoke GetWindowRect, hWndParent, Addr rect
     mov eax, rect.right
@@ -195,16 +209,20 @@ MUICreateCaptionBar PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD
     
     ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
 	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
-    Invoke CreateWindowEx, NULL, Addr szMUICaptionBarClass, lpszCaptionText, WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS, 0, 0, eax, dwCaptionHeight, hWndParent, dwResourceID, hinstance, NULL
+	mov eax, dwStyle
+	or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+	mov dwControlStyle, eax
+	
+    Invoke CreateWindowEx, NULL, Addr szMUICaptionBarClass, lpszCaptionText, dwControlStyle, 0, 0, eax, dwCaptionHeight, hWndParent, dwResourceID, hinstance, NULL
 	mov hControl, eax
 	.IF eax != NULL
-		Invoke _MUISetIntProperty, hControl, @CaptionBarStyle, dwStyle
-		Invoke _MUISetIntProperty, hControl, @CaptionBar_hCaptionBarParent, hWndParent
-		Invoke _MUI_CreateCaptionBarSysButtons, hControl, hWndParent, dwStyle
-		Invoke SetWindowText, hWndParent, lpszCaptionText
+		;Invoke _MUISetIntProperty, hControl, @CaptionBarStyle, dwStyle
+		;Invoke _MUISetIntProperty, hControl, @CaptionBar_hCaptionBarParent, hWndParent
+		;Invoke _MUI_CreateCaptionBarSysButtons, hControl, hWndParent
+		;Invoke SetWindowText, hWndParent, lpszCaptionText
 		
 		; Subclass parent window to allow us to handle sizing stuff
-        Invoke SetWindowSubclass, hWndParent, Addr _MUI_CaptionBarParentSubClassProc, 0, hControl
+        ;Invoke SetWindowSubclass, hWndParent, Addr _MUI_CaptionBarParentSubClassProc, 0, hControl
 		
 	.ENDIF
 	mov eax, hControl
@@ -218,12 +236,17 @@ MUICreateCaptionBar ENDP
 _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL wp:WINDOWPLACEMENT
+    LOCAL hParent:DWORD
     
     mov eax,uMsg
     .IF eax == WM_NCCREATE
+        Invoke GetParent, hWin
+        mov hParent, eax
         mov ebx, lParam
 		; sets text of our control, delete if not required.
-        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
+        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName
+        ; Set main window title
+        Invoke SetWindowText, hParent, (CREATESTRUCT PTR [ebx]).lpszName
         mov eax, TRUE
         ret
 
@@ -362,6 +385,23 @@ _MUI_CaptionBarInit PROC PRIVATE hCaptionBar:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
     LOCAL hFont:DWORD
+    LOCAL hParent:DWORD
+    LOCAL dwStyle:DWORD
+    
+    Invoke GetParent, hCaptionBar
+    mov hParent, eax
+    
+    ; get style and check it is our default at least
+    Invoke GetWindowLong, hCaptionBar, GWL_STYLE
+    mov dwStyle, eax
+    and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+    .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        mov eax, dwStyle
+        or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        mov dwStyle, eax
+        Invoke SetWindowLong, hCaptionBar, GWL_STYLE, dwStyle
+    .ENDIF
+    ;PrintDec dwStyle
     
     ; Set default initial external property values     
     Invoke MUISetExtProperty, hCaptionBar, @CaptionBarTextColor, MUI_RGBCOLOR(255,255,255)
@@ -380,6 +420,10 @@ _MUI_CaptionBarInit PROC PRIVATE hCaptionBar:DWORD
         Invoke DeleteObject, hFont
     .ENDIF
     Invoke MUISetExtProperty, hCaptionBar, @CaptionBarTextFont, hMUICaptionBarFont
+
+    Invoke _MUI_CreateCaptionBarSysButtons, hCaptionBar, hParent
+    
+    Invoke SetWindowSubclass, hParent, Addr _MUI_CaptionBarParentSubClassProc, 0, hCaptionBar
 
     ret
 
@@ -423,8 +467,11 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
 	;----------------------------------------------------------
 	; Get properties
 	;----------------------------------------------------------
-	Invoke _MUIGetIntProperty, hWin, @CaptionBarStyle
-	mov dwStyle, eax
+	;Invoke _MUIGetIntProperty, hWin, @CaptionBarStyle
+	;mov dwStyle, eax
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax	
+	
 	Invoke _MUIGetIntProperty, hWin, @CaptionBarMouseOver
     mov MouseOver, eax
     Invoke MUIGetExtProperty, hWin, @CaptionBarTextColor        ; normal text color
@@ -496,7 +543,7 @@ _MUI_CaptionBarPaint ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_CreateCaptionBarSysButtons - create all specified system buttons
 ;-------------------------------------------------------------------------------------
-_MUI_CreateCaptionBarSysButtons PROC PRIVATE USES EBX hCaptionBar:DWORD, hCaptionBarParent:DWORD, dwStyle:DWORD
+_MUI_CreateCaptionBarSysButtons PROC PRIVATE USES EBX hCaptionBar:DWORD, hCaptionBarParent:DWORD
     LOCAL wp:WINDOWPLACEMENT
     LOCAL dwLeftOffset:DWORD
     LOCAL rect:RECT
@@ -505,9 +552,13 @@ _MUI_CreateCaptionBarSysButtons PROC PRIVATE USES EBX hCaptionBar:DWORD, hCaptio
     LOCAL hSysButtonMax:DWORD
     LOCAL hSysButtonRes:DWORD
     LOCAL hSysButtonMin:DWORD
+    LOCAL dwStyle:DWORD
     
     mov dwLeftOffset, 32d ; start with width of first button
     Invoke GetWindowRect, hCaptionBar, Addr rect
+    
+    Invoke GetWindowLong, hCaptionBar, GWL_STYLE
+    mov dwStyle, eax
     
     mov eax, dwStyle
     and eax, MUICS_NOCLOSEBUTTON
@@ -719,6 +770,7 @@ _MUI_CaptionBarSetSysButtonColor PROC PRIVATE USES EBX hCaptionBar:DWORD, dwProp
     LOCAL hSysButtonMax:DWORD
     LOCAL hSysButtonRes:DWORD
     LOCAL hSysButtonMin:DWORD
+    LOCAL dwStyle:DWORD
 
     .IF dwProperty == @CaptionBarTextFont
         ret
@@ -733,7 +785,10 @@ _MUI_CaptionBarSetSysButtonColor PROC PRIVATE USES EBX hCaptionBar:DWORD, dwProp
         .ELSEIF eax == @CaptionBarBackColor
             Invoke MUISetExtProperty, hSysButtonClose, @SysButtonBackColor, dwPropertyValue
         .ELSEIF eax == @CaptionBarBtnTxtRollColor || eax == @CaptionBarBtnBckRollColor
-            Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBarStyle
+        
+            Invoke GetWindowLong, hCaptionBar, GWL_STYLE
+            mov dwStyle, eax        
+            ;Invoke _MUIGetIntProperty, hCaptionBar, @CaptionBarStyle
             and eax, MUICS_REDCLOSEBUTTON
             .IF eax == MUICS_REDCLOSEBUTTON
                 Invoke MUISetExtProperty, hSysButtonClose, @SysButtonTextRollColor, MUI_RGBCOLOR(255,255,255)
@@ -849,6 +904,10 @@ _MUI_SysButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM,
 		ret    
 
     .ELSEIF eax == WM_NCDESTROY
+        Invoke _MUIGetIntProperty, hWin, @SysButtonFont
+        .IF eax != 0
+            Invoke DeleteObject, eax
+        .ENDIF
         Invoke _MUIFreeMemProperties, hWin, 0
 		Invoke _MUIFreeMemProperties, hWin, 4   
         
@@ -909,9 +968,10 @@ _MUI_SysButtonInit PROC PRIVATE hSysButton:DWORD
     Invoke MUISetExtProperty, hSysButton, @SysButtonTextRollColor, MUI_RGBCOLOR(0,0,0)
     Invoke MUISetExtProperty, hSysButton, @SysButtonBackColor, MUI_RGBCOLOR(21,133,181)
     Invoke MUISetExtProperty, hSysButton, @SysButtonBackRollColor, MUI_RGBCOLOR(138,194,218)
+    
 
     .IF hMUISysButtonFont == 0
-        Invoke CreateFont, -10, 0, 0, 0, FW_THIN, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_TT_ONLY_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, FF_DONTCARE, Addr szMUISysButtonFont
+        Invoke CreateFont, -10, 0, 0, 0, FW_THIN, FALSE, FALSE, FALSE, SYMBOL_CHARSET, 0, 0, 0, 0, Addr szMUISysButtonFont
         mov hMUISysButtonFont, eax
     .ENDIF
     
@@ -991,6 +1051,8 @@ _MUI_SysButtonPaint PROC PRIVATE hWin:DWORD
 	;----------------------------------------------------------
 	Invoke SelectObject, hdcMem, hFont
     mov hOldFont, eax
+    ;PrintDec hFont
+    ;PrintDec hOldFont
     Invoke GetWindowText, hWin, Addr szText, sizeof szText
     Invoke SetTextColor, hdcMem, TextColor
     Invoke DrawText, hdcMem, Addr szText, -1, Addr rect, DT_SINGLELINE or DT_CENTER or DT_VCENTER
@@ -1003,13 +1065,14 @@ _MUI_SysButtonPaint PROC PRIVATE hWin:DWORD
     ;----------------------------------------------------------
     ; Cleanup
     ;----------------------------------------------------------
+
     Invoke DeleteDC, hdcMem
     Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
         Invoke DeleteObject, hOldBitmap
     .ENDIF		
     .IF hOldFont != 0
-        Invoke DeleteObject, hOldFont
+       Invoke DeleteObject, hOldFont
     .ENDIF
     .IF hOldBrush != 0
         Invoke DeleteObject, hOldBrush

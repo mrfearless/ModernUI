@@ -1,24 +1,10 @@
-;.386
-;.model flat,stdcall
-;option casemap:none
 .686
 .MMX
 .XMM
 .model flat,stdcall
 option casemap:none
-include \masm32\macros\macros.asm
 
-;DEBUG32 EQU 1
-
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
-
-include MUICaptionBar.inc
+include MUICaptionBar1.inc
 
 .code
 
@@ -85,7 +71,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		push hWin
 		pop hWnd
 		
-		; Create CaptionBar control
+		; Create CaptionBar control via MUI api
 		Invoke MUICreateCaptionBar, hWin, Addr AppName, 32d, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
 		mov hCaptionBar, eax
 		
@@ -93,7 +79,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackColor, MUI_RGBCOLOR(51,51,51)
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(228,228,228)
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(81,81,81)
-		
+
 		
 	.ELSEIF eax == WM_COMMAND
 		mov eax, wParam
