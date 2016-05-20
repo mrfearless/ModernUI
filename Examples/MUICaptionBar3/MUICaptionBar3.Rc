@@ -1,0 +1,5 @@
+#include "Res/MUISomeOtherDialogDlg.rc"
+#include "Res/MUICaptionBar3Mnu.rc"
+#include "Res/MUICaptionBar3Ver.rc"
+#include "Res/MUICaptionBar3Dlg.rc"
+#include "Res/MUICaptionBar3Res.rc"

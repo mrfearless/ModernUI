@@ -89,31 +89,28 @@ MUI_gdipsi	                    GdiplusStartupInput	<1,0,0,0>
 ; Start of ModernUI framework (wrapper for gdiplus startup)
 ; Placed at start of program before WinMain call
 ;-------------------------------------------------------------------------------------
-_MUIGDIPlusStart PROC PUBLIC
+MUIGDIPlusStart PROC PUBLIC
     .IF MUI_GDIPLUS == 0
 	    Invoke GdiplusStartup, Addr MUI_GDIPlusToken, Addr MUI_gdipsi, NULL
 	.ENDIF
 	inc MUI_GDIPLUS
-
-;    Invoke CreateFont, 10d, 0, 0, 0, 0, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_TT_ONLY_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, FF_DONTCARE, Addr szMUISysFont
-;    mov hMUISysFont, eax
 	xor eax, eax
     ret
-_MUIGDIPlusStart ENDP
+MUIGDIPlusStart ENDP
 
 
 ;-------------------------------------------------------------------------------------
 ; Finish ModernUI framework (wrapper for gdiplus shutdown)
 ; Placed after WinMain call before ExitProcess
 ;-------------------------------------------------------------------------------------
-_MUIGDIPlusFinish PROC PUBLIC
+MUIGDIPlusFinish PROC PUBLIC
     dec MUI_GDIPLUS
     .IF MUI_GDIPLUS == 0
         Invoke GdiplusShutdown, MUI_GDIPlusToken
     .ENDIF
     xor eax, eax
     ret
-_MUIGDIPlusFinish ENDP
+MUIGDIPlusFinish ENDP
 
 
 ;-------------------------------------------------------------------------------------
@@ -169,7 +166,7 @@ _MUISetProperty ENDP
 ;-------------------------------------------------------------------------------------
 ; Allocs memory for the properties of a control
 ;-------------------------------------------------------------------------------------
-_MUIAllocMemProperties PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwSize:DWORD
+MUIAllocMemProperties PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwSize:DWORD
     LOCAL pMem:DWORD
     Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, dwSize
     .IF eax == NULL
@@ -182,13 +179,13 @@ _MUIAllocMemProperties PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWO
     
     mov eax, TRUE
     ret
-_MUIAllocMemProperties ENDP
+MUIAllocMemProperties ENDP
 
 
 ;-------------------------------------------------------------------------------------
 ; Frees memory for the properties of a control
 ;-------------------------------------------------------------------------------------
-_MUIFreeMemProperties PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD
+MUIFreeMemProperties PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD
     Invoke GetWindowLong, hControl, cbWndExtraOffset
     .IF eax != NULL
         invoke GlobalFree, eax
@@ -198,7 +195,7 @@ _MUIFreeMemProperties PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWOR
         mov eax, FALSE
     .ENDIF
     ret
-_MUIFreeMemProperties ENDP
+MUIFreeMemProperties ENDP
 
 
 ;======================================================================================================================================
@@ -227,23 +224,38 @@ MUISetExtProperty ENDP
 ;-------------------------------------------------------------------------------------
 ; Gets internal property value and returns it in eax
 ;-------------------------------------------------------------------------------------
-_MUIGetIntProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD
+MUIGetIntProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD
     Invoke _MUIGetProperty, hControl, 0, dwProperty ; get internal properties
     ret
-_MUIGetIntProperty ENDP
+MUIGetIntProperty ENDP
 
 
 ;-------------------------------------------------------------------------------------
 ; Sets internal property value and returns previous value in eax.
 ;-------------------------------------------------------------------------------------
-_MUISetIntProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUISetIntProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke _MUISetProperty, hControl, 0, dwProperty, dwPropertyValue ; set internal properties
     ret
-_MUISetIntProperty ENDP
+MUISetIntProperty ENDP
 
 
-
-
+;-------------------------------------------------------------------------------------
+; Convert font point size eg '12' to logical unit size for use with CreateFont,
+; CreateFontIndirect
+;-------------------------------------------------------------------------------------
+MUIPointSizeToLogicalUnit PROC PUBLIC hWin:DWORD, dwPointSize:DWORD
+    LOCAL hdc:HDC
+    LOCAL dwLogicalUnit:DWORD
+    
+    Invoke GetDC, hWin
+    mov hdc, eax
+    Invoke GetDeviceCaps, hdc, LOGPIXELSY
+    Invoke MulDiv, dwPointSize, eax, 72d
+    mov dwLogicalUnit, eax
+    Invoke ReleaseDC, hWin, hdc
+    mov eax, dwLogicalUnit
+    ret
+MUIPointSizeToLogicalUnit ENDP
 
 
 

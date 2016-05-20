@@ -37,18 +37,20 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 MUIGetExtProperty                PROTO :DWORD, :DWORD                   ; hControl, dwProperty
 MUISetExtProperty                PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
-_MUIGetIntProperty               PROTO :DWORD, :DWORD                   ; hControl, dwProperty
-_MUISetIntProperty               PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
+MUIGetIntProperty                PROTO :DWORD, :DWORD                   ; hControl, dwProperty
+MUISetIntProperty                PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
 
+MUIPointSizeToLogicalUnit        PROTO :DWORD, :DWORD                   ; hControl, dwPointSize
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; PRIVATE ModernUI Prototypes for control creators to use with their controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
-_MUIGDIPlusStart                 PROTO                                  ; Wrapper for GDIPlus startup
-_MUIGDIPlusFinish                PROTO                                  ; Wrapper for GDIPlus shutdown
+MUIGDIPlusStart                 PROTO                                  ; Wrapper for GDIPlus startup
+MUIGDIPlusFinish                PROTO                                  ; Wrapper for GDIPlus shutdown
 
-_MUIAllocMemProperties           PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwSizeToAllocate
-_MUIFreeMemProperties            PROTO :DWORD, :DWORD                   ; hControl, cbWndExtraOffset
+MUIAllocMemProperties           PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwSizeToAllocate
+MUIFreeMemProperties            PROTO :DWORD, :DWORD                   ; hControl, cbWndExtraOffset
+
 
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
