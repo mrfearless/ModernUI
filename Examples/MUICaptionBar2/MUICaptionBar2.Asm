@@ -25,7 +25,7 @@ start:
 	; in the RadASM custom control. The control is thus created automatically
 	; for us when the dialog is instantiated.
 	
-	Invoke MUIRegisterCaptionBar
+	Invoke MUICaptionBarRegister
 	
 	Invoke WinMain, hInstance, NULL, CommandLine, SW_SHOWDEFAULT
 	Invoke ExitProcess, eax

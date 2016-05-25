@@ -33,8 +33,8 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_CaptionBar Prototypes for users of controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUIRegisterCaptionBar       PROTO                                           ; Use 'ModernUICaptionBar' as class in RadASM custom class control
-MUICreateCaptionBar		    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszCaptionText, dwCaptionHeight, dwResourceID, dwStyle
+MUICaptionBarRegister       PROTO                                           ; Use 'ModernUICaptionBar' as class in RadASM custom class control
+MUICaptionBarCreate		    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszCaptionText, dwCaptionHeight, dwResourceID, dwStyle
 MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hCaptionBar, dwProperty, dwPropertyValue
 MUICaptionBarGetProperty    PROTO :DWORD, :DWORD                            ; hCaptionBar, dwProperty
 

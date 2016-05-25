@@ -25,7 +25,7 @@ start:
 	; in the RadASM custom control. The control is thus created automatically
 	; for us when the dialog is instantiated.
 	
-	Invoke MUIRegisterCaptionBar
+	Invoke MUICaptionBarRegister
 	
 	Invoke WinMain, hInstance, NULL, CommandLine, SW_SHOWDEFAULT
 	Invoke ExitProcess, eax
@@ -79,6 +79,10 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		push hWin
 		pop hWnd
 		
+		; Applies the ModernUI base style to the dialog, turning it into a borderless, caption less form
+		; we set our own caption and system buttons with the ModernUI_CaptionBar control
+		Invoke MUIApplyToDialog, hWin, TRUE
+		
 		; Get CaptionBar control handle from resource id and save handle
 		Invoke GetDlgItem, hWin, IDC_CAPTIONBAR
 		mov hCaptionBar, eax
@@ -87,6 +91,15 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackColor, MUI_RGBCOLOR(26,166,140)
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(61,61,61)
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(89,179,162)
+
+    .ELSEIF eax == WM_ERASEBKGND
+        mov eax, 1
+        ret
+
+	.ELSEIF eax == WM_PAINT
+		invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(202,234,228), MUI_RGBCOLOR(26,166,140)
+		mov eax, 0
+		ret
 		
 	.ELSEIF eax == WM_COMMAND
 		mov eax, wParam
@@ -127,6 +140,14 @@ SomeOtherDlgProc PROC hWin:HWND, iMsg:UINT, wParam:WPARAM, lParam:LPARAM
 	mov  eax,iMsg
     .IF eax==WM_INITDIALOG
         
+        ; This dialogs resources have been edited to give it the style flags required for our ModernUI styling
+        ; hence no need to call MUIApplyToDialog - it is provided for ease of use, so you dont have to keep
+        ; setting style flags - for those that forget or are lazy :)
+        
+        ; However, if we do wish to add the dropshadow effect to the dialog we can do so with MUIApplyToDialog 
+        ; (the 2nd param if TRUE will enable the CS_DROPSHADOW style on the dialog)
+        Invoke MUIApplyToDialog, hWin, TRUE
+        
         ; Get CaptionBar control handle from resource id and save handle
 		Invoke GetDlgItem, hWin, IDC_SOMEOTHERCAPTIONBAR
 		mov hCaptionSomeOtherDlg, eax    
@@ -135,6 +156,15 @@ SomeOtherDlgProc PROC hWin:HWND, iMsg:UINT, wParam:WPARAM, lParam:LPARAM
 		Invoke MUICaptionBarSetProperty, hCaptionSomeOtherDlg, @CaptionBarBackColor, MUI_RGBCOLOR(148,89,179)
 		Invoke MUICaptionBarSetProperty, hCaptionSomeOtherDlg, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(61,61,61)
 		Invoke MUICaptionBarSetProperty, hCaptionSomeOtherDlg, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(172,142,187)
+
+    .ELSEIF eax == WM_ERASEBKGND
+        mov eax, 1
+        ret
+
+	.ELSEIF eax == WM_PAINT
+		invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(255,255,255), MUI_RGBCOLOR(148,89,179)
+		mov eax, 0
+		ret
 
     .ELSEIF eax==WM_COMMAND
 		mov		eax,wParam

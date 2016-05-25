@@ -258,9 +258,157 @@ MUIPointSizeToLogicalUnit PROC PUBLIC hWin:DWORD, dwPointSize:DWORD
 MUIPointSizeToLogicalUnit ENDP
 
 
+;-------------------------------------------------------------------------------------
+; Applies the ModernUI style to a dialog to make it a captionless, borderless form. 
+; User can manually change a form in a resource editor to have the following style
+; flags: WS_POPUP or WS_VISIBLE and optionally with DS_CENTER /DS_CENTERMOUSE / 
+; WS_CLIPCHILDREN / WS_CLIPSIBLINGS / WS_MINIMIZE / WS_MAXIMIZE
+;-------------------------------------------------------------------------------------
+MUIApplyToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
+    LOCAL dwStyle:DWORD
+    LOCAL dwNewStyle:DWORD
+    LOCAL dwClassStyle:DWORD
+    
+    mov dwNewStyle, WS_POPUP
+    
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
+    
+    and eax, DS_CENTER
+    .IF eax == DS_CENTER
+        or dwNewStyle, DS_CENTER
+    .ENDIF
+    
+    mov eax, dwStyle
+    and eax, DS_CENTERMOUSE
+    .IF eax == DS_CENTERMOUSE
+        or dwNewStyle, DS_CENTERMOUSE
+    .ENDIF
+    
+    mov eax, dwStyle
+    and eax, WS_VISIBLE
+    .IF eax == WS_VISIBLE
+        or dwNewStyle, WS_VISIBLE
+    .ENDIF
+    
+    mov eax, dwStyle
+    and eax, WS_MINIMIZE
+    .IF eax == WS_MINIMIZE
+        or dwNewStyle, WS_MINIMIZE
+    .ENDIF
+    
+    mov eax, dwStyle
+    and eax, WS_MAXIMIZE
+    .IF eax == WS_MAXIMIZE
+        or dwNewStyle, WS_MAXIMIZE
+    .ENDIF        
+
+    mov eax, dwStyle
+    and eax, WS_CLIPSIBLINGS
+    .IF eax == WS_CLIPSIBLINGS
+        or dwNewStyle, WS_CLIPSIBLINGS
+    .ENDIF        
+    
+    or dwNewStyle, WS_CLIPCHILDREN
+
+	Invoke SetWindowLong, hWin, GWL_STYLE, dwNewStyle
+	
+	; Set dropshadow on or off on our dialog
+	
+	Invoke GetClassLong, hWin, GCL_STYLE
+	mov dwClassStyle, eax
+	
+	.IF dwDropShadow == TRUE
+	    mov eax, dwClassStyle
+	    and eax, CS_DROPSHADOW
+	    .IF eax != CS_DROPSHADOW
+	        or dwClassStyle, CS_DROPSHADOW
+	        Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
+	    .ENDIF
+	.ELSE    
+	    mov eax, dwClassStyle
+	    and eax, CS_DROPSHADOW
+	    .IF eax == CS_DROPSHADOW
+	        and dwClassStyle,(-1 xor CS_DROPSHADOW)
+            Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
+	    .ENDIF
+	.ENDIF
+	
+    ret
+
+MUIApplyToDialog ENDP
 
 
+;-------------------------------------------------------------------------------------
+; Paint the background of the main window specified color
+; optional provide dwBorderColor for border. If dwBorderColor = 0, no border is drawn
+; if you require black for border, use 1, or MUI_RGBCOLOR(1,1,1)
+;
+; If you are using this on a window/dialog that does not use the ModernUI_CaptionBar
+; control AND window/dialog is resizable, you should place a call to InvalideRect
+; in the WM_NCCALCSIZE handler to prevent ugly drawing artifacts when border is drawn
+; whilst resize of window/dialog occurs. The ModernUI_CaptionBar handles this call to 
+; WM_NCCALCSIZE already by default. Here is an example of what to include if you need:
+;
+;    .ELSEIF eax == WM_NCCALCSIZE
+;        Invoke InvalidateRect, hWin, NULL, TRUE
+; 
+;-------------------------------------------------------------------------------------
+MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD
+	LOCAL ps:PAINTSTRUCT
+	LOCAL hdc:HDC
+    LOCAL rect:RECT
+    LOCAL hdcMem:DWORD
+    LOCAL hbmMem:DWORD
+    LOCAL hOldBitmap:DWORD
+    LOCAL hBrush:DWORD
 
+	invoke BeginPaint, hWin, addr ps
+	mov	hdc, eax
+    Invoke GetClientRect, hWin, Addr rect
+    Invoke CreateCompatibleDC, hdc
+    mov hdcMem, eax
+   	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+   	mov hbmMem, eax
+   	Invoke SelectObject, hdcMem, hbmMem
+  	mov hOldBitmap, eax 
+
+    Invoke GetStockObject, DC_BRUSH
+    mov hBrush, eax
+    Invoke SelectObject, hdcMem, eax
+    Invoke SetDCBrushColor, hdcMem, dwBackcolor
+    Invoke FillRect, hdcMem, Addr rect, hBrush
+
+    .IF dwBorderColor != 0
+        Invoke GetStockObject, DC_BRUSH
+        mov hBrush, eax
+        Invoke SelectObject, hdcMem, eax
+        Invoke SetDCBrushColor, hdcMem, dwBorderColor
+        Invoke FrameRect, hdcMem, Addr rect, hBrush
+    .ENDIF
+    
+    Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+
+;    .IF dwBorderColor != 0
+;        Invoke GetStockObject, DC_BRUSH
+;        mov hBrush, eax
+;        Invoke SelectObject, hdc, eax
+;        Invoke SetDCBrushColor, hdc, dwBorderColor
+;        Invoke FrameRect, hdc, Addr rect, hBrush
+;    .ENDIF
+
+    Invoke SelectObject, hdcMem, hbmMem
+    Invoke DeleteObject, hbmMem
+    Invoke DeleteDC, hdcMem
+    Invoke DeleteObject, hOldBitmap
+    .IF hBrush != 0
+        Invoke DeleteObject, hBrush
+    .ENDIF
+    invoke ReleaseDC, hWin, hdc
+    invoke EndPaint, hWin, addr ps
+    ret
+
+MUIPaintBackground ENDP
 
 
 

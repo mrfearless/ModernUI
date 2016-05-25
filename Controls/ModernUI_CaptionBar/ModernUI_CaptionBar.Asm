@@ -18,15 +18,15 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-DEBUG32 EQU 1
-
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;DEBUG32 EQU 1
+;
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include user32.inc
@@ -154,11 +154,11 @@ MUICaptionBarGetProperty ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; MUIRegisterCaptionBar - Registers the ModernUI_CaptionBar control
+; MUICaptionBarRegister - Registers the ModernUI_CaptionBar control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_CaptionBar
 ;-------------------------------------------------------------------------------------
-MUIRegisterCaptionBar PROC PUBLIC
+MUICaptionBarRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
 	
@@ -166,7 +166,6 @@ MUIRegisterCaptionBar PROC PUBLIC
     mov hinstance, eax
 
     invoke GetClassInfoEx, hinstance, Addr szMUICaptionBarClass, Addr wc 
-    PrintDec eax
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUICaptionBarClass
@@ -180,20 +179,20 @@ MUIRegisterCaptionBar PROC PUBLIC
     	mov wc.hIconSm, 0
     	mov wc.lpszMenuName, NULL
     	mov wc.hbrBackground, NULL
-    	mov wc.style, NULL
+    	mov wc.style, CS_DBLCLKS ;NULL
         mov wc.cbClsExtra, 0
     	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
     	Invoke RegisterClassEx, addr wc
     .ENDIF
     ret
 
-MUIRegisterCaptionBar ENDP
+MUICaptionBarRegister ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; MUICreateCaptionBar - Returns handle in eax of newly created control
+; MUICaptionBarCreate - Returns handle in eax of newly created control
 ;-------------------------------------------------------------------------------------
-MUICreateCaptionBar PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD, dwCaptionHeight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+MUICaptionBarCreate PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD, dwCaptionHeight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL hinstance:DWORD
 	LOCAL hControl:DWORD
 	LOCAL rect:RECT
@@ -202,38 +201,31 @@ MUICreateCaptionBar PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 	
-	Invoke MUIRegisterCaptionBar
+	Invoke MUICaptionBarRegister
     
+    ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
+	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN.
+	mov eax, dwStyle
+	or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+	mov dwControlStyle, eax
+
     Invoke GetWindowRect, hWndParent, Addr rect
     mov eax, rect.right
     mov ebx, rect.left
     sub eax, ebx
-    
-    ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
-	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
-	mov eax, dwStyle
-	or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-	mov dwControlStyle, eax
 	
     Invoke CreateWindowEx, NULL, Addr szMUICaptionBarClass, lpszCaptionText, dwControlStyle, 0, 0, eax, dwCaptionHeight, hWndParent, dwResourceID, hinstance, NULL
 	mov hControl, eax
 	.IF eax != NULL
-		;Invoke _MUISetIntProperty, hControl, @CaptionBarStyle, dwStyle
-		;Invoke _MUISetIntProperty, hControl, @CaptionBar_hCaptionBarParent, hWndParent
-		;Invoke _MUI_CreateCaptionBarSysButtons, hControl, hWndParent
-		;Invoke SetWindowText, hWndParent, lpszCaptionText
-		
-		; Subclass parent window to allow us to handle sizing stuff
-        ;Invoke SetWindowSubclass, hWndParent, Addr _MUI_CaptionBarParentSubClassProc, 0, hControl
 		
 	.ENDIF
 	mov eax, hControl
     ret
-MUICreateCaptionBar ENDP
+MUICaptionBarCreate ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; _MUI_CaptionBarWndProc - Main processing window for our control
+; _MUI_CaptionBarWndProc - Main processing window for our CaptionBar control
 ;-------------------------------------------------------------------------------------
 _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
@@ -245,7 +237,7 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         Invoke GetParent, hWin
         mov hParent, eax
         mov ebx, lParam
-		; sets text of our control, delete if not required.
+		; sets text of our CaptionBar
         Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName
         ; Set main window title
         Invoke SetWindowText, hParent, (CREATESTRUCT PTR [ebx]).lpszName
@@ -294,6 +286,22 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         Invoke _MUI_CaptionBarPaint, hWin
         mov eax, 0
         ret
+    
+    .ELSEIF eax == WM_LBUTTONDBLCLK
+        Invoke GetParent, hWin
+        mov hParent, eax
+        Invoke GetWindowPlacement, hParent, Addr wp
+        .IF wp.showCmd == SW_SHOWNORMAL    
+            Invoke ShowWindow, hParent, SW_MAXIMIZE
+            Invoke _MUI_CaptionBarReposition, hWin
+            ret
+        .ELSEIF wp.showCmd == SW_SHOWMAXIMIZED
+            Invoke ShowWindow, hParent, SW_RESTORE
+            Invoke _MUI_CaptionBarReposition, hWin
+            ret
+        .ELSE
+            mov eax, 0
+        .ENDIF
 
     .ELSEIF eax == WM_NCHITTEST
         Invoke GetParent, hWin
@@ -317,14 +325,10 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , FALSE
 		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
 
     .ELSEIF eax == WM_KILLFOCUS
         Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , FALSE
 		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
 	
 	.ELSEIF eax == WM_SIZE
 	    Invoke _MUI_CaptionBarReposition, hWin
@@ -332,7 +336,6 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
 	    ret
 	
 	; custom messages start here
-	
 	.ELSEIF eax == MUI_GETPROPERTY
 		Invoke MUIGetExtProperty, hWin, wParam
 		ret
@@ -356,6 +359,7 @@ _MUI_CaptionBarWndProc ENDP
 
 ;-------------------------------------------------------------------------------------
 ; _MUI_CaptionBarParentSubClassProc - Subclass for caption bar parent window 
+; dwRefData is the handle to our CaptionBar control in this subclass proc
 ;-------------------------------------------------------------------------------------
 _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM, uIdSubclass:UINT, dwRefData:DWORD
     LOCAL hParent:DWORD
@@ -363,15 +367,21 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
     
     mov eax, uMsg
     .IF eax == WM_NCDESTROY
-        Invoke RemoveWindowSubclass, hWin, Addr _MUI_CaptionBarParentSubClassProc, uIdSubclass
+        Invoke RemoveWindowSubclass, hWin, Addr _MUI_CaptionBarParentSubClassProc, uIdSubclass ; remove subclass before control destroyed.
         ret
-        
+    
+    ; Handle resize of dialog/window and invalidate it if we are painting a border via MUIPaintBackground
+    .ELSEIF eax == WM_NCCALCSIZE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+    
+    ; If user pulls caption down whilst maximized this will be caught by this handler and we can adjust the CaptionBar control to reflect the 
+    ; restore state it will be in. Or if user programmatically changes window this should catch it as well.
     .ELSEIF eax == WM_SIZE
         mov eax, wParam
         .IF eax == SIZE_MAXIMIZED
-            Invoke SendMessage, dwRefData, WM_SIZE, 0, 0
+            Invoke SendMessage, dwRefData, WM_SIZE, 0, 0 ; force reposition of CaptionBar and its child controls
         .ELSEIF eax == SIZE_RESTORED
-            Invoke SendMessage, dwRefData, WM_SIZE, 0, 0
+            Invoke SendMessage, dwRefData, WM_SIZE, 0, 0 ; force reposition of CaptionBar and its child controls
         .ENDIF
     .ENDIF
     
@@ -434,7 +444,7 @@ _MUI_CaptionBarInit ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; _MUI_CaptionBarPaint
+; _MUI_CaptionBarPaint - main CaptionBar painting
 ;-------------------------------------------------------------------------------------
 _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
@@ -642,7 +652,7 @@ _MUI_CreateCaptionBarSysButtons ENDP
 
 ;-------------------------------------------------------------------------------------
 ; _MUI_CaptionBarReposition - Reposition window and child system buttons after main
-; window resizes - call WM_SIZE
+; window resizes - called via SendMessage, hControl, WM_SIZE, 0, 0
 ;-------------------------------------------------------------------------------------
 _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
     LOCAL wp:WINDOWPLACEMENT
@@ -983,7 +993,7 @@ _MUI_SysButtonInit ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; Main system button painting
+; _MUI_SysButtonPaint - System button painting
 ;-------------------------------------------------------------------------------------
 _MUI_SysButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 

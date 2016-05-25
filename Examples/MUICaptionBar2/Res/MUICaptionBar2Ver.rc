@@ -1,7 +1,7 @@
 #define VERINF1 1
 VERINF1 VERSIONINFO
-FILEVERSION 0,0,0,3
-PRODUCTVERSION 0,0,0,3
+FILEVERSION 0,0,0,4
+PRODUCTVERSION 0,0,0,4
 FILEOS 0x00000004
 FILETYPE 0x00000001
 BEGIN
@@ -9,12 +9,12 @@ BEGIN
   BEGIN
     BLOCK "040904B0"
     BEGIN
-      VALUE "FileVersion", "0.0.0.3\0"
+      VALUE "FileVersion", "0.0.0.4\0"
       VALUE "FileDescription", "MUICaptionBar Example #2\0"
       VALUE "InternalName", "MUICaptionBar2\0"
       VALUE "OriginalFilename", "MUICaptionBar2\0"
       VALUE "ProductName", "MUICaptionBar2\0"
-      VALUE "ProductVersion", "0.0.0.3\0"
+      VALUE "ProductVersion", "0.0.0.4\0"
     END
   END
   BLOCK "VarFileInfo"

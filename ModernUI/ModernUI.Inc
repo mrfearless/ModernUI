@@ -35,12 +35,14 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; PUBLIC ModernUI Prototypes for users of controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUIGetExtProperty                PROTO :DWORD, :DWORD                   ; hControl, dwProperty
-MUISetExtProperty                PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
-MUIGetIntProperty                PROTO :DWORD, :DWORD                   ; hControl, dwProperty
-MUISetIntProperty                PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
+MUIGetExtProperty               PROTO :DWORD, :DWORD                   ; hControl, dwProperty
+MUISetExtProperty               PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
+MUIGetIntProperty               PROTO :DWORD, :DWORD                   ; hControl, dwProperty
+MUISetIntProperty               PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
 
-MUIPointSizeToLogicalUnit        PROTO :DWORD, :DWORD                   ; hControl, dwPointSize
+MUIPointSizeToLogicalUnit       PROTO :DWORD, :DWORD                   ; hControl, dwPointSize
+MUIApplyToDialog                PROTO :DWORD, :DWORD                   ; hDialogWindow, dwDropShadow (true to set drop shadow)
+MUIPaintBackground              PROTO :DWORD, :DWORD, :DWORD           ; hDialogWindow, dwBackColor, dwBorderColor
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; PRIVATE ModernUI Prototypes for control creators to use with their controls

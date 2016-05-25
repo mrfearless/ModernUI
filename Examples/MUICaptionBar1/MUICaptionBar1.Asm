@@ -72,7 +72,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		pop hWnd
 		
 		; Create CaptionBar control via MUI api
-		Invoke MUICreateCaptionBar, hWin, Addr AppName, 32d, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
+		Invoke MUICaptionBarCreate, hWin, Addr AppName, 32d, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
 		mov hCaptionBar, eax
 		
 		; Set some properties for our CaptionBar control 
