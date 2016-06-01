@@ -333,6 +333,12 @@ MUIApplyToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
             Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
 	    .ENDIF
 	.ENDIF
+
+	; remove any menu that might have been assigned via class registration - for modern ui look
+	Invoke GetMenu, hWin
+	.IF eax != NULL
+	    Invoke SetMenu, hWin, NULL
+	.ENDIF
 	
     ret
 

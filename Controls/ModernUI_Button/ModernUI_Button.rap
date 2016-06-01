@@ -1,47 +1,45 @@
 [Project]
 Assembler=masm
 Type=LIB Project
-Description=ModernUI
+Description=ModernUI_Button
 Backup=$P\Bak\
 Group=1
 GroupExpand=1
-Debug=0
 [Files]
-1=ModernUI.Asm
-2=ModernUI.Inc
-3=
-4=
-5=
+1=ModernUI_Button.Asm
+2=ModernUI_Button.Inc
+3=Notes.txt
+4=Distribution\Readme.txt
 [MakeFiles]
-0=ModernUI.rap
-1=ModernUI.rc
-2=ModernUI.asm
-3=ModernUI.obj
-4=ModernUI.res
-5=ModernUI.exe
-6=ModernUI.def
-7=ModernUI.dll
-8=ModernUI.txt
-9=ModernUI.lib
-10=ModernUI.mak
-11=ModernUI.hla
-12=ModernUI.com
-13=ModernUI.ocx
-14=ModernUI.idl
-15=ModernUI.tlb
-16=ModernUI.sys
+0=ModernUI_Button.rap
+1=ModernUI_Button.rc
+2=ModernUI_Button.asm
+3=ModernUI_Button.obj
+4=ModernUI_Button.res
+5=ModernUI_Button.exe
+6=ModernUI_Button.def
+7=ModernUI_Button.dll
+8=ModernUI_Button.txt
+9=ModernUI_Button.lib
+10=ModernUI_Button.mak
+11=ModernUI_Button.hla
+12=ModernUI_Button.com
+13=ModernUI_Button.ocx
+14=ModernUI_Button.idl
+15=ModernUI_Button.tlb
+16=ModernUI_Button.sys
 [MakeDef]
 Menu=0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 1=4,O,$B\RC.EXE /v,1
-2=3,O,$B\ML.EXE /c /coff /Cp /nologo /I"M:\MASM32\Include" ModernUI.asm
-3=9,O,$B\LIB *.obj /out:ModernUI.lib
+2=3,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I",2
+3=9,O,$B\LIB /OUT:"$9",3
 4=0,0,,5
 5=rsrc.obj,O,$B\CVTRES.EXE,rsrc.res
-6=*.obj,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I",*.asm
+6=*.obj,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I",2
 7=0,0,"$E\x32dbg.exe",5
 11=4,O,$B\RC.EXE /v,1
 12=3,O,$B\ML.EXE /c /coff /Cp /Zi /Zd /nologo /I"$I",2
-13=9,O,$B\LIB.EXE,3
+13=9,O,$B\LIB.EXE /OUT:"$9",3
 14=0,0,,5
 15=rsrc.obj,O,$B\CVTRES.EXE,rsrc.res
 16=*.obj,O,$B\ML.EXE /c /coff /Cp /Zi /Zd /nologo /I"$I",*.asm
@@ -51,25 +49,19 @@ Menu=0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 [Accel]
 [VerInf]
 [Group]
-Group=Assembly
-1=1
-2=1
-3=
-4=
-5=
+Group=Distribuition,Modules,Assembly,Resources,Misc
+1=3
+2=3
+3=5
+4=1
+5=2
 [AutoLoad]
-AutoLoad=2,1
-[Size]
-5=
-4=
-3=
-2=0,0,0,0,2837
-1=0,0,0,0,11902
+AutoLoad=1,2
 [RADebugBP]
 1=
 2=
 [VersionControl]
-Settings=1278
+Settings=1279
 Milestones=129
 MilestoneEvery=10
 MilestoneEveryCurrent=0
@@ -81,10 +73,10 @@ MilestoneOnDateStatus=0
 MilestoneOnDateDate=1
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
-MilestoneOnDateTimeDate=16
-MilestoneOnDateTimeHour=22
-MilestoneOnDateTimeMin=4
-MilestoneOnDateTimeSec=35
+MilestoneOnDateTimeDate=30
+MilestoneOnDateTimeHour=20
+MilestoneOnDateTimeMin=45
+MilestoneOnDateTimeSec=12
 MilestoneOnDateTimeStatus=0
 BackupLocation=M:\radasm\Masm\Projects\VCBackups\
 CompressionLevel=0
@@ -102,12 +94,15 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=23650311
+PTimer=25869037
 [Collapse]
+1=524328,537133057,1048576,10502144,243269636,6
 2=
-1=1431453700,
+[Size]
+1=0,0,0,0,980
+2=0,0,0,0,6476
 [GroupExpand]
-GroupExpand=1,0
+GroupExpand=1,0,0,0,0,0
 [BookMark]
 0=
 1=
@@ -121,3 +116,7 @@ GroupExpand=1,0
 9=
 [BreakPoint]
 0=
+[Find]
+1="       EQU"
+2="       EQU 0    ; "
+3="    @Button"

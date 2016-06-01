@@ -1,0 +1,4 @@
+#include "Res/MUIButton1Mnu.rc"
+#include "Res/MUIButton1Ver.rc"
+#include "Res/MUIButton1Dlg.rc"
+#include "Res/MUIButton1Res.rc"
