@@ -9,7 +9,7 @@ option casemap:none
 include \masm32\macros\macros.asm
 
 ;DEBUG32 EQU 1
-
+;
 ;IFDEF DEBUG32
 ;    PRESERVEXMMREGS equ 1
 ;    includelib M:\Masm32\lib\Debug32.lib

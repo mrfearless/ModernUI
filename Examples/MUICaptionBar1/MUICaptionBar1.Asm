@@ -80,7 +80,15 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(228,228,228)
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(81,81,81)
 
-		
+    .ELSEIF eax == WM_ERASEBKGND
+        mov eax, 1
+        ret
+
+	.ELSEIF eax == WM_PAINT
+		invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(255,255,255), MUI_RGBCOLOR(51,51,51)
+		mov eax, 0
+		ret
+
 	.ELSEIF eax == WM_COMMAND
 		mov eax, wParam
 		and eax, 0FFFFh

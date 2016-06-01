@@ -85,6 +85,7 @@ MUIBS_CENTER                    EQU 4
 MUIBS_AUTOSTATE                 EQU 8
 MUIBS_PUSHBUTTON                EQU 10h
 MUIBS_HAND                      EQU 20h
+MUIBS_KEEPIMAGES                EQU 40h
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Button Properties: Use with MUIButtonSetProperty / MUIButtonGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs

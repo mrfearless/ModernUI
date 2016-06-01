@@ -116,10 +116,10 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=13396694
+PTimer=13830236
 [Size]
 4=0,0,0,0
-1=0,0,0,0,3253
+1=0,0,0,0,2960
 2=0,0,0,0,1383
 [Collapse]
 1=16

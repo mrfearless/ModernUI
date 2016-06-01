@@ -1,6 +1,6 @@
 ;======================================================================================================================================
 ;
-; ModernUI Library v1.0.0.0
+; ModernUI Library v0.0.0.4
 ;
 ; Copyright (c) 2016 by fearless
 ;
@@ -20,7 +20,7 @@
 option casemap:none
 
 ;DEBUG32 EQU 1
-
+;
 ;IFDEF DEBUG32
 ;    PRESERVEXMMREGS equ 1
 ;    includelib M:\Masm32\lib\Debug32.lib
@@ -91,9 +91,11 @@ MUI_gdipsi	                    GdiplusStartupInput	<1,0,0,0>
 ;-------------------------------------------------------------------------------------
 MUIGDIPlusStart PROC PUBLIC
     .IF MUI_GDIPLUS == 0
+        ;PrintText 'GdiplusStartup'
 	    Invoke GdiplusStartup, Addr MUI_GDIPlusToken, Addr MUI_gdipsi, NULL
 	.ENDIF
 	inc MUI_GDIPLUS
+	;PrintDec MUI_GDIPLUS
 	xor eax, eax
     ret
 MUIGDIPlusStart ENDP
@@ -104,8 +106,10 @@ MUIGDIPlusStart ENDP
 ; Placed after WinMain call before ExitProcess
 ;-------------------------------------------------------------------------------------
 MUIGDIPlusFinish PROC PUBLIC
+    ;PrintDec MUI_GDIPLUS
     dec MUI_GDIPLUS
     .IF MUI_GDIPLUS == 0
+        ;PrintText 'GdiplusShutdown'
         Invoke GdiplusShutdown, MUI_GDIPlusToken
     .ENDIF
     xor eax, eax

@@ -5,6 +5,7 @@ Description=ModernUI_Button
 Backup=$P\Bak\
 Group=1
 GroupExpand=1
+Debug=0
 [Files]
 1=ModernUI_Button.Asm
 2=ModernUI_Button.Inc
@@ -61,7 +62,7 @@ AutoLoad=1,2,3
 1=
 2=
 [VersionControl]
-Settings=1279
+Settings=1278
 Milestones=129
 MilestoneEvery=10
 MilestoneEveryCurrent=0
@@ -94,14 +95,14 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=37731010
+PTimer=42802680
 [Collapse]
-1=524330,4194369,16384,,18894880,205144064
+1=1048640,33554946,131072,16384,164096,4096,132004
 2=
 3=
 [Size]
-1=0,0,0,0,543
-2=0,0,0,0,6005
+1=0,0,0,0,27547
+2=0,0,0,0,6123
 3=0,0,0,0,5527
 [GroupExpand]
 GroupExpand=1,0,1,0,0,0

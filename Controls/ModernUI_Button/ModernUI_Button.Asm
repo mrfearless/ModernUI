@@ -65,6 +65,7 @@ _MUI_ButtonLoadIcon                         PROTO :DWORD, :DWORD, :DWORD
 _MUI_ButtonLoadPng                          PROTO :DWORD, :DWORD, :DWORD
 
 _MUI_ButtonGetImageSize                     PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_ButtonPngReleaseIStream                PROTO :DWORD
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Structures for internal use
@@ -129,6 +130,28 @@ _MUI_BUTTON_PROPERTIES				        STRUCT
 	dwImageDisabledStream                   DD ?
 	dwNotifyImageStream                     DD ?
 _MUI_BUTTON_PROPERTIES				        ENDS
+
+
+UNKNOWN STRUCT
+   QueryInterface   DWORD ?
+   AddRef           DWORD ?
+   Release          DWORD ?
+UNKNOWN ENDS
+
+IStream STRUCT
+IUnknown            UNKNOWN <>
+Read                DWORD ?
+Write               DWORD ?
+Seek                DWORD ?
+SetSize             DWORD ?
+CopyTo              DWORD ?
+Commit              DWORD ?
+Revert              DWORD ?
+LockRegion          DWORD ?
+UnlockRegion        DWORD ?
+Stat                DWORD ?
+Clone               DWORD ?
+IStream ENDS
 
 
 .CONST
@@ -284,7 +307,8 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         Invoke MUIFreeMemProperties, hWin, 0
 		Invoke MUIFreeMemProperties, hWin, 4
 		Invoke MUIGDIPlusFinish
-		
+		mov eax, 0
+		ret
         
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -626,33 +650,146 @@ _MUI_ButtonInit ENDP
 ; _MUI_ButtonCleanup - cleanup a few things before control is destroyed
 ;-------------------------------------------------------------------------------------
 _MUI_ButtonCleanup PROC PRIVATE hControl:DWORD
+    LOCAL ImageType:DWORD
+    LOCAL hIStreamImage:DWORD
+    LOCAL hIStreamImageAlt:DWORD
+    LOCAL hIStreamImageSel:DWORD
+    LOCAL hIStreamImageSelAlt:DWORD
+    LOCAL hIStreamImageDisabled:DWORD
+    LOCAL hIStreamNotify:DWORD
+    LOCAL hImage:DWORD
+    LOCAL hImageAlt:DWORD
+    LOCAL hImageSel:DWORD
+    LOCAL hImageSelAlt:DWORD
+    LOCAL hImageDisabled:DWORD
+    LOCAL hImageNotify:DWORD
+    LOCAL dwStyle:DWORD
     
+    Invoke GetWindowLong, hControl, GWL_STYLE
+    mov dwStyle, eax
+    and eax, MUIBS_KEEPIMAGES
+    .IF eax == MUIBS_KEEPIMAGES
+        ret
+    .ENDIF
+    
+    IFDEF DEBUG32
+    PrintText '_MUI_ButtonCleanup'
+    ENDIF
     ; cleanup any stream handles if png where loaded as resources
-    Invoke MUIGetIntProperty, hControl, @ButtonImageStream
-    .IF eax != 0
-        Invoke GlobalFree, eax
-    .ENDIF
-    Invoke MUIGetIntProperty, hControl, @ButtonImageAltStream
-    .IF eax != 0
-        Invoke GlobalFree, eax
-    .ENDIF
-    Invoke MUIGetIntProperty, hControl, @ButtonImageSelStream
-    .IF eax != 0
-        Invoke GlobalFree, eax
-    .ENDIF
-    Invoke MUIGetIntProperty, hControl, @ButtonImageSelAltStream
-    .IF eax != 0
-        Invoke GlobalFree, eax
-    .ENDIF
-    Invoke MUIGetIntProperty, hControl, @ButtonImageDisabledStream
-    .IF eax != 0
-        Invoke GlobalFree, eax
-    .ENDIF
-    Invoke MUIGetIntProperty, hControl, @ButtonNotifyImageStream
-    .IF eax != 0
-        Invoke GlobalFree, eax
+
+    .IF ImageType == 3
+        Invoke MUIGetIntProperty, hControl, @ButtonImageStream
+        mov hIStreamImage, eax
+        .IF eax != 0
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        Invoke MUIGetIntProperty, hControl, @ButtonImageAltStream
+        mov hIStreamImageAlt, eax
+        .IF eax != 0 && eax != hIStreamImage
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        Invoke MUIGetIntProperty, hControl, @ButtonImageSelStream
+        mov hIStreamImageSel, eax
+        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        Invoke MUIGetIntProperty, hControl, @ButtonImageSelAltStream
+        mov hIStreamImageSelAlt, eax
+        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        Invoke MUIGetIntProperty, hControl, @ButtonImageDisabledStream
+        mov hIStreamImageDisabled, eax
+        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel && eax != hIStreamImageSelAlt 
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        IFDEF DEBUG32
+        PrintText '_MUI_ButtonCleanup::IStream Handles cleared'
+        ENDIF        
     .ENDIF
 
+
+    Invoke MUIGetExtProperty, hControl, @ButtonImageType
+    mov ImageType, eax
+    .IF ImageType == 0
+        ret
+    .ENDIF
+    Invoke MUIGetExtProperty, hControl, @ButtonImage
+    mov hImage, eax
+    .IF eax != 0
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            Invoke GdipDisposeImage, eax
+        .ENDIF
+    .ENDIF
+    Invoke MUIGetExtProperty, hControl, @ButtonImageAlt
+    mov hImageAlt, eax
+    .IF eax != 0 && eax != hImage
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            Invoke GdipDisposeImage, eax
+        .ENDIF
+    .ENDIF    
+    Invoke MUIGetExtProperty, hControl, @ButtonImageSel
+    mov hImageSel, eax
+    .IF eax != 0 && eax != hImage && eax != hImageAlt
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            Invoke GdipDisposeImage, eax
+        .ENDIF
+    .ENDIF    
+    Invoke MUIGetExtProperty, hControl, @ButtonImageSelAlt
+    mov hImageSelAlt, eax
+    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            Invoke GdipDisposeImage, eax
+        .ENDIF
+    .ENDIF
+    Invoke MUIGetExtProperty, hControl, @ButtonImageDisabled
+    mov hImageDisabled, eax
+    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel && eax != hImageSelAlt
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            Invoke GdipDisposeImage, eax
+        .ENDIF
+    .ENDIF
+    
+
+       
+    IFDEF DEBUG32
+    PrintText '_MUI_ButtonCleanup::Image Handles cleared'
+    ENDIF
+    Invoke MUIGetExtProperty, hControl, @ButtonNotifyImageType
+    mov ImageType, eax
+    .IF ImageType == 0
+        ret
+    .ENDIF
+    Invoke MUIGetExtProperty, hControl, @ButtonNotifyImage
+    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel && eax != hImageSelAlt && eax != hImageDisabled
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            Invoke GdipDisposeImage, eax
+            
+            Invoke MUIGetIntProperty, hControl, @ButtonNotifyImageStream
+            .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel && eax != hIStreamImageSelAlt && eax != hIStreamImageDisabled
+                Invoke GlobalFree, eax
+            .ENDIF            
+            IFDEF DEBUG32
+            PrintText '_MUI_ButtonCleanup::Notify IStream Handle cleared'
+            ENDIF  
+        .ENDIF
+    .ENDIF
+    
+    IFDEF DEBUG32
+    PrintText '_MUI_ButtonCleanup::Notify Image Handles cleared'
+    ENDIF
     ret
 
 _MUI_ButtonCleanup ENDP
@@ -1692,6 +1829,15 @@ _MUI_ButtonGetImageSize PROC PRIVATE USES EBX hWin:DWORD, dwImageType:DWORD, hIm
                 mov [ebx], eax                
             .ENDIF
         .ENDIF
+        ; free up color and mask icons created by the GetIconInfo function
+        mov eax, iinfo.hbmColor
+        .IF eax != NULL
+            Invoke DeleteObject, eax
+        .ENDIF
+        mov eax, iinfo.hbmMask
+        .IF eax != NULL
+            Invoke DeleteObject, eax
+        .ENDIF
     
     .ELSEIF eax == MUIBIT_PNG ; png
         Invoke GdipGetImageWidth, hImage, Addr nImageWidth
@@ -1934,7 +2080,7 @@ _MUI_ButtonLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
-	Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0
+	Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
     Invoke MUISetExtProperty, hWin, dwProperty, eax
 
 	mov eax, TRUE
@@ -2012,7 +2158,7 @@ _MUI_ButtonLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
 	mov		pbuffer, eax
 	
 	invoke	RtlMoveMemory, pbuffer, hResData, sizeOfRes
-	invoke	CreateStreamOnHGlobal, pbuffer, FALSE, addr pIStream
+	invoke	CreateStreamOnHGlobal, pbuffer, TRUE, addr pIStream
 	or		eax, eax
 	jz		@f
 	jmp		_MUI_ButtonLoadPng@Close
@@ -2055,7 +2201,15 @@ _MUI_ButtonLoadPng@Close:
 _MUI_ButtonLoadPng endp
 
 
+_MUI_ButtonPngReleaseIStream PROC hIStream:DWORD
+    
+    mov eax, hIStream
+    push    eax
+    mov     eax,DWORD PTR [eax]
+    call    IStream.IUnknown.Release[eax]                               ; release the stream
+    ret
 
+_MUI_ButtonPngReleaseIStream ENDP
 
 
 

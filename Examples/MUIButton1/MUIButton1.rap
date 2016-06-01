@@ -7,6 +7,7 @@ Group=1
 GroupExpand=1
 Ver.rc=1
 Res.rc=1
+Debug=0
 [Files]
 1=MUIButton1.Asm
 2=MUIButton1.Inc
@@ -92,7 +93,7 @@ AutoLoad=2,1,4
 Settings=1279
 Milestones=129
 MilestoneEvery=10
-MilestoneEveryCurrent=8
+MilestoneEveryCurrent=9
 MilestoneOnBuild=0.0.0.0
 MilestoneOnTime=2
 MilestoneOnDate=0
@@ -122,12 +123,12 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=15557228
+PTimer=19407114
 [Collapse]
 1=
 2=
 [Size]
-1=0,0,0,0,6218
+1=0,0,0,0,4314
 2=0,0,0,0,1735
 4=0,0,0,0
 [GroupExpand]
