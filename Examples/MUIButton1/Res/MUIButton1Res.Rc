@@ -2,3 +2,7 @@
 1						MANIFEST  DISCARDABLE "MUIButton1.xml"
 100						ICON      DISCARDABLE "system_monitor.ico"
 101						ICON      DISCARDABLE "system_monitor_grey.ico"
+102						RCDATA    DISCARDABLE "chart_line.png"
+103						RCDATA    DISCARDABLE "chart_line_grey.png"
+104						BITMAP    DISCARDABLE "house.bmp"
+105						BITMAP    DISCARDABLE "house_grey.bmp"

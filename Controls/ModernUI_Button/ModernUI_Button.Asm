@@ -18,15 +18,15 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-DEBUG32 EQU 1
-
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;DEBUG32 EQU 1
+;
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include kernel32.inc
@@ -228,6 +228,7 @@ MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
 	LOCAL hControl:DWORD
+	LOCAL dwNewStyle:DWORD
 	
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
@@ -236,8 +237,15 @@ MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:
 	
     ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
 	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
+
+    mov eax, dwStyle
+    mov dwNewStyle, eax
+    and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+    .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        or dwNewStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+    .ENDIF
 	
-    Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
+    Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
 	mov hControl, eax
 	.IF eax != NULL
 		
@@ -317,7 +325,19 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         .ELSE
             Invoke InvalidateRect, hWin, NULL, TRUE
             Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED	
-        .ENDIF		
+        .ENDIF
+        
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, MUIBS_AUTOSTATE
+        .IF eax == MUIBS_AUTOSTATE
+            Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
+            .IF eax == FALSE
+	            Invoke MUISetIntProperty, hWin, @ButtonSelectedState, TRUE
+            .ELSE
+                Invoke MUISetIntProperty, hWin, @ButtonSelectedState, FALSE
+            .ENDIF
+            Invoke InvalidateRect, hWin, NULL, TRUE
+        .ENDIF
 
     .ELSEIF eax == WM_LBUTTONDOWN
         Invoke GetWindowLong, hWin, GWL_STYLE
@@ -535,11 +555,10 @@ _MUI_ButtonInit PROC PRIVATE hControl:DWORD
     mov dwStyle, eax
     and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-        mov eax, dwStyle
-        or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-        mov dwStyle, eax
+        or dwStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
     .ENDIF
+
     ;PrintDec dwStyle
     
     ; Set default initial external property values
@@ -597,7 +616,7 @@ _MUI_ButtonInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @ButtonTextFont, hMUIButtonFont
     Invoke MUISetExtProperty, hControl, @ButtonNotifyTextFont, hMUIButtonNotifyFont
     Invoke MUISetExtProperty, hControl, @ButtonNoteTextFont, hMUIButtonNoteFont
-
+    
     ret
 
 _MUI_ButtonInit ENDP
@@ -1151,10 +1170,6 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
     mov hOldFont, eax
     Invoke GetWindowText, hWin, Addr szText, sizeof szText
     
-;    lea eax, szText
-;    mov DbgVar, eax
-;    PrintStringByAddr DbgVar
-    
     Invoke SetBkMode, hdc, OPAQUE
     Invoke SetBkColor, hdc, BackColor    
     Invoke SetTextColor, hdc, TextColor
@@ -1175,17 +1190,8 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
     .ELSE ; center
         or dwTextStyle, DT_VCENTER
     .ENDIF
-;    
-;    PrintDec BackColor
-;    PrintDec TextColor
-;    
-;    PrintDec rect.left
-;    PrintDec rect.top
-;    PrintDec rect.right
-;    PrintDec rect.bottom
     
     Invoke DrawText, hdc, Addr szText, -1, Addr rect, dwTextStyle
-    
     
     .IF hOldFont != 0
         Invoke SelectObject, hdc, hOldFont
@@ -1193,7 +1199,6 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
     .ENDIF
     
     ; Draw notify text
-    
     Invoke MUIGetIntProperty, hWin, @ButtonNotifyState
     .IF eax == FALSE
         ret
@@ -1222,14 +1227,11 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
         sub eax, 4
         sub eax, sz.x
         mov rect.left, eax
-        
-        PrintDec rect.right
-        PrintDec rect.left
-        
+
         mov eax, rect.right
         mov ebx, rect.left
         sub eax, ebx
-        PrintDec eax
+
 ;        .IF eax < 28d
 ;            mov eax, rect.right
 ;            sub eax, 28d
@@ -1326,6 +1328,9 @@ _MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:
     LOCAL hNotifyImage:DWORD    
     LOCAL hdcMem:HDC
     LOCAL hbmOld:DWORD
+    LOCAL pGraphics:DWORD
+    LOCAL pGraphicsBuffer:DWORD
+    LOCAL pBitmap:DWORD
     LOCAL ImageWidth:DWORD
     LOCAL ImageHeight:DWORD
     LOCAL rect:RECT
@@ -1415,7 +1420,21 @@ _MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:
             Invoke DrawIconEx, hdcDest, pt.x, pt.y, hImage, 0, 0, 0, 0, DI_NORMAL
         
         .ELSEIF eax == 3 ; png
-        
+            Invoke GdipCreateFromHDC, hdcDest, Addr pGraphics
+            
+            Invoke GdipCreateBitmapFromGraphics, ImageWidth, ImageHeight, pGraphics, Addr pBitmap
+            Invoke GdipGetImageGraphicsContext, pBitmap, Addr pGraphicsBuffer            
+            Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
+            Invoke GdipDrawImageRectI, pGraphics, pBitmap, pt.x, pt.y, ImageWidth, ImageHeight
+            .IF pBitmap != NULL
+                Invoke GdipDisposeImage, pBitmap
+            .ENDIF
+            .IF pGraphicsBuffer != NULL
+                Invoke GdipDeleteGraphics, pGraphicsBuffer
+            .ENDIF
+            .IF pGraphics != NULL
+                Invoke GdipDeleteGraphics, pGraphics
+            .ENDIF
         
         .ENDIF
     
@@ -1486,7 +1505,21 @@ _MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:
             Invoke DrawIconEx, hdcDest, pt.x, pt.y, hNotifyImage, 0, 0, 0, 0, DI_NORMAL
         
         .ELSEIF eax == 3 ; png
-        
+            Invoke GdipCreateFromHDC, hdcMain, Addr pGraphics
+            
+            Invoke GdipCreateBitmapFromGraphics, ImageWidth, ImageHeight, pGraphics, Addr pBitmap
+            Invoke GdipGetImageGraphicsContext, pBitmap, Addr pGraphicsBuffer            
+            Invoke GdipDrawImageI, pGraphicsBuffer, hNotifyImage, 0, 0
+            Invoke GdipDrawImageRectI, pGraphics, pBitmap, pt.x, pt.y, ImageWidth, ImageHeight
+            .IF pBitmap != NULL
+                Invoke GdipDisposeImage, pBitmap
+            .ENDIF
+            .IF pGraphicsBuffer != NULL
+                Invoke GdipDeleteGraphics, pGraphicsBuffer
+            .ENDIF
+            .IF pGraphics != NULL
+                Invoke GdipDeleteGraphics, pGraphics
+            .ENDIF
         
         .ENDIF
     
@@ -1613,6 +1646,8 @@ _MUI_ButtonPaintBorder ENDP
 _MUI_ButtonGetImageSize PROC PRIVATE USES EBX hWin:DWORD, dwImageType:DWORD, hImage:DWORD, lpdwImageWidth:DWORD, lpdwImageHeight:DWORD
     LOCAL bm:BITMAP
     LOCAL iinfo:ICONINFO
+    LOCAL nImageWidth:DWORD
+    LOCAL nImageHeight:DWORD
 
     mov eax, dwImageType
     .IF eax == MUIBIT_NONE
@@ -1659,7 +1694,14 @@ _MUI_ButtonGetImageSize PROC PRIVATE USES EBX hWin:DWORD, dwImageType:DWORD, hIm
         .ENDIF
     
     .ELSEIF eax == MUIBIT_PNG ; png
-    
+        Invoke GdipGetImageWidth, hImage, Addr nImageWidth
+        Invoke GdipGetImageHeight, hImage, Addr nImageHeight
+        mov eax, nImageWidth
+        mov ebx, lpdwImageWidth
+        mov [ebx], eax
+        mov eax, nImageHeight
+        mov ebx, lpdwImageHeight
+        mov [ebx], eax
     .ENDIF
     
     mov eax, TRUE

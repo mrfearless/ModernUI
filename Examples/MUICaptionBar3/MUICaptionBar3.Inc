@@ -56,8 +56,8 @@ IDM_HELP_ABOUT			EQU 10101
 ; MUICaptionBar Initialized Data
 ;-----------------------------------------------------------------------------------------
 ClassName				DB 'DLGCLASS',0
-AppName					DB 'ModernUI_CaptionBar Example',0
-AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2014',0
+AppName					DB 'MUICaptionBar Example #3',0
+AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
 
 
 

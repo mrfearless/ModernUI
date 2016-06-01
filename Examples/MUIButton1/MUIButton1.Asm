@@ -44,7 +44,7 @@ WinMain proc hInst:HINSTANCE,hPrevInst:HINSTANCE,CmdLine:LPSTR,CmdShow:DWORD
 	LOCAL	msg:MSG
 
 	mov		wc.cbSize, sizeof WNDCLASSEX
-	mov		wc.style, 0 ;CS_HREDRAW or CS_VREDRAW
+	mov		wc.style, 0 ; not including CS_HREDRAW or CS_VREDRAW which helps prevent flickering
 	mov		wc.lpfnWndProc, offset WndProc
 	mov		wc.cbClsExtra, NULL
 	mov		wc.cbWndExtra, DLGWINDOWEXTRA
@@ -53,9 +53,8 @@ WinMain proc hInst:HINSTANCE,hPrevInst:HINSTANCE,CmdLine:LPSTR,CmdShow:DWORD
 	mov		wc.hbrBackground, COLOR_BTNFACE+1 ; COLOR_WINDOW+1
 	mov		wc.lpszMenuName, IDM_MENU
 	mov		wc.lpszClassName, offset ClassName
-	Invoke LoadIcon, NULL, IDI_APPLICATION
-	;Invoke LoadIcon, hInstance, ICO_MAIN ; resource icon for main application icon
-	;mov hIcoMain, eax ; main application icon
+	;Invoke LoadIcon, NULL, IDI_APPLICATION
+	Invoke LoadIcon, hInstance, ICO_SYSTEM ; resource icon for main application icon, in this case we use the example system icon
 	mov		wc.hIcon, eax
 	mov		wc.hIconSm, eax
 	Invoke LoadCursor, NULL, IDC_ARROW
@@ -85,7 +84,10 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		push hWin
 		pop hWnd
 		; Init Stuff Here
-		
+
+		;-----------------------------------------------------------------------------------------------------
+        ; ModernUI_CaptionBar Example - similar to the other example projects based on this control
+        ;-----------------------------------------------------------------------------------------------------
 		; Applies the ModernUI base style to the dialog, turning it into a borderless, caption less form
 		; we set our own caption and system buttons with the ModernUI_CaptionBar control
 		Invoke MUIApplyToDialog, hWin, TRUE
@@ -99,12 +101,17 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(61,61,61)
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(87,193,244)		
 		
-		; Create our ModernUI_Button control
-		Invoke MUIButtonCreate, hWin, Addr szButton1Text, 50, 50, 150, 38, IDC_BUTTON1, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+		;-----------------------------------------------------------------------------------------------------
+        ; ModernUI_Button Examples: Button1
+        ;-----------------------------------------------------------------------------------------------------
+		; Create our ModernUI_Button control using ICO images
+		Invoke MUIButtonCreate, hWin, Addr szButton1Text, 20, 50, 150, 38, IDC_BUTTON1, 0
 		mov hBtn1, eax
 		
+		; Load some images for when user moves mouse over button, or if its selected state changes
 		Invoke MUIButtonLoadImages, hBtn1, MUIBIT_ICO, ICO_SYSTEM_GREY, ICO_SYSTEM, ICO_SYSTEM, ICO_SYSTEM, ICO_SYSTEM_GREY
 		
+		; Set notification options for button - shows a little rounded rectangle on the right when text when button is 'notified' (MUIButtonNotify or MUIBM_NOTIFY)
 		Invoke MUIButtonSetProperty, hBtn1, @ButtonNotifyRound, 4
 		Invoke MUIButtonSetProperty, hBtn1, @ButtonNotifyTextColor, MUI_RGBCOLOR(255,255,255)
 		Invoke MUIButtonSetProperty, hBtn1, @ButtonNotifyBackColor, MUI_RGBCOLOR(166,26,32)
@@ -113,14 +120,44 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		; set timer to emulate check for messages or other notifications, then show notification in button via the WM_TIMER event
 		Invoke SetTimer, hWin, hWin, 5000d, NULL ; set for 5 seconds
 	
+		;-----------------------------------------------------------------------------------------------------
+        ; ModernUI_Button Examples: Button2
+        ;-----------------------------------------------------------------------------------------------------
+		; Create a second ModernUI_Button control that will use PNG images (stored as RC_DATA resources)
+		; additional style flags to emulate a button pressed down and up again and a hand when hovering over button
+		Invoke MUIButtonCreate, hWin, Addr szButton2Text, 20, 100, 150, 38, IDC_BUTTON2, WS_CHILD or WS_VISIBLE or MUIBS_HAND or MUIBS_PUSHBUTTON
+		mov hBtn2, eax
+	    
+	    ; Load some images for when user moves mouse over button, or if its selected state changes
+	    Invoke MUIButtonLoadImages, hBtn2, MUIBIT_PNG, PNG_CHART_GREY, PNG_CHART, PNG_CHART, PNG_CHART, PNG_CHART_GREY
+	    ; Note: the state of button2 is toggled everytime button1 is clicked: see WM_COMMAND for that
+
+		;-----------------------------------------------------------------------------------------------------
+        ; ModernUI_Button Examples: Button3
+        ;-----------------------------------------------------------------------------------------------------	    
+		; Create a third ModernUI_Button control that will use BMP images
+		; Style flags also used to create auto state, toggles between states when clicked
+		Invoke MUIButtonCreate, hWin, Addr szButton3Text, 20, 150, 150, 38, IDC_BUTTON3, WS_CHILD or WS_VISIBLE or MUIBS_HAND or MUIBS_PUSHBUTTON or MUIBS_AUTOSTATE
+		mov hBtn3, eax
+	    
+	    ; Load some images for when user moves mouse over button, or if its selected state changes
+	    Invoke MUIButtonLoadImages, hBtn3, MUIBIT_BMP, BMP_HOUSE_GREY, BMP_HOUSE, BMP_HOUSE_GREY, BMP_HOUSE, BMP_HOUSE_GREY
+	    
+	    ; Note: Bitmap buttons dont have transparency, so the house button in this example has been modified to match the grey color that appears when the mouse is over
+	    ; the control: RGB 221, 221, 221
+	    ; Icons and png use tranparency so they might be preferable when using with the ModernUI_Button control
+	    
+	
 	.ELSEIF eax == WM_TIMER
 	    mov eax, wParam
 	    .IF eax == hWin
 	        Invoke KillTimer, hWin, hWin
-	        Invoke MUIButtonNotify, hBtn1, TRUE
+	        Invoke MUIButtonNotify, hBtn1, TRUE ; Notify button1 to show our notification text and little colored rectangle
 	    .ENDIF
 		
-		
+	;---------------------------------------------------------------------------------------------------------------
+	; Handle painting of our dialog with our specified background and border color to mimic new Modern style UI feel
+	;---------------------------------------------------------------------------------------------------------------
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
         ret
@@ -129,8 +166,8 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(255,255,255), MUI_RGBCOLOR(27,161,226)
 		mov eax, 0
 		ret
-		
-		
+    ;---------------------------------------------------------------------------------------------------------------
+	
 	.ELSEIF eax == WM_COMMAND
 		mov eax, wParam
 		and eax, 0FFFFh
@@ -143,8 +180,17 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		.ELSEIF eax == IDC_BUTTON1
 		    ; clear notifications and reset timer for our example
 		    Invoke MUIButtonNotify, hBtn1, FALSE
-		    Invoke MessageBox, hWin, Addr szBtnClicked, Addr AppName, MB_OK
+		    ;Invoke MessageBox, hWin, Addr szBtnClicked, Addr AppName, MB_OK
 			Invoke SetTimer, hWin, hWin, 5000d, NULL ; set for 5 seconds
+			
+			; Toggle state on button2 everytime button1 is clicked
+			Invoke MUIButtonGetState, hBtn2
+			.IF eax == FALSE
+			    Invoke MUIButtonSetState, hBtn2, TRUE
+			.ELSE
+			    Invoke MUIButtonSetState, hBtn2, FALSE
+			.ENDIF
+			
 		.ENDIF
 
 	.ELSEIF eax == WM_CLOSE

@@ -50,7 +50,7 @@ IDM_HELP_ABOUT			EQU 10101
 ;-----------------------------------------------------------------------------------------
 ClassName				DB 'DLGCLASS',0
 AppName					DB 'MUICaptionBar Example #1',0
-AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2014',0
+AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
 
 
 

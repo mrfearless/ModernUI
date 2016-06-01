@@ -39,11 +39,17 @@ WndProc					PROTO :DWORD,:DWORD,:DWORD,:DWORD
 
 ICO_SYSTEM              EQU 100
 ICO_SYSTEM_GREY         EQU 101
+PNG_CHART               EQU 102
+PNG_CHART_GREY          EQU 103
+BMP_HOUSE               EQU 104
+BMP_HOUSE_GREY          EQU 105
 
 ; Main Dialog
 IDD_DIALOG				EQU 1000
 IDC_CAPTIONBAR          EQU 1001
 IDC_BUTTON1             EQU 1002
+IDC_BUTTON2             EQU 1003
+IDC_BUTTON3             EQU 1004
 
 ; Main Menu 
 IDM_MENU				EQU 10000
@@ -57,9 +63,11 @@ IDM_HELP_ABOUT			EQU 10101
 ; MUIButton1 Initialized Data
 ;-----------------------------------------------------------------------------------------
 ClassName				DB 'DLGCLASS',0
-AppName					DB 'LTLI Dialog',0
-AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2014',0
+AppName					DB 'MUIButton Example #1',0
+AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
 szButton1Text           DB 'Button 1',0
+szButton2Text           DB 'Button 2',0
+szButton3Text           DB 'Button 3',0
 szBtnClicked            DB 'Button 1 was clicked.',0
 szNotifyText            DB '23',0
 
@@ -74,7 +82,7 @@ CommandLine				DD ?
 hWnd					DD ?
 hCaptionBar             DD ?
 hBtn1                   DD ?
-
-
+hBtn2                   DD ?
+hBtn3                   DD ?
 
 
