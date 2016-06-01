@@ -100,8 +100,26 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(87,193,244)		
 		
 		; Create our ModernUI_Button control
-		Invoke MUIButtonCreate, hWin, Addr szButton1Text, 50, 50, 100, 33, IDC_BUTTON1, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+		Invoke MUIButtonCreate, hWin, Addr szButton1Text, 50, 50, 150, 38, IDC_BUTTON1, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
 		mov hBtn1, eax
+		
+		Invoke MUIButtonLoadImages, hBtn1, MUIBIT_ICO, ICO_SYSTEM_GREY, ICO_SYSTEM, ICO_SYSTEM, ICO_SYSTEM, ICO_SYSTEM_GREY
+		
+		Invoke MUIButtonSetProperty, hBtn1, @ButtonNotifyRound, 4
+		Invoke MUIButtonSetProperty, hBtn1, @ButtonNotifyTextColor, MUI_RGBCOLOR(255,255,255)
+		Invoke MUIButtonSetProperty, hBtn1, @ButtonNotifyBackColor, MUI_RGBCOLOR(166,26,32)
+		Invoke MUIButtonNotifySetText, hBtn1, Addr szNotifyText, FALSE
+		
+		; set timer to emulate check for messages or other notifications, then show notification in button via the WM_TIMER event
+		Invoke SetTimer, hWin, hWin, 5000d, NULL ; set for 5 seconds
+	
+	.ELSEIF eax == WM_TIMER
+	    mov eax, wParam
+	    .IF eax == hWin
+	        Invoke KillTimer, hWin, hWin
+	        Invoke MUIButtonNotify, hBtn1, TRUE
+	    .ENDIF
+		
 		
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -123,8 +141,10 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			Invoke ShellAbout,hWin,addr AppName,addr AboutMsg,NULL
 		
 		.ELSEIF eax == IDC_BUTTON1
+		    ; clear notifications and reset timer for our example
+		    Invoke MUIButtonNotify, hBtn1, FALSE
 		    Invoke MessageBox, hWin, Addr szBtnClicked, Addr AppName, MB_OK
-			
+			Invoke SetTimer, hWin, hWin, 5000d, NULL ; set for 5 seconds
 		.ENDIF
 
 	.ELSEIF eax == WM_CLOSE

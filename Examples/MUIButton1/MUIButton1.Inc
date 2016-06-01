@@ -36,6 +36,10 @@ WndProc					PROTO :DWORD,:DWORD,:DWORD,:DWORD
 ;-----------------------------------------------------------------------------------------
 ; MUIButton1 Constants
 ;-----------------------------------------------------------------------------------------
+
+ICO_SYSTEM              EQU 100
+ICO_SYSTEM_GREY         EQU 101
+
 ; Main Dialog
 IDD_DIALOG				EQU 1000
 IDC_CAPTIONBAR          EQU 1001
@@ -57,7 +61,7 @@ AppName					DB 'LTLI Dialog',0
 AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2014',0
 szButton1Text           DB 'Button 1',0
 szBtnClicked            DB 'Button 1 was clicked.',0
-
+szNotifyText            DB '23',0
 
 
 .DATA?

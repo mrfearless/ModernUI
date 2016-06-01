@@ -47,7 +47,7 @@ MUIButtonNotifySetText          PROTO :DWORD, :DWORD, :DWORD                    
 MUIButtonNotifyLoadImage        PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, dwImageType, dwResIDNotifyImage
 MUIButtonNotifySetImage         PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, dwImageType, hNotifyImage
 MUIButtonNotifySetFont          PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, hFont, bRedraw
-MUIButtonNotify                 PROTO :DWORD                                                            ; hModernUI_Button
+MUIButtonNotify                 PROTO :DWORD, :DWORD                                                    ; hModernUI_Button, bNotify
 
 MUIButtonNoteSetText            PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, lpszNoteText, bRedraw
 MUIButtonNoteSetFont            PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, hFont, bRedraw
@@ -70,7 +70,7 @@ MUIBM_NOTIFYSETTEXT             EQU WM_USER + 1777 ; wParam = lpszNotifyText, lP
 MUIBM_NOTIFYSETIMAGE            EQU WM_USER + 1776 ; wParam = dwImageType, lParam = Handle of Image
 MUIBM_NOTIFYLOADIMAGE           EQU WM_USER + 1775 ; wParam = dwImageType, lParam = ResourceID
 MUIBM_NOTIFYSETFONT             EQU WM_USER + 1774 ; wParam = hFont, lParam = TRUE/FALSE to redraw control
-MUIBM_NOTIFY                    EQU WM_USER + 1773 ; wParam = NULL, lParam = NULL
+MUIBM_NOTIFY                    EQU WM_USER + 1773 ; wParam = TRUE/FALSE to notify or clear notification, lParam = NULL
 
 MUIBM_NOTESETTEXT               EQU WM_USER + 1772 ; wParam = lpszNoteText, lParam = TRUE/FALSE to redraw control
 MUIBM_NOTESETFONT               EQU WM_USER + 1771 ; wParam = hFont, lParam = TRUE/FALSE to redraw control

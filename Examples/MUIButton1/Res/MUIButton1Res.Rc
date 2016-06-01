@@ -1,2 +1,4 @@
-#define MANIFEST 24
-1 MANIFEST DISCARDABLE "MUIButton1.xml"
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUIButton1.xml"
+100						ICON      DISCARDABLE "system_monitor.ico"
+101						ICON      DISCARDABLE "system_monitor_grey.ico"
