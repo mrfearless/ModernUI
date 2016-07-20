@@ -1,47 +1,45 @@
 [Project]
 Assembler=masm
 Type=LIB Project
-Description=ModernUI
+Description=ModernUI_ProgressBar
 Backup=$P\Bak\
 Group=1
 GroupExpand=1
-Debug=0
 [Files]
-1=ModernUI.Asm
-2=ModernUI.Inc
-3=
-4=
-5=
+1=ModernUI_ProgressBar.Asm
+2=ModernUI_ProgressBar.Inc
+3=Notes.txt
+4=Distribution\Readme.txt
 [MakeFiles]
-0=ModernUI.rap
-1=ModernUI.rc
-2=ModernUI.asm
-3=ModernUI.obj
-4=ModernUI.res
-5=ModernUI.exe
-6=ModernUI.def
-7=ModernUI.dll
-8=ModernUI.txt
-9=ModernUI.lib
-10=ModernUI.mak
-11=ModernUI.hla
-12=ModernUI.com
-13=ModernUI.ocx
-14=ModernUI.idl
-15=ModernUI.tlb
-16=ModernUI.sys
+0=ModernUI_ProgressBar.rap
+1=ModernUI_ProgressBar.rc
+2=ModernUI_ProgressBar.asm
+3=ModernUI_ProgressBar.obj
+4=ModernUI_ProgressBar.res
+5=ModernUI_ProgressBar.exe
+6=ModernUI_ProgressBar.def
+7=ModernUI_ProgressBar.dll
+8=ModernUI_ProgressBar.txt
+9=ModernUI_ProgressBar.lib
+10=ModernUI_ProgressBar.mak
+11=ModernUI_ProgressBar.hla
+12=ModernUI_ProgressBar.com
+13=ModernUI_ProgressBar.ocx
+14=ModernUI_ProgressBar.idl
+15=ModernUI_ProgressBar.tlb
+16=ModernUI_ProgressBar.sys
 [MakeDef]
 Menu=0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 1=4,O,$B\RC.EXE /v,1
-2=3,O,$B\ML.EXE /c /coff /Cp /nologo /I"M:\MASM32\Include" ModernUI.asm
-3=9,O,$B\LIB *.obj /out:ModernUI.lib
+2=3,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I",2
+3=9,O,$B\LIB /OUT:"$9",3
 4=0,0,,5
 5=rsrc.obj,O,$B\CVTRES.EXE,rsrc.res
-6=*.obj,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I",*.asm
+6=*.obj,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I",2
 7=0,0,"$E\x32dbg.exe",5
 11=4,O,$B\RC.EXE /v,1
 12=3,O,$B\ML.EXE /c /coff /Cp /Zi /Zd /nologo /I"$I",2
-13=9,O,$B\LIB.EXE,3
+13=9,O,$B\LIB.EXE /OUT:"$9",3
 14=0,0,,5
 15=rsrc.obj,O,$B\CVTRES.EXE,rsrc.res
 16=*.obj,O,$B\ML.EXE /c /coff /Cp /Zi /Zd /nologo /I"$I",*.asm
@@ -51,25 +49,19 @@ Menu=0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 [Accel]
 [VerInf]
 [Group]
-Group=Assembly
-1=1
-2=1
-3=
-4=
-5=
+Group=Distribuition,Modules,Assembly,Resources,Misc
+1=3
+2=3
+3=5
+4=1
+5=2
 [AutoLoad]
 AutoLoad=2,1
-[Size]
-5=
-4=
-3=
-2=0,0,0,0,165
-1=0,0,0,0,24527
 [RADebugBP]
 1=
 2=
 [VersionControl]
-Settings=1278
+Settings=1279
 Milestones=129
 MilestoneEvery=10
 MilestoneEveryCurrent=0
@@ -78,13 +70,13 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=19
+MilestoneOnDateDate=20
 MilestoneOnDateTimeYear=2016
-MilestoneOnDateTimeMonth=5
-MilestoneOnDateTimeDate=16
-MilestoneOnDateTimeHour=22
-MilestoneOnDateTimeMin=4
-MilestoneOnDateTimeSec=35
+MilestoneOnDateTimeMonth=7
+MilestoneOnDateTimeDate=19
+MilestoneOnDateTimeHour=14
+MilestoneOnDateTimeMin=55
+MilestoneOnDateTimeSec=58
 MilestoneOnDateTimeStatus=0
 BackupLocation=M:\radasm\Masm\Projects\VCBackups\
 CompressionLevel=0
@@ -102,12 +94,15 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=34731061
+PTimer=15403725
 [Collapse]
 2=
-1=67108864,11186112
+1=545262340,29
+[Size]
+2=0,0,0,0,2291
+1=0,0,0,0,9159
 [GroupExpand]
-GroupExpand=1,0
+GroupExpand=1,1,1,0,0,0
 [BookMark]
 0=
 1=

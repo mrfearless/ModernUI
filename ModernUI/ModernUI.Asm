@@ -19,6 +19,8 @@
 .model flat,stdcall
 option casemap:none
 
+MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
+
 ;DEBUG32 EQU 1
 ;
 ;IFDEF DEBUG32
@@ -34,12 +36,18 @@ include windows.inc
 include kernel32.inc
 include user32.inc
 include gdi32.inc
+
+IFDEF MUI_USEGDIPLUS
 include gdiplus.inc
+ENDIF
 
 includelib user32.lib
 includelib kernel32.lib
 includelib gdi32.lib
+
+IFDEF MUI_USEGDIPLUS
 includelib gdiplus.lib
+ENDIF
 
 include ModernUI.inc
 
@@ -62,12 +70,13 @@ _MUISetProperty                  PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hContr
 
 
 .DATA
+IFDEF MUI_USEGDIPLUS
 MUI_GDIPLUS                     DD 0 ; controls that use gdiplus check this first, if 0 they call gdi startup and inc the value
                                      ; controls that use gdiplus when destroyed decrement this value and check if 0. If 0 they call gdi finish
 
 MUI_GDIPlusToken	            DD 0
 MUI_gdipsi	                    GdiplusStartupInput	<1,0,0,0>
-
+ENDIF
 
 .CODE
 
@@ -89,6 +98,7 @@ MUI_gdipsi	                    GdiplusStartupInput	<1,0,0,0>
 ; Start of ModernUI framework (wrapper for gdiplus startup)
 ; Placed at start of program before WinMain call
 ;-------------------------------------------------------------------------------------
+IFDEF MUI_USEGDIPLUS
 MUIGDIPlusStart PROC PUBLIC
     .IF MUI_GDIPLUS == 0
         ;PrintText 'GdiplusStartup'
@@ -99,12 +109,13 @@ MUIGDIPlusStart PROC PUBLIC
 	xor eax, eax
     ret
 MUIGDIPlusStart ENDP
-
+ENDIF
 
 ;-------------------------------------------------------------------------------------
 ; Finish ModernUI framework (wrapper for gdiplus shutdown)
 ; Placed after WinMain call before ExitProcess
 ;-------------------------------------------------------------------------------------
+IFDEF MUI_USEGDIPLUS
 MUIGDIPlusFinish PROC PUBLIC
     ;PrintDec MUI_GDIPLUS
     dec MUI_GDIPLUS
@@ -115,7 +126,7 @@ MUIGDIPlusFinish PROC PUBLIC
     xor eax, eax
     ret
 MUIGDIPlusFinish ENDP
-
+ENDIF
 
 ;-------------------------------------------------------------------------------------
 ; Gets the pointer to memory allocated to control at startup and stored in cbWinExtra
@@ -416,17 +427,396 @@ MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWOR
     .ENDIF
     invoke ReleaseDC, hWin, hdc
     invoke EndPaint, hWin, addr ps
+    mov eax, 0
     ret
 
 MUIPaintBackground ENDP
 
 
+;-------------------------------------------------------------------------------------
+; Same as MUIPaintBackground, but with an image (dwImageType 0=none, 1=bmp, 2=ico)
+; dwImageLocation: 0=center center, 1=bottom left, 2=bottom right, 3=top left, 
+; 4=top right, 5=center top, 6=center bottom
+;-------------------------------------------------------------------------------------
+MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD, hImage:DWORD, dwImageType:DWORD, dwImageLocation:DWORD
+	LOCAL ps:PAINTSTRUCT
+	LOCAL hdc:HDC
+    LOCAL rect:RECT
+    LOCAL pt:POINT
+    LOCAL hdcMem:DWORD
+    LOCAL hdcMemBmp:DWORD
+    LOCAL hbmMem:DWORD
+    LOCAL hbmMemBmp:DWORD
+    LOCAL hOldBitmap:DWORD
+    LOCAL hBrush:DWORD
+    LOCAL ImageWidth:DWORD
+    LOCAL ImageHeight:DWORD
+    LOCAL pGraphics:DWORD
+    LOCAL pGraphicsBuffer:DWORD
+    LOCAL pBitmap:DWORD
+    
+    .IF dwImageType == MUIIT_PNG
+        mov pGraphics, 0
+        mov pGraphicsBuffer, 0
+        mov pBitmap, 0
+    .ENDIF
+    
+	invoke BeginPaint, hWin, addr ps
+	mov	hdc, eax
+    Invoke GetClientRect, hWin, Addr rect
+    Invoke CreateCompatibleDC, hdc
+    mov hdcMem, eax
+   	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+   	mov hbmMem, eax
+   	Invoke SelectObject, hdcMem, hbmMem
+  	mov hOldBitmap, eax 
+
+    Invoke GetStockObject, DC_BRUSH
+    mov hBrush, eax
+    Invoke SelectObject, hdcMem, eax
+    Invoke SetDCBrushColor, hdcMem, dwBackcolor
+    Invoke FillRect, hdcMem, Addr rect, hBrush
+
+    .IF dwBorderColor != 0
+        Invoke GetStockObject, DC_BRUSH
+        mov hBrush, eax
+        Invoke SelectObject, hdcMem, eax
+        Invoke SetDCBrushColor, hdcMem, dwBorderColor
+        Invoke FrameRect, hdcMem, Addr rect, hBrush
+    .ENDIF
+    
+    .IF hImage != NULL
+        ;----------------------------------------
+        ; Calc left and top of image based on 
+        ; client rect and image width and height
+        ;----------------------------------------
+        Invoke MUIGetImageSize, hImage, dwImageType, Addr ImageWidth, Addr ImageHeight
+
+        mov eax, dwImageLocation
+        .IF eax == MUIIL_CENTER
+            mov eax, rect.right
+            shr eax, 1
+            mov ebx, ImageWidth
+            shr ebx, 1
+            sub eax, ebx
+            mov pt.x, eax
+                    
+            mov eax, rect.bottom
+            shr eax, 1
+            mov ebx, ImageHeight
+            shr ebx, 1
+            sub eax, ebx
+            mov pt.y, eax
+        
+        .ELSEIF eax == MUIIL_BOTTOMLEFT
+            mov pt.x, 1
+            
+            mov eax, rect.bottom
+            mov ebx, ImageHeight
+            sub eax, ebx
+            dec eax
+            mov pt.y, eax
+        
+        .ELSEIF eax == MUIIL_BOTTOMRIGHT
+            mov eax, rect.right
+            mov ebx, ImageWidth
+            sub eax, ebx
+            dec eax
+            mov pt.x, eax
+                    
+            mov eax, rect.bottom
+            mov ebx, ImageHeight
+            sub eax, ebx
+            dec eax
+            mov pt.y, eax        
+        
+        .ELSEIF eax == MUIIL_TOPLEFT
+            mov pt.x, 1
+            mov pt.y, 1
+        
+        .ELSEIF eax == MUIIL_TOPRIGHT
+            mov eax, rect.right
+            mov ebx, ImageWidth
+            sub eax, ebx
+            dec eax
+            mov pt.x, eax        
+        
+        .ELSEIF eax == MUIIL_TOPCENTER
+            mov pt.x, 1
+
+            mov eax, rect.bottom
+            shr eax, 1
+            mov ebx, ImageHeight
+            shr ebx, 1
+            sub eax, ebx
+            mov pt.y, eax            
+        
+        .ELSEIF eax == MUIIL_BOTTOMCENTER
+            mov eax, rect.right
+            shr eax, 1
+            mov ebx, ImageWidth
+            shr ebx, 1
+            sub eax, ebx
+            mov pt.x, eax
+                    
+            mov eax, rect.bottom
+            mov ebx, ImageHeight
+            sub eax, ebx
+            dec eax
+            mov pt.y, eax
+        
+        .ENDIF
+        
+        ;----------------------------------------
+        ; Draw image depending on what type it is
+        ;----------------------------------------
+        mov eax, dwImageType
+        .IF eax == MUIIT_NONE
+            
+        .ELSEIF eax == MUIIT_BMP
+            Invoke CreateCompatibleDC, hdc
+            mov hdcMemBmp, eax
+            Invoke SelectObject, hdcMemBmp, hImage
+            mov hbmMemBmp, eax
+            Invoke BitBlt, hdcMem, pt.x, pt.y, ImageWidth, ImageHeight, hdcMemBmp, 0, 0, SRCCOPY
+            Invoke SelectObject, hdcMemBmp, hbmMemBmp
+            Invoke DeleteDC, hdcMemBmp
+            .IF hbmMemBmp != 0
+                Invoke DeleteObject, hbmMemBmp
+            .ENDIF
+
+        .ELSEIF eax == MUIIT_ICO
+            Invoke DrawIconEx, hdcMem, pt.x, pt.y, hImage, 0, 0, NULL, NULL, DI_NORMAL
+        
+        .ELSEIF eax == MUIIT_PNG
+            IFDEF MUI_USEGDIPLUS
+            Invoke GdipCreateFromHDC, hdcMem, Addr pGraphics
+            
+            Invoke GdipCreateBitmapFromGraphics, ImageWidth, ImageHeight, pGraphics, Addr pBitmap
+            Invoke GdipGetImageGraphicsContext, pBitmap, Addr pGraphicsBuffer            
+            Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
+            Invoke GdipDrawImageRectI, pGraphics, pBitmap, pt.x, pt.y, ImageWidth, ImageHeight
+            .IF pBitmap != NULL
+                Invoke GdipDisposeImage, pBitmap
+            .ENDIF
+            .IF pGraphicsBuffer != NULL
+                Invoke GdipDeleteGraphics, pGraphicsBuffer
+            .ENDIF
+            .IF pGraphics != NULL
+                Invoke GdipDeleteGraphics, pGraphics
+            .ENDIF
+            ENDIF
+        .ENDIF
+        
+    .ENDIF
+    
+    Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+
+    Invoke SelectObject, hdcMem, hbmMem
+    Invoke DeleteObject, hbmMem
+    Invoke DeleteDC, hdcMem
+    Invoke DeleteObject, hOldBitmap
+    .IF hBrush != 0
+        Invoke DeleteObject, hBrush
+    .ENDIF
+    invoke ReleaseDC, hWin, hdc
+    invoke EndPaint, hWin, addr ps
+    mov eax, 0
+    ret
+
+MUIPaintBackgroundImage ENDP
 
 
 
+;-------------------------------------------------------------------------------------
+; MUIGetImageSize
+;-------------------------------------------------------------------------------------
+MUIGetImageSize PROC PRIVATE USES EBX hImage:DWORD, dwImageType:DWORD, lpdwImageWidth:DWORD, lpdwImageHeight:DWORD
+    LOCAL bm:BITMAP
+    LOCAL iinfo:ICONINFO
+    LOCAL nImageWidth:DWORD
+    LOCAL nImageHeight:DWORD
+
+    mov eax, dwImageType
+    .IF eax == MUIIT_NONE
+        mov eax, 0
+        mov ebx, lpdwImageWidth
+        mov [ebx], eax
+        mov ebx, lpdwImageHeight
+        mov [ebx], eax    
+        mov eax, FALSE
+        ret
+        
+    .ELSEIF eax == MUIIT_BMP ; bitmap/icon
+        Invoke GetObject, hImage, SIZEOF bm, Addr bm
+        mov eax, bm.bmWidth
+        mov ebx, lpdwImageWidth
+        mov [ebx], eax
+        mov eax, bm.bmHeight
+        mov ebx, lpdwImageHeight
+        mov [ebx], eax
+    
+    .ELSEIF eax == MUIIT_ICO ; icon    
+        Invoke GetIconInfo, hImage, Addr iinfo ; get icon information
+        mov eax, iinfo.hbmColor ; bitmap info of icon has width/height
+        .IF eax != NULL
+            Invoke GetObject, iinfo.hbmColor, SIZEOF bm, Addr bm
+            mov eax, bm.bmWidth
+            mov ebx, lpdwImageWidth
+            mov [ebx], eax
+            mov eax, bm.bmHeight
+            mov ebx, lpdwImageHeight
+            mov [ebx], eax
+        .ELSE ; Icon has no color plane, image width/height data stored in mask
+            mov eax, iinfo.hbmMask
+            .IF eax != NULL
+                Invoke GetObject, iinfo.hbmMask, SIZEOF bm, Addr bm
+                mov eax, bm.bmWidth
+                mov ebx, lpdwImageWidth
+                mov [ebx], eax
+                mov eax, bm.bmHeight
+                shr eax, 1 ;bmp.bmHeight / 2;
+                mov ebx, lpdwImageHeight
+                mov [ebx], eax                
+            .ENDIF
+        .ENDIF
+        ; free up color and mask icons created by the GetIconInfo function
+        mov eax, iinfo.hbmColor
+        .IF eax != NULL
+            Invoke DeleteObject, eax
+        .ENDIF
+        mov eax, iinfo.hbmMask
+        .IF eax != NULL
+            Invoke DeleteObject, eax
+        .ENDIF
+    
+    .ELSEIF eax == MUIIT_PNG ; png
+        IFDEF MUI_USEGDIPLUS
+        Invoke GdipGetImageWidth, hImage, Addr nImageWidth
+        Invoke GdipGetImageHeight, hImage, Addr nImageHeight
+        mov eax, nImageWidth
+        mov ebx, lpdwImageWidth
+        mov [ebx], eax
+        mov eax, nImageHeight
+        mov ebx, lpdwImageHeight
+        mov [ebx], eax
+        ENDIF
+    .ENDIF
+    
+    mov eax, TRUE
+    ret
+
+MUIGetImageSize ENDP
 
 
+;--------------------------------------------------------------------------------------------------------------------
+; Dynamically allocates or resizes a memory location based on items in a structure and the size of the structure
+;
+; StructMemPtr is an address to receive the pointer to memory location of the base structure in memory.
+; StructMemPtr can be NULL if TotalItems are 0. Otherwise it must contain the address of the base structure in memory
+; if the memory is to be increased, TotalItems > 0
+; ItemSize is typically SIZEOF structure to be allocated (this function calcs for you the size * TotalItems)
+; If StructMemPtr is NULL then memory object is initialized to the size of total items * itemsize and pointer to mem
+; is returned in eax.
+; On return eax contains the pointer to the new structure item or -1 if there was a problem alloc'ing memory.
+;--------------------------------------------------------------------------------------------------------------------
+MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, ItemSize:DWORD
+    LOCAL StructDataOffset:DWORD
+    LOCAL StructSize:DWORD
+    LOCAL StructData:DWORD
+    
+    ;PrintText 'AllocStructureMemory'
+    .IF TotalItems == 0
+        Invoke GlobalAlloc, GMEM_FIXED+GMEM_ZEROINIT, ItemSize ;
+        .IF eax != NULL
+            mov StructData, eax
+            mov ebx, dwPtrStructMem
+            mov [ebx], eax ; save pointer to memory alloc'd for structure
+            mov StructDataOffset, 0 ; save offset for new entry
+            ;IFDEF DEBUG32
+            ;    PrintDec StructData
+            ;ENDIF
+        .ELSE
+            IFDEF DEBUG32
+            PrintText '_AllocStructureMemory::Mem error GlobalAlloc'
+            ENDIF
+            mov eax, -1
+            ret
+        .ENDIF
+    .ELSE
+        
+        .IF dwPtrStructMem != NULL
+        
+            ; calc new size to grow structure and offset to new entry
+            mov eax, TotalItems
+            inc eax
+            mov ebx, ItemSize
+            mul ebx
+            mov StructSize, eax ; save new size to alloc mem for
+            mov ebx, ItemSize
+            sub eax, ebx
+            mov StructDataOffset, eax ; save offset for new entry
+            
+            mov ebx, dwPtrStructMem ; get value from addr of passed dword dwPtrStructMem into eax, this is our pointer to previous mem location of structure
+            mov eax, [ebx]
+            mov StructData, eax
+            ;IFDEF DEBUG32
+            ;    PrintDec StructData
+            ;    PrintDec StructSize
+            ;ENDIF
+            
+            .IF TotalItems >= 2
+                Invoke GlobalUnlock, StructData
+            .ENDIF
+            Invoke GlobalReAlloc, StructData, StructSize, GMEM_ZEROINIT + GMEM_MOVEABLE ; resize memory for structure
+            .IF eax != NULL
+                ;PrintDec eax
+                Invoke GlobalLock, eax
+                mov StructData, eax
+                
+                mov ebx, dwPtrStructMem
+                mov [ebx], eax ; save new pointer to memory alloc'd for structure back to dword address passed as dwPtrStructMem
+            .ELSE
+                IFDEF DEBUG32
+                PrintText '_AllocStructureMemory::Mem error GlobalReAlloc'
+                ENDIF
+                mov eax, -1
+                ret
+            .ENDIF
+        
+        .ELSE ; initialize structure size to the size specified by items * size
+            
+            ; calc size of structure
+            mov eax, TotalItems
+            mov ebx, ItemSize
+            mul ebx
+            mov StructSize, eax ; save new size to alloc mem for        
+            Invoke GlobalAlloc, GMEM_FIXED+GMEM_ZEROINIT, StructSize ;GMEM_FIXED+GMEM_ZEROINIT
+            .IF eax != NULL
+                mov StructData, eax
+                ;mov ebx, dwPtrStructMem ; alloc memory so dont return anything to this as it was null when we got it
+                ;mov [ebx], eax ; save pointer to memory alloc'd for structure
+                mov StructDataOffset, 0 ; save offset for new entry
+                ;IFDEF DEBUG32
+                ;    PrintDec StructData
+                ;ENDIF
+            .ELSE
+                IFDEF DEBUG32
+                PrintText '_AllocStructureMemory::Mem error GlobalAlloc'
+                ENDIF
+                mov eax, -1
+                ret
+            .ENDIF
+        .ENDIF
+    .ENDIF
 
+    ; calc entry to new item, (base address of memory alloc'd for structure + size of mem for new structure size - size of structure item)
+    ;PrintText 'AllocStructureMemory END'
+    mov eax, StructData
+    add eax, StructDataOffset
+    
+    ret
+MUIAllocStructureMemory endp
 
 
 

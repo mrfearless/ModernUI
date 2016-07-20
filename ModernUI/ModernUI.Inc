@@ -1,6 +1,6 @@
 ;======================================================================================================================================
 ;
-; ModernUI Library v0.0.0.4
+; ModernUI Library v0.0.0.5
 ;
 ; Copyright (c) 2016 by fearless
 ;
@@ -43,6 +43,9 @@ MUISetIntProperty               PROTO :DWORD, :DWORD, :DWORD           ; hContro
 MUIPointSizeToLogicalUnit       PROTO :DWORD, :DWORD                   ; hControl, dwPointSize
 MUIApplyToDialog                PROTO :DWORD, :DWORD                   ; hDialogWindow, dwDropShadow (true to set drop shadow)
 MUIPaintBackground              PROTO :DWORD, :DWORD, :DWORD           ; hDialogWindow, dwBackColor, dwBorderColor
+MUIPaintBackgroundImage         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hDialogWindow, dwBackColor, dwBorderColor, hImage, dwImageType, dwImageLocation
+
+MUIGetImageSize                 PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hImage, dwImageType, lpdwImageWidth, lpdwImageHeight
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; PRIVATE ModernUI Prototypes for control creators to use with their controls
@@ -53,6 +56,7 @@ MUIGDIPlusFinish                PROTO                                  ; Wrapper
 MUIAllocMemProperties           PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwSizeToAllocate
 MUIFreeMemProperties            PROTO :DWORD, :DWORD                   ; hControl, cbWndExtraOffset
 
+MUIAllocStructureMemory         PROTO :DWORD, :DWORD, :DWORD           ; dwPtrStructMem, TotalItems, ItemSize
 
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -75,9 +79,20 @@ MUI_SETPROPERTY                 EQU WM_USER + 1799                      ; wParam
 ;MUI_SETTHEME                    EQU WM_USER + 1797                      ; wParam = lpMUITHEMEStructure, lParam = NULL
 
 
+; Image Types
+MUIIT_NONE                      EQU 0
+MUIIT_BMP                       EQU 1
+MUIIT_ICO                       EQU 2
+MUIIT_PNG                       EQU 3
 
-
-
+; Image Locations
+MUIIL_CENTER                    EQU 0
+MUIIL_BOTTOMLEFT                EQU 1
+MUIIL_BOTTOMRIGHT               EQU 2
+MUIIL_TOPLEFT                   EQU 3
+MUIIL_TOPRIGHT                  EQU 4
+MUIIL_TOPCENTER                 EQU 5
+MUIIL_BOTTOMCENTER              EQU 6
 
 
 
@@ -86,13 +101,18 @@ MUI_ARGBCOLOR MACRO alpha, red, green, blue
     EXITM < alpha SHL 24 OR red SHL 16 OR green SHL 8 OR blue >
 ENDM
 
-; ModernUI Red Green Blue Macro
-MUI_RGBCOLOR macro r:REQ,g:REQ,b:REQ
-    exitm <( ( ( ( r )  or  ( ( ( g ) )  shl  8 ) )  or  ( ( ( b ) )  shl  16 ) ) ) >
+AlphaRGB MACRO alpha, red, green, blue
+    EXITM < alpha SHL 24 OR red SHL 16 OR green SHL 8 OR blue >
 ENDM
 
+; ModernUI Red Green Blue Macro
+MUI_RGBCOLOR MACRO red:REQ, green:REQ, blue:REQ
+    EXITM < red or green shl 8 or blue shl 16 >
+ENDM
 
-
+RGB MACRO red:REQ, green:REQ, blue:REQ
+    EXITM < red or green shl 8 or blue shl 16 >
+ENDM
 
 
 

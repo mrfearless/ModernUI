@@ -1,0 +1,7 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUICaptionBar4.xml"
+100						ICON      DISCARDABLE "Images/ModernUI.ico"
+101						ICON      DISCARDABLE "Images/mui_minimize_lower_10x10.ico"
+102						ICON      DISCARDABLE "Images/mui_maximize_10x10.ico"
+103						ICON      DISCARDABLE "Images/mui_restore_10x10.ico"
+104						ICON      DISCARDABLE "Images/mui_close_10x10.ico"
