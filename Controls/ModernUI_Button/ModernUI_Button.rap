@@ -71,7 +71,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=1
+MilestoneOnDateDate=22
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=30
@@ -95,15 +95,15 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=42802680
+PTimer=117182602
 [Collapse]
-1=1048640,33554946,131072,16384,164096,4096,132004
+1=73,1610745848,1,131074,1024,,134217732,536870992,488636418,16
 2=
 3=
 [Size]
-1=0,0,0,0,27547
-2=0,0,0,0,6123
-3=0,0,0,0,5527
+1=0,0,0,0,58538
+2=0,0,0,0,14198
+3=0,0,0,0,458
 [GroupExpand]
 GroupExpand=1,0,1,0,0,0
 [BookMark]
@@ -120,6 +120,11 @@ GroupExpand=1,0,1,0,0,0
 [BreakPoint]
 0=
 [Find]
-1="       EQU"
-2="       EQU 0    ; "
-3="    @Button"
+1="@ButtonPaddingGeneral"
+2="_MUI_ButtonGetImageSize"
+3="MUIBS_KEEPIMAGES"
+4="DD ? "
+5="CreateFont"
+6="       EQU"
+7="       EQU 0    ; "
+8="    @Button"

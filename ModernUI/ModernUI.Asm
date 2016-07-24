@@ -1,6 +1,6 @@
 ;======================================================================================================================================
 ;
-; ModernUI Library v0.0.0.4
+; ModernUI Library v0.0.0.5
 ;
 ; Copyright (c) 2016 by fearless
 ;
@@ -181,7 +181,7 @@ _MUISetProperty ENDP
 ;-------------------------------------------------------------------------------------
 ; Allocs memory for the properties of a control
 ;-------------------------------------------------------------------------------------
-MUIAllocMemProperties PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwSize:DWORD
+MUIAllocMemProperties PROC PUBLIC hControl:DWORD, cbWndExtraOffset:DWORD, dwSize:DWORD
     LOCAL pMem:DWORD
     Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, dwSize
     .IF eax == NULL
@@ -200,7 +200,7 @@ MUIAllocMemProperties ENDP
 ;-------------------------------------------------------------------------------------
 ; Frees memory for the properties of a control
 ;-------------------------------------------------------------------------------------
-MUIFreeMemProperties PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD
+MUIFreeMemProperties PROC PUBLIC hControl:DWORD, cbWndExtraOffset:DWORD
     Invoke GetWindowLong, hControl, cbWndExtraOffset
     .IF eax != NULL
         invoke GlobalFree, eax
@@ -221,7 +221,7 @@ MUIFreeMemProperties ENDP
 ;-------------------------------------------------------------------------------------
 ; Gets external property value and returns it in eax
 ;-------------------------------------------------------------------------------------
-MUIGetExtProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD
+MUIGetExtProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke _MUIGetProperty, hControl, 4, dwProperty ; get external properties
     ret
 MUIGetExtProperty ENDP
@@ -230,7 +230,7 @@ MUIGetExtProperty ENDP
 ;-------------------------------------------------------------------------------------
 ; Sets external property value and returns previous value in eax.
 ;-------------------------------------------------------------------------------------
-MUISetExtProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUISetExtProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke _MUISetProperty, hControl, 4, dwProperty, dwPropertyValue ; set external properties
     ret
 MUISetExtProperty ENDP
@@ -239,7 +239,7 @@ MUISetExtProperty ENDP
 ;-------------------------------------------------------------------------------------
 ; Gets internal property value and returns it in eax
 ;-------------------------------------------------------------------------------------
-MUIGetIntProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD
+MUIGetIntProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke _MUIGetProperty, hControl, 0, dwProperty ; get internal properties
     ret
 MUIGetIntProperty ENDP
@@ -248,7 +248,7 @@ MUIGetIntProperty ENDP
 ;-------------------------------------------------------------------------------------
 ; Sets internal property value and returns previous value in eax.
 ;-------------------------------------------------------------------------------------
-MUISetIntProperty PROC PUBLIC USES EBX hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUISetIntProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke _MUISetProperty, hControl, 0, dwProperty, dwPropertyValue ; set internal properties
     ret
 MUISetIntProperty ENDP
@@ -578,7 +578,11 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
             mov hdcMemBmp, eax
             Invoke SelectObject, hdcMemBmp, hImage
             mov hbmMemBmp, eax
-            Invoke BitBlt, hdcMem, pt.x, pt.y, ImageWidth, ImageHeight, hdcMemBmp, 0, 0, SRCCOPY
+            dec rect.right
+            dec rect.bottom
+            Invoke BitBlt, hdcMem, pt.x, pt.y, rect.right, rect.bottom, hdcMemBmp, 0, 0, SRCCOPY ;ImageWidth, ImageHeight
+            inc rect.right
+            inc rect.bottom
             Invoke SelectObject, hdcMemBmp, hbmMemBmp
             Invoke DeleteDC, hdcMemBmp
             .IF hbmMemBmp != 0
@@ -586,7 +590,8 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
             .ENDIF
 
         .ELSEIF eax == MUIIT_ICO
-            Invoke DrawIconEx, hdcMem, pt.x, pt.y, hImage, 0, 0, NULL, NULL, DI_NORMAL
+            Invoke DrawIconEx, hdcMem, pt.x, pt.y, hImage, 0, 0, NULL, NULL, DI_NORMAL ; 0, 0,
+
         
         .ELSEIF eax == MUIIT_PNG
             IFDEF MUI_USEGDIPLUS
@@ -595,7 +600,11 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
             Invoke GdipCreateBitmapFromGraphics, ImageWidth, ImageHeight, pGraphics, Addr pBitmap
             Invoke GdipGetImageGraphicsContext, pBitmap, Addr pGraphicsBuffer            
             Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
-            Invoke GdipDrawImageRectI, pGraphics, pBitmap, pt.x, pt.y, ImageWidth, ImageHeight
+            dec rect.right
+            dec rect.bottom               
+            Invoke GdipDrawImageRectI, pGraphics, pBitmap, pt.x, pt.y, rect.right, rect.bottom ;ImageWidth, ImageHeight
+            inc rect.right
+            inc rect.bottom               
             .IF pBitmap != NULL
                 Invoke GdipDisposeImage, pBitmap
             .ENDIF

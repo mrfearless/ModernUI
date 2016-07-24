@@ -44,9 +44,6 @@ include ModernUI_SmartPanel.inc
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUISmartPanelSetProperty	            PROTO :DWORD, :DWORD, :DWORD											   ; hModernUI_SmartPanel, dwProperty, dwPropertyValue
-MUISmartPanelGetProperty	            PROTO :DWORD, :DWORD													   ; hModernUI_SmartPanel, dwProperty
-
 _MUI_SmartPanelWndProc					PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_SmartPanelInit					    PROTO :DWORD
 _MUI_SmartPanelCleanup					PROTO :DWORD
@@ -62,7 +59,7 @@ _MUI_SmartPanelSlidePanelsRight         PROTO :DWORD, :DWORD, :DWORD, :DWORD
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; External public properties
 MUI_SMARTPANEL_PROPERTIES				STRUCT
-	dwReserved                          DD ?
+	dwlDllInstance                      DD ?
 MUI_SMARTPANEL_PROPERTIES				ENDS
 
 ; Internal properties
@@ -315,6 +312,7 @@ _MUI_SmartPanelInit PROC PRIVATE hControl:DWORD
     Invoke MUISetIntProperty, hControl, @SmartPanelTotalPanels, 0
     Invoke MUISetIntProperty, hControl, @SmartPanelPanelsArray, 0
     Invoke MUISetIntProperty, hControl, @SmartPanellpdwIsDlgMsgVar, 0
+    Invoke MUISetExtProperty, hControl, @SmartPanelDllInstance, 0
     ret
 
 _MUI_SmartPanelInit ENDP
@@ -356,7 +354,10 @@ MUISmartPanelRegisterPanel PROC PRIVATE USES EBX hControl:DWORD, idPanelDlg:DWOR
     LOCAL pItemDataEntry:DWORD
     LOCAL TotalItems:DWORD
 
-    Invoke GetModuleHandle, NULL
+    Invoke MUIGetExtProperty, hControl, @SmartPanelDllInstance
+    .IF eax == 0
+        Invoke GetModuleHandle, NULL
+    .ENDIF
     mov hinstance, eax
 
     Invoke MUIGetIntProperty, hControl, @SmartPanelTotalPanels

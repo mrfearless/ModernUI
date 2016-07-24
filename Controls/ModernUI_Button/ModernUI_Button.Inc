@@ -1,6 +1,6 @@
 ;======================================================================================================================================
 ;
-; ModernUI Control - ModernUI_Button v1.0.0.0
+; ModernUI Control - ModernUI_Button v0.0.0.4
 ;
 ; Copyright (c) 2016 by fearless
 ;
@@ -52,9 +52,63 @@ MUIButtonNotify                 PROTO :DWORD, :DWORD                            
 MUIButtonNoteSetText            PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, lpszNoteText, bRedraw
 MUIButtonNoteSetFont            PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, hFont, bRedraw
 
+MUIButtonSetAllProperties       PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, lpMUI_BUTTON_PROPERTIES structure, SIZEOF MUI_BUTTON_PROPERTIES
+
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Button Structures
 ;--------------------------------------------------------------------------------------------------------------------------------------
+MUI_BUTTON_PROPERTIES           STRUCT
+    dwTextFont                  DD ?       ; hFont
+    dwTextColor                 DD ?       ; Colorref
+    dwTextColorAlt              DD ?       ; Colorref
+    dwTextColorSel              DD ?       ; Colorref
+    dwTextColorSelAlt           DD ?       ; Colorref
+    dwTextColorDisabled         DD ?       ; Colorref
+    dwBackColor                 DD ?       ; Colorref
+    dwBackColorAlt              DD ?       ; Colorref
+    dwBackColorSel              DD ?       ; Colorref
+    dwBackColorSelAlt           DD ?       ; Colorref
+    dwBackColorDisabled         DD ?       ; Colorref
+    dwBorderColor               DD ?       ; Colorref
+    dwBorderColorAlt            DD ?       ; Colorref
+    dwBorderColorSel            DD ?       ; Colorref
+    dwBorderColorSelAlt         DD ?       ; Colorref
+    dwBorderColorDisabled       DD ?       ; Colorref
+    dwBorderStyle               DD ?       ; Button Border Styles
+    dwAccentColor               DD ?       ; Colorref
+    dwAccentColorAlt            DD ?       ; Colorref
+    dwAccentColorSel            DD ?       ; Colorref
+    dwAccentColorSelAlt         DD ?       ; Colorref
+    dwAccentStyle               DD ?       ; Button Accent Styles
+    dwAccentStyleAlt            DD ?       ; Button Accent Styles
+    dwAccentStyleSel            DD ?       ; Button Accent Styles
+    dwAccentStyleSelAlt         DD ?       ; Button Accent Styles
+    dwImageType                 DD ?       ; hImage
+    dwImage                     DD ?       ; hImage - Left or center image
+    dwImageAlt                  DD ?       ; hImage - Left or center image
+    dwImageSel                  DD ?       ; hImage - Left or center image
+    dwImageSelAlt               DD ?       ; hImage - Left or center image
+    dwImageDisabled             DD ?       ; hImage - Left or center image
+	dwRightImage                DD ?       ; hImage - Right side image
+	dwRightImageAlt             DD ?       ; hImage - Right side image
+	dwRightImageSel             DD ?       ; hImage - Right side image
+	dwRightImageSelAlt          DD ?       ; hImage - Right side image
+	dwRightImageDisabled        DD ?       ; hImage - Right side image
+    dwNotifyTextFont            DD ?       ; hFont
+    dwNotifyTextColor           DD ?       ; Colorref
+    dwNotifyBackColor           DD ?       ; Colorref
+    dwNotifyRound               DD ?       ; Roundrect x,y value
+    dwNotifyImageType           DD ?       ; Button Image Types
+    dwNotifyImage               DD ?       ; hImage
+    dwButtonNoteTextFont        DD ?       ; hFont
+    dwButtonNoteTextColor       DD ?       ; Colorref
+    dwButtonNoteTextColorDisabled DD ?     ; Colorref
+    dwButtonPaddingLeftIndent   DD ?       ; 
+    dwButtonPaddingGeneral      DD ?       ; 
+    dwButtonPaddingStyle        DD ?       ; 
+    dwButtonPaddingTextImage    DD ?       ; 
+MUI_BUTTON_PROPERTIES			ENDS
+
 
 
 .CONST
@@ -79,59 +133,70 @@ MUIBM_NOTESETFONT               EQU WM_USER + 1771 ; wParam = hFont, lParam = TR
 
 
 ; ModernUI_Button Styles
-MUIBS_LEFT                      EQU 1 
-MUIBS_BOTTOM                    EQU 2
-MUIBS_CENTER                    EQU 4
-MUIBS_AUTOSTATE                 EQU 8
-MUIBS_PUSHBUTTON                EQU 10h
-MUIBS_HAND                      EQU 20h
-MUIBS_KEEPIMAGES                EQU 40h
+MUIBS_LEFT                      EQU 1       ; Align text to the left of the button
+MUIBS_BOTTOM                    EQU 2       ; Place image at the top, and text below
+MUIBS_CENTER                    EQU 4       ; Align text centerally.
+MUIBS_AUTOSTATE                 EQU 8       ; Automatically toggle between TRUE/FALSE state when clicked. TRUE = Selected.
+MUIBS_PUSHBUTTON                EQU 10h     ; Simulate button movement down slightly when mouse click and movement up again when mouse is released.
+MUIBS_HAND                      EQU 20h     ; Show a hand instead of an arrow when mouse moves over button.
+MUIBS_KEEPIMAGES                EQU 40h     ; Dont delete image handles when control is destoyed. Essential if image handles are used in multiple controls.
+MUIBS_DROPDOWN                  EQU 80h     ; Show dropdown arrow right side of control
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Button Properties: Use with MUIButtonSetProperty / MUIButtonGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
 
 
-@ButtonTextFont                 EQU 0    ; 
-@ButtonTextColor                EQU 4    ; 
-@ButtonTextColorAlt             EQU 8    ; 
-@ButtonTextColorSel             EQU 12    ; 
-@ButtonTextColorSelAlt          EQU 16    ; 
-@ButtonTextColorDisabled        EQU 20    ; 
-@ButtonBackColor                EQU 24    ; 
-@ButtonBackColorAlt             EQU 28    ; 
-@ButtonBackColorSel             EQU 32    ; 
-@ButtonBackColorSelAlt          EQU 36    ; 
-@ButtonBackColorDisabled        EQU 40    ; 
-@ButtonBorderColor              EQU 44    ; 
-@ButtonBorderColorAlt           EQU 48    ; 
-@ButtonBorderColorSel           EQU 52    ; 
-@ButtonBorderColorSelAlt        EQU 56    ; 
-@ButtonBorderColorDisabled      EQU 60    ; 
-@ButtonBorderStyle              EQU 64    ; 
-@ButtonAccentColor              EQU 68    ; 
-@ButtonAccentColorAlt           EQU 72    ; 
-@ButtonAccentColorSel           EQU 76    ; 
-@ButtonAccentColorSelAlt        EQU 80    ; 
-@ButtonAccentStyle              EQU 84    ; 
-@ButtonAccentStyleAlt           EQU 88    ; 
-@ButtonAccentStyleSel           EQU 92    ; 
-@ButtonAccentStyleSelAlt        EQU 96    ; 
-@ButtonImageType                EQU 100    ; 0 = none, 1 = bitmap, 2 = icon, 3 = png
-@ButtonImage                    EQU 104    ; 
-@ButtonImageAlt                 EQU 108    ; 
-@ButtonImageSel                 EQU 112    ; 
-@ButtonImageSelAlt              EQU 116    ; 
-@ButtonImageDisabled            EQU 120    ; 
-@ButtonNotifyTextFont           EQU 124    ; 
-@ButtonNotifyTextColor          EQU 128    ; 
-@ButtonNotifyBackColor          EQU 132    ; 
-@ButtonNotifyRound              EQU 136    ; 
-@ButtonNotifyImageType          EQU 140    ; 
-@ButtonNotifyImage              EQU 144    ; 
-@ButtonNoteTextFont             EQU 148    
-@ButtonNoteTextColor            EQU 152
-@ButtonNoteTextColorDisabled    EQU 156
+@ButtonTextFont                 EQU 0       ; hFont
+@ButtonTextColor                EQU 4       ; Colorref
+@ButtonTextColorAlt             EQU 8       ; Colorref
+@ButtonTextColorSel             EQU 12      ; Colorref
+@ButtonTextColorSelAlt          EQU 16      ; Colorref
+@ButtonTextColorDisabled        EQU 20      ; Colorref
+@ButtonBackColor                EQU 24      ; Colorref
+@ButtonBackColorAlt             EQU 28      ; Colorref
+@ButtonBackColorSel             EQU 32      ; Colorref
+@ButtonBackColorSelAlt          EQU 36      ; Colorref
+@ButtonBackColorDisabled        EQU 40      ; Colorref
+@ButtonBorderColor              EQU 44      ; Colorref
+@ButtonBorderColorAlt           EQU 48      ; Colorref
+@ButtonBorderColorSel           EQU 52      ; Colorref
+@ButtonBorderColorSelAlt        EQU 56      ; Colorref
+@ButtonBorderColorDisabled      EQU 60      ; Colorref
+@ButtonBorderStyle              EQU 64      ; Button Border Styles - Either MUIBBS_NONE, MUIBBS_ALL or a combination of MUIBBS_LEFT, MUIBBS_TOP, MUIBBS_BOTTOM, MUIBBS_RIGHT
+@ButtonAccentColor              EQU 68      ; Colorref
+@ButtonAccentColorAlt           EQU 72      ; Colorref
+@ButtonAccentColorSel           EQU 76      ; Colorref
+@ButtonAccentColorSelAlt        EQU 80      ; Colorref
+@ButtonAccentStyle              EQU 84      ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
+@ButtonAccentStyleAlt           EQU 88      ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
+@ButtonAccentStyleSel           EQU 92      ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
+@ButtonAccentStyleSelAlt        EQU 96      ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
+@ButtonImageType                EQU 100     ; Button Image Types - One of the following: MUIBIT_NONE, MUIBIT_BMP, MUIBIT_ICO or MUIBIT_PNG
+@ButtonImage                    EQU 104     ; hImage
+@ButtonImageAlt                 EQU 108     ; hImage
+@ButtonImageSel                 EQU 112     ; hImage
+@ButtonImageSelAlt              EQU 116     ; hImage
+@ButtonImageDisabled            EQU 120     ; hImage
+@ButtonRightImage               EQU 124     ; hImage - Right side image
+@ButtonRightImageAlt            EQU 128     ; hImage - Right side image
+@ButtonRightImageSel            EQU 132     ; hImage - Right side image
+@ButtonRightImageSelAlt         EQU 136     ; hImage - Right side image
+@ButtonRightImageDisabled       EQU 140     ; hImage - Right side image
+@ButtonNotifyTextFont           EQU 144     ; hFont
+@ButtonNotifyTextColor          EQU 148     ; Colorref
+@ButtonNotifyBackColor          EQU 152     ; Colorref
+@ButtonNotifyRound              EQU 156     ; dwPixels - Roundrect x,y value
+@ButtonNotifyImageType          EQU 160     ; Button Image Types - One of the following: MUIBIT_NONE, MUIBIT_BMP, MUIBIT_ICO or MUIBIT_PNG
+@ButtonNotifyImage              EQU 164     ; hImage
+@ButtonNoteTextFont             EQU 168     ; hFont
+@ButtonNoteTextColor            EQU 172     ; Colorref
+@ButtonNoteTextColorDisabled    EQU 176     ; Colorref
+@ButtonPaddingLeftIndent        EQU 180     ; dwPixels - No of pixels to indent images + text (or just text if no images). Defaults to 0 when control is created
+@ButtonPaddingGeneral           EQU 184     ; dwPixels - No of pixels of padding to apply based on @ButtonPaddingStyle: Defaults to 4px when control is created.
+@ButtonPaddingStyle             EQU 188     ; Button Padding Style - Where to apply @ButtonPaddingGeneral: defaults to MUIBPS_ALL when control is created
+@ButtonPaddingTextImage         EQU 192     ; dwPixels - No of pixels between left images and text. Defaults to 8 when control is created
+@ButtonDllInstance              EQU 196     ; Set to hInstance of dll before calling MUIButtonLoadImages or MUIButtonNotifyLoadImage if used within a dll
 
 ; Button Border Styles
 MUIBBS_NONE                     EQU 0
@@ -156,6 +221,18 @@ MUIBIT_BMP                      EQU 1
 MUIBIT_ICO                      EQU 2
 MUIBIT_PNG                      EQU 3
 
+; Button Padding Styles
+MUIBPS_NONE                     EQU 0
+MUIBPS_LEFT                     EQU 1
+MUIBPS_TOP                      EQU 2
+MUIBPS_BOTTOM                   EQU 4
+MUIBPS_RIGHT                    EQU 8
+MUIBPS_ALL                      EQU MUIBPS_LEFT + MUIBPS_TOP + MUIBPS_BOTTOM + MUIBPS_RIGHT
 
 
+.DATA
+; Button All Properties Themes
 
+MUI_BUTTON_DEFAULT_THEME        MUI_BUTTON_PROPERTIES <0,333333h,333333h,333333h,333333h,0CCCCCCh,0FFFFFFh,0DDDDDDh,0FFFFFFh,0DDDDDDh,0C0C0C0h,0CCCCCCh,0CCCCCCh,0E2A11Bh,0E2A11Bh,0CCCCCCh,MUIBBS_ALL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0333333h,0FFFFFFh,4,0,0,0,0,0CCCCCCh,0,4,MUIBPS_ALL,8>
+MUI_BUTTON_LIGHT_THEME          MUI_BUTTON_PROPERTIES <>
+MUI_BUTTON_DARK_THEME           MUI_BUTTON_PROPERTIES <>

@@ -18,7 +18,7 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-DEBUG32 EQU 1
+;DEBUG32 EQU 1
 
 IFDEF DEBUG32
     PRESERVEXMMREGS equ 1
@@ -48,6 +48,7 @@ _MUI_ProgressBarWndProc					PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ProgressBarInit					PROTO :DWORD
 _MUI_ProgressBarPaint					PROTO :DWORD
 _MUI_ProgressBarCalcWidth               PROTO :DWORD, :DWORD
+
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Structures for internal use
@@ -203,8 +204,7 @@ _MUI_ProgressBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
         Invoke _MUI_ProgressBarPaint, hWin
         mov eax, 0
         ret
-
-
+    
 	; custom messages start here
 	
 	.ELSEIF eax == MUI_GETPROPERTY
@@ -285,6 +285,8 @@ _MUI_ProgressBarInit PROC PRIVATE hControl:DWORD
         Invoke DeleteObject, hFont
     .ENDIF
     Invoke MUISetExtProperty, hControl, @ProgressBarTextFont, hMUIProgressBarFont
+
+    ;Invoke _MUI_ProgressBarCalcIncrementRemainder, hControl
 
     ret
 
@@ -440,17 +442,15 @@ _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
     ret
 _MUI_ProgressBarPaint ENDP
 
-
 ;-------------------------------------------------------------------------------------
 ; _MUI_ProgressBarCalcWidth
 ;-------------------------------------------------------------------------------------
-_MUI_ProgressBarCalcWidth PROC USES EBX EDX hControl:DWORD, dwPercent:DWORD
+_MUI_ProgressBarCalcWidth PROC USES EBX ECX EDX hControl:DWORD, dwPercent:DWORD
     LOCAL rect:RECT
-    LOCAL pcent:DWORD
-    LOCAL dwWidth:SDWORD
-    LOCAL dwWidthIncrement:DWORD
     LOCAL dwProgressWidth:DWORD
-    
+    LOCAL dwWidth:DWORD
+    LOCAL nTmp:DWORD
+
     Invoke GetWindowRect, hControl, Addr rect
     
     mov eax, rect.right
@@ -458,46 +458,19 @@ _MUI_ProgressBarCalcWidth PROC USES EBX EDX hControl:DWORD, dwPercent:DWORD
     sub eax, ebx
     mov dwWidth, eax
 
-    .IF sdword ptr dwWidth < 100
+    mov nTmp, 100
 
-        mov eax,dwWidth
-        mov edx,0CCCCCCCDh
-        mul edx
-        shr edx,03h
-        ; edx = quotient
-        mov dwWidthIncrement, edx
-
-        mov eax,dwPercent
-        mov edx,0CCCCCCCDh
-        mul edx
-        shr edx,03h
-        ; edx = quotient
-        mov pcent, edx
-        
-        mov eax, dwWidthIncrement
-        mov ebx, pcent
-        mul ebx
-        
-        mov dwProgressWidth, eax
-
-    .ELSE ; div by 100
-
-        mov eax, dwWidth
-        mov edx,051EB851Fh
-        mul edx
-        shr edx,05h
-        mov dwWidthIncrement, edx
-        
-        mov eax, dwWidthIncrement
-        mov ebx, dwPercent
-        mul ebx
-        
-        mov dwProgressWidth, eax
-
-    .ENDIF
-    ; int width = (int)((percent / 100) * this.Width);
+    finit
+    fild dwWidth
+    fild nTmp
+    fdiv
+    fld st
+    fild dwPercent
+    fmul
+    fistp dwProgressWidth
     
-    ;Invoke MUISetIntProperty, hControl, @ProgressBarWidth, dwProgressWidth
+    ;PrintDec dwPercent
+    ;PrintDec dwProgressWidth
     
     mov eax, dwProgressWidth
     ret
@@ -581,8 +554,12 @@ MUIProgressBarSetPercent PROC hControl:DWORD, dwPercent:DWORD
         Invoke MUISetExtProperty, hControl, @ProgressBarPercent, dwNewPercent        
         Invoke UpdateWindow, hControl
     .ENDIF
+    
+    mov eax, dwNewPercent
+    
     ret
 MUIProgressBarSetPercent ENDP
+
 
 ;-------------------------------------------------------------------------------------
 ; 
@@ -634,6 +611,7 @@ MUIProgressBarStep PROC hControl:DWORD
         Invoke MUISetExtProperty, hControl, @ProgressBarPercent, dwNewPercent
 
     .ENDIF
+    mov eax, dwNewPercent
     ;PrintDec dwNewPercent
     
     ret

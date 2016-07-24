@@ -46,7 +46,9 @@ include ModernUI_CaptionBar.inc
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-_MUI_CreateCaptionBarWndProc				PROTO :DWORD, :DWORD, :DWORD, :DWORD
+
+
+_MUI_CaptionBarWndProc				        PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CaptionBarInit                         PROTO :DWORD
 _MUI_CaptionBarPaint					    PROTO :DWORD
 _MUI_CaptionBarReposition                   PROTO :DWORD
@@ -83,6 +85,7 @@ MUI_CAPTIONBAR_PROPERTIES				    STRUCT
 	dwBtnIcoResAlt                          DD ?
 	dwBtnIcoClose                           DD ?
 	dwBtnIcoCloseAlt                        DD ?
+	dwDllInstance                           DD ?
 MUI_CAPTIONBAR_PROPERTIES				    ENDS
 
 ; CaptionBar Internal Poperties
@@ -305,6 +308,8 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
             Invoke ShowWindow, eax, SW_MINIMIZE
             ret
         .ENDIF
+        xor eax, eax
+        ret
 
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -510,6 +515,7 @@ _MUI_CaptionBarInit PROC PRIVATE hCaptionBar:DWORD
     Invoke MUISetExtProperty, hCaptionBar, @CaptionBarBackColor, MUI_RGBCOLOR(21,133,181)
     Invoke MUISetExtProperty, hCaptionBar, @CaptionBarBtnWidth, MUI_SYSBUTTON_WIDTH ;32d
     Invoke MUISetExtProperty, hCaptionBar, @CaptionBarBtnHeight, MUI_SYSBUTTON_HEIGHT ;28d
+    Invoke MUISetExtProperty, hCaptionBar, @CaptionBarDllInstance, 0
     
     .IF hMUICaptionBarFont == 0
     	mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
@@ -1526,7 +1532,10 @@ MUICaptionBarLoadIcons PROC PUBLIC hCaptionBar:DWORD, idResMin:DWORD, idResMinAl
     LOCAL hSysButtonRes:DWORD
     LOCAL hSysButtonMin:DWORD
     
-    Invoke GetModuleHandle, NULL
+    Invoke MUIGetExtProperty, hCaptionBar, @CaptionBarDllInstance
+    .IF eax == 0
+        Invoke GetModuleHandle, NULL
+    .ENDIF
     mov hinstance, eax
     
     .IF idResMin != NULL || idResMinAlt != NULL

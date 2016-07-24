@@ -38,7 +38,7 @@ MUICaptionBarCreate		    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndP
 MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hCaptionBar, dwProperty, dwPropertyValue
 MUICaptionBarGetProperty    PROTO :DWORD, :DWORD                            ; hCaptionBar, dwProperty
 MUICaptionBarLoadIcons      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
-MUICaptionBarLoadIconsDll   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, hInstance, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt   
+MUICaptionBarLoadIconsDll   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, hInstance, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Caption Structures
@@ -82,6 +82,6 @@ MUICS_NOCAPTIONTITLETEXT    EQU 400h ; Dont draw a title text value, use lpszCap
 @CaptionBarBtnIcoResAlt     EQU 48  ; hIcon for restore button when mouse moves over button
 @CaptionBarBtnIcoClose      EQU 52  ; hIcon for close button
 @CaptionBarBtnIcoCloseAlt   EQU 56  ; hIcon for close button when mouse moves over button
-@CaptionBarResourceInstance EQU 60  ; hInstance for loading resources (icons) - normally set to 0 (current module) but when resources are in a dll set this before calling MUICaptionBarLoadIcons
+@CaptionBarDllInstance      EQU 60  ; hInstance for loading resources (icons) - normally set to 0 (current module) but when resources are in a dll set this before calling MUICaptionBarLoadIcons
 
 

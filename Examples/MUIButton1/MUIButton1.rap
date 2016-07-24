@@ -7,7 +7,7 @@ Group=1
 GroupExpand=1
 Ver.rc=1
 Res.rc=1
-Debug=0
+Debug=1
 [Files]
 1=MUIButton1.Asm
 2=MUIButton1.Inc
@@ -99,7 +99,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=1
+MilestoneOnDateDate=11
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=31
@@ -123,13 +123,13 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=19407114
+PTimer=24949969
 [Collapse]
 1=
 2=
 [Size]
-1=0,0,0,0,4314
-2=0,0,0,0,1735
+1=0,0,0,0,5357
+2=0,0,0,0,436
 4=0,0,0,0
 [GroupExpand]
 GroupExpand=1,0,1,0

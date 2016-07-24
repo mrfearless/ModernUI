@@ -35,7 +35,8 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 MUISmartPanelRegister		   PROTO																   ; Use 'ModernUI_SmartPanel' as class in RadASM custom class control
 MUISmartPanelCreate		       PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD        	   ; hWndParent, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
-
+MUISmartPanelSetProperty	   PROTO :DWORD, :DWORD, :DWORD											   ; hModernUI_SmartPanel, dwProperty, dwPropertyValue
+MUISmartPanelGetProperty	   PROTO :DWORD, :DWORD													   ; hModernUI_SmartPanel, dwProperty
 
 MUISmartPanelGetCurrentPanel   PROTO :DWORD                                                            ; hModernUI_SmartPanel
 MUISmartPanelSetCurrentPanel   PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_SmartPanel, PanelIndex, bNotify
@@ -95,7 +96,7 @@ MUISPS_SPS_WRAPAROUND           EQU 10h ; for next/prev and showcase, if at end,
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_SmartPanel Properties: Use with MUIModernUI_SmartPanelSetProperty / MUIModernUI_SmartPanelGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
-
+@SmartPanelDllInstance          EQU 0
 
 
 
