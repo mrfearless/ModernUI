@@ -533,12 +533,13 @@ _MUI_CaptionBarInit PROC PRIVATE hCaptionBar:DWORD
 
     Invoke _MUI_CreateCaptionBarSysButtons, hCaptionBar, hParent
     
-    mov eax, dwStyle
-    and eax, MUICS_NOMAXBUTTON
-    .IF eax != MUICS_NOMAXBUTTON
+    ; 26/07/2016 - needed to remove as some dialogs without max/res would show up with artifact drawing if border drawn
+    ;mov eax, dwStyle
+    ;and eax, MUICS_NOMAXBUTTON
+    ;.IF eax != MUICS_NOMAXBUTTON
         ; only need to subclass to handle catching restore/maximize - no need if max/res button is not present 
         Invoke SetWindowSubclass, hParent, Addr _MUI_CaptionBarParentSubClassProc, hCaptionBar, hCaptionBar
-    .ENDIF
+    ;.ENDIF
 
     ret
 
