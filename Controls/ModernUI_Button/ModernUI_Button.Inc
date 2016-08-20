@@ -57,6 +57,7 @@ MUIButtonSetAllProperties       PROTO :DWORD, :DWORD, :DWORD                    
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Button Structures
 ;--------------------------------------------------------------------------------------------------------------------------------------
+IFNDEF MUI_BUTTON_PROPERTIES
 MUI_BUTTON_PROPERTIES           STRUCT
     dwTextFont                  DD ?       ; hFont
     dwTextColor                 DD ?       ; Colorref
@@ -108,7 +109,7 @@ MUI_BUTTON_PROPERTIES           STRUCT
     dwButtonPaddingStyle        DD ?       ; 
     dwButtonPaddingTextImage    DD ?       ; 
 MUI_BUTTON_PROPERTIES			ENDS
-
+ENDIF
 
 
 .CONST
@@ -234,5 +235,30 @@ MUIBPS_ALL                      EQU MUIBPS_LEFT + MUIBPS_TOP + MUIBPS_BOTTOM + M
 ; Button All Properties Themes
 
 MUI_BUTTON_DEFAULT_THEME        MUI_BUTTON_PROPERTIES <0,333333h,333333h,333333h,333333h,0CCCCCCh,0FFFFFFh,0DDDDDDh,0FFFFFFh,0DDDDDDh,0C0C0C0h,0CCCCCCh,0CCCCCCh,0E2A11Bh,0E2A11Bh,0CCCCCCh,MUIBBS_ALL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0333333h,0FFFFFFh,4,0,0,0,0,0CCCCCCh,0,4,MUIBPS_ALL,8>
-MUI_BUTTON_LIGHT_THEME          MUI_BUTTON_PROPERTIES <>
+MUI_BUTTON_LIGHT_THEME          MUI_BUTTON_PROPERTIES <0,333333h,333333h,333333h,333333h,0CCCCCCh>
 MUI_BUTTON_DARK_THEME           MUI_BUTTON_PROPERTIES <>
+MUI_CHECKBOX_LIGHT_THEME        MUI_BUTTON_PROPERTIES <0,333333h,333333h,333333h,333333h,0CCCCCCh,0FFFFFFh,0FFFFFFh,0FFFFFFh,0FFFFFFh,0FFFFFFh,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,MUIBPS_ALL,8>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

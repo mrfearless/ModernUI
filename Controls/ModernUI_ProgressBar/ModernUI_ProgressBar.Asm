@@ -174,14 +174,12 @@ MUIProgressBarCreate ENDP
 ; _MUI_ProgressBarWndProc - Main processing window for our control
 ;-------------------------------------------------------------------------------------
 _MUI_ProgressBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
-    LOCAL TE:TRACKMOUSEEVENT
-    LOCAL wp:WINDOWPLACEMENT
     
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
 		; sets text of our control, delete if not required.
-        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
+        ;Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
         mov eax, TRUE
         ret
 
@@ -443,9 +441,9 @@ _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
 _MUI_ProgressBarPaint ENDP
 
 ;-------------------------------------------------------------------------------------
-; _MUI_ProgressBarCalcWidth
+; _MUI_ProgressBarCalcWidth ;ECX EDX
 ;-------------------------------------------------------------------------------------
-_MUI_ProgressBarCalcWidth PROC USES EBX ECX EDX hControl:DWORD, dwPercent:DWORD
+_MUI_ProgressBarCalcWidth PROC USES EBX hControl:DWORD, dwPercent:DWORD
     LOCAL rect:RECT
     LOCAL dwProgressWidth:DWORD
     LOCAL dwWidth:DWORD

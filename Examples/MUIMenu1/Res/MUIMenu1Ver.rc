@@ -1,0 +1,24 @@
+#define VERINF1 1
+VERINF1 VERSIONINFO
+FILEVERSION 0,0,3,9
+PRODUCTVERSION 0,0,3,9
+FILEOS 0x00000004
+FILETYPE 0x00000001
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "FileVersion", "0.0.3.9\0"
+      VALUE "FileDescription", "MUIMenu Example #1\0"
+      VALUE "InternalName", "MUIMenu1\0"
+      VALUE "OriginalFilename", "MUIMenu1\0"
+      VALUE "ProductName", "MUIMenu1\0"
+      VALUE "ProductVersion", "0.0.3.9\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 0x04B0
+  END
+END

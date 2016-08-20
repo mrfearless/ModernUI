@@ -1,0 +1,6 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUIMenu1.xml"
+100						ICON      DISCARDABLE "Images/ModernUI.ico"
+101						ICON      DISCARDABLE "Images/appbar.image.ico"
+102						ICON      DISCARDABLE "Images/appbar.page.question.ico"
+103						ICON      DISCARDABLE "Images/appbar.folder.ico"

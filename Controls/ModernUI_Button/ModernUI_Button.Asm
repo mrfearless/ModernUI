@@ -1029,7 +1029,9 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
     mov AccentColor, eax
 
     .IF AccentColor != 0
-
+        
+        Invoke CopyRect, Addr rect, lpRect
+        
         .IF bSelectedState == FALSE
             .IF bMouseOver == FALSE
                 Invoke MUIGetExtProperty, hWin, @ButtonAccentStyle        ; Normal accent style

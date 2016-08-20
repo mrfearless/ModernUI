@@ -1,6 +1,6 @@
 ;======================================================================================================================================
 ;
-; ModernUI Control - ModernUI_CaptionBar v1.0.0.1
+; ModernUI Control - ModernUI_CaptionBar v1.0.0.2
 ;
 ; Copyright (c) 2016 by fearless
 ;

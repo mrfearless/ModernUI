@@ -1,0 +1,5 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUICheckbox.xml"
+100						ICON      DISCARDABLE "Images/ModernUI.ico"
+101						ICON      DISCARDABLE "Images/mui_checkbox_empty_16x16.ico"
+102						ICON      DISCARDABLE "Images/mui_checkbox_tick_16x16.ico"

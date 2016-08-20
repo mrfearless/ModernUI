@@ -1,6 +1,6 @@
 ;======================================================================================================================================
 ;
-; ModernUI Control - ModernUI_CaptionBar v1.0.0.1
+; ModernUI Control - ModernUI_CaptionBar v1.0.0.2
 ;
 ; Copyright (c) 2016 by fearless
 ;
@@ -421,7 +421,8 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
     .ELSEIF eax == WM_NCCALCSIZE
         Invoke InvalidateRect, hWin, NULL, TRUE
     
-    .ELSEIF eax == WM_THEMECHANGED
+    .ELSEIF eax == WM_THEMECHANGED || eax == WM_DWMCOMPOSITIONCHANGED
+        ;PrintText 'WM_THEMECHANGED || WM_DWMCOMPOSITIONCHANGED'
         Invoke GetWindowLong, dwRefData, GWL_STYLE
         mov dwStyle, eax
         and eax, MUICS_WINNOMUISTYLE
@@ -434,6 +435,8 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
             .ELSE
                 Invoke _MUI_ApplyMUIStyleToDialog, hWin, TRUE
             .ENDIF
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            Invoke UpdateWindow, hWin
         .ENDIF
     
     ; If user pulls caption down whilst maximized this will be caught by this handler and we can adjust the CaptionBar control to reflect the 

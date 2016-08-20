@@ -1,0 +1,4 @@
+#include "Res/MUIMenu1Mnu.rc"
+#include "Res/MUIMenu1Ver.rc"
+#include "Res/MUIMenu1Dlg.rc"
+#include "Res/MUIMenu1Res.rc"
