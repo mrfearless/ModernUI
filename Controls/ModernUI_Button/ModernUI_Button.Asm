@@ -2568,16 +2568,15 @@ MUIButtonNoteSetFont ENDP
 ; MUIButtonSetAllProperties - Set all properties at once from long poiner to a 
 ; MUI_BUTTON_PROPERTIES structure.
 ;-------------------------------------------------------------------------------------
-MUIButtonSetAllProperties PROC PUBLIC USES EBX hControl:DWORD, lpMUIBUTTONPROPERTIES:DWORD, dwSizeMUIBP:DWORD
-    LOCAL lpdwInternalProperties:DWORD
+MUIButtonSetAllProperties PROC PUBLIC USES EBX ECX hControl:DWORD, lpMUIBUTTONPROPERTIES:DWORD, dwSizeMUIBP:DWORD
+    LOCAL lpdwExternalProperties:DWORD
     
     Invoke GetWindowLong, hControl, MUI_EXTERNAL_PROPERTIES ; 4
     .IF eax == 0
         mov eax, FALSE
         ret
     .ENDIF
-    
-    mov lpdwInternalProperties, eax
+    mov lpdwExternalProperties, eax
     
     mov eax, dwSizeMUIBP
     .IF eax != SIZEOF MUI_BUTTON_PROPERTIES
@@ -2585,7 +2584,122 @@ MUIButtonSetAllProperties PROC PUBLIC USES EBX hControl:DWORD, lpMUIBUTTONPROPER
         ret
     .ENDIF
     
-    Invoke RtlMoveMemory, lpdwInternalProperties, lpMUIBUTTONPROPERTIES, SIZEOF MUI_BUTTON_PROPERTIES
+    mov ecx, lpdwExternalProperties
+    mov ebx, lpMUIBUTTONPROPERTIES
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwTextFont
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwTextFont, eax 
+    .ENDIF
+    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwTextColor
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwTextColor, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwTextColorAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwTextColorAlt, eax    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwTextColorSel
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwTextColorSel, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwTextColorSelAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwTextColorSelAlt, eax    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwTextColorDisabled
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwTextColorDisabled, eax      
+        
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColor
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColor, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorAlt, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorSel
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorSel, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorSelAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorSelAlt, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorDisabled
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorDisabled, eax    
+    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBorderColor
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBorderColor, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBorderColorAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBorderColorAlt, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBorderColorSel
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBorderColorSel, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBorderColorSelAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBorderColorSelAlt, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBorderColorDisabled
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBorderColorDisabled, eax
+    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBorderStyle
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBorderStyle, eax
+
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwAccentColor
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwAccentColor, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwAccentColorAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwAccentColorAlt, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwAccentColorSel
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwAccentColorSel, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwAccentColorSelAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwAccentColorSelAlt, eax
+
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwAccentStyle
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwAccentStyle, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwAccentStyleAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwAccentStyleAlt, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwAccentStyleSel
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwAccentStyleSel, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwAccentStyleSelAlt
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwAccentStyleSelAlt, eax
+    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwImageType
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwImageType, eax
+    .ENDIF
+    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwImage
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwImage, eax
+    .ENDIF
+    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwRightImage
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwRightImage, eax
+    .ENDIF
+    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwNotifyTextFont
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwNotifyTextFont, eax
+    .ENDIF
+    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwNotifyTextColor
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwNotifyTextColor, eax    
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwNotifyBackColor
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwNotifyBackColor, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwNotifyRound
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwNotifyRound, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwNotifyImageType
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwNotifyImageType, eax
+    .ENDIF
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwNotifyImage
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwNotifyImage, eax
+    .ENDIF
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwButtonNoteTextFont
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwButtonNoteTextFont, eax
+    .ENDIF
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwButtonNoteTextColor
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwButtonNoteTextColor, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwButtonNoteTextColorDisabled
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwButtonNoteTextColorDisabled, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwButtonPaddingLeftIndent
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwButtonPaddingLeftIndent, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwButtonPaddingGeneral
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwButtonPaddingGeneral, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwButtonPaddingStyle
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwButtonPaddingStyle, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwButtonPaddingTextImage
+    .IF eax != NULL
+        mov [ecx].MUI_BUTTON_PROPERTIES.dwButtonPaddingTextImage, eax
+    .ENDIF
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwButtonDllInstance
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwButtonDllInstance, eax
+    ;Invoke RtlMoveMemory, lpdwInternalProperties, lpMUIBUTTONPROPERTIES, SIZEOF MUI_BUTTON_PROPERTIES
 
     ; check default values: text colors
     Invoke MUIGetExtProperty, hControl, @ButtonTextColorAlt

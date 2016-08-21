@@ -110,82 +110,86 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		Invoke MUIButtonCreate, hWin, Addr szMenu1Text, 20, 50, 200, 45, IDC_MENUITEM1, MUIBS_LEFT + MUIBS_HAND
 		mov hMenu1, eax
 		Invoke MUIButtonLoadImages, hMenu1, MUIBIT_ICO, ICO_IMAGE, ICO_IMAGE, ICO_IMAGE, ICO_IMAGE, ICO_IMAGE
+		Invoke MUIButtonSetAllProperties, hMenu1, Addr MUI_MENUITEM_DARKTHEME, SIZEOF MUI_BUTTON_PROPERTIES
 
 		; Create our ModernUI_Button control
 		Invoke MUIButtonCreate, hWin, Addr szMenu2Text, 20, 94, 200, 45, IDC_MENUITEM2, MUIBS_LEFT + MUIBS_HAND
 		mov hMenu2, eax
 		Invoke MUIButtonLoadImages, hMenu2, MUIBIT_ICO, ICO_FILE, ICO_FILE, ICO_FILE, ICO_FILE, ICO_FILE
-
+        Invoke MUIButtonSetAllProperties, hMenu2, Addr MUI_MENUITEM_DARKTHEME, SIZEOF MUI_BUTTON_PROPERTIES
+        
 		; Create our ModernUI_Button control
 		Invoke MUIButtonCreate, hWin, Addr szMenu3Text, 20, 138, 200, 45, IDC_MENUITEM3, MUIBS_LEFT + MUIBS_HAND
 		mov hMenu3, eax
 		Invoke MUIButtonLoadImages, hMenu3, MUIBIT_ICO, ICO_FOLDER, ICO_FOLDER, ICO_FOLDER, ICO_FOLDER, ICO_FOLDER
+        Invoke MUIButtonSetAllProperties, hMenu3, Addr MUI_MENUITEM_DARKTHEME, SIZEOF MUI_BUTTON_PROPERTIES
 
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColor, MUI_RGBCOLOR(51,51,51) ; 28,43,54 51,51,51
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColorAlt, MUI_RGBCOLOR(61,61,61)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColorSel, MUI_RGBCOLOR(71,71,71) ;71,71,71
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColorSelAlt, MUI_RGBCOLOR(71,71,71)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonTextColor, MUI_RGBCOLOR(185,185,185) ; 134,159,177 185,185,185
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonTextColorAlt, MUI_RGBCOLOR(195,195,195)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonTextColorSel, MUI_RGBCOLOR(255,255,255)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonTextColorSelAlt, MUI_RGBCOLOR(255,255,255)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderColor, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderColorAlt, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderColorSel, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderStyle, MUIBBS_BOTTOM + MUIBBS_TOP
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentStyle, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentStyleAlt, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentStyleSel, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentStyleSelAlt, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentColor, 0
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentColorAlt, MUI_RGBCOLOR(71,121,145) ;71,121,145
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentColorSel, MUI_RGBCOLOR(57,149,193)
-        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentColorSelAlt, MUI_RGBCOLOR(57,149,193)
 
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBackColor, MUI_RGBCOLOR(51,51,51)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBackColorAlt, MUI_RGBCOLOR(61,61,61)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBackColorSel, MUI_RGBCOLOR(71,71,71)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBackColorSelAlt, MUI_RGBCOLOR(71,71,71)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonTextColor, MUI_RGBCOLOR(185,185,185)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonTextColorAlt, MUI_RGBCOLOR(195,195,195)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonTextColorSel, MUI_RGBCOLOR(255,255,255)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonTextColorSelAlt, MUI_RGBCOLOR(255,255,255)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderColor, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderColorAlt, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderColorSel, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderStyle, MUIBBS_BOTTOM + MUIBBS_TOP
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentStyle, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentStyleAlt, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentStyleSel, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentStyleSelAlt, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentColor, 0
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentColorAlt, MUI_RGBCOLOR(71,121,145)        
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentColorSel, MUI_RGBCOLOR(57,149,193)
-        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentColorSelAlt, MUI_RGBCOLOR(57,149,193) ;180,212,226
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColor, MUI_RGBCOLOR(51,51,51) ; 28,43,54 51,51,51
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColorAlt, MUI_RGBCOLOR(61,61,61)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColorSel, MUI_RGBCOLOR(71,71,71) ;71,71,71
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColorSelAlt, MUI_RGBCOLOR(71,71,71)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonTextColor, MUI_RGBCOLOR(185,185,185) ; 134,159,177 185,185,185
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonTextColorAlt, MUI_RGBCOLOR(195,195,195)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonTextColorSel, MUI_RGBCOLOR(255,255,255)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonTextColorSelAlt, MUI_RGBCOLOR(255,255,255)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderColor, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderColorAlt, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderColorSel, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBorderStyle, MUIBBS_BOTTOM + MUIBBS_TOP
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentStyle, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentStyleAlt, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentStyleSel, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentStyleSelAlt, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentColor, 0
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentColorAlt, MUI_RGBCOLOR(71,121,145) ;71,121,145
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentColorSel, MUI_RGBCOLOR(57,149,193)
+;        Invoke MUIButtonSetProperty, hMenu1, @ButtonAccentColorSelAlt, MUI_RGBCOLOR(57,149,193)
 
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBackColor, MUI_RGBCOLOR(51,51,51)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBackColorAlt, MUI_RGBCOLOR(61,61,61)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBackColorSel, MUI_RGBCOLOR(71,71,71)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBackColorSelAlt, MUI_RGBCOLOR(71,71,71)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonTextColor, MUI_RGBCOLOR(185,185,185)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonTextColorAlt,  MUI_RGBCOLOR(195,195,195)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonTextColorSel, MUI_RGBCOLOR(255,255,255)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonTextColorSelAlt, MUI_RGBCOLOR(255,255,255)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderColor, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderColorAlt, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderColorSel, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(105,105,105)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderStyle, MUIBBS_BOTTOM + MUIBBS_TOP
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentStyle, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentStyleAlt, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentStyleSel, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentStyleSelAlt, MUIBAS_LEFT
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentColor, 0
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentColorAlt, MUI_RGBCOLOR(71,121,145)        
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentColorSel, MUI_RGBCOLOR(57,149,193)
-        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentColorSelAlt, MUI_RGBCOLOR(57,149,193)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBackColor, MUI_RGBCOLOR(51,51,51)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBackColorAlt, MUI_RGBCOLOR(61,61,61)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBackColorSel, MUI_RGBCOLOR(71,71,71)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBackColorSelAlt, MUI_RGBCOLOR(71,71,71)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonTextColor, MUI_RGBCOLOR(185,185,185)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonTextColorAlt, MUI_RGBCOLOR(195,195,195)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonTextColorSel, MUI_RGBCOLOR(255,255,255)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonTextColorSelAlt, MUI_RGBCOLOR(255,255,255)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderColor, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderColorAlt, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderColorSel, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonBorderStyle, MUIBBS_BOTTOM + MUIBBS_TOP
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentStyle, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentStyleAlt, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentStyleSel, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentStyleSelAlt, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentColor, 0
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentColorAlt, MUI_RGBCOLOR(71,121,145)        
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentColorSel, MUI_RGBCOLOR(57,149,193)
+;        Invoke MUIButtonSetProperty, hMenu2, @ButtonAccentColorSelAlt, MUI_RGBCOLOR(57,149,193) ;180,212,226
+
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBackColor, MUI_RGBCOLOR(51,51,51)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBackColorAlt, MUI_RGBCOLOR(61,61,61)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBackColorSel, MUI_RGBCOLOR(71,71,71)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBackColorSelAlt, MUI_RGBCOLOR(71,71,71)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonTextColor, MUI_RGBCOLOR(185,185,185)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonTextColorAlt,  MUI_RGBCOLOR(195,195,195)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonTextColorSel, MUI_RGBCOLOR(255,255,255)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonTextColorSelAlt, MUI_RGBCOLOR(255,255,255)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderColor, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderColorAlt, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderColorSel, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(105,105,105)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonBorderStyle, MUIBBS_BOTTOM + MUIBBS_TOP
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentStyle, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentStyleAlt, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentStyleSel, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentStyleSelAlt, MUIBAS_LEFT
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentColor, 0
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentColorAlt, MUI_RGBCOLOR(71,121,145)        
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentColorSel, MUI_RGBCOLOR(57,149,193)
+;        Invoke MUIButtonSetProperty, hMenu3, @ButtonAccentColorSelAlt, MUI_RGBCOLOR(57,149,193)
         
 	;---------------------------------------------------------------------------------------------------------------
 	; Handle painting of our dialog with our specified background and border color to mimic new Modern style UI feel

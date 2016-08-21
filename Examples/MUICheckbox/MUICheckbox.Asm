@@ -109,24 +109,25 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		Invoke MUIButtonCreate, hWin, Addr szCheckbox1Text, 20, 50, 200, 24, IDC_CHECKBOX1, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
 		mov hChk1, eax
 		; Set all properties for checkbox style
-		Invoke MUIButtonSetAllProperties, hChk1, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_CHECKBOX_LIGHT_THEME
+		Invoke MUIButtonSetAllProperties, hChk1, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
 		; load checkbox icons
 		Invoke MUIButtonLoadImages, hChk1, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
 
 		Invoke MUIButtonCreate, hWin, Addr szCheckbox2Text, 20, 75, 200, 24, IDC_CHECKBOX2, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
 		mov hChk2, eax
 		; Set all properties for checkbox style
-		Invoke MUIButtonSetAllProperties, hChk2, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_CHECKBOX_LIGHT_THEME
+		Invoke MUIButtonSetAllProperties, hChk2, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
 		; load checkbox icons
 		Invoke MUIButtonLoadImages, hChk2, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
 
 		Invoke MUIButtonCreate, hWin, Addr szCheckbox3Text, 20, 100, 200, 24, IDC_CHECKBOX3, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
 		mov hChk3, eax
 		; Set all properties for checkbox style
-		Invoke MUIButtonSetAllProperties, hChk3, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_CHECKBOX_LIGHT_THEME
+		Invoke MUIButtonSetAllProperties, hChk3, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
 		; load checkbox icons
 		Invoke MUIButtonLoadImages, hChk3, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
 		
+
 		; or set individually the properties, instead of calling MUIButtonSetAllProperties
 ;        Invoke MUIButtonSetProperty, hChk1, @ButtonBackColor, MUI_RGBCOLOR(255,255,255)
 ;        Invoke MUIButtonSetProperty, hChk1, @ButtonBackColorAlt, MUI_RGBCOLOR(255,255,255)
