@@ -998,7 +998,7 @@ _MUI_ButtonPaintBackground ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonPaintAccent
 ;-------------------------------------------------------------------------------------
-_MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL AccentColor:DWORD
     LOCAL AccentStyle:DWORD
     LOCAL hBrush:DWORD
@@ -1226,7 +1226,7 @@ _MUI_ButtonPaintAccent ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonCalcPositions - calculate x, y positions of images, text etc
 ;-------------------------------------------------------------------------------------
-_MUI_ButtonCalcPositions PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonCalcPositions PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL dwStyle:DWORD
     LOCAL hImage:DWORD
     LOCAL ImageType:DWORD
@@ -1458,7 +1458,7 @@ _MUI_ButtonCalcPositions ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonPaintText
 ;-------------------------------------------------------------------------------------
-_MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
     LOCAL dwStyle:DWORD
@@ -1786,7 +1786,7 @@ _MUI_ButtonPaintText ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonPaintImages
 ;-------------------------------------------------------------------------------------
-_MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL dwStyle:DWORD
     LOCAL ImageType:DWORD
     LOCAL hImage:DWORD
@@ -2023,7 +2023,7 @@ _MUI_ButtonPaintImages ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonPaintBorder
 ;-------------------------------------------------------------------------------------
-_MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BorderColor:DWORD
     LOCAL BorderStyle:DWORD
     LOCAL hBrush:DWORD
@@ -2831,7 +2831,8 @@ MUIButtonSetAllProperties ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; _MUI_ButtonLoadBitmap - returns in eax handle to bitmap loaded from resource
+; _MUI_ButtonLoadIcon - if succesful, loads specified bitmap resource into the specified
+; external property and returns TRUE in eax, otherwise FALSE.
 ;-------------------------------------------------------------------------------------
 _MUI_ButtonLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
     LOCAL hinstance:DWORD
@@ -2857,7 +2858,8 @@ _MUI_ButtonLoadBitmap ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; _MUI_ButtonLoadIcon - returns in eax handle to icon loaded from resource
+; _MUI_ButtonLoadIcon - if succesful, loads specified icon resource into the specified
+; external property and returns TRUE in eax, otherwise FALSE.
 ;-------------------------------------------------------------------------------------
 _MUI_ButtonLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     LOCAL hinstance:DWORD
