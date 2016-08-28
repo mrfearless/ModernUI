@@ -268,8 +268,8 @@ MUI_BUTTON_DARK_THEME           DD 0                                            
                                 DD 0                                                    ; DllInstance
 
 MUI_CHECKBOX_LIGHT_THEME        DD 0                                                    ; Font 
-                                DD 0333333h, 0333333h, 0333333h, 0333333h, 0333333h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
-                                DD 0FFFFFFh, 0FFFFFFh, 0FFFFFFh, 0FFFFFFh, 0FFFFFFh     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD 0333333h, 0B97A29h, 0333333h, 0B97A29h, 0333333h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
+                                DD 0F0F0F0h, 0F0F0F0h, 0F0F0F0h, 0F0F0F0h, 0F0F0F0h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
                                 DD 0, 0, 0, 0, 0                                        ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_NONE                                          ; BorderStyle
                                 DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -283,7 +283,7 @@ MUI_CHECKBOX_LIGHT_THEME        DD 0                                            
                                 DD 0                                                    ; DllInstance
 
 MUI_CHECKBOX_DARK_THEME         DD 0                                                    ; Font 
-                                DD 0FFFFFFh, 0FFFFFFh, 0FFFFFFh, 0FFFFFFh, 0FFFFFFh     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
+                                DD 0F0F0F0h, 0F0F0F0h, 0F0F0F0h, 0F0F0F0h, 0F0F0F0h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0333333h, 0333333h, 0333333h, 0333333h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
                                 DD 0, 0, 0, 0, 0                                        ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_NONE                                          ; BorderStyle
@@ -327,15 +327,54 @@ MUI_MENUITEM_DARK_THEME         DD 0                                            
                                 DD 0, 4, MUIBPS_ALL, 8                                  ; PaddingLeftIndent, PaddingGeneral, PaddingStyle, PaddingTextImage
                                 DD 0                                                    ; DllInstance
 
+MUI_MENUITEM_DARK_THEME_BLANK   DD 0                                                    ; Font 
+                                DD 0B9B9B9h, 0B9B9B9h, 0B9B9B9h, 0B9B9B9h, 0676767h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
+                                DD 0333333h, 0333333h, 0333333h, 0333333h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD 0696969h, 0696969h, 0696969h, 0696969h, 0696969h     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
+                                DD MUIBBS_BOTTOM + MUIBBS_TOP                           ; BorderStyle
+                                DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
+                                DD MUIBAS_NONE, MUIBAS_NONE, MUIBAS_NONE, MUIBAS_NONE   ; AccentStyle, AccentStyleAlt, AccentStyleSel, AccentStyleSelAlt
+                                DD MUIBIT_NONE                                          ; ImageType
+                                DD 0, 0, 0, 0, 0                                        ; Image, ImageAlt, ImageSel, ImageSelAlt, ImageDisabled
+                                DD 0, 0, 0, 0, 0                                        ; RightImage, RightImageAlt, RightImageSel, RightImageSelAlt, RightImageDisabled
+                                DD 0, 0B9B9B9h, 0333333h, 4, MUIBIT_NONE, 0             ; NotifyTextFont, NotifyTextColor, NotifyBackColor, NotifyRound, NotifyImageType, NotifyImage
+                                DD 0, 0B9B9B9h, 0CCCCCCh                                ; NoteTextFont, NoteTextColor, NoteTextColorDisabled
+                                DD 0, 4, MUIBPS_ALL, 8                                  ; PaddingLeftIndent, PaddingGeneral, PaddingStyle, PaddingTextImage
+                                DD 0                                                    ; DllInstance
 
 
+MUI_MENUITEM_DARK_THEME_2       DD 0                                                    ; Font 
+                                DD 0B9B9B9h, 0C3C3C3h, 0FFFFFFh, 0FFFFFFh, 0676767h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
+                                DD 0333333h, 03D3D3Dh, 0474747h, 0474747h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD 0000000h, 0000000h, 0000000h, 0000000h, 0000000h     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
+                                DD MUIBBS_BOTTOM + MUIBBS_TOP                           ; BorderStyle
+                                DD 0000000h, 0917947h, 0C19539h, 0C19539h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
+                                DD MUIBAS_LEFT, MUIBAS_LEFT, MUIBAS_LEFT, MUIBAS_LEFT   ; AccentStyle, AccentStyleAlt, AccentStyleSel, AccentStyleSelAlt
+                                DD MUIBIT_NONE                                          ; ImageType
+                                DD 0, 0, 0, 0, 0                                        ; Image, ImageAlt, ImageSel, ImageSelAlt, ImageDisabled
+                                DD 0, 0, 0, 0, 0                                        ; RightImage, RightImageAlt, RightImageSel, RightImageSelAlt, RightImageDisabled
+                                DD 0, 0B9B9B9h, 0333333h, 4, MUIBIT_NONE, 0             ; NotifyTextFont, NotifyTextColor, NotifyBackColor, NotifyRound, NotifyImageType, NotifyImage
+                                DD 0, 0B9B9B9h, 0CCCCCCh                                ; NoteTextFont, NoteTextColor, NoteTextColorDisabled
+                                DD 0, 4, MUIBPS_ALL, 8                                  ; PaddingLeftIndent, PaddingGeneral, PaddingStyle, PaddingTextImage
+                                DD 0   
+
+MUI_MENUITEM_DARK_THEME_BLANK_2 DD 0                                                    ; Font 
+                                DD 0B9B9B9h, 0B9B9B9h, 0B9B9B9h, 0B9B9B9h, 0676767h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
+                                DD 0333333h, 0333333h, 0333333h, 0333333h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD 0000000h, 0000000h, 0000000h, 0000000h, 0000000h     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
+                                DD MUIBBS_BOTTOM + MUIBBS_TOP                           ; BorderStyle
+                                DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
+                                DD MUIBAS_NONE, MUIBAS_NONE, MUIBAS_NONE, MUIBAS_NONE   ; AccentStyle, AccentStyleAlt, AccentStyleSel, AccentStyleSelAlt
+                                DD MUIBIT_NONE                                          ; ImageType
+                                DD 0, 0, 0, 0, 0                                        ; Image, ImageAlt, ImageSel, ImageSelAlt, ImageDisabled
+                                DD 0, 0, 0, 0, 0                                        ; RightImage, RightImageAlt, RightImageSel, RightImageSelAlt, RightImageDisabled
+                                DD 0, 0B9B9B9h, 0333333h, 4, MUIBIT_NONE, 0             ; NotifyTextFont, NotifyTextColor, NotifyBackColor, NotifyRound, NotifyImageType, NotifyImage
+                                DD 0, 0B9B9B9h, 0CCCCCCh                                ; NoteTextFont, NoteTextColor, NoteTextColorDisabled
+                                DD 0, 4, MUIBPS_ALL, 8                                  ; PaddingLeftIndent, PaddingGeneral, PaddingStyle, PaddingTextImage
+                                DD 0    
 
 
-
-
-
-
-
+MUI_TEXT_DOS_PROMPT             TEXTEQU <MUI_MENUITEM_DARK_THEME_BLANK_2>
 
 
 

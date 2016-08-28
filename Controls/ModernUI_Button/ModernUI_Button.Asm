@@ -357,7 +357,9 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
     .ELSEIF eax == WM_CREATE
 		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_BUTTON_PROPERTIES ; internal properties
 		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_BUTTON_PROPERTIES ; external properties
+		IFDEF MUI_USEGDIPLUS
 		Invoke MUIGDIPlusStart ; for png resources if used
+		ENDIF
 		Invoke _MUI_ButtonInit, hWin
 		mov eax, 0
 		ret    
@@ -366,7 +368,9 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         Invoke _MUI_ButtonCleanup, hWin
         Invoke MUIFreeMemProperties, hWin, 0
 		Invoke MUIFreeMemProperties, hWin, 4
+		IFDEF MUI_USEGDIPLUS
 		Invoke MUIGDIPlusFinish
+		ENDIF
 		mov eax, 0
 		ret
         
@@ -384,11 +388,12 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         and eax, MUIBS_HAND
         .IF eax == MUIBS_HAND
 		    invoke LoadCursor, NULL, IDC_HAND
-		    Invoke SetCursor, eax
-        ;.ELSE
-        ;    invoke LoadCursor, NULL, IDC_ARROW
+        .ELSE
+            invoke LoadCursor, NULL, IDC_ARROW
         .ENDIF
-        ;Invoke SetCursor, eax
+        Invoke SetCursor, eax
+        mov eax, 0
+        ret        
 
     .ELSEIF eax == WM_LBUTTONUP
 		; simulates click on our control, delete if not required.
@@ -441,7 +446,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
     .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @ButtonEnabledState
         .IF eax == TRUE   
-    		Invoke MUISetIntProperty, hWin, @ButtonMouseOver , TRUE
+    		Invoke MUISetIntProperty, hWin, @ButtonMouseOver, TRUE
     		.IF eax != TRUE
     		    Invoke InvalidateRect, hWin, NULL, TRUE
     		    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
@@ -454,7 +459,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         .ENDIF
 
     .ELSEIF eax == WM_MOUSELEAVE
-        Invoke MUISetIntProperty, hWin, @ButtonMouseOver , FALSE
+        Invoke MUISetIntProperty, hWin, @ButtonMouseOver, FALSE
 		Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
         .IF eax == TRUE		
             invoke GetClientRect, hWin, addr rect
@@ -470,7 +475,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         .ENDIF
 
     .ELSEIF eax == WM_KILLFOCUS
-        Invoke MUISetIntProperty, hWin, @ButtonMouseOver , FALSE
+        Invoke MUISetIntProperty, hWin, @ButtonMouseOver, FALSE
 		Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
         .IF eax == TRUE		
             invoke GetClientRect, hWin, addr rect
@@ -718,7 +723,13 @@ _MUI_ButtonCleanup PROC PRIVATE hControl:DWORD
     PrintText '_MUI_ButtonCleanup'
     ENDIF
     ; cleanup any stream handles if png where loaded as resources
+    Invoke MUIGetExtProperty, hControl, @ButtonImageType
+    mov ImageType, eax
 
+    .IF ImageType == 0
+        ret
+    .ENDIF
+    
     .IF ImageType == 3
         IFDEF MUI_USEGDIPLUS
         Invoke MUIGetIntProperty, hControl, @ButtonImageStream
@@ -755,12 +766,6 @@ _MUI_ButtonCleanup PROC PRIVATE hControl:DWORD
         ENDIF        
     .ENDIF
 
-
-    Invoke MUIGetExtProperty, hControl, @ButtonImageType
-    mov ImageType, eax
-    .IF ImageType == 0
-        ret
-    .ENDIF
     Invoke MUIGetExtProperty, hControl, @ButtonImage
     mov hImage, eax
     .IF eax != 0
@@ -1633,6 +1638,12 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
 	Invoke SelectObject, hdc, hFont
     mov hOldFont, eax
     Invoke GetWindowText, hWin, Addr szText, sizeof szText
+
+    Invoke GetStockObject, DC_BRUSH
+    mov hBrush, eax
+    Invoke SelectObject, hdc, eax
+    mov hOldBrush, eax
+    Invoke SetDCBrushColor, hdc, BackColor
     
     Invoke SetBkMode, hdc, OPAQUE
     Invoke SetBkColor, hdc, BackColor    
@@ -1660,6 +1671,13 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
     .IF hOldFont != 0
         Invoke SelectObject, hdc, hOldFont
         Invoke DeleteObject, hOldFont
+    .ENDIF
+    .IF hOldBrush != 0
+        Invoke SelectObject, hdc, hOldBrush
+        Invoke DeleteObject, hOldBrush
+    .ENDIF     
+    .IF hBrush != 0
+        Invoke DeleteObject, hBrush
     .ENDIF
     
     ; Draw notify text
@@ -1736,7 +1754,7 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
             mov hOldFont, eax
             
             Invoke SetBkMode, hdc, OPAQUE
-            Invoke SetBkColor, hdc, BackColor    
+            ;Invoke SetBkColor, hdc, BackColor    
             Invoke SetTextColor, hdc, TextColor        
     
             Invoke GetStockObject, DC_BRUSH

@@ -103,44 +103,47 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(87,193,244)		
 		
 		;-----------------------------------------------------------------------------------------------------
-        ; ModernUI_Button Examples: Createing a button as a checkbox style control - Checkbox1
+        ; ModernUI_Checkbox Examples:
         ;-----------------------------------------------------------------------------------------------------
 		; Create our ModernUI_Button control and set to autostate
-		Invoke MUIButtonCreate, hWin, Addr szCheckbox1Text, 20, 50, 200, 24, IDC_CHECKBOX1, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
-		mov hChk1, eax
-		; Set all properties for checkbox style
-		Invoke MUIButtonSetAllProperties, hChk1, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
-		; load checkbox icons
-		Invoke MUIButtonLoadImages, hChk1, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
-
-		Invoke MUIButtonCreate, hWin, Addr szCheckbox2Text, 20, 75, 200, 24, IDC_CHECKBOX2, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
-		mov hChk2, eax
-		; Set all properties for checkbox style
-		Invoke MUIButtonSetAllProperties, hChk2, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
-		; load checkbox icons
-		Invoke MUIButtonLoadImages, hChk2, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
-
-		Invoke MUIButtonCreate, hWin, Addr szCheckbox3Text, 20, 100, 200, 24, IDC_CHECKBOX3, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
-		mov hChk3, eax
-		; Set all properties for checkbox style
-		Invoke MUIButtonSetAllProperties, hChk3, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
-		; load checkbox icons
-		Invoke MUIButtonLoadImages, hChk3, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
+;		Invoke MUIButtonCreate, hWin, Addr szCheckbox1Text, 20, 50, 200, 24, IDC_CHECKBOX1, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
+;		mov hChk1, eax
+;		; Set all properties for checkbox style
+;		Invoke MUIButtonSetAllProperties, hChk1, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
+;		; load checkbox icons
+;		Invoke MUIButtonLoadImages, hChk1, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
+;
+;		Invoke MUIButtonCreate, hWin, Addr szCheckbox2Text, 20, 75, 200, 24, IDC_CHECKBOX2, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
+;		mov hChk2, eax
+;		; Set all properties for checkbox style
+;		Invoke MUIButtonSetAllProperties, hChk2, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
+;		; load checkbox icons
+;		Invoke MUIButtonLoadImages, hChk2, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
+;
+;		Invoke MUIButtonCreate, hWin, Addr szCheckbox3Text, 20, 100, 200, 24, IDC_CHECKBOX3, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
+;		mov hChk3, eax
+;		; Set all properties for checkbox style
+;		Invoke MUIButtonSetAllProperties, hChk3, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
+;		; load checkbox icons
+;		Invoke MUIButtonLoadImages, hChk3, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
 		
 
-		; or set individually the properties, instead of calling MUIButtonSetAllProperties
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonBackColor, MUI_RGBCOLOR(255,255,255)
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonBackColorAlt, MUI_RGBCOLOR(255,255,255)
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonBackColorSel, MUI_RGBCOLOR(255,255,255)
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonBackColorSelAlt, MUI_RGBCOLOR(255,255,255)
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonTextColor, MUI_RGBCOLOR(51,51,51)
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonTextColorAlt, MUI_RGBCOLOR(51,51,51)
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonTextColorSel, MUI_RGBCOLOR(51,51,51)
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonTextColorSelAlt, MUI_RGBCOLOR(51,51,51)
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonBorderColor, 0
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonBorderColorAlt, 0
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonBorderColorSel, 0
-;        Invoke MUIButtonSetProperty, hChk1, @ButtonBorderColorSelAlt, 0
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox1Text, 20, 50, 200, 24, IDC_CHECKBOX1, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        mov hChk1, eax
+        Invoke MUICheckboxSetProperty, hChk1, @CheckboxDllInstance, hInstance
+        Invoke MUICheckboxLoadImages, hChk1, MUICIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK
+
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox2Text, 20, 75, 200, 24, IDC_CHECKBOX2, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        mov hChk2, eax
+        Invoke MUICheckboxSetProperty, hChk2, @CheckboxDllInstance, hInstance
+        Invoke MUICheckboxLoadImages, hChk2, MUICIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK
+        
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox3Text, 20, 100, 200, 24, IDC_CHECKBOX3, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        mov hChk3, eax
+        Invoke MUICheckboxSetProperty, hChk3, @CheckboxDllInstance, hInstance
+        Invoke MUICheckboxLoadImages, hChk3, MUICIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK
+        
+
         
 
 	;---------------------------------------------------------------------------------------------------------------
@@ -151,7 +154,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ret
 
 	.ELSEIF eax == WM_PAINT
-		invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(255,255,255), MUI_RGBCOLOR(27,161,226)
+		invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(240,240,240), MUI_RGBCOLOR(27,161,226)
 		mov eax, 0
 		ret
     ;---------------------------------------------------------------------------------------------------------------

@@ -24,6 +24,9 @@ includelib ModernUI_CaptionBar.lib
 include ModernUI_Button.inc
 includelib ModernUI_Button.lib
 
+include ModernUI_Checkbox.inc
+includelib ModernUI_Checkbox.lib
+
 ;-----------------------------------------------------------------------------------------
 ; MUICheckbox Prototypes
 ;-----------------------------------------------------------------------------------------
