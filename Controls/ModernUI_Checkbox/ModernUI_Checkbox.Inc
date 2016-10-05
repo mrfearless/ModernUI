@@ -78,6 +78,8 @@ MUICM_GETSTATE                  EQU WM_USER + 1779 ; wParam = NULL, lParam = NUL
 MUICM_SETSTATE                  EQU WM_USER + 1778 ; wParam = TRUE/FALSE, lParam = NULL
 
 ; ModernUI_Checkbox Styles
+MUICS_CHECK                     EQU 00h     ;
+MUICS_RADIO                     EQU 01h     ;
 MUICS_HAND                      EQU 20h     ; Show a hand instead of an arrow when mouse moves over checkbox.
 
 ;--------------------------------------------------------------------------------------------------------------------------------------

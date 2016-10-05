@@ -53,6 +53,7 @@ include ModernUI.inc
 includelib ModernUI.lib
 
 include ModernUI_Checkbox.inc
+include ModernUI_Checkbox_Icons.asm
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
@@ -154,10 +155,17 @@ ENDIF
 
 
 .DATA
-szMUICheckboxClass					    DB 'ModernUI_XCheckbox',0 	        ; Class name for creating our ModernUI_Checkbox control
+szMUICheckboxClass					    DB 'ModernUI_Checkbox',0 	        ; Class name for creating our ModernUI_Checkbox control
 szMUICheckboxFont                       DB 'Segoe UI',0             	    ; Font used for ModernUI_Checkbox text
 hMUICheckboxFont                        DD 0                        	    ; Handle to ModernUI_Checkbox font (segoe ui)
 
+  ; File M:\GitProjects\ModernUI\icons\Dark\16px\mui_checkbox_tick_16x16.ico opened at 1150 bytes
+
+
+hDefault_icoMUICheckboxTick             DD 0
+hDefault_icoMUICheckboxEmpty            DD 0
+hDefault_icoMUIRadioTick                DD 0
+hDefault_icoMUIRadioEmpty               DD 0
 
 
 .CODE
@@ -425,7 +433,7 @@ _MUI_CheckboxInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @CheckboxTextColorDisabled, MUI_RGBCOLOR(204,204,204)
     Invoke MUISetExtProperty, hControl, @CheckboxBackColor, MUI_RGBCOLOR(240,240,240) ;MUI_RGBCOLOR(21,133,181)
     Invoke MUISetExtProperty, hControl, @CheckboxDllInstance, 0
-    Invoke MUISetExtProperty, hControl, @CheckboxImageType, 0
+    ;Invoke MUISetExtProperty, hControl, @CheckboxImageType, MUICIT_NONE
     
     ;PrintDec hMUICheckboxFont
     
@@ -445,6 +453,43 @@ _MUI_CheckboxInit PROC PRIVATE hControl:DWORD
 
     ;PrintDec hMUICheckboxFont
 
+    ; create default icons for use if user hasnt specified any images
+    .IF hDefault_icoMUICheckboxTick == 0
+        Invoke MUICreateIconFromMemory, Addr icoMUICheckboxTick, 0
+        mov hDefault_icoMUICheckboxTick, eax
+    .ENDIF
+    .IF hDefault_icoMUICheckboxEmpty == 0
+        Invoke MUICreateIconFromMemory, Addr icoMUICheckboxEmpty, 0
+        mov hDefault_icoMUICheckboxEmpty, eax
+    .ENDIF
+    .IF hDefault_icoMUIRadioTick == 0
+        Invoke MUICreateIconFromMemory, Addr icoMUIRadioTick, 0
+        mov hDefault_icoMUIRadioTick, eax
+    .ENDIF
+    .IF hDefault_icoMUIRadioEmpty == 0
+        Invoke MUICreateIconFromMemory, Addr icoMUIRadioEmpty, 0
+        mov hDefault_icoMUIRadioEmpty, eax
+    .ENDIF
+    Invoke MUISetExtProperty, hControl, @CheckboxImageType, MUICIT_ICO
+    
+    ;PrintDec hDefault_icoMUICheckboxTick
+    ;PrintDec hDefault_icoMUICheckboxEmpty
+    ;PrintDec hDefault_icoMUIRadioTick
+    ;PrintDec hDefault_icoMUIRadioEmpty
+    
+    mov eax, dwStyle
+    and eax, MUICS_RADIO
+    .IF eax == MUICS_RADIO
+        Invoke MUISetExtProperty, hControl, @CheckboxImage, hDefault_icoMUIRadioEmpty
+        Invoke MUISetExtProperty, hControl, @CheckboxImageAlt, hDefault_icoMUIRadioEmpty
+        Invoke MUISetExtProperty, hControl, @CheckboxImageSel, hDefault_icoMUIRadioTick
+        Invoke MUISetExtProperty, hControl, @CheckboxImageSelAlt, hDefault_icoMUIRadioTick
+    .ELSE
+        Invoke MUISetExtProperty, hControl, @CheckboxImage, hDefault_icoMUICheckboxEmpty
+        Invoke MUISetExtProperty, hControl, @CheckboxImageAlt, hDefault_icoMUICheckboxEmpty
+        Invoke MUISetExtProperty, hControl, @CheckboxImageSel, hDefault_icoMUICheckboxTick
+        Invoke MUISetExtProperty, hControl, @CheckboxImageSelAlt, hDefault_icoMUICheckboxTick
+    .ENDIF
     ret
 
 _MUI_CheckboxInit ENDP

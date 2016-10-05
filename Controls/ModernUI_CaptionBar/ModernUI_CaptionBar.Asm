@@ -43,6 +43,13 @@ includelib ModernUI.lib
 
 include ModernUI_CaptionBar.inc
 
+IFNDEF LIBEND
+    LIBEND TEXTEQU <END>
+ELSE
+    LIBEND TEXTEQU <>
+ENDIF
+
+
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -121,8 +128,9 @@ _MUI_SYSBUTTON_PROPERTIES                   ENDS
 
 
 .CONST
-MUI_SYSBUTTON_WIDTH                        EQU 32d
-MUI_SYSBUTTON_HEIGHT                       EQU 28d
+MUI_DEFAULT_CAPTION_HEIGHT                  EQU 32d
+MUI_SYSBUTTON_WIDTH                         EQU 32d
+MUI_SYSBUTTON_HEIGHT                        EQU 28d
 
 
 ; CaptionBar Internal Properties
@@ -151,8 +159,8 @@ MUI_SYSBUTTON_HEIGHT                       EQU 28d
 @SysButtonIcoAlt                            EQU 24
 
 .DATA
-szMUICaptionBarClass					    DB 'ModernUICaptionBar',0   ; Class name for our CaptionBar control
-szMUISysButtonClass                         DB 'ModernUISysButton',0    ; Class name for our system buttons (min/max/restore or close buttons)
+szMUICaptionBarClass					    DB 'ModernUI_CaptionBar',0  ; Class name for our CaptionBar control
+szMUISysButtonClass                         DB 'ModernUI_SysButton',0   ; Class name for our system buttons (min/max/restore or close buttons)
 szMUISysButtonFont                          DB 'Marlett',0              ; System font used for drawing min/max/restore/close glyphs from marlett font
 szMUICaptionBarFont                         DB 'Segoe UI',0             ; Font used for caption text
 hMUISysButtonFont                           DD 0                        ; Handle to system button font (marlett)
@@ -501,7 +509,7 @@ _MUI_CaptionBarInit PROC PRIVATE hCaptionBar:DWORD
     .IF eax == MUICS_NOMOVEWINDOW    
         Invoke MUISetIntProperty, hCaptionBar, @CaptionBarNoMoveWindow, TRUE
     .ELSE
-        Invoke MUISetIntProperty, hCaptionBar, @CaptionBarNoMoveWindow, TRUE
+        Invoke MUISetIntProperty, hCaptionBar, @CaptionBarNoMoveWindow, FALSE
     .ENDIF
     
     ; Check if to use icons or not?
@@ -816,7 +824,14 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
     LOCAL dwSysButtonHeight:DWORD    
     LOCAL hParent:DWORD
     LOCAL rect:RECT
+    LOCAL dwStyle:DWORD
+    
+    ;todo, if MUICS_WINNOMUISTYLE applied (ie in radasm dialog editor) then we should just set pos to 0,0, and client width
 
+    Invoke GetWindowLong, hCaptionBar, GWL_STYLE
+    mov dwStyle, eax
+ 
+    
     Invoke GetParent, hCaptionBar
     mov hParent, eax
 
@@ -829,10 +844,19 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
     Invoke GetClientRect, hCaptionBar, Addr rect
     mov eax, rect.bottom
     mov dwCaptionHeight, eax
-
-    Invoke GetWindowPlacement, hParent, Addr wp
+    .IF sdword ptr eax < 6
+        mov dwCaptionHeight, MUI_DEFAULT_CAPTION_HEIGHT
+    .ENDIF
     
-    Invoke GetWindowRect, hParent, Addr rect
+    Invoke GetWindowPlacement, hParent, Addr wp
+
+    mov eax, dwStyle
+    and eax, MUICS_WINNOMUISTYLE
+    .IF eax == MUICS_WINNOMUISTYLE
+        Invoke GetClientRect, hParent, Addr rect
+    .ELSE       
+        Invoke GetWindowRect, hParent, Addr rect
+    .ENDIF
     mov eax, rect.right
     mov ebx, rect.left
     sub eax, ebx
@@ -1682,6 +1706,4 @@ MUICaptionBarLoadIconsDll ENDP
 
 
 
-
-
-END
+LIBEND

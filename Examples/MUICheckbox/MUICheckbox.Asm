@@ -130,8 +130,8 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 
         Invoke MUICheckboxCreate, hWin, Addr szCheckbox1Text, 20, 50, 200, 24, IDC_CHECKBOX1, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov hChk1, eax
-        Invoke MUICheckboxSetProperty, hChk1, @CheckboxDllInstance, hInstance
-        Invoke MUICheckboxLoadImages, hChk1, MUICIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK
+        ;Invoke MUICheckboxSetProperty, hChk1, @CheckboxDllInstance, hInstance
+        ;Invoke MUICheckboxLoadImages, hChk1, MUICIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK
 
         Invoke MUICheckboxCreate, hWin, Addr szCheckbox2Text, 20, 75, 200, 24, IDC_CHECKBOX2, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov hChk2, eax

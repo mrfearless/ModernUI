@@ -9,6 +9,7 @@ Distribution/
 *.ilk
 *.exp
 template/
+RAControl/
 downloads/
 screenshots/
 releases/
