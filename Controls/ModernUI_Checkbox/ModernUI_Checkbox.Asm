@@ -58,10 +58,10 @@ include ModernUI_Checkbox_Icons.asm
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-_MUI_CheckboxWndProc					PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_CheckboxInit					    PROTO :DWORD
+_MUI_CheckboxWndProc                    PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CheckboxInit                       PROTO :DWORD
 _MUI_CheckboxCleanup                    PROTO :DWORD
-_MUI_CheckboxPaint					    PROTO :DWORD
+_MUI_CheckboxPaint                      PROTO :DWORD
 
 _MUI_CheckboxPaintBackground            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CheckboxPaintText                  PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -99,21 +99,21 @@ MUI_CHECKBOX_PROPERTIES                 STRUCT
     dwImageDisabled                     DD ?       ; hImage for disabled empty checkbox
     dwImageDisabledSel                  DD ?       ; hImage for disabled checkbox with checkmark
     dwCheckboxDllInstance               DD ?
-MUI_CHECKBOX_PROPERTIES			        ENDS
+MUI_CHECKBOX_PROPERTIES                 ENDS
 ENDIF
 
 ; Internal properties
-_MUI_CHECKBOX_PROPERTIES				STRUCT
-	dwEnabledState						DD ?
-	dwMouseOver							DD ?
-	dwSelectedState                     DD ?
-	dwImageStream                       DD ?
-	dwImageAltStream                    DD ?
-	dwImageSelStream                    DD ?
-	dwImageSelAltStream                 DD ?
-	dwImageDisabledStream               DD ?
-	dwImageDisabledSelStream            DD ?
-_MUI_CHECKBOX_PROPERTIES				ENDS
+_MUI_CHECKBOX_PROPERTIES                STRUCT
+    dwEnabledState                      DD ?
+    dwMouseOver                         DD ?
+    dwSelectedState                     DD ?
+    dwImageStream                       DD ?
+    dwImageAltStream                    DD ?
+    dwImageSelStream                    DD ?
+    dwImageSelAltStream                 DD ?
+    dwImageDisabledStream               DD ?
+    dwImageDisabledSelStream            DD ?
+_MUI_CHECKBOX_PROPERTIES                ENDS
 
 IFDEF MUI_USEGDIPLUS
 UNKNOWN STRUCT
@@ -141,8 +141,8 @@ ENDIF
 
 .CONST
 ; Internal properties
-@CheckboxEnabledState				    EQU 0
-@CheckboxMouseOver					    EQU 4
+@CheckboxEnabledState                   EQU 0
+@CheckboxMouseOver                      EQU 4
 @CheckboxSelectedState                  EQU 8
 @CheckboxImageStream                    EQU 12
 @CheckboxImageAltStream                 EQU 16
@@ -155,9 +155,9 @@ ENDIF
 
 
 .DATA
-szMUICheckboxClass					    DB 'ModernUI_Checkbox',0 	        ; Class name for creating our ModernUI_Checkbox control
-szMUICheckboxFont                       DB 'Segoe UI',0             	    ; Font used for ModernUI_Checkbox text
-hMUICheckboxFont                        DD 0                        	    ; Handle to ModernUI_Checkbox font (segoe ui)
+szMUICheckboxClass                      DB 'ModernUI_Checkbox',0            ; Class name for creating our ModernUI_Checkbox control
+szMUICheckboxFont                       DB 'Segoe UI',0                     ; Font used for ModernUI_Checkbox text
+hMUICheckboxFont                        DD 0                                ; Handle to ModernUI_Checkbox font (segoe ui)
 
   ; File M:\GitProjects\ModernUI\icons\Dark\16px\mui_checkbox_tick_16x16.ico opened at 1150 bytes
 
@@ -195,7 +195,7 @@ MUICheckboxGetProperty ENDP
 MUICheckboxRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
@@ -203,21 +203,21 @@ MUICheckboxRegister PROC PUBLIC
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUICheckboxClass
-    	mov wc.lpszClassName, eax
-    	mov eax, hinstance
+        mov wc.lpszClassName, eax
+        mov eax, hinstance
         mov wc.hInstance, eax
         lea eax, _MUI_CheckboxWndProc
-    	mov wc.lpfnWndProc, eax
-    	;Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, NULL
-    	mov wc.hIcon, 0
-    	mov wc.hIconSm, 0
-    	mov wc.lpszMenuName, NULL
-    	mov wc.hbrBackground, NULL
-    	mov wc.style, NULL
+        mov wc.lpfnWndProc, eax
+        ;Invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.hCursor, NULL
+        mov wc.hIcon, 0
+        mov wc.hIconSm, 0
+        mov wc.lpszMenuName, NULL
+        mov wc.hbrBackground, NULL
+        mov wc.style, NULL
         mov wc.cbClsExtra, 0
-    	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
-    	Invoke RegisterClassEx, addr wc
+        mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        Invoke RegisterClassEx, addr wc
     .ENDIF  
     ret
 
@@ -230,16 +230,16 @@ MUICheckboxRegister ENDP
 MUICheckboxCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	LOCAL hControl:DWORD
-	LOCAL dwNewStyle:DWORD
-	
+    LOCAL hControl:DWORD
+    LOCAL dwNewStyle:DWORD
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
-	Invoke MUICheckboxRegister
-	
+    Invoke MUICheckboxRegister
+    
     ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
-	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
+    ; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
 
     mov eax, dwStyle
     mov dwNewStyle, eax
@@ -247,13 +247,13 @@ MUICheckboxCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypo
     .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         or dwNewStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .ENDIF
-	
+    
     Invoke CreateWindowEx, NULL, Addr szMUICheckboxClass, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
-	mov hControl, eax
-	.IF eax != NULL
-		;PrintDec hControl
-	.ENDIF
-	mov eax, hControl
+    mov hControl, eax
+    .IF eax != NULL
+        ;PrintDec hControl
+    .ENDIF
+    mov eax, hControl
     ret
 MUICheckboxCreate ENDP
 
@@ -270,30 +270,30 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
-		; sets text of our control, delete if not required.
-        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
+        ; sets text of our control, delete if not required.
+        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName   
         mov eax, TRUE
         ret
 
     .ELSEIF eax == WM_CREATE
-		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_CHECKBOX_PROPERTIES ; internal properties
-		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_CHECKBOX_PROPERTIES ; external properties
-		IFDEF MUI_USEGDIPLUS
-		Invoke MUIGDIPlusStart ; for png resources if used
-		ENDIF
-		Invoke _MUI_CheckboxInit, hWin
-		mov eax, 0
-		ret    
+        Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_CHECKBOX_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_CHECKBOX_PROPERTIES ; external properties
+        IFDEF MUI_USEGDIPLUS
+        Invoke MUIGDIPlusStart ; for png resources if used
+        ENDIF
+        Invoke _MUI_CheckboxInit, hWin
+        mov eax, 0
+        ret    
 
     .ELSEIF eax == WM_NCDESTROY
         Invoke _MUI_CheckboxCleanup, hWin
         Invoke MUIFreeMemProperties, hWin, 0
-		Invoke MUIFreeMemProperties, hWin, 4
-		IFDEF MUI_USEGDIPLUS
-		Invoke MUIGDIPlusFinish
-		ENDIF
-		mov eax, 0
-		ret		
+        Invoke MUIFreeMemProperties, hWin, 4
+        IFDEF MUI_USEGDIPLUS
+        Invoke MUIGDIPlusFinish
+        ENDIF
+        mov eax, 0
+        ret     
         
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -308,7 +308,7 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
         Invoke GetWindowLong, hWin, GWL_STYLE
         and eax, MUICS_HAND
         .IF eax == MUICS_HAND
-		    invoke LoadCursor, NULL, IDC_HAND
+            invoke LoadCursor, NULL, IDC_HAND
         .ELSE
             invoke LoadCursor, NULL, IDC_ARROW
         .ENDIF
@@ -317,11 +317,11 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
         ret   
 
     .ELSEIF eax == WM_LBUTTONUP
-		; simulates click on our control, delete if not required.
-		Invoke GetParent, hWin
-		mov hParent, eax
-		Invoke GetDlgCtrlID, hWin
-		Invoke PostMessage, hParent, WM_COMMAND, eax, hWin
+        ; simulates click on our control, delete if not required.
+        Invoke GetParent, hWin
+        mov hParent, eax
+        Invoke GetDlgCtrlID, hWin
+        Invoke PostMessage, hParent, WM_COMMAND, eax, hWin
 
         Invoke MUIGetIntProperty, hWin, @CheckboxSelectedState
         .IF eax == FALSE
@@ -335,30 +335,30 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
    .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @CheckboxEnabledState
         .IF eax == TRUE   
-    		Invoke MUISetIntProperty, hWin, @CheckboxMouseOver , TRUE
-    		.IF eax != TRUE
-    		    Invoke InvalidateRect, hWin, NULL, TRUE
-    		    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
-    		    mov TE.dwFlags, TME_LEAVE
-    		    mov eax, hWin
-    		    mov TE.hwndTrack, eax
-    		    mov TE.dwHoverTime, NULL
-    		    Invoke TrackMouseEvent, Addr TE
-    		.ENDIF
+            Invoke MUISetIntProperty, hWin, @CheckboxMouseOver , TRUE
+            .IF eax != TRUE
+                Invoke InvalidateRect, hWin, NULL, TRUE
+                mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
+                mov TE.dwFlags, TME_LEAVE
+                mov eax, hWin
+                mov TE.hwndTrack, eax
+                mov TE.dwHoverTime, NULL
+                Invoke TrackMouseEvent, Addr TE
+            .ENDIF
         .ENDIF
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @CheckboxMouseOver , FALSE
-		Invoke InvalidateRect, hWin, NULL, FALSE
+        Invoke InvalidateRect, hWin, NULL, FALSE
 
     .ELSEIF eax == WM_KILLFOCUS
         Invoke MUISetIntProperty, hWin, @CheckboxMouseOver , FALSE
-		Invoke InvalidateRect, hWin, NULL, FALSE
+        Invoke InvalidateRect, hWin, NULL, FALSE
 
-	.ELSEIF eax == WM_ENABLE
-	    Invoke MUISetIntProperty, hWin, @CheckboxEnabledState, wParam
-	    Invoke InvalidateRect, hWin, NULL, TRUE
-	    mov eax, 0
+    .ELSEIF eax == WM_ENABLE
+        Invoke MUISetIntProperty, hWin, @CheckboxEnabledState, wParam
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        mov eax, 0
 
     .ELSEIF eax == WM_SETTEXT
         Invoke DefWindowProc, hWin, uMsg, wParam, lParam
@@ -370,29 +370,29 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
         .IF lParam == TRUE
             Invoke InvalidateRect, hWin, NULL, TRUE
         .ENDIF   
-	
-	; custom messages start here
-	
-	.ELSEIF eax == MUI_GETPROPERTY
-		Invoke MUIGetExtProperty, hWin, wParam
-		ret
-		
-	.ELSEIF eax == MUI_SETPROPERTY	
-		;Invoke MUISetExtProperty, hWin, wParam, lParam
-		; by default set other similar properties when main one is set
-		Invoke _MUI_CheckboxSetPropertyEx, hWin, wParam, lParam
-		Invoke InvalidateRect, hWin, NULL, TRUE		
-		ret
+    
+    ; custom messages start here
+    
+    .ELSEIF eax == MUI_GETPROPERTY
+        Invoke MUIGetExtProperty, hWin, wParam
+        ret
+        
+    .ELSEIF eax == MUI_SETPROPERTY  
+        ;Invoke MUISetExtProperty, hWin, wParam, lParam
+        ; by default set other similar properties when main one is set
+        Invoke _MUI_CheckboxSetPropertyEx, hWin, wParam, lParam
+        Invoke InvalidateRect, hWin, NULL, TRUE     
+        ret
 
-	.ELSEIF eax == MUICM_GETSTATE ; wParam = NULL, lParam = NULL. EAX contains state (TRUE/FALSE)
-	    Invoke MUIGetIntProperty, hWin, @CheckboxSelectedState
-	    ret
-	 
-	.ELSEIF eax == MUICM_SETSTATE ; wParam = TRUE/FALSE, lParam = NULL
-	    Invoke MUISetIntProperty, hWin, @CheckboxSelectedState, wParam
-	    Invoke InvalidateRect, hWin, NULL, TRUE
-	    ret
-		
+    .ELSEIF eax == MUICM_GETSTATE ; wParam = NULL, lParam = NULL. EAX contains state (TRUE/FALSE)
+        Invoke MUIGetIntProperty, hWin, @CheckboxSelectedState
+        ret
+     
+    .ELSEIF eax == MUICM_SETSTATE ; wParam = TRUE/FALSE, lParam = NULL
+        Invoke MUISetIntProperty, hWin, @CheckboxSelectedState, wParam
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        ret
+        
     .ENDIF
     
     Invoke DefWindowProc, hWin, uMsg, wParam, lParam
@@ -438,14 +438,14 @@ _MUI_CheckboxInit PROC PRIVATE hControl:DWORD
     ;PrintDec hMUICheckboxFont
     
     .IF hMUICheckboxFont == 0
-    	mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
-    	Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
-    	Invoke CreateFontIndirect, Addr ncm.lfMessageFont
-    	mov hFont, eax
-	    Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
-	    mov lfnt.lfHeight, -16d
-	    ;mov lfnt.lfWeight, FW_BOLD
-	    Invoke CreateFontIndirect, Addr lfnt
+        mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
+        Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
+        Invoke CreateFontIndirect, Addr ncm.lfMessageFont
+        mov hFont, eax
+        Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
+        mov lfnt.lfHeight, -16d
+        ;mov lfnt.lfWeight, FW_BOLD
+        Invoke CreateFontIndirect, Addr lfnt
         mov hMUICheckboxFont, eax
         Invoke DeleteObject, hFont
     .ENDIF
@@ -671,44 +671,44 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     ; Setup Double Buffering
     ;----------------------------------------------------------
     Invoke GetClientRect, hWin, Addr rect
-	Invoke CreateCompatibleDC, hdc
-	mov hdcMem, eax
-	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-	mov hbmMem, eax
-	Invoke SelectObject, hdcMem, hbmMem
-	mov hOldBitmap, eax
-	
-	;----------------------------------------------------------
-	; Get some property values
-	;----------------------------------------------------------	
+    Invoke CreateCompatibleDC, hdc
+    mov hdcMem, eax
+    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+    mov hbmMem, eax
+    Invoke SelectObject, hdcMem, hbmMem
+    mov hOldBitmap, eax
+    
+    ;----------------------------------------------------------
+    ; Get some property values
+    ;---------------------------------------------------------- 
     Invoke MUIGetIntProperty, hWin, @CheckboxEnabledState
     mov EnabledState, eax
-	Invoke MUIGetIntProperty, hWin, @CheckboxMouseOver
+    Invoke MUIGetIntProperty, hWin, @CheckboxMouseOver
     mov MouseOver, eax
-	Invoke MUIGetIntProperty, hWin, @CheckboxSelectedState
+    Invoke MUIGetIntProperty, hWin, @CheckboxSelectedState
     mov SelectedState, eax    
-	
-	;PrintDec EnabledState
-	;PrintDec MouseOver
-	;PrintDec SelectedState
-	
-	;----------------------------------------------------------
-	; Background
-	;----------------------------------------------------------
-	;PrintText '_MUI_CheckboxPaintBackground'
-	Invoke _MUI_CheckboxPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+    ;PrintDec EnabledState
+    ;PrintDec MouseOver
+    ;PrintDec SelectedState
+    
+    ;----------------------------------------------------------
+    ; Background
+    ;----------------------------------------------------------
+    ;PrintText '_MUI_CheckboxPaintBackground'
+    Invoke _MUI_CheckboxPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
-	;----------------------------------------------------------
-	; Images
-	;----------------------------------------------------------
+    ;----------------------------------------------------------
+    ; Images
+    ;----------------------------------------------------------
     ;PrintText '_MUI_CheckboxPaintImages'
     Invoke _MUI_CheckboxPaintImages, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
-	;----------------------------------------------------------
-	; Text
-	;----------------------------------------------------------
-	;PrintText '_MUI_CheckboxPaintText'
-	Invoke _MUI_CheckboxPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    ;----------------------------------------------------------
+    ; Text
+    ;----------------------------------------------------------
+    ;PrintText '_MUI_CheckboxPaintText'
+    Invoke _MUI_CheckboxPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
@@ -723,7 +723,7 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
         Invoke DeleteObject, hOldBitmap
-    .ENDIF		
+    .ENDIF      
      
     Invoke EndPaint, hWin, Addr ps
 
@@ -867,7 +867,7 @@ _MUI_CheckboxPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:D
 
     .ENDIF
 
-	Invoke SelectObject, hdc, hFont
+    Invoke SelectObject, hdc, hFont
     mov hOldFont, eax
     Invoke GetWindowText, hWin, Addr szText, sizeof szText
 
@@ -1041,53 +1041,53 @@ _MUI_CheckboxSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, d
         Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue
     .ENDIF
     
-	mov eax, dwProperty
-	.IF eax == @CheckboxTextColor ; set other text colors to this if they are not set
-	    Invoke MUIGetExtProperty, hWin, @CheckboxTextColorAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @CheckboxTextColorAlt, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @CheckboxTextColorSel
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @CheckboxTextColorSel, dwPropertyValue
-	    .ENDIF
-	    ; except this, if sel has a color, then use this for selalt if it has a value
-	    Invoke MUIGetExtProperty, hWin, @CheckboxTextColorSelAlt
-	    .IF eax == 0
-	        Invoke MUIGetExtProperty, hWin, @CheckboxTextColorSel
-	        .IF eax == 0
-	            Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, dwPropertyValue
-	        .ELSE
-	            Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, eax
-	        .ENDIF
-	    .ENDIF
-	
-	.ELSEIF eax == @CheckboxTextColorSel
-	    Invoke MUIGetExtProperty, hWin, @CheckboxTextColorSelAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, dwPropertyValue
-	    .ENDIF
+    mov eax, dwProperty
+    .IF eax == @CheckboxTextColor ; set other text colors to this if they are not set
+        Invoke MUIGetExtProperty, hWin, @CheckboxTextColorAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @CheckboxTextColorAlt, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @CheckboxTextColorSel
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @CheckboxTextColorSel, dwPropertyValue
+        .ENDIF
+        ; except this, if sel has a color, then use this for selalt if it has a value
+        Invoke MUIGetExtProperty, hWin, @CheckboxTextColorSelAlt
+        .IF eax == 0
+            Invoke MUIGetExtProperty, hWin, @CheckboxTextColorSel
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, dwPropertyValue
+            .ELSE
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, eax
+            .ENDIF
+        .ENDIF
+    
+    .ELSEIF eax == @CheckboxTextColorSel
+        Invoke MUIGetExtProperty, hWin, @CheckboxTextColorSelAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, dwPropertyValue
+        .ENDIF
 
-	.ELSEIF eax == @CheckboxImage
-	    Invoke MUIGetExtProperty, hWin, @CheckboxImageAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @CheckboxImageSel
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @CheckboxImageSel, dwPropertyValue
-	    .ENDIF
-	    ; except this, if sel has a color, then use this for selalt if it has a value
-	    Invoke MUIGetExtProperty, hWin, @CheckboxImageSelAlt
-	    .IF eax == 0
-	        Invoke MUIGetExtProperty, hWin, @CheckboxImageSel
-	        .IF eax == 0
-	            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, dwPropertyValue
-	        .ELSE
-	            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, eax
-	        .ENDIF
-	    .ENDIF			
-	.ENDIF
+    .ELSEIF eax == @CheckboxImage
+        Invoke MUIGetExtProperty, hWin, @CheckboxImageAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @CheckboxImageSel
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, dwPropertyValue
+        .ENDIF
+        ; except this, if sel has a color, then use this for selalt if it has a value
+        Invoke MUIGetExtProperty, hWin, @CheckboxImageSelAlt
+        .IF eax == 0
+            Invoke MUIGetExtProperty, hWin, @CheckboxImageSel
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, dwPropertyValue
+            .ELSE
+                Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, eax
+            .ENDIF
+        .ENDIF          
+    .ENDIF
 
     ret
 _MUI_CheckboxSetPropertyEx ENDP
@@ -1270,9 +1270,9 @@ _MUI_CheckboxLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:D
     .ENDIF
     mov hinstance, eax
     
-	Invoke LoadBitmap, hinstance, idResBitmap
+    Invoke LoadBitmap, hinstance, idResBitmap
     Invoke MUISetExtProperty, hWin, dwProperty, eax
-	mov eax, TRUE
+    mov eax, TRUE
     
     ret
 
@@ -1296,10 +1296,10 @@ _MUI_CheckboxLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     .ENDIF
     mov hinstance, eax
 
-	Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+    Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
     Invoke MUISetExtProperty, hWin, dwProperty, eax
 
-	mov eax, TRUE
+    mov eax, TRUE
 
     ret
 
@@ -1319,14 +1319,14 @@ _MUI_CheckboxLoadIcon ENDP
 ;-------------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
 _MUI_CheckboxLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
-	local rcRes:HRSRC
-	local hResData:HRSRC
-	local pResData:HANDLE
-	local sizeOfRes:DWORD
-	local hbuffer:HANDLE
-	local pbuffer:DWORD
-	local pIStream:DWORD
-	local hIStream:DWORD
+    local rcRes:HRSRC
+    local hResData:HRSRC
+    local pResData:HANDLE
+    local sizeOfRes:DWORD
+    local hbuffer:HANDLE
+    local pbuffer:DWORD
+    local pIStream:DWORD
+    local hIStream:DWORD
     LOCAL hinstance:DWORD
     LOCAL pBitmapFromStream:DWORD
 
@@ -1336,67 +1336,67 @@ _MUI_CheckboxLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     .ENDIF
     mov hinstance, eax
 
-	; ------------------------------------------------------------------
-	; STEP 1: Find the resource
-	; ------------------------------------------------------------------
-	invoke	FindResource, hinstance, idResPng, RT_RCDATA
-	or 		eax, eax
-	jnz		@f
-	jmp		_MUI_CheckboxLoadPng@Close
-@@:	mov		rcRes, eax
-	
-	; ------------------------------------------------------------------
-	; STEP 2: Load the resource
-	; ------------------------------------------------------------------
-	invoke	LoadResource, hinstance, rcRes
-	or		eax, eax
-	jnz		@f
-	ret		; Resource was not loaded
-@@:	mov		hResData, eax
+    ; ------------------------------------------------------------------
+    ; STEP 1: Find the resource
+    ; ------------------------------------------------------------------
+    invoke  FindResource, hinstance, idResPng, RT_RCDATA
+    or      eax, eax
+    jnz     @f
+    jmp     _MUI_CheckboxLoadPng@Close
+@@: mov     rcRes, eax
+    
+    ; ------------------------------------------------------------------
+    ; STEP 2: Load the resource
+    ; ------------------------------------------------------------------
+    invoke  LoadResource, hinstance, rcRes
+    or      eax, eax
+    jnz     @f
+    ret     ; Resource was not loaded
+@@: mov     hResData, eax
 
-	; ------------------------------------------------------------------
-	; STEP 3: Create a stream to contain our loaded resource
-	; ------------------------------------------------------------------
-	invoke	SizeofResource, hinstance, rcRes
-	or		eax, eax
-	jnz		@f
-	jmp		_MUI_CheckboxLoadPng@Close
-@@:	mov		sizeOfRes, eax
-	
-	invoke	LockResource, hResData
-	or		eax, eax
-	jnz		@f
-	jmp		_MUI_CheckboxLoadPng@Close
-@@:	mov		pResData, eax
+    ; ------------------------------------------------------------------
+    ; STEP 3: Create a stream to contain our loaded resource
+    ; ------------------------------------------------------------------
+    invoke  SizeofResource, hinstance, rcRes
+    or      eax, eax
+    jnz     @f
+    jmp     _MUI_CheckboxLoadPng@Close
+@@: mov     sizeOfRes, eax
+    
+    invoke  LockResource, hResData
+    or      eax, eax
+    jnz     @f
+    jmp     _MUI_CheckboxLoadPng@Close
+@@: mov     pResData, eax
 
-	invoke	GlobalAlloc, GMEM_MOVEABLE, sizeOfRes
-	or		eax, eax
-	jnz		@f
-	jmp		_MUI_CheckboxLoadPng@Close
-@@:	mov		hbuffer, eax
+    invoke  GlobalAlloc, GMEM_MOVEABLE, sizeOfRes
+    or      eax, eax
+    jnz     @f
+    jmp     _MUI_CheckboxLoadPng@Close
+@@: mov     hbuffer, eax
 
-	invoke	GlobalLock, hbuffer
-	mov		pbuffer, eax
-	
-	invoke	RtlMoveMemory, pbuffer, hResData, sizeOfRes
-	invoke	CreateStreamOnHGlobal, pbuffer, TRUE, addr pIStream
-	or		eax, eax
-	jz		@f
-	jmp		_MUI_CheckboxLoadPng@Close
-@@:	
+    invoke  GlobalLock, hbuffer
+    mov     pbuffer, eax
+    
+    invoke  RtlMoveMemory, pbuffer, hResData, sizeOfRes
+    invoke  CreateStreamOnHGlobal, pbuffer, TRUE, addr pIStream
+    or      eax, eax
+    jz      @f
+    jmp     _MUI_CheckboxLoadPng@Close
+@@: 
 
-	; ------------------------------------------------------------------
-	; STEP 4: Create an image object from stream
-	; ------------------------------------------------------------------
-	invoke	GdipCreateBitmapFromStream, pIStream, Addr pBitmapFromStream
-	
-	; ------------------------------------------------------------------
-	; STEP 5: Free all used locks and resources
-	; ------------------------------------------------------------------
-	invoke	GetHGlobalFromStream, pIStream, addr hIStream ; had to uncomment as corrupts pngs if left in, googling shows underlying stream needs to be left open for the life of the bitmap
-	;invoke	GlobalFree, hIStream
-	invoke	GlobalUnlock, hbuffer
-	invoke	GlobalFree, hbuffer
+    ; ------------------------------------------------------------------
+    ; STEP 4: Create an image object from stream
+    ; ------------------------------------------------------------------
+    invoke  GdipCreateBitmapFromStream, pIStream, Addr pBitmapFromStream
+    
+    ; ------------------------------------------------------------------
+    ; STEP 5: Free all used locks and resources
+    ; ------------------------------------------------------------------
+    invoke  GetHGlobalFromStream, pIStream, addr hIStream ; had to uncomment as corrupts pngs if left in, googling shows underlying stream needs to be left open for the life of the bitmap
+    ;invoke GlobalFree, hIStream
+    invoke  GlobalUnlock, hbuffer
+    invoke  GlobalFree, hbuffer
 
     Invoke MUISetExtProperty, hWin, dwProperty, pBitmapFromStream
     ;PrintDec dwProperty
@@ -1417,10 +1417,10 @@ _MUI_CheckboxLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
         Invoke MUISetIntProperty, hWin, @CheckboxImageDisabledSelStream, hIStream
     .ENDIF
 
-	mov eax, TRUE
-	
+    mov eax, TRUE
+    
 _MUI_CheckboxLoadPng@Close:
-	ret
+    ret
 _MUI_CheckboxLoadPng endp
 ENDIF
 

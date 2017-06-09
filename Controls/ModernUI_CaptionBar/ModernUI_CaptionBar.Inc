@@ -34,7 +34,7 @@
 ; ModernUI_CaptionBar Prototypes for users of controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
 MUICaptionBarRegister       PROTO                                           ; Use 'ModernUICaptionBar' as class in RadASM custom class control
-MUICaptionBarCreate		    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszCaptionText, dwCaptionHeight, dwResourceID, dwStyle
+MUICaptionBarCreate         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszCaptionText, dwCaptionHeight, dwResourceID, dwStyle
 MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hCaptionBar, dwProperty, dwPropertyValue
 MUICaptionBarGetProperty    PROTO :DWORD, :DWORD                            ; hCaptionBar, dwProperty
 MUICaptionBarLoadIcons      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
@@ -68,7 +68,7 @@ MUICS_NOCAPTIONTITLETEXT    EQU 400h ; Dont draw a title text value, use lpszCap
 ; ModernUI_Caption Properties: Use with MUICaptionBarSetProperty / MUICaptionBarGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
 @CaptionBarTextColor        EQU 0   ; Text color for caption text and system buttons (min/max/restore/close)
-@CaptionBarTextFont	        EQU 4   ; Font for caption text
+@CaptionBarTextFont         EQU 4   ; Font for caption text
 @CaptionBarBackColor        EQU 8   ; Background color of caption and system buttons
 @CaptionBarBtnTxtRollColor  EQU 12  ; Text color for system buttons when mouse moves over button
 @CaptionBarBtnBckRollColor  EQU 16  ; Background color for system buttons when mouse moves over button

@@ -55,9 +55,9 @@ ENDIF
 ;--------------------------------------------------------------------------------------------------------------------------------------
 
 
-_MUI_CaptionBarWndProc				        PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarWndProc                      PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CaptionBarInit                         PROTO :DWORD
-_MUI_CaptionBarPaint					    PROTO :DWORD
+_MUI_CaptionBarPaint                        PROTO :DWORD
 _MUI_CaptionBarReposition                   PROTO :DWORD
 _MUI_CaptionBarParentSubClassProc           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CaptionBarSetSysButtonProperty         PROTO :DWORD, :DWORD, :DWORD
@@ -76,43 +76,43 @@ _MUI_ApplyMUIStyleToDialog                  PROTO :DWORD, :DWORD
 ; Structures for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; CaptionBar External Properties
-MUI_CAPTIONBAR_PROPERTIES				    STRUCT
-	dwTextColor							    DD ?
-	dwTextFont							    DD ?
-	dwBackColor							    DD ?
-	dwSysButtonTextRollColor                DD ?
-	dwSysButtonBackRollColor                DD ?
-	dwSysButtonsWidth                       DD ? ; defaults to 32
-	dwSysButtonsHeight                      DD ? ; defaults to 28
-	dwBtnIcoMin                             DD ?
-	dwBtnIcoMinAlt                          DD ?
-	dwBtnIcoMax                             DD ?
-	dwBtnIcoMaxAlt                          DD ?
-	dwBtnIcoRes                             DD ?
-	dwBtnIcoResAlt                          DD ?
-	dwBtnIcoClose                           DD ?
-	dwBtnIcoCloseAlt                        DD ?
-	dwDllInstance                           DD ?
-MUI_CAPTIONBAR_PROPERTIES				    ENDS
+MUI_CAPTIONBAR_PROPERTIES                   STRUCT
+    dwTextColor                             DD ?
+    dwTextFont                              DD ?
+    dwBackColor                             DD ?
+    dwSysButtonTextRollColor                DD ?
+    dwSysButtonBackRollColor                DD ?
+    dwSysButtonsWidth                       DD ? ; defaults to 32
+    dwSysButtonsHeight                      DD ? ; defaults to 28
+    dwBtnIcoMin                             DD ?
+    dwBtnIcoMinAlt                          DD ?
+    dwBtnIcoMax                             DD ?
+    dwBtnIcoMaxAlt                          DD ?
+    dwBtnIcoRes                             DD ?
+    dwBtnIcoResAlt                          DD ?
+    dwBtnIcoClose                           DD ?
+    dwBtnIcoCloseAlt                        DD ?
+    dwDllInstance                           DD ?
+MUI_CAPTIONBAR_PROPERTIES                   ENDS
 
 ; CaptionBar Internal Poperties
-_MUI_CAPTIONBAR_PROPERTIES				    STRUCT
-	dwEnabledState						    DD ?
-	dwMouseOver							    DD ?
-	hSysButtonClose                         DD ?
-	hSysButtonMax                           DD ?
-	hSysButtonRes                           DD ?
-	hSysButtonMin                           DD ?
-	dwNoMoveWindow                          DD ?
-	dwUseIcons                              DD ?
-_MUI_CAPTIONBAR_PROPERTIES				    ENDS
+_MUI_CAPTIONBAR_PROPERTIES                  STRUCT
+    dwEnabledState                          DD ?
+    dwMouseOver                             DD ?
+    hSysButtonClose                         DD ?
+    hSysButtonMax                           DD ?
+    hSysButtonRes                           DD ?
+    hSysButtonMin                           DD ?
+    dwNoMoveWindow                          DD ?
+    dwUseIcons                              DD ?
+_MUI_CAPTIONBAR_PROPERTIES                  ENDS
 
 ; SysButton External Properties
 MUI_SYSBUTTON_PROPERTIES                    STRUCT
-	dwTextColor							    DD ?
-	dwTextRollColor                         DD ?
-	dwBackColor							    DD ?
-	dwBackRollColor                         DD ?
+    dwTextColor                             DD ?
+    dwTextRollColor                         DD ?
+    dwBackColor                             DD ?
+    dwBackRollColor                         DD ?
     dwSysButtonType                         DD ?
     dwIco                                   DD ?
     dwIcoAlt                                DD ?
@@ -120,10 +120,10 @@ MUI_SYSBUTTON_PROPERTIES                    ENDS
 
 ; SysButton Internal Properties
 _MUI_SYSBUTTON_PROPERTIES                   STRUCT
-    dwSysButtonFont						    DD ?
-	dwEnabledState						    DD ?
-	dwMouseOver							    DD ?
-    dwUseIcons                              DD ?	
+    dwSysButtonFont                         DD ?
+    dwEnabledState                          DD ?
+    dwMouseOver                             DD ?
+    dwUseIcons                              DD ?    
 _MUI_SYSBUTTON_PROPERTIES                   ENDS
 
 
@@ -134,8 +134,8 @@ MUI_SYSBUTTON_HEIGHT                        EQU 28d
 
 
 ; CaptionBar Internal Properties
-@CaptionBarEnabledState				        EQU 0
-@CaptionBarMouseOver					    EQU 4
+@CaptionBarEnabledState                     EQU 0
+@CaptionBarMouseOver                        EQU 4
 @CaptionBar_hSysButtonClose                 EQU 8
 @CaptionBar_hSysButtonMax                   EQU 12
 @CaptionBar_hSysButtonRes                   EQU 16
@@ -145,21 +145,21 @@ MUI_SYSBUTTON_HEIGHT                        EQU 28d
 
 ; SysButton Internal Properties
 @SysButtonFont                              EQU 0
-@SysButtonEnabledState						EQU 4
-@SysButtonMouseOver							EQU 8
+@SysButtonEnabledState                      EQU 4
+@SysButtonMouseOver                         EQU 8
 @SysButtonUseIcons                          EQU 12
 
 ; SysButton External Properties
-@SysButtonTextColor							EQU 0 
+@SysButtonTextColor                         EQU 0 
 @SysButtonTextRollColor                     EQU 4
-@SysButtonBackColor							EQU 8
+@SysButtonBackColor                         EQU 8
 @SysButtonBackRollColor                     EQU 12
 @SysButtonType                              EQU 16
 @SysButtonIco                               EQU 20
 @SysButtonIcoAlt                            EQU 24
 
 .DATA
-szMUICaptionBarClass					    DB 'ModernUI_CaptionBar',0  ; Class name for our CaptionBar control
+szMUICaptionBarClass                        DB 'ModernUI_CaptionBar',0  ; Class name for our CaptionBar control
 szMUISysButtonClass                         DB 'ModernUI_SysButton',0   ; Class name for our system buttons (min/max/restore or close buttons)
 szMUISysButtonFont                          DB 'Marlett',0              ; System font used for drawing min/max/restore/close glyphs from marlett font
 szMUICaptionBarFont                         DB 'Segoe UI',0             ; Font used for caption text
@@ -200,7 +200,7 @@ MUICaptionBarGetProperty ENDP
 MUICaptionBarRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
@@ -208,20 +208,20 @@ MUICaptionBarRegister PROC PUBLIC
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUICaptionBarClass
-    	mov wc.lpszClassName, eax
-    	mov eax, hinstance
+        mov wc.lpszClassName, eax
+        mov eax, hinstance
         mov wc.hInstance, eax
-    	mov wc.lpfnWndProc, OFFSET _MUI_CaptionBarWndProc
-    	Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, eax
-    	mov wc.hIcon, 0
-    	mov wc.hIconSm, 0
-    	mov wc.lpszMenuName, NULL
-    	mov wc.hbrBackground, NULL
-    	mov wc.style, CS_DBLCLKS ;NULL
+        mov wc.lpfnWndProc, OFFSET _MUI_CaptionBarWndProc
+        Invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.hCursor, eax
+        mov wc.hIcon, 0
+        mov wc.hIconSm, 0
+        mov wc.lpszMenuName, NULL
+        mov wc.hbrBackground, NULL
+        mov wc.style, CS_DBLCLKS ;NULL
         mov wc.cbClsExtra, 0
-    	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
-    	Invoke RegisterClassEx, addr wc
+        mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        Invoke RegisterClassEx, addr wc
     .ENDIF
     ret
 
@@ -233,32 +233,32 @@ MUICaptionBarRegister ENDP
 ;-------------------------------------------------------------------------------------
 MUICaptionBarCreate PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD, dwCaptionHeight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL hinstance:DWORD
-	LOCAL hControl:DWORD
-	LOCAL rect:RECT
-	LOCAL dwControlStyle:DWORD
+    LOCAL hControl:DWORD
+    LOCAL rect:RECT
+    LOCAL dwControlStyle:DWORD
 
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
-	
-	Invoke MUICaptionBarRegister
+    
+    Invoke MUICaptionBarRegister
     
     ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
-	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN.
-	mov eax, dwStyle
-	or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-	mov dwControlStyle, eax
+    ; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN.
+    mov eax, dwStyle
+    or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+    mov dwControlStyle, eax
 
     Invoke GetWindowRect, hWndParent, Addr rect
     mov eax, rect.right
     mov ebx, rect.left
     sub eax, ebx
-	
+    
     Invoke CreateWindowEx, NULL, Addr szMUICaptionBarClass, lpszCaptionText, dwControlStyle, 0, 0, eax, dwCaptionHeight, hWndParent, dwResourceID, hinstance, NULL
-	mov hControl, eax
-	.IF eax != NULL
-		
-	.ENDIF
-	mov eax, hControl
+    mov hControl, eax
+    .IF eax != NULL
+        
+    .ENDIF
+    mov eax, hControl
     ret
 MUICaptionBarCreate ENDP
 
@@ -276,7 +276,7 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         Invoke GetParent, hWin
         mov hParent, eax
         mov ebx, lParam
-		; sets text of our CaptionBar
+        ; sets text of our CaptionBar
         Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName
         ; Set main window title
         Invoke SetWindowText, hParent, (CREATESTRUCT PTR [ebx]).lpszName
@@ -284,15 +284,15 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         ret
 
     .ELSEIF eax == WM_CREATE
-		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_CAPTIONBAR_PROPERTIES ; internal properties
-		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_CAPTIONBAR_PROPERTIES ; external properties
-		Invoke _MUI_CaptionBarInit, hWin
-		mov eax, 0
-		ret    
+        Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_CAPTIONBAR_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_CAPTIONBAR_PROPERTIES ; external properties
+        Invoke _MUI_CaptionBarInit, hWin
+        mov eax, 0
+        ret    
 
     .ELSEIF eax == WM_NCDESTROY
         Invoke MUIFreeMemProperties, hWin, 0
-		Invoke MUIFreeMemProperties, hWin, 4
+        Invoke MUIFreeMemProperties, hWin, 4
 
     .ELSEIF eax == WM_COMMAND
         mov eax, wParam
@@ -361,47 +361,58 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
    .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @CaptionBarEnabledState
         .IF eax == TRUE   
-    		Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , TRUE
-    		.IF eax != TRUE
-    		    Invoke InvalidateRect, hWin, NULL, TRUE
-    		    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
-    		    mov TE.dwFlags, TME_LEAVE
-    		    mov eax, hWin
-    		    mov TE.hwndTrack, eax
-    		    mov TE.dwHoverTime, NULL
-    		    Invoke TrackMouseEvent, Addr TE
-    		.ENDIF
+            Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , TRUE
+            .IF eax != TRUE
+                Invoke InvalidateRect, hWin, NULL, TRUE
+                mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
+                mov TE.dwFlags, TME_LEAVE
+                mov eax, hWin
+                mov TE.hwndTrack, eax
+                mov TE.dwHoverTime, NULL
+                Invoke TrackMouseEvent, Addr TE
+            .ENDIF
         .ENDIF
         
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke InvalidateRect, hWin, NULL, TRUE
 
     .ELSEIF eax == WM_KILLFOCUS
         Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-	
-	.ELSEIF eax == WM_SIZE
-	    Invoke _MUI_CaptionBarReposition, hWin
-	    mov eax, 0
-	    ret
-	
-	; custom messages start here
-	.ELSEIF eax == MUI_GETPROPERTY
-		Invoke MUIGetExtProperty, hWin, wParam
-		ret
-		
-	.ELSEIF eax == MUI_SETPROPERTY
-		Invoke MUISetExtProperty, hWin, wParam, lParam
-		
-		; also set child system button properties as well if they apply
-		Invoke _MUI_CaptionBarSetSysButtonProperty, hWin, wParam, lParam
-		
-		.IF wParam == @CaptionBarBtnWidth || wParam == @CaptionBarBtnHeight
+        Invoke InvalidateRect, hWin, NULL, TRUE
+    
+    .ELSEIF eax == WM_SIZE
+        Invoke _MUI_CaptionBarReposition, hWin
+        mov eax, 0
+        ret
+    
+    .ELSEIF eax == WM_SETTEXT
+        Invoke GetParent, hWin
+        mov hParent, eax
+         ; sets text of our CaptionBar
+        Invoke SetWindowText, hWin, lParam
+        ; Set main window title
+        Invoke SetWindowText, hParent, lParam
+        mov eax, 0
+        Invoke InvalidateRect, hWin, NULL, FALSE
+        ret
+    
+    ; custom messages start here
+    .ELSEIF eax == MUI_GETPROPERTY
+        Invoke MUIGetExtProperty, hWin, wParam
+        ret
+        
+    .ELSEIF eax == MUI_SETPROPERTY
+        Invoke MUISetExtProperty, hWin, wParam, lParam
+        
+        ; also set child system button properties as well if they apply
+        Invoke _MUI_CaptionBarSetSysButtonProperty, hWin, wParam, lParam
+        
+        .IF wParam == @CaptionBarBtnWidth || wParam == @CaptionBarBtnHeight
             Invoke _MUI_CaptionBarReposition, hWin
-		.ENDIF
-		ret
-		
+        .ENDIF
+        ret
+        
     .ENDIF
     
     Invoke DefWindowProc, hWin, uMsg, wParam, lParam
@@ -529,14 +540,14 @@ _MUI_CaptionBarInit PROC PRIVATE hCaptionBar:DWORD
     Invoke MUISetExtProperty, hCaptionBar, @CaptionBarDllInstance, 0
     
     .IF hMUICaptionBarFont == 0
-    	mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
-    	Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
-    	Invoke CreateFontIndirect, Addr ncm.lfMessageFont
-    	mov hFont, eax
-	    Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
-	    mov lfnt.lfHeight, -12d
-	    mov lfnt.lfWeight, FW_NORMAL ;FW_BOLD
-	    Invoke CreateFontIndirect, Addr lfnt
+        mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
+        Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
+        Invoke CreateFontIndirect, Addr ncm.lfMessageFont
+        mov hFont, eax
+        Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
+        mov lfnt.lfHeight, -12d
+        mov lfnt.lfWeight, FW_NORMAL ;FW_BOLD
+        Invoke CreateFontIndirect, Addr lfnt
         mov hMUICaptionBarFont, eax
         Invoke DeleteObject, hFont
     .ENDIF
@@ -584,22 +595,22 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     ; Setup Double Buffering
     ;----------------------------------------------------------
     Invoke GetClientRect, hWin, Addr rect
-	Invoke CreateCompatibleDC, hdc
-	mov hdcMem, eax
-	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-	mov hbmMem, eax
-	Invoke SelectObject, hdcMem, hbmMem
-	mov hOldBitmap, eax
-	
-	;----------------------------------------------------------
-	; Get properties
-	;----------------------------------------------------------
-	;Invoke _MUIGetIntProperty, hWin, @CaptionBarStyle
-	;mov dwStyle, eax
+    Invoke CreateCompatibleDC, hdc
+    mov hdcMem, eax
+    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+    mov hbmMem, eax
+    Invoke SelectObject, hdcMem, hbmMem
+    mov hOldBitmap, eax
+    
+    ;----------------------------------------------------------
+    ; Get properties
+    ;----------------------------------------------------------
+    ;Invoke _MUIGetIntProperty, hWin, @CaptionBarStyle
+    ;mov dwStyle, eax
     Invoke GetWindowLong, hWin, GWL_STYLE
-    mov dwStyle, eax	
-	
-	Invoke MUIGetIntProperty, hWin, @CaptionBarMouseOver
+    mov dwStyle, eax    
+    
+    Invoke MUIGetIntProperty, hWin, @CaptionBarMouseOver
     mov MouseOver, eax
     Invoke MUIGetExtProperty, hWin, @CaptionBarTextColor        ; normal text color
     mov TextColor, eax
@@ -607,10 +618,10 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     mov BackColor, eax
     Invoke MUIGetExtProperty, hWin, @CaptionBarTextFont        
     mov hFont, eax
-	
-	;----------------------------------------------------------
-	; Fill background
-	;----------------------------------------------------------
+    
+    ;----------------------------------------------------------
+    ; Fill background
+    ;----------------------------------------------------------
     Invoke SetBkMode, hdcMem, OPAQUE
     Invoke SetBkColor, hdcMem, BackColor
     Invoke GetStockObject, DC_BRUSH
@@ -623,10 +634,10 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     mov eax, dwStyle
     and eax, MUICS_NOCAPTIONTITLETEXT
     .IF eax != MUICS_NOCAPTIONTITLETEXT
-    	;----------------------------------------------------------
-    	; Draw Text
-    	;----------------------------------------------------------
-    	Invoke SelectObject, hdcMem, hFont
+        ;----------------------------------------------------------
+        ; Draw Text
+        ;----------------------------------------------------------
+        Invoke SelectObject, hdcMem, hFont
         mov hOldFont, eax
         Invoke GetWindowText, hWin, Addr szText, sizeof szText
         Invoke SetTextColor, hdcMem, TextColor
@@ -653,7 +664,7 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
         Invoke DeleteObject, hOldBitmap
-    .ENDIF		
+    .ENDIF      
     .IF hOldFont != 0
         Invoke DeleteObject, hOldFont
     .ENDIF
@@ -665,7 +676,7 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     .ENDIF
     
     Invoke EndPaint, hWin, Addr ps
-	
+    
 
     ret
 _MUI_CaptionBarPaint ENDP
@@ -893,18 +904,18 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
     ; have to move this caption bar first, so that child controls can be moved inside of the new width (cant use defer on this window)
     .IF wp.showCmd == SW_SHOWNORMAL
         sub dwClientWidth, 2
-        Invoke SetWindowPos, hCaptionBar, NULL, 1, 1, dwClientWidth, dwCaptionHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOREDRAW or SWP_NOACTIVATE or SWP_NOSENDCHANGING	 ;SWP_NOCOPYBITS	 or SWP_NOREDRAW
+        Invoke SetWindowPos, hCaptionBar, NULL, 1, 1, dwClientWidth, dwCaptionHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOREDRAW or SWP_NOACTIVATE or SWP_NOSENDCHANGING  ;SWP_NOCOPYBITS     or SWP_NOREDRAW
     .ELSE
-        Invoke SetWindowPos, hCaptionBar, NULL, 1, 1, dwClientWidth, dwCaptionHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOREDRAW or SWP_NOACTIVATE or SWP_NOSENDCHANGING	 ;SWP_NOCOPYBITS	 or SWP_NOREDRAW
+        Invoke SetWindowPos, hCaptionBar, NULL, 1, 1, dwClientWidth, dwCaptionHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOREDRAW or SWP_NOACTIVATE or SWP_NOSENDCHANGING  ;SWP_NOCOPYBITS     or SWP_NOREDRAW
     .ENDIF 
 
     .IF hSysButtonClose != NULL
         mov eax, dwClientWidth
         sub eax, dwLeftOffset
         .IF hDefer == NULL
-            Invoke SetWindowPos, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	;or SWP_NOCOPYBITS
+            Invoke SetWindowPos, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING ;or SWP_NOCOPYBITS
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke DeferWindowPos, hDefer, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING    
         .ENDIF
         mov eax, dwSysButtonWidth
         add dwLeftOffset, eax ;32d
@@ -914,17 +925,17 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
         mov eax, dwClientWidth
         sub eax, dwLeftOffset
         .IF hDefer == NULL
-            Invoke SetWindowPos, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke SetWindowPos, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING    
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke DeferWindowPos, hDefer, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING 
         .ENDIF
 
         mov eax, dwClientWidth
         sub eax, dwLeftOffset        
         .IF hDefer == NULL
-            Invoke SetWindowPos, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke SetWindowPos, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING    
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke DeferWindowPos, hDefer, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING  
         .ENDIF
         mov eax, dwSysButtonWidth
         add dwLeftOffset, eax ;32d
@@ -934,9 +945,9 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
         mov eax, dwClientWidth
         sub eax, dwLeftOffset
         .IF hDefer == NULL
-            Invoke SetWindowPos, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke SetWindowPos, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING    
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING	
+            Invoke DeferWindowPos, hDefer, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING  
         .ENDIF
     .ENDIF
 
@@ -1116,20 +1127,20 @@ _MUI_CreateSysButton PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, 
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUISysButtonClass
-    	mov wc.lpszClassName, eax
-    	mov eax, hinstance
+        mov wc.lpszClassName, eax
+        mov eax, hinstance
         mov wc.hInstance, eax
-    	mov wc.lpfnWndProc, OFFSET _MUI_SysButtonWndProc
-    	Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, eax
-    	mov wc.hIcon, 0
-    	mov wc.hIconSm, 0
-    	mov wc.lpszMenuName, NULL
-    	mov wc.hbrBackground, NULL
-    	mov wc.style, NULL
+        mov wc.lpfnWndProc, OFFSET _MUI_SysButtonWndProc
+        Invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.hCursor, eax
+        mov wc.hIcon, 0
+        mov wc.hIconSm, 0
+        mov wc.lpszMenuName, NULL
+        mov wc.hbrBackground, NULL
+        mov wc.style, NULL
         mov wc.cbClsExtra, 0
-    	mov wc.cbWndExtra, 8
-    	Invoke RegisterClassEx, addr wc
+        mov wc.cbWndExtra, 8
+        Invoke RegisterClassEx, addr wc
     .ENDIF   
     Invoke CreateWindowEx, NULL, Addr szMUISysButtonClass, lpszText, WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL ;WS_EX_TRANSPARENT needed only for click through or WS_CLIPSIBLINGS
     ret
@@ -1146,16 +1157,16 @@ _MUI_SysButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM,
     
     mov eax,uMsg
     .IF eax == WM_CREATE
-		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_SYSBUTTON_PROPERTIES ; internal properties
-		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_SYSBUTTON_PROPERTIES ; external properties
-		Invoke _MUI_SysButtonInit, hWin
-		mov eax, 0
-		ret    
+        Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_SYSBUTTON_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_SYSBUTTON_PROPERTIES ; external properties
+        Invoke _MUI_SysButtonInit, hWin
+        mov eax, 0
+        ret    
 
     .ELSEIF eax == WM_NCDESTROY
         Invoke _MUI_SysButtonCleanup, hWin
         Invoke MUIFreeMemProperties, hWin, 0
-		Invoke MUIFreeMemProperties, hWin, 4   
+        Invoke MUIFreeMemProperties, hWin, 4   
         
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -1167,35 +1178,35 @@ _MUI_SysButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM,
         ret
    
     .ELSEIF eax == WM_LBUTTONUP
-		Invoke GetDlgCtrlID, hWin
-		mov ebx,eax
-		Invoke GetParent, hWin
-		Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
+        Invoke GetDlgCtrlID, hWin
+        mov ebx,eax
+        Invoke GetParent, hWin
+        Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
    
    .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUISetIntProperty, hWin, @SysButtonMouseOver, TRUE
-		.IF eax != TRUE
-		    Invoke InvalidateRect, hWin, NULL, TRUE
-		    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
-		    mov TE.dwFlags, TME_LEAVE
-		    mov eax, hWin
-		    mov TE.hwndTrack, eax
-		    mov TE.dwHoverTime, NULL
-		    Invoke TrackMouseEvent, Addr TE
-		.ENDIF
+        .IF eax != TRUE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
+            mov TE.dwFlags, TME_LEAVE
+            mov eax, hWin
+            mov TE.hwndTrack, eax
+            mov TE.dwHoverTime, NULL
+            Invoke TrackMouseEvent, Addr TE
+        .ENDIF
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @SysButtonMouseOver, FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke LoadCursor, NULL, IDC_ARROW
+        Invoke SetCursor, eax
 
     .ELSEIF eax == WM_KILLFOCUS
         Invoke MUISetIntProperty, hWin, @SysButtonMouseOver, FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
-		
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke LoadCursor, NULL, IDC_ARROW
+        Invoke SetCursor, eax
+        
     .ENDIF
     
     Invoke DefWindowProc, hWin, uMsg, wParam, lParam
@@ -1296,17 +1307,17 @@ _MUI_SysButtonPaint PROC PRIVATE USES EBX hWin:DWORD
     ; Setup Double Buffering
     ;----------------------------------------------------------
     Invoke GetClientRect, hWin, Addr rect
-	Invoke CreateCompatibleDC, hdc
-	mov hdcMem, eax
-	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-	mov hbmMem, eax
-	Invoke SelectObject, hdcMem, hbmMem
-	mov hOldBitmap, eax
-	
-	;----------------------------------------------------------
-	; Get properties
-	;----------------------------------------------------------
-	Invoke MUIGetIntProperty, hWin, @SysButtonMouseOver
+    Invoke CreateCompatibleDC, hdc
+    mov hdcMem, eax
+    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+    mov hbmMem, eax
+    Invoke SelectObject, hdcMem, hbmMem
+    mov hOldBitmap, eax
+    
+    ;----------------------------------------------------------
+    ; Get properties
+    ;----------------------------------------------------------
+    Invoke MUIGetIntProperty, hWin, @SysButtonMouseOver
     mov MouseOver, eax
     .IF MouseOver == 0
         Invoke MUIGetExtProperty, hWin, @SysButtonTextColor        ; normal text color
@@ -1337,9 +1348,9 @@ _MUI_SysButtonPaint PROC PRIVATE USES EBX hWin:DWORD
         mov hIcon, eax
     .ENDIF
 
-	;----------------------------------------------------------
-	; Fill background
-	;----------------------------------------------------------    
+    ;----------------------------------------------------------
+    ; Fill background
+    ;----------------------------------------------------------    
     Invoke SetBkMode, hdcMem, OPAQUE
     Invoke SetBkColor, hdcMem, BackColor
     Invoke GetStockObject, DC_BRUSH
@@ -1349,10 +1360,10 @@ _MUI_SysButtonPaint PROC PRIVATE USES EBX hWin:DWORD
     Invoke FillRect, hdcMem, Addr rect, hBrush
 
     .IF UseIcons == FALSE || hIcon == NULL
-    	;----------------------------------------------------------
-    	; Draw Text
-    	;----------------------------------------------------------
-    	Invoke SelectObject, hdcMem, hFont
+        ;----------------------------------------------------------
+        ; Draw Text
+        ;----------------------------------------------------------
+        Invoke SelectObject, hdcMem, hFont
         mov hOldFont, eax
         ;PrintDec hFont
         ;PrintDec hOldFont
@@ -1361,9 +1372,9 @@ _MUI_SysButtonPaint PROC PRIVATE USES EBX hWin:DWORD
         Invoke DrawText, hdcMem, Addr szText, -1, Addr rect, DT_SINGLELINE or DT_CENTER or DT_VCENTER
 
     .ELSE
-    	;----------------------------------------------------------
-    	; Draw Icon
-    	;----------------------------------------------------------
+        ;----------------------------------------------------------
+        ; Draw Icon
+        ;----------------------------------------------------------
         
         ; get icon width and height and center it in our client
         Invoke MUIGetImageSize, hIcon, MUIIT_ICO, Addr nIcoWidth, Addr nIcoHeight
@@ -1400,7 +1411,7 @@ _MUI_SysButtonPaint PROC PRIVATE USES EBX hWin:DWORD
     Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
         Invoke DeleteObject, hOldBitmap
-    .ENDIF		
+    .ENDIF      
     .IF hOldFont != 0
        Invoke DeleteObject, hOldFont
     .ENDIF
@@ -1470,35 +1481,35 @@ _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
     
     or dwNewStyle, WS_CLIPCHILDREN
 
-	Invoke SetWindowLong, hWin, GWL_STYLE, dwNewStyle
-	
-	; Set dropshadow on or off on our dialog
-	
-	Invoke GetClassLong, hWin, GCL_STYLE
-	mov dwClassStyle, eax
-	
-	.IF dwDropShadow == TRUE
-	    mov eax, dwClassStyle
-	    and eax, CS_DROPSHADOW
-	    .IF eax != CS_DROPSHADOW
-	        or dwClassStyle, CS_DROPSHADOW
-	        Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
-	    .ENDIF
-	.ELSE    
-	    mov eax, dwClassStyle
-	    and eax, CS_DROPSHADOW
-	    .IF eax == CS_DROPSHADOW
-	        and dwClassStyle,(-1 xor CS_DROPSHADOW)
+    Invoke SetWindowLong, hWin, GWL_STYLE, dwNewStyle
+    
+    ; Set dropshadow on or off on our dialog
+    
+    Invoke GetClassLong, hWin, GCL_STYLE
+    mov dwClassStyle, eax
+    
+    .IF dwDropShadow == TRUE
+        mov eax, dwClassStyle
+        and eax, CS_DROPSHADOW
+        .IF eax != CS_DROPSHADOW
+            or dwClassStyle, CS_DROPSHADOW
             Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
-	    .ENDIF
-	.ENDIF
+        .ENDIF
+    .ELSE    
+        mov eax, dwClassStyle
+        and eax, CS_DROPSHADOW
+        .IF eax == CS_DROPSHADOW
+            and dwClassStyle,(-1 xor CS_DROPSHADOW)
+            Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
+        .ENDIF
+    .ENDIF
 
-	; remove any menu that might have been assigned via class registration - for modern ui look
-	Invoke GetMenu, hWin
-	.IF eax != NULL
-	    Invoke SetMenu, hWin, NULL
-	.ENDIF
-	
+    ; remove any menu that might have been assigned via class registration - for modern ui look
+    Invoke GetMenu, hWin
+    .IF eax != NULL
+        Invoke SetMenu, hWin, NULL
+    .ENDIF
+    
     ret
 
 _MUI_ApplyMUIStyleToDialog ENDP
@@ -1571,11 +1582,11 @@ MUICaptionBarLoadIcons PROC PUBLIC hCaptionBar:DWORD, idResMin:DWORD, idResMinAl
         mov hSysButtonMin, eax
         
         .IF idResMin != NULL
-    	    Invoke LoadImage, hinstance, idResMin, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hinstance, idResMin, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonMin, @SysButtonIco, eax
         .ENDIF
         .IF idResMinAlt != NULL
-    	    Invoke LoadImage, hinstance, idResMinAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hinstance, idResMinAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonMin, @SysButtonIcoAlt, eax
         .ENDIF
     .ENDIF
@@ -1585,11 +1596,11 @@ MUICaptionBarLoadIcons PROC PUBLIC hCaptionBar:DWORD, idResMin:DWORD, idResMinAl
         mov hSysButtonMax, eax
         
         .IF idResMax != NULL
-    	    Invoke LoadImage, hinstance, idResMax, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hinstance, idResMax, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonMax, @SysButtonIco, eax
         .ENDIF
         .IF idResMaxAlt != NULL
-    	    Invoke LoadImage, hinstance, idResMaxAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hinstance, idResMaxAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonMax, @SysButtonIcoAlt, eax
         .ENDIF
     .ENDIF
@@ -1599,11 +1610,11 @@ MUICaptionBarLoadIcons PROC PUBLIC hCaptionBar:DWORD, idResMin:DWORD, idResMinAl
         mov hSysButtonRes, eax
         
         .IF idResRes != NULL
-    	    Invoke LoadImage, hinstance, idResRes, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hinstance, idResRes, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonRes, @SysButtonIco, eax
         .ENDIF
         .IF idResResAlt != NULL
-    	    Invoke LoadImage, hinstance, idResResAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hinstance, idResResAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonRes, @SysButtonIcoAlt, eax
         .ENDIF
     .ENDIF
@@ -1613,17 +1624,17 @@ MUICaptionBarLoadIcons PROC PUBLIC hCaptionBar:DWORD, idResMin:DWORD, idResMinAl
         mov hSysButtonClose, eax
         
         .IF idResClose != NULL
-    	    Invoke LoadImage, hinstance, idResClose, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hinstance, idResClose, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonClose, @SysButtonIco, eax
         .ENDIF
         .IF idResClose != NULL
-    	    Invoke LoadImage, hinstance, idResCloseAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hinstance, idResCloseAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonClose, @SysButtonIcoAlt, eax
         .ENDIF
     .ENDIF
     
 
-	mov eax, TRUE
+    mov eax, TRUE
     ret
 
 MUICaptionBarLoadIcons ENDP
@@ -1643,11 +1654,11 @@ MUICaptionBarLoadIconsDll PROC PUBLIC hCaptionBar:DWORD, hInst:DWORD, idResMin:D
         mov hSysButtonMin, eax
         
         .IF idResMin != NULL
-    	    Invoke LoadImage, hInst, idResMin, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hInst, idResMin, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonMin, @SysButtonIco, eax
         .ENDIF
         .IF idResMinAlt != NULL
-    	    Invoke LoadImage, hInst, idResMinAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hInst, idResMinAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonMin, @SysButtonIcoAlt, eax
         .ENDIF
     .ENDIF
@@ -1657,11 +1668,11 @@ MUICaptionBarLoadIconsDll PROC PUBLIC hCaptionBar:DWORD, hInst:DWORD, idResMin:D
         mov hSysButtonMax, eax
         
         .IF idResMax != NULL
-    	    Invoke LoadImage, hInst, idResMax, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hInst, idResMax, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonMax, @SysButtonIco, eax
         .ENDIF
         .IF idResMaxAlt != NULL
-    	    Invoke LoadImage, hInst, idResMaxAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hInst, idResMaxAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonMax, @SysButtonIcoAlt, eax
         .ENDIF
     .ENDIF
@@ -1671,11 +1682,11 @@ MUICaptionBarLoadIconsDll PROC PUBLIC hCaptionBar:DWORD, hInst:DWORD, idResMin:D
         mov hSysButtonRes, eax
         
         .IF idResRes != NULL
-    	    Invoke LoadImage, hInst, idResRes, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hInst, idResRes, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonRes, @SysButtonIco, eax
         .ENDIF
         .IF idResResAlt != NULL
-    	    Invoke LoadImage, hInst, idResResAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hInst, idResResAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonRes, @SysButtonIcoAlt, eax
         .ENDIF
     .ENDIF
@@ -1685,17 +1696,17 @@ MUICaptionBarLoadIconsDll PROC PUBLIC hCaptionBar:DWORD, hInst:DWORD, idResMin:D
         mov hSysButtonClose, eax
         
         .IF idResClose != NULL
-    	    Invoke LoadImage, hInst, idResClose, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hInst, idResClose, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonClose, @SysButtonIco, eax
         .ENDIF
         .IF idResClose != NULL
-    	    Invoke LoadImage, hInst, idResCloseAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+            Invoke LoadImage, hInst, idResCloseAlt, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
             Invoke MUISetExtProperty, hSysButtonClose, @SysButtonIcoAlt, eax
         .ENDIF
     .ENDIF
     
 
-	mov eax, TRUE
+    mov eax, TRUE
     ret
 
 MUICaptionBarLoadIconsDll ENDP

@@ -33,10 +33,10 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Button Prototypes
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUIButtonRegister		        PROTO																	; Use 'ModernUI_Button' as class in RadASM custom class control
-MUIButtonCreate		            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD	; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
-MUIButtonSetProperty	        PROTO :DWORD, :DWORD, :DWORD											; hModernUI_Button, dwProperty, dwPropertyValue
-MUIButtonGetProperty	        PROTO :DWORD, :DWORD													; hModernUI_Button, dwProperty
+MUIButtonRegister               PROTO                                                                   ; Use 'ModernUI_Button' as class in RadASM custom class control
+MUIButtonCreate                 PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
+MUIButtonSetProperty            PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, dwProperty, dwPropertyValue
+MUIButtonGetProperty            PROTO :DWORD, :DWORD                                                    ; hModernUI_Button, dwProperty
 MUIButtonGetState               PROTO :DWORD                                                            ; hModernUI_Button
 MUIButtonSetState               PROTO :DWORD, :DWORD                                                    ; hModernUI_Button, bState
 
@@ -90,11 +90,11 @@ MUI_BUTTON_PROPERTIES           STRUCT
     dwImageSel                  DD ?       ; hImage - Left or center image
     dwImageSelAlt               DD ?       ; hImage - Left or center image
     dwImageDisabled             DD ?       ; hImage - Left or center image
-	dwRightImage                DD ?       ; hImage - Right side image
-	dwRightImageAlt             DD ?       ; hImage - Right side image
-	dwRightImageSel             DD ?       ; hImage - Right side image
-	dwRightImageSelAlt          DD ?       ; hImage - Right side image
-	dwRightImageDisabled        DD ?       ; hImage - Right side image
+    dwRightImage                DD ?       ; hImage - Right side image
+    dwRightImageAlt             DD ?       ; hImage - Right side image
+    dwRightImageSel             DD ?       ; hImage - Right side image
+    dwRightImageSelAlt          DD ?       ; hImage - Right side image
+    dwRightImageDisabled        DD ?       ; hImage - Right side image
     dwNotifyTextFont            DD ?       ; hFont
     dwNotifyTextColor           DD ?       ; Colorref
     dwNotifyBackColor           DD ?       ; Colorref
@@ -109,7 +109,7 @@ MUI_BUTTON_PROPERTIES           STRUCT
     dwButtonPaddingStyle        DD ?       ; 
     dwButtonPaddingTextImage    DD ?       ; 
     dwButtonDllInstance         DD ?
-MUI_BUTTON_PROPERTIES			ENDS
+MUI_BUTTON_PROPERTIES           ENDS
 ENDIF
 
 

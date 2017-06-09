@@ -33,10 +33,10 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_SmartPanel Prototypes
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUISmartPanelRegister		   PROTO																   ; Use 'ModernUI_SmartPanel' as class in RadASM custom class control
-MUISmartPanelCreate		       PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD        	   ; hWndParent, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
-MUISmartPanelSetProperty	   PROTO :DWORD, :DWORD, :DWORD											   ; hModernUI_SmartPanel, dwProperty, dwPropertyValue
-MUISmartPanelGetProperty	   PROTO :DWORD, :DWORD													   ; hModernUI_SmartPanel, dwProperty
+MUISmartPanelRegister          PROTO                                                                   ; Use 'ModernUI_SmartPanel' as class in RadASM custom class control
+MUISmartPanelCreate            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD            ; hWndParent, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
+MUISmartPanelSetProperty       PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_SmartPanel, dwProperty, dwPropertyValue
+MUISmartPanelGetProperty       PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, dwProperty
 
 MUISmartPanelGetCurrentPanel   PROTO :DWORD                                                            ; hModernUI_SmartPanel
 MUISmartPanelSetCurrentPanel   PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_SmartPanel, PanelIndex, bNotify
@@ -51,19 +51,19 @@ MUISmartPanelRegisterPanel     PROTO :DWORD, :DWORD, :DWORD                     
 ;--------------------------------------------------------------------------------------------------------------------------------------
 
 IFNDEF MUISP_ITEM ; SmartPanel Notification Item
-MUISP_ITEM                 	    STRUCT
-    iItem               	    DD 0
-    lParam              	    DD 0
+MUISP_ITEM                      STRUCT
+    iItem                       DD 0
+    lParam                      DD 0
     hPanel                      DD 0
-MUISP_ITEM                 	    ENDS
+MUISP_ITEM                      ENDS
 ENDIF
 
 IFNDEF NM_MUISMARTPANEL ; Notification Message Structure for SmartPanel
-NM_MUISMARTPANEL      	        STRUCT
-    hdr                 	    NMHDR <>
-    itemOld             	    MUISP_ITEM <>
-    itemNew             	    MUISP_ITEM <>
-NM_MUISMARTPANEL      	        ENDS
+NM_MUISMARTPANEL                STRUCT
+    hdr                         NMHDR <>
+    itemOld                     MUISP_ITEM <>
+    itemNew                     MUISP_ITEM <>
+NM_MUISMARTPANEL                ENDS
 ENDIF
 
 .CONST

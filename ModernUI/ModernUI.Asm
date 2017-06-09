@@ -54,8 +54,8 @@ include ModernUI.inc
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-_MUIGetProperty                  PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwProperty
-_MUISetProperty                  PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hControl, cbWndExtraOffset, dwProperty, dwPropertyValue
+_MUIGetProperty                 PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwProperty
+_MUISetProperty                 PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hControl, cbWndExtraOffset, dwProperty, dwPropertyValue
 
 
 
@@ -74,8 +74,8 @@ IFDEF MUI_USEGDIPLUS
 MUI_GDIPLUS                     DD 0 ; controls that use gdiplus check this first, if 0 they call gdi startup and inc the value
                                      ; controls that use gdiplus when destroyed decrement this value and check if 0. If 0 they call gdi finish
 
-MUI_GDIPlusToken	            DD 0
-MUI_gdipsi	                    GdiplusStartupInput	<1,0,0,0>
+MUI_GDIPlusToken                DD 0
+MUI_gdipsi                      GdiplusStartupInput <1,0,0,0>
 ENDIF
 
 .CODE
@@ -102,11 +102,11 @@ IFDEF MUI_USEGDIPLUS
 MUIGDIPlusStart PROC PUBLIC
     .IF MUI_GDIPLUS == 0
         ;PrintText 'GdiplusStartup'
-	    Invoke GdiplusStartup, Addr MUI_GDIPlusToken, Addr MUI_gdipsi, NULL
-	.ENDIF
-	inc MUI_GDIPLUS
-	;PrintDec MUI_GDIPLUS
-	xor eax, eax
+        Invoke GdiplusStartup, Addr MUI_GDIPlusToken, Addr MUI_gdipsi, NULL
+    .ENDIF
+    inc MUI_GDIPLUS
+    ;PrintDec MUI_GDIPLUS
+    xor eax, eax
     ret
 MUIGDIPlusStart ENDP
 ENDIF
@@ -222,7 +222,7 @@ MUIFreeMemProperties ENDP
 ; Gets external property value and returns it in eax
 ;-------------------------------------------------------------------------------------
 MUIGetExtProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
-    Invoke _MUIGetProperty, hControl, 4, dwProperty ; get external properties
+    Invoke _MUIGetProperty, hControl, MUI_EXTERNAL_PROPERTIES, dwProperty ; get external properties
     ret
 MUIGetExtProperty ENDP
 
@@ -231,7 +231,7 @@ MUIGetExtProperty ENDP
 ; Sets external property value and returns previous value in eax.
 ;-------------------------------------------------------------------------------------
 MUISetExtProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
-    Invoke _MUISetProperty, hControl, 4, dwProperty, dwPropertyValue ; set external properties
+    Invoke _MUISetProperty, hControl, MUI_EXTERNAL_PROPERTIES, dwProperty, dwPropertyValue ; set external properties
     ret
 MUISetExtProperty ENDP
 
@@ -240,7 +240,7 @@ MUISetExtProperty ENDP
 ; Gets internal property value and returns it in eax
 ;-------------------------------------------------------------------------------------
 MUIGetIntProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
-    Invoke _MUIGetProperty, hControl, 0, dwProperty ; get internal properties
+    Invoke _MUIGetProperty, hControl, MUI_INTERNAL_PROPERTIES, dwProperty ; get internal properties
     ret
 MUIGetIntProperty ENDP
 
@@ -249,7 +249,7 @@ MUIGetIntProperty ENDP
 ; Sets internal property value and returns previous value in eax.
 ;-------------------------------------------------------------------------------------
 MUISetIntProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
-    Invoke _MUISetProperty, hControl, 0, dwProperty, dwPropertyValue ; set internal properties
+    Invoke _MUISetProperty, hControl, MUI_INTERNAL_PROPERTIES, dwProperty, dwPropertyValue ; set internal properties
     ret
 MUISetIntProperty ENDP
 
@@ -326,35 +326,35 @@ MUIApplyToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
     
     or dwNewStyle, WS_CLIPCHILDREN
 
-	Invoke SetWindowLong, hWin, GWL_STYLE, dwNewStyle
-	
-	; Set dropshadow on or off on our dialog
-	
-	Invoke GetClassLong, hWin, GCL_STYLE
-	mov dwClassStyle, eax
-	
-	.IF dwDropShadow == TRUE
-	    mov eax, dwClassStyle
-	    and eax, CS_DROPSHADOW
-	    .IF eax != CS_DROPSHADOW
-	        or dwClassStyle, CS_DROPSHADOW
-	        Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
-	    .ENDIF
-	.ELSE    
-	    mov eax, dwClassStyle
-	    and eax, CS_DROPSHADOW
-	    .IF eax == CS_DROPSHADOW
-	        and dwClassStyle,(-1 xor CS_DROPSHADOW)
+    Invoke SetWindowLong, hWin, GWL_STYLE, dwNewStyle
+    
+    ; Set dropshadow on or off on our dialog
+    
+    Invoke GetClassLong, hWin, GCL_STYLE
+    mov dwClassStyle, eax
+    
+    .IF dwDropShadow == TRUE
+        mov eax, dwClassStyle
+        and eax, CS_DROPSHADOW
+        .IF eax != CS_DROPSHADOW
+            or dwClassStyle, CS_DROPSHADOW
             Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
-	    .ENDIF
-	.ENDIF
+        .ENDIF
+    .ELSE    
+        mov eax, dwClassStyle
+        and eax, CS_DROPSHADOW
+        .IF eax == CS_DROPSHADOW
+            and dwClassStyle,(-1 xor CS_DROPSHADOW)
+            Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
+        .ENDIF
+    .ENDIF
 
-	; remove any menu that might have been assigned via class registration - for modern ui look
-	Invoke GetMenu, hWin
-	.IF eax != NULL
-	    Invoke SetMenu, hWin, NULL
-	.ENDIF
-	
+    ; remove any menu that might have been assigned via class registration - for modern ui look
+    Invoke GetMenu, hWin
+    .IF eax != NULL
+        Invoke SetMenu, hWin, NULL
+    .ENDIF
+    
     ret
 
 MUIApplyToDialog ENDP
@@ -481,23 +481,23 @@ MUICenterWindow ENDP
 ; 
 ;-------------------------------------------------------------------------------------
 MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD
-	LOCAL ps:PAINTSTRUCT
-	LOCAL hdc:HDC
+    LOCAL ps:PAINTSTRUCT
+    LOCAL hdc:HDC
     LOCAL rect:RECT
     LOCAL hdcMem:DWORD
     LOCAL hbmMem:DWORD
     LOCAL hOldBitmap:DWORD
     LOCAL hBrush:DWORD
 
-	invoke BeginPaint, hWin, addr ps
-	mov	hdc, eax
+    invoke BeginPaint, hWin, addr ps
+    mov hdc, eax
     Invoke GetClientRect, hWin, Addr rect
     Invoke CreateCompatibleDC, hdc
     mov hdcMem, eax
-   	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-   	mov hbmMem, eax
-   	Invoke SelectObject, hdcMem, hbmMem
-  	mov hOldBitmap, eax 
+    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+    mov hbmMem, eax
+    Invoke SelectObject, hdcMem, hbmMem
+    mov hOldBitmap, eax 
 
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
@@ -544,8 +544,8 @@ MUIPaintBackground ENDP
 ; 4=top right, 5=center top, 6=center bottom
 ;-------------------------------------------------------------------------------------
 MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD, hImage:DWORD, dwImageType:DWORD, dwImageLocation:DWORD
-	LOCAL ps:PAINTSTRUCT
-	LOCAL hdc:HDC
+    LOCAL ps:PAINTSTRUCT
+    LOCAL hdc:HDC
     LOCAL rect:RECT
     LOCAL pt:POINT
     LOCAL hdcMem:DWORD
@@ -566,15 +566,15 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
         mov pBitmap, 0
     .ENDIF
     
-	invoke BeginPaint, hWin, addr ps
-	mov	hdc, eax
+    invoke BeginPaint, hWin, addr ps
+    mov hdc, eax
     Invoke GetClientRect, hWin, Addr rect
     Invoke CreateCompatibleDC, hdc
     mov hdcMem, eax
-   	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-   	mov hbmMem, eax
-   	Invoke SelectObject, hdcMem, hbmMem
-  	mov hOldBitmap, eax 
+    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+    mov hbmMem, eax
+    Invoke SelectObject, hdcMem, hbmMem
+    mov hOldBitmap, eax 
 
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
@@ -939,8 +939,8 @@ MUIAllocStructureMemory endp
 ; (The icon data is an ICO file stored directly in the executable)
 ;
 ; Parameters
-;	pIconData = Pointer to the ico file data
-;	iIcon = zero based index of the icon to load
+;   pIconData = Pointer to the ico file data
+;   iIcon = zero based index of the icon to load
 ;
 ; If successful will return an icon handle, this handle must be freed
 ; using DestroyIcon when it is no longer needed. The size of the icon
@@ -955,48 +955,45 @@ MUIAllocStructureMemory endp
 ;http://www.masmforum.com/board/index.php?topic=16267.msg134434#msg134434
 ;--------------------------------------------------------------------------------------------------------------------
 MUICreateIconFromMemory PROC pIconData:DWORD, iIcon:DWORD
-	LOCAL sz[2]:DWORD
+    LOCAL sz[2]:DWORD
 
+    xor eax, eax
+    mov edx, [pIconData]
+    or edx, edx
+    jz ERRORCATCH
 
+    movzx eax, WORD PTR [edx+4]
+    cmp eax, [iIcon]
+    ja @F
+        ERRORCATCH:
+        push eax
+        invoke SetLastError, ERROR_RESOURCE_NAME_NOT_FOUND
+        pop edx
+        xor eax, eax
+        ret
+    @@:
 
-	xor eax, eax
-	mov edx, [pIconData]
-	or edx, edx
-	jz ERRORCATCH
+    mov eax, [iIcon]
+    shl eax, 4
+    add edx, eax
+    add edx, 6
 
-	movzx eax, WORD PTR [edx+4]
-	cmp eax, [iIcon]
-	ja @F
-		ERRORCATCH:
-		push eax
-		invoke SetLastError, ERROR_RESOURCE_NAME_NOT_FOUND
-		pop edx
-		xor eax, eax
-		ret
-	@@:
+    movzx eax, BYTE PTR [edx]
+    mov [sz], eax
+    movzx eax, BYTE PTR [edx+1]
+    mov [sz+4], eax
 
-	mov eax, [iIcon]
-	shl eax, 4
-	add edx, eax
-	add edx, 6
+    mov eax, [edx+12]
+    add eax, [pIconData]
+    mov edx, [edx+8]
 
-	movzx eax, BYTE PTR [edx]
-	mov [sz], eax
-	movzx eax, BYTE PTR [edx+1]
-	mov [sz+4], eax
+    invoke CreateIconFromResourceEx, eax, edx, 1, 030000h, [sz], [sz+4], 0
 
-	mov eax, [edx+12]
-	add eax, [pIconData]
-	mov edx, [edx+8]
+    mov edx,[sz]
+    shl edx,16
+    mov dx, word ptr [sz+4]
 
-	invoke CreateIconFromResourceEx, eax, edx, 1, 030000h, [sz], [sz+4], 0
-
-	mov edx,[sz]
-	shl edx,16
-	mov dx, word ptr [sz+4]
-
-	RET
-
+    ret
 
 MUICreateIconFromMemory ENDP
 

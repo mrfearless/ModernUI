@@ -25,8 +25,8 @@ includelib ModernUI_CaptionBar.lib
 ;-----------------------------------------------------------------------------------------
 ; MUICaptionBar Prototypes
 ;-----------------------------------------------------------------------------------------
-WinMain					PROTO :DWORD,:DWORD,:DWORD,:DWORD
-WndProc					PROTO :DWORD,:DWORD,:DWORD,:DWORD
+WinMain                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
+WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 
 
 .CONST
@@ -34,13 +34,13 @@ WndProc					PROTO :DWORD,:DWORD,:DWORD,:DWORD
 ; MUICaptionBar Constants
 ;-----------------------------------------------------------------------------------------
 ; Main Dialog
-IDD_DIALOG				EQU 1000
+IDD_DIALOG              EQU 1000
 IDC_CAPTIONBAR          EQU 1001
 
 ; Main Menu 
-IDM_MENU				EQU 10000
-IDM_FILE_EXIT			EQU 10001
-IDM_HELP_ABOUT			EQU 10101
+IDM_MENU                EQU 10000
+IDM_FILE_EXIT           EQU 10001
+IDM_HELP_ABOUT          EQU 10101
 
 
 
@@ -48,9 +48,9 @@ IDM_HELP_ABOUT			EQU 10101
 ;-----------------------------------------------------------------------------------------
 ; MUICaptionBar Initialized Data
 ;-----------------------------------------------------------------------------------------
-ClassName				DB 'DLGCLASS',0
-AppName					DB 'MUICaptionBar Example #2',0
-AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
+ClassName               DB 'DLGCLASS',0
+AppName                 DB 'MUICaptionBar Example #2',0
+AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
 
 
 
@@ -60,10 +60,10 @@ AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
 ;-----------------------------------------------------------------------------------------
 ; MUICaptionBar Uninitialized Data
 ;-----------------------------------------------------------------------------------------
-icc 					INITCOMMONCONTROLSEX <>
-hInstance				DD ?
-CommandLine				DD ?
-hWnd					DD ?
+icc                     INITCOMMONCONTROLSEX <>
+hInstance               DD ?
+CommandLine             DD ?
+hWnd                    DD ?
 hCaptionBar             DD ?
 
 

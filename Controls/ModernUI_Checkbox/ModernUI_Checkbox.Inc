@@ -33,10 +33,10 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Checkbox Prototypes
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUICheckboxRegister		        PROTO																	; Use 'ModernUI_Checkbox' as class in RadASM custom class control
-MUICheckboxCreate		        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD	; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
-MUICheckboxSetProperty	        PROTO :DWORD, :DWORD, :DWORD											; hModernUI_Checkbox, dwProperty, dwPropertyValue
-MUICheckboxGetProperty	        PROTO :DWORD, :DWORD													; hModernUI_Checkbox, dwProperty
+MUICheckboxRegister             PROTO                                                                   ; Use 'ModernUI_Checkbox' as class in RadASM custom class control
+MUICheckboxCreate               PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
+MUICheckboxSetProperty          PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Checkbox, dwProperty, dwPropertyValue
+MUICheckboxGetProperty          PROTO :DWORD, :DWORD                                                    ; hModernUI_Checkbox, dwProperty
 MUICheckboxGetState             PROTO :DWORD                                                            ; hModernUI_Checkbox
 MUICheckboxSetState             PROTO :DWORD, :DWORD                                                    ; hModernUI_Checkbox, bState
 
@@ -64,7 +64,7 @@ MUI_CHECKBOX_PROPERTIES         STRUCT
     dwImageDisabled             DD ?       ; hImage for disabled empty checkbox
     dwImageDisabledSel          DD ?       ; hImage for disabled checkbox with checkmark
     dwCheckboxDllInstance       DD ?
-MUI_CHECKBOX_PROPERTIES			ENDS
+MUI_CHECKBOX_PROPERTIES         ENDS
 ENDIF
 
 
@@ -85,7 +85,7 @@ MUICS_HAND                      EQU 20h     ; Show a hand instead of an arrow wh
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Checkbox Properties: Use with MUICheckboxSetProperty / MUICheckboxGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
-@CheckboxTextFont	            EQU 0       ; Font for checkbox text
+@CheckboxTextFont               EQU 0       ; Font for checkbox text
 @CheckboxTextColor              EQU 4       ; Colorref Text color for checkbox
 @CheckboxTextColorAlt           EQU 8       ; Colorref
 @CheckboxTextColorSel           EQU 12      ; Colorref

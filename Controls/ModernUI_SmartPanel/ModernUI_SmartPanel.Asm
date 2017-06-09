@@ -44,9 +44,9 @@ include ModernUI_SmartPanel.inc
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-_MUI_SmartPanelWndProc					PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_SmartPanelInit					    PROTO :DWORD
-_MUI_SmartPanelCleanup					PROTO :DWORD
+_MUI_SmartPanelWndProc                  PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_SmartPanelInit                     PROTO :DWORD
+_MUI_SmartPanelCleanup                  PROTO :DWORD
 _MUI_SmartPanelGetPanelHandle           PROTO :DWORD, :DWORD
 _MUI_SmartPanelNavNotify                PROTO :DWORD, :DWORD, :DWORD
 _MUI_SmartPanelSlidePanels              PROTO :DWORD, :DWORD, :DWORD, :DWORD
@@ -58,34 +58,34 @@ _MUI_SmartPanelSlidePanelsRight         PROTO :DWORD, :DWORD, :DWORD, :DWORD
 ; Structures for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; External public properties
-MUI_SMARTPANEL_PROPERTIES				STRUCT
-	dwlDllInstance                      DD ?
-MUI_SMARTPANEL_PROPERTIES				ENDS
+MUI_SMARTPANEL_PROPERTIES               STRUCT
+    dwlDllInstance                      DD ?
+MUI_SMARTPANEL_PROPERTIES               ENDS
 
 ; Internal properties
-_MUI_SMARTPANEL_PROPERTIES				STRUCT
-	dwEnabledState						DD ?
-	dwMouseOver							DD ?
-	dwCurrentPanel                      DD ?
+_MUI_SMARTPANEL_PROPERTIES              STRUCT
+    dwEnabledState                      DD ?
+    dwMouseOver                         DD ?
+    dwCurrentPanel                      DD ?
     dwTotalPanels                       DD ?
     dwPanelsArray                       DD ?
     lpdwIsDlgMsgVar                     DD ?
-_MUI_SMARTPANEL_PROPERTIES				ENDS
+_MUI_SMARTPANEL_PROPERTIES              ENDS
 
 IFNDEF MUISP_ITEM ; SmartPanel Notification Item
-MUISP_ITEM                 	            STRUCT
-    iItem               	            DD 0
-    lParam              	            DD 0
+MUISP_ITEM                              STRUCT
+    iItem                               DD 0
+    lParam                              DD 0
     hPanel                              DD 0
-MUISP_ITEM                 	            ENDS
+MUISP_ITEM                              ENDS
 ENDIF
 
 IFNDEF NM_MUISMARTPANEL ; Notification Message Structure for SmartPanel
-NM_MUISMARTPANEL      	                STRUCT
-    hdr                 	            NMHDR <>
-    itemOld             	            MUISP_ITEM <>
-    itemNew             	            MUISP_ITEM <>
-NM_MUISMARTPANEL      	                ENDS
+NM_MUISMARTPANEL                        STRUCT
+    hdr                                 NMHDR <>
+    itemOld                             MUISP_ITEM <>
+    itemNew                             MUISP_ITEM <>
+NM_MUISMARTPANEL                        ENDS
 ENDIF
 
 
@@ -101,8 +101,8 @@ SlideVFast                              EQU 3
 
 
 ; Internal properties
-@SmartPanelEnabledState				    EQU 0
-@SmartPanelMouseOver					EQU 4
+@SmartPanelEnabledState                 EQU 0
+@SmartPanelMouseOver                    EQU 4
 @SmartPanelCurrentPanel                 EQU 8
 @SmartPanelTotalPanels                  EQU 12
 @SmartPanelPanelsArray                  EQU 16
@@ -111,8 +111,8 @@ SlideVFast                              EQU 3
 
 
 .DATA
-szMUISmartPanelClass					DB 'ModernUI_SmartPanel',0 	; Class name for creating our ModernUI_SmartPanel control
-SPNM                    	            NM_MUISMARTPANEL <> ; Notification data passed via WM_NOTIFY
+szMUISmartPanelClass                    DB 'ModernUI_SmartPanel',0  ; Class name for creating our ModernUI_SmartPanel control
+SPNM                                    NM_MUISMARTPANEL <> ; Notification data passed via WM_NOTIFY
 
 
 .CODE
@@ -142,7 +142,7 @@ MUISmartPanelGetProperty ENDP
 MUISmartPanelRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
@@ -150,20 +150,20 @@ MUISmartPanelRegister PROC PUBLIC
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUISmartPanelClass
-    	mov wc.lpszClassName, eax
-    	mov eax, hinstance
+        mov wc.lpszClassName, eax
+        mov eax, hinstance
         mov wc.hInstance, eax
-    	mov wc.lpfnWndProc, OFFSET _MUI_SmartPanelWndProc
-    	Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, eax
-    	mov wc.hIcon, 0
-    	mov wc.hIconSm, 0
-    	mov wc.lpszMenuName, NULL
-    	mov wc.hbrBackground, NULL
-    	mov wc.style, NULL
+        mov wc.lpfnWndProc, OFFSET _MUI_SmartPanelWndProc
+        Invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.hCursor, eax
+        mov wc.hIcon, 0
+        mov wc.hIconSm, 0
+        mov wc.lpszMenuName, NULL
+        mov wc.hbrBackground, NULL
+        mov wc.style, NULL
         mov wc.cbClsExtra, 0
-    	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
-    	Invoke RegisterClassEx, addr wc
+        mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        Invoke RegisterClassEx, addr wc
     .ENDIF  
     ret
 
@@ -176,16 +176,16 @@ MUISmartPanelRegister ENDP
 MUISmartPanelCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	LOCAL hControl:DWORD
-	LOCAL dwNewStyle:DWORD
-	
+    LOCAL hControl:DWORD
+    LOCAL dwNewStyle:DWORD
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
-	Invoke MUISmartPanelRegister
-	
+    Invoke MUISmartPanelRegister
+    
     ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
-	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
+    ; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
 
     mov eax, dwStyle
     mov dwNewStyle, eax
@@ -193,13 +193,13 @@ MUISmartPanelCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, contr
     .IF eax != DS_CONTROL or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         or dwNewStyle, DS_CONTROL or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .ENDIF
-	
+    
     Invoke CreateWindowEx, WS_EX_CONTROLPARENT, Addr szMUISmartPanelClass, NULL, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
-	mov hControl, eax
-	.IF eax != NULL
-		
-	.ENDIF
-	mov eax, hControl
+    mov hControl, eax
+    .IF eax != NULL
+        
+    .ENDIF
+    mov eax, hControl
     ret
 MUISmartPanelCreate ENDP
 
@@ -213,62 +213,62 @@ _MUI_SmartPanelWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
-		; sets text of our control, delete if not required.
-        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
+        ; sets text of our control, delete if not required.
+        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName   
         mov eax, TRUE
         ret
 
     .ELSEIF eax == WM_CREATE
-		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_SMARTPANEL_PROPERTIES ; internal properties
-		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_SMARTPANEL_PROPERTIES ; external properties
-		Invoke _MUI_SmartPanelInit, hWin
-		mov eax, 0
-		ret    
+        Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_SMARTPANEL_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_SMARTPANEL_PROPERTIES ; external properties
+        Invoke _MUI_SmartPanelInit, hWin
+        mov eax, 0
+        ret    
 
     .ELSEIF eax == WM_NCDESTROY
         Invoke _MUI_SmartPanelCleanup, hWin
         Invoke MUIFreeMemProperties, hWin, 0
-		Invoke MUIFreeMemProperties, hWin, 4
-		mov eax, 0
-		ret
-	
-	; custom messages start here
-	
-	.ELSEIF eax == MUI_GETPROPERTY
-		Invoke MUIGetExtProperty, hWin, wParam
-		ret
-		
-	.ELSEIF eax == MUI_SETPROPERTY	
-		Invoke MUISetExtProperty, hWin, wParam, lParam
-		ret
+        Invoke MUIFreeMemProperties, hWin, 4
+        mov eax, 0
+        ret
+    
+    ; custom messages start here
+    
+    .ELSEIF eax == MUI_GETPROPERTY
+        Invoke MUIGetExtProperty, hWin, wParam
+        ret
+        
+    .ELSEIF eax == MUI_SETPROPERTY  
+        Invoke MUISetExtProperty, hWin, wParam, lParam
+        ret
 
     .ELSEIF eax == MUISPM_REGISTERPANEL
         Invoke MUISmartPanelRegisterPanel, hWin, wParam, lParam
         ret
-		
+        
     .ELSEIF eax == MUISPM_SETCURRENTPANEL
         Invoke MUISmartPanelSetCurrentPanel, hWin, wParam, lParam
         ret
     
     .ELSEIF eax == MUISPM_GETCURRENTPANEL
         Invoke MUIGetIntProperty, hWin, @SmartPanelCurrentPanel
-		ret
-		
-	.ELSEIF eax == MUISPM_SETISDLGMSGVAR ; wParam is addr of variable to use to specify current selected panel
-	    Invoke MUISetIntProperty, hWin, @SmartPanellpdwIsDlgMsgVar, wParam
-	    ret	
-	    
-	.ELSEIF eax == MUISPM_GETTOTALPANELS
-	    Invoke MUIGetIntProperty, hWin, @SmartPanelTotalPanels
-	    ret
-	
-	.ELSEIF eax == MUISPM_NEXTPANEL
-	    Invoke MUISmartPanelNextPanel, hWin, wParam
-	    ret
-	    
-	.ELSEIF eax == MUISPM_PREVPANEL
-	    Invoke MUISmartPanelPrevPanel, hWin, wParam
-	    ret
+        ret
+        
+    .ELSEIF eax == MUISPM_SETISDLGMSGVAR ; wParam is addr of variable to use to specify current selected panel
+        Invoke MUISetIntProperty, hWin, @SmartPanellpdwIsDlgMsgVar, wParam
+        ret 
+        
+    .ELSEIF eax == MUISPM_GETTOTALPANELS
+        Invoke MUIGetIntProperty, hWin, @SmartPanelTotalPanels
+        ret
+    
+    .ELSEIF eax == MUISPM_NEXTPANEL
+        Invoke MUISmartPanelNextPanel, hWin, wParam
+        ret
+        
+    .ELSEIF eax == MUISPM_PREVPANEL
+        Invoke MUISmartPanelPrevPanel, hWin, wParam
+        ret
 
     .ENDIF
     
@@ -365,13 +365,13 @@ MUISmartPanelRegisterPanel PROC PRIVATE USES EBX hControl:DWORD, idPanelDlg:DWOR
     Invoke MUIGetIntProperty, hControl, @SmartPanelPanelsArray
     mov pItemData, eax
     
-	Invoke CreateDialogParam, hinstance, idPanelDlg, hControl, lpdwPanelProc, 0
-	.IF eax == NULL
-	    mov eax, NULL
-	    ret
-	.ENDIF
-	mov hPanelDlg, eax
-	
+    Invoke CreateDialogParam, hinstance, idPanelDlg, hControl, lpdwPanelProc, 0
+    .IF eax == NULL
+        mov eax, NULL
+        ret
+    .ENDIF
+    mov hPanelDlg, eax
+    
     Invoke MUIAllocStructureMemory, Addr pItemData, TotalItems, SIZEOF MUISP_ITEM
     .IF eax == -1
         mov eax, NULL
@@ -385,13 +385,13 @@ MUISmartPanelRegisterPanel PROC PRIVATE USES EBX hControl:DWORD, idPanelDlg:DWOR
     mov eax, TotalItems
     mov [ebx].MUISP_ITEM.iItem, eax
     ;mov eax, lParam
-    ;mov [ebx].MUISP_ITEM.lParam, eax	
-	
+    ;mov [ebx].MUISP_ITEM.lParam, eax   
+    
     inc TotalItems
     Invoke MUISetIntProperty, hControl, @SmartPanelTotalPanels, TotalItems
     Invoke MUISetIntProperty, hControl, @SmartPanelPanelsArray, pItemData
-	    
-    Invoke SetWindowLongPtr, hPanelDlg, GWL_EXSTYLE, WS_EX_CONTROLPARENT	
+        
+    Invoke SetWindowLongPtr, hPanelDlg, GWL_EXSTYLE, WS_EX_CONTROLPARENT    
     Invoke SetWindowLongPtr, hPanelDlg, GWL_STYLE, WS_CHILD + DS_CONTROL + WS_CLIPCHILDREN;+ WS_TABSTOP ; 40000000d ; WS_CHILD
     Invoke SetWindowPos, hPanelDlg, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED ; 
     Invoke GetClientRect, hControl, Addr rect
@@ -448,7 +448,7 @@ MUISmartPanelSetCurrentPanel PROC PRIVATE USES EBX hControl:DWORD, NewSelection:
         Invoke GetClientRect, hControl, Addr rect
         ;sub rect.right, 2d
         ;sub rect.bottom, 2d
-        Invoke SetWindowPos, hNewSelection, HWND_TOP, 0, 0, rect.right, rect.bottom, SWP_NOZORDER ;+ SWP_NOMOVE		                    
+        Invoke SetWindowPos, hNewSelection, HWND_TOP, 0, 0, rect.right, rect.bottom, SWP_NOZORDER ;+ SWP_NOMOVE                         
         Invoke ShowWindow, hNewSelection, SW_SHOWDEFAULT
         
         Invoke MUISetIntProperty, hControl, @SmartPanelCurrentPanel, NewSelection
@@ -498,7 +498,7 @@ MUISmartPanelSetCurrentPanel PROC PRIVATE USES EBX hControl:DWORD, NewSelection:
                 Invoke GetClientRect, hControl, Addr rect
                 ;sub rect.right, 2d
                 ;sub rect.bottom, 2d
-                Invoke SetWindowPos, hNewSelection, HWND_TOP, 0, 0, rect.right, rect.bottom, SWP_NOZORDER ;+ SWP_NOMOVE		                    
+                Invoke SetWindowPos, hNewSelection, HWND_TOP, 0, 0, rect.right, rect.bottom, SWP_NOZORDER ;+ SWP_NOMOVE                         
                 
                 Invoke ShowWindow, hNewSelection, SW_SHOWDEFAULT
                 Invoke SetFocus, hNewSelection
@@ -850,7 +850,7 @@ MUISmartPanelNextPanel PROC PRIVATE USES EBX hControl:DWORD, dwNotify:DWORD
         .IF hNewSelection != NULL
             ; resize panel if container size has changed since last selection
             Invoke GetClientRect, hControl, Addr rect
-            Invoke SetWindowPos, hNewSelection, HWND_TOP, 0, 0, rect.right, rect.bottom, SWP_NOZORDER ;+ SWP_NOMOVE		                    
+            Invoke SetWindowPos, hNewSelection, HWND_TOP, 0, 0, rect.right, rect.bottom, SWP_NOZORDER ;+ SWP_NOMOVE                         
             Invoke ShowWindow, hNewSelection, SW_SHOWDEFAULT
         .ENDIF
     .ELSE
@@ -954,7 +954,7 @@ MUISmartPanelPrevPanel PROC PRIVATE USES EBX hControl:DWORD, dwNotify:DWORD
         .IF hNewSelection != NULL
             ; resize panel if container size has changed since last selection
             Invoke GetClientRect, hControl, Addr rect
-            Invoke SetWindowPos, hNewSelection, HWND_TOP, 0, 0, rect.right, rect.bottom, SWP_NOZORDER ;+ SWP_NOMOVE		                    
+            Invoke SetWindowPos, hNewSelection, HWND_TOP, 0, 0, rect.right, rect.bottom, SWP_NOZORDER ;+ SWP_NOMOVE                         
             Invoke ShowWindow, hNewSelection, SW_SHOWDEFAULT
         .ENDIF
     .ELSE

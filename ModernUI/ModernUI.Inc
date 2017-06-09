@@ -22,7 +22,7 @@
 ; notice that the files are modified, and not in the original state. This includes the name of the person(s) who modified the code. 
 ;
 ; If you want to distribute or redistribute any portion of this package, you will need to include the full package in it's original 
-; state, including this license and all the copyrights. 
+; state, including this license and all the copyrights.  
 ;
 ; While distributing this package (in it's original state) is allowed, it is not allowed to charge anything for this. You may not sell
 ; or include the package in any commercial package without having permission of the author. Neither is it allowed to redistribute any 
@@ -117,10 +117,16 @@ ENDM
 
 
 
-
-
-
-
+;--------------------------------------------------------------------------------------------------------------------------------------
+; Notes
+;--------------------------------------------------------------------------------------------------------------------------------------
+;
+; Custom controls: dwStyle parameter of CreateWindowEx
+;
+; The low 16 bits of the dwStyle parameter are defined by the implementor of the window class (by the person who calls RegisterClass)
+; Raymond Chen - https://blogs.msdn.microsoft.com/oldnewthing/20031203-00/?p=41633/
+;
+; 0x0h - 0xFFFFh reserved for user creating the control to define styles
 
 
 

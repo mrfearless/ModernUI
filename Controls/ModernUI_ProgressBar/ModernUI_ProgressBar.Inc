@@ -33,10 +33,10 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_ProgressBar Prototypes
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUIProgressBarRegister		PROTO																	; Use 'ModernUI_ProgressBar' as class in RadASM custom class control
-MUIProgressBarCreate		PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD        	; hWndParent, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
-MUIProgressBarSetProperty	PROTO :DWORD, :DWORD, :DWORD											; hModernUI_ProgressBar, dwProperty, dwPropertyValue
-MUIProgressBarGetProperty	PROTO :DWORD, :DWORD													; hModernUI_ProgressBar, dwProperty
+MUIProgressBarRegister      PROTO                                                                   ; Use 'ModernUI_ProgressBar' as class in RadASM custom class control
+MUIProgressBarCreate        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD            ; hWndParent, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
+MUIProgressBarSetProperty   PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_ProgressBar, dwProperty, dwPropertyValue
+MUIProgressBarGetProperty   PROTO :DWORD, :DWORD                                                    ; hModernUI_ProgressBar, dwProperty
 MUIProgressBarSetMinMax     PROTO :DWORD, :DWORD, :DWORD
 MUIProgressBarSetPercent    PROTO :DWORD, :DWORD
 MUIProgressBarGetPercent    PROTO :DWORD
@@ -63,7 +63,7 @@ MUIPBM_SETPERCENT           EQU WM_USER + 1749
 ; ModernUI_ProgressBar Properties: Use with MUIProgressBarSetProperty / MUIProgressBarGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
 @ProgressBarTextColor        EQU 0   ; Text color for caption text and system buttons (min/max/restore/close)
-@ProgressBarTextFont	     EQU 4   ; Font for caption text
+@ProgressBarTextFont         EQU 4   ; Font for caption text
 @ProgressBarBackColor        EQU 8   ; Background color of caption and system buttons
 @ProgressBarProgressColor    EQU 12  ;
 @ProgressBarBorderColor      EQU 16  ;

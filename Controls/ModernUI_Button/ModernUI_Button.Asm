@@ -58,10 +58,10 @@ include ModernUI_Button.inc
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-_MUI_ButtonWndProc					        PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_ButtonInit					            PROTO :DWORD
+_MUI_ButtonWndProc                          PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_ButtonInit                             PROTO :DWORD
 _MUI_ButtonCleanup                          PROTO :DWORD
-_MUI_ButtonPaint					        PROTO :DWORD
+_MUI_ButtonPaint                            PROTO :DWORD
 
 _MUI_ButtonPaintBackground                  PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintAccent                      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -88,7 +88,7 @@ _MUI_ButtonSetPropertyEx                    PROTO :DWORD, :DWORD, :DWORD
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; External public properties
 IFNDEF MUI_BUTTON_PROPERTIES
-MUI_BUTTON_PROPERTIES				        STRUCT
+MUI_BUTTON_PROPERTIES                       STRUCT
     dwTextFont                              DD ?
     dwTextColor                             DD ? 
     dwTextColorAlt                          DD ? 
@@ -120,11 +120,11 @@ MUI_BUTTON_PROPERTIES				        STRUCT
     dwImageSel                              DD ? 
     dwImageSelAlt                           DD ? 
     dwImageDisabled                         DD ?
-	dwRightImage                            DD ?
-	dwRightImageAlt                         DD ?
-	dwRightImageSel                         DD ?
-	dwRightImageSelAlt                      DD ?
-	dwRightImageDisabled                    DD ?	    
+    dwRightImage                            DD ?
+    dwRightImageAlt                         DD ?
+    dwRightImageSel                         DD ?
+    dwRightImageSelAlt                      DD ?
+    dwRightImageDisabled                    DD ?        
     dwNotifyTextFont                        DD ? 
     dwNotifyTextColor                       DD ? 
     dwNotifyBackColor                       DD ? 
@@ -139,41 +139,41 @@ MUI_BUTTON_PROPERTIES				        STRUCT
     dwButtonPaddingStyle                    DD ?
     dwButtonPaddingTextImage                DD ?  
     dwButtonDllInstance                     DD ? ; Set to hInstance of dll before calling MUIButtonLoadImages or MUIButtonNotifyLoadImage if used within a dll
-MUI_BUTTON_PROPERTIES				        ENDS
+MUI_BUTTON_PROPERTIES                       ENDS
 ENDIF
 
 ; Internal properties
-_MUI_BUTTON_PROPERTIES				        STRUCT
-	dwEnabledState						    DD ?
-	dwMouseOver							    DD ?
-	dwSelectedState                         DD ?
-	dwMouseDown                             DD ?
-	dwNotifyState                           DD ?
-	lpszNotifyText                          DD ?
-	lpszNoteText                            DD ?
-	dwImageStream                           DD ?
-	dwImageAltStream                        DD ?
-	dwImageSelStream                        DD ?
-	dwImageSelAltStream                     DD ?
-	dwImageDisabledStream                   DD ?
-	dwRightImageStream                      DD ?
-	dwRightImageAltStream                   DD ?
-	dwRightImageSelStream                   DD ?
-	dwRightImageSelAltStream                DD ?
-	dwRightImageDisabledStream              DD ?	
-	dwNotifyImageStream                     DD ?
-	dwImageXposition                        DD ?
-	dwImageYposition                        DD ?
-	dwRightImageXposition                   DD ?
-	dwRightImageYposition                   DD ?
-	dwNotifyImageXposition                  DD ?
-	dwNotifyImageYposition                  DD ?
-	dwTextXposition                         DD ?
-	dwTextYposition                         DD ?
-	dwNoteXposition                         DD ?
-	dwNoteYposition                         DD ?
+_MUI_BUTTON_PROPERTIES                      STRUCT
+    dwEnabledState                          DD ?
+    dwMouseOver                             DD ?
+    dwSelectedState                         DD ?
+    dwMouseDown                             DD ?
+    dwNotifyState                           DD ?
+    lpszNotifyText                          DD ?
+    lpszNoteText                            DD ?
+    dwImageStream                           DD ?
+    dwImageAltStream                        DD ?
+    dwImageSelStream                        DD ?
+    dwImageSelAltStream                     DD ?
+    dwImageDisabledStream                   DD ?
+    dwRightImageStream                      DD ?
+    dwRightImageAltStream                   DD ?
+    dwRightImageSelStream                   DD ?
+    dwRightImageSelAltStream                DD ?
+    dwRightImageDisabledStream              DD ?    
+    dwNotifyImageStream                     DD ?
+    dwImageXposition                        DD ?
+    dwImageYposition                        DD ?
+    dwRightImageXposition                   DD ?
+    dwRightImageYposition                   DD ?
+    dwNotifyImageXposition                  DD ?
+    dwNotifyImageYposition                  DD ?
+    dwTextXposition                         DD ?
+    dwTextYposition                         DD ?
+    dwNoteXposition                         DD ?
+    dwNoteYposition                         DD ?
     dwButtonRecalcPositions                 DD ? ; set to TRUE in init and when properties change and/or wm_size, wm_settext, wm_setfont ? not sure if to implement or just calc on each wm_paint call
-_MUI_BUTTON_PROPERTIES				        ENDS
+_MUI_BUTTON_PROPERTIES                      ENDS
 
 IFDEF MUI_USEGDIPLUS
 UNKNOWN STRUCT
@@ -203,8 +203,8 @@ ACCENTWIDTH                                 EQU 6d
 
 
 ; Internal properties
-@ButtonEnabledState				            EQU 0
-@ButtonMouseOver					        EQU 4
+@ButtonEnabledState                         EQU 0
+@ButtonMouseOver                            EQU 4
 @ButtonSelectedState                        EQU 8
 @ButtonMouseDown                            EQU 12
 @ButtonNotifyState                          EQU 16
@@ -219,7 +219,7 @@ ACCENTWIDTH                                 EQU 6d
 @ButtonRightImageAltStream                  EQU 52
 @ButtonRightImageSelStream                  EQU 56
 @ButtonRightImageSelAltStream               EQU 60
-@ButtonRightImageDisabledStream             EQU 64	
+@ButtonRightImageDisabledStream             EQU 64  
 @ButtonNotifyImageStream                    EQU 68
 @ButtonImageXposition                       EQU 72
 @ButtonImageYposition                       EQU 76
@@ -237,9 +237,9 @@ ACCENTWIDTH                                 EQU 6d
 
 
 .DATA
-szMUIButtonClass					        DB 'ModernUI_Button',0 	        ; Class name for creating our ModernUI_Button control
-szMUIButtonFont                             DB 'Segoe UI',0             	; Font used for ModernUI_Button text
-hMUIButtonFont                              DD 0                        	; Handle to ModernUI_Button font (segoe ui)
+szMUIButtonClass                            DB 'ModernUI_Button',0          ; Class name for creating our ModernUI_Button control
+szMUIButtonFont                             DB 'Segoe UI',0                 ; Font used for ModernUI_Button text
+hMUIButtonFont                              DD 0                            ; Handle to ModernUI_Button font (segoe ui)
 hMUIButtonNotifyFont                        DD 0
 hMUIButtonNoteFont                          DD 0
 
@@ -276,7 +276,7 @@ MUIButtonGetProperty ENDP
 MUIButtonRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
@@ -284,20 +284,20 @@ MUIButtonRegister PROC PUBLIC
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUIButtonClass
-    	mov wc.lpszClassName, eax
-    	mov eax, hinstance
+        mov wc.lpszClassName, eax
+        mov eax, hinstance
         mov wc.hInstance, eax
-    	mov wc.lpfnWndProc, OFFSET _MUI_ButtonWndProc
-    	;Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, NULL ;eax
-    	mov wc.hIcon, 0
-    	mov wc.hIconSm, 0
-    	mov wc.lpszMenuName, NULL
-    	mov wc.hbrBackground, NULL
-    	mov wc.style, NULL
+        mov wc.lpfnWndProc, OFFSET _MUI_ButtonWndProc
+        ;Invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.hCursor, NULL ;eax
+        mov wc.hIcon, 0
+        mov wc.hIconSm, 0
+        mov wc.lpszMenuName, NULL
+        mov wc.hbrBackground, NULL
+        mov wc.style, NULL
         mov wc.cbClsExtra, 0
-    	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
-    	Invoke RegisterClassEx, addr wc
+        mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        Invoke RegisterClassEx, addr wc
     .ENDIF  
     ret
 
@@ -310,16 +310,16 @@ MUIButtonRegister ENDP
 MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	LOCAL hControl:DWORD
-	LOCAL dwNewStyle:DWORD
-	
+    LOCAL hControl:DWORD
+    LOCAL dwNewStyle:DWORD
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
-	Invoke MUIButtonRegister
-	
+    Invoke MUIButtonRegister
+    
     ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
-	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
+    ; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
 
     mov eax, dwStyle
     mov dwNewStyle, eax
@@ -327,13 +327,13 @@ MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:
     .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         or dwNewStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .ENDIF
-	
+    
     Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
-	mov hControl, eax
-	.IF eax != NULL
-		
-	.ENDIF
-	mov eax, hControl
+    mov hControl, eax
+    .IF eax != NULL
+        
+    .ENDIF
+    mov eax, hControl
     ret
 MUIButtonCreate ENDP
 
@@ -349,30 +349,30 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
-		; sets text of our control, delete if not required.
-        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
+        ; sets text of our control, delete if not required.
+        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName   
         mov eax, TRUE
         ret
 
     .ELSEIF eax == WM_CREATE
-		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_BUTTON_PROPERTIES ; internal properties
-		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_BUTTON_PROPERTIES ; external properties
-		IFDEF MUI_USEGDIPLUS
-		Invoke MUIGDIPlusStart ; for png resources if used
-		ENDIF
-		Invoke _MUI_ButtonInit, hWin
-		mov eax, 0
-		ret    
+        Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_BUTTON_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_BUTTON_PROPERTIES ; external properties
+        IFDEF MUI_USEGDIPLUS
+        Invoke MUIGDIPlusStart ; for png resources if used
+        ENDIF
+        Invoke _MUI_ButtonInit, hWin
+        mov eax, 0
+        ret    
 
     .ELSEIF eax == WM_NCDESTROY
         Invoke _MUI_ButtonCleanup, hWin
         Invoke MUIFreeMemProperties, hWin, 0
-		Invoke MUIFreeMemProperties, hWin, 4
-		IFDEF MUI_USEGDIPLUS
-		Invoke MUIGDIPlusFinish
-		ENDIF
-		mov eax, 0
-		ret
+        Invoke MUIFreeMemProperties, hWin, 4
+        IFDEF MUI_USEGDIPLUS
+        Invoke MUIGDIPlusFinish
+        ENDIF
+        mov eax, 0
+        ret
         
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -387,7 +387,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         Invoke GetWindowLong, hWin, GWL_STYLE
         and eax, MUIBS_HAND
         .IF eax == MUIBS_HAND
-		    invoke LoadCursor, NULL, IDC_HAND
+            invoke LoadCursor, NULL, IDC_HAND
         .ELSE
             invoke LoadCursor, NULL, IDC_ARROW
         .ENDIF
@@ -396,13 +396,13 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         ret        
 
     .ELSEIF eax == WM_LBUTTONUP
-		; simulates click on our control, delete if not required.
-		Invoke GetDlgCtrlID, hWin
-		mov ebx,eax
-		Invoke GetParent, hWin
-		Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
-		
-		Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
+        ; simulates click on our control, delete if not required.
+        Invoke GetDlgCtrlID, hWin
+        mov ebx,eax
+        Invoke GetParent, hWin
+        Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
+        
+        Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
         .IF eax == TRUE
             invoke GetClientRect, hWin, addr rect
             Invoke GetParent, hWin
@@ -413,7 +413,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
         .ELSE
             Invoke InvalidateRect, hWin, NULL, TRUE
-            Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED	
+            Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
         .ENDIF
         
         Invoke GetWindowLong, hWin, GWL_STYLE
@@ -421,7 +421,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         .IF eax == MUIBS_AUTOSTATE
             Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
             .IF eax == FALSE
-	            Invoke MUISetIntProperty, hWin, @ButtonSelectedState, TRUE
+                Invoke MUISetIntProperty, hWin, @ButtonSelectedState, TRUE
             .ELSE
                 Invoke MUISetIntProperty, hWin, @ButtonSelectedState, FALSE
             .ENDIF
@@ -446,22 +446,22 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
     .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @ButtonEnabledState
         .IF eax == TRUE   
-    		Invoke MUISetIntProperty, hWin, @ButtonMouseOver, TRUE
-    		.IF eax != TRUE
-    		    Invoke InvalidateRect, hWin, NULL, TRUE
-    		    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
-    		    mov TE.dwFlags, TME_LEAVE
-    		    mov eax, hWin
-    		    mov TE.hwndTrack, eax
-    		    mov TE.dwHoverTime, NULL
-    		    Invoke TrackMouseEvent, Addr TE
-    		.ENDIF
+            Invoke MUISetIntProperty, hWin, @ButtonMouseOver, TRUE
+            .IF eax != TRUE
+                Invoke InvalidateRect, hWin, NULL, TRUE
+                mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
+                mov TE.dwFlags, TME_LEAVE
+                mov eax, hWin
+                mov TE.hwndTrack, eax
+                mov TE.dwHoverTime, NULL
+                Invoke TrackMouseEvent, Addr TE
+            .ENDIF
         .ENDIF
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @ButtonMouseOver, FALSE
-		Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
-        .IF eax == TRUE		
+        Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
+        .IF eax == TRUE     
             invoke GetClientRect, hWin, addr rect
             Invoke GetParent, hWin
             mov hParent, eax            
@@ -476,8 +476,8 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
 
     .ELSEIF eax == WM_KILLFOCUS
         Invoke MUISetIntProperty, hWin, @ButtonMouseOver, FALSE
-		Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
-        .IF eax == TRUE		
+        Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
+        .IF eax == TRUE     
             invoke GetClientRect, hWin, addr rect
             Invoke GetParent, hWin
             mov hParent, eax            
@@ -489,11 +489,11 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             Invoke InvalidateRect, hWin, NULL, FALSE
             ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
         .ENDIF
-	
-	.ELSEIF eax == WM_ENABLE
-	    Invoke MUISetIntProperty, hWin, @ButtonEnabledState, wParam
-	    Invoke InvalidateRect, hWin, NULL, TRUE
-	    mov eax, 0
+    
+    .ELSEIF eax == WM_ENABLE
+        Invoke MUISetIntProperty, hWin, @ButtonEnabledState, wParam
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        mov eax, 0
 
     .ELSEIF eax == WM_SETTEXT
         Invoke DefWindowProc, hWin, uMsg, wParam, lParam
@@ -505,39 +505,39 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         .IF lParam == TRUE
             Invoke InvalidateRect, hWin, NULL, TRUE
         .ENDIF    
-	
-	; custom messages start here
-	
-	.ELSEIF eax == MUI_GETPROPERTY
-		Invoke MUIGetExtProperty, hWin, wParam
-		ret
-		
-	.ELSEIF eax == MUI_SETPROPERTY	
-		; by default set other similar properties when main one is set
-		Invoke _MUI_ButtonSetPropertyEx, hWin, wParam, lParam
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		ret
+    
+    ; custom messages start here
+    
+    .ELSEIF eax == MUI_GETPROPERTY
+        Invoke MUIGetExtProperty, hWin, wParam
+        ret
+        
+    .ELSEIF eax == MUI_SETPROPERTY  
+        ; by default set other similar properties when main one is set
+        Invoke _MUI_ButtonSetPropertyEx, hWin, wParam, lParam
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        ret
 
-	.ELSEIF eax == MUIBM_NOTIFYSETTEXT ; wParam = lpszNotifyText, lParam = Redraw TRUE/FALSE
-	    Invoke MUISetIntProperty, hWin, @ButtonszNotifyText, wParam
-	    .IF lParam == TRUE
-	        Invoke InvalidateRect, hWin, NULL, TRUE
-	    .ENDIF
-	    ret
-	    
-	.ELSEIF eax == MUIBM_NOTIFY ; wParam = TRUE/FALSE, lParam = NULL
-	    Invoke MUISetIntProperty, hWin, @ButtonNotifyState, wParam
+    .ELSEIF eax == MUIBM_NOTIFYSETTEXT ; wParam = lpszNotifyText, lParam = Redraw TRUE/FALSE
+        Invoke MUISetIntProperty, hWin, @ButtonszNotifyText, wParam
+        .IF lParam == TRUE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+        .ENDIF
+        ret
+        
+    .ELSEIF eax == MUIBM_NOTIFY ; wParam = TRUE/FALSE, lParam = NULL
+        Invoke MUISetIntProperty, hWin, @ButtonNotifyState, wParam
         Invoke InvalidateRect, hWin, NULL, TRUE
         ret
     
-	.ELSEIF eax == MUIBM_NOTIFYSETFONT ; wParam = hFont, lParam = TRUE/FALSE to redraw control
-	    Invoke MUISetExtProperty, hWin, @ButtonNotifyTextFont, lParam
-	    .IF lParam == TRUE
-	        Invoke InvalidateRect, hWin, NULL, TRUE
-	    .ENDIF
-	    ret
-	    
-	.ELSEIF eax == MUIBM_NOTIFYSETIMAGE ; wParam = dwImageType, lParam = Handle of Image
+    .ELSEIF eax == MUIBM_NOTIFYSETFONT ; wParam = hFont, lParam = TRUE/FALSE to redraw control
+        Invoke MUISetExtProperty, hWin, @ButtonNotifyTextFont, lParam
+        .IF lParam == TRUE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+        .ENDIF
+        ret
+        
+    .ELSEIF eax == MUIBM_NOTIFYSETIMAGE ; wParam = dwImageType, lParam = Handle of Image
         .IF wParam == 0
             ret
         .ENDIF
@@ -548,7 +548,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         Invoke InvalidateRect, hWin, NULL, TRUE
         ret
     
-	.ELSEIF eax == MUIBM_NOTIFYLOADIMAGE ; wParam = dwImageType, lParam = ResourceID
+    .ELSEIF eax == MUIBM_NOTIFYLOADIMAGE ; wParam = dwImageType, lParam = ResourceID
         .IF wParam == 0
             ret
         .ENDIF
@@ -568,28 +568,28 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         Invoke InvalidateRect, hWin, NULL, TRUE
         ret
     
-	.ELSEIF eax == MUIBM_NOTESETTEXT ; wParam = lpszNoteText, lParam = TRUE/FALSE to redraw control
-	    Invoke MUISetIntProperty, hWin, @ButtonszNoteText, wParam
-	    .IF lParam == TRUE
-	        Invoke InvalidateRect, hWin, NULL, TRUE
-	    .ENDIF
-	    ret	
+    .ELSEIF eax == MUIBM_NOTESETTEXT ; wParam = lpszNoteText, lParam = TRUE/FALSE to redraw control
+        Invoke MUISetIntProperty, hWin, @ButtonszNoteText, wParam
+        .IF lParam == TRUE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+        .ENDIF
+        ret 
     
-	.ELSEIF eax == MUIBM_NOTESETFONT ; wParam = hFont, lParam = TRUE/FALSE to redraw control
-	    Invoke MUISetExtProperty, hWin, @ButtonNoteTextFont, lParam
-	    .IF lParam == TRUE
-	        Invoke InvalidateRect, hWin, NULL, TRUE
-	    .ENDIF
-	    ret	
+    .ELSEIF eax == MUIBM_NOTESETFONT ; wParam = hFont, lParam = TRUE/FALSE to redraw control
+        Invoke MUISetExtProperty, hWin, @ButtonNoteTextFont, lParam
+        .IF lParam == TRUE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+        .ENDIF
+        ret 
     
-	.ELSEIF eax == MUIBM_GETSTATE ; wParam = NULL, lParam = NULL. EAX contains state (TRUE/FALSE)
-	    Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
-	    ret
-	 
-	.ELSEIF eax == MUIBM_SETSTATE ; wParam = TRUE/FALSE, lParam = NULL
-	    Invoke MUISetIntProperty, hWin, @ButtonSelectedState, wParam
-	    Invoke InvalidateRect, hWin, NULL, TRUE
-	    ret
+    .ELSEIF eax == MUIBM_GETSTATE ; wParam = NULL, lParam = NULL. EAX contains state (TRUE/FALSE)
+        Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
+        ret
+     
+    .ELSEIF eax == MUIBM_SETSTATE ; wParam = TRUE/FALSE, lParam = NULL
+        Invoke MUISetIntProperty, hWin, @ButtonSelectedState, wParam
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        ret
 
     .ENDIF
     
@@ -661,14 +661,14 @@ _MUI_ButtonInit PROC PRIVATE hControl:DWORD
     
 
     .IF hMUIButtonFont == 0
-    	mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
-    	Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
-    	Invoke CreateFontIndirect, Addr ncm.lfMessageFont
-    	mov hFont, eax
-	    Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
-	    mov lfnt.lfHeight, -16d
-	    ;mov lfnt.lfWeight, FW_BOLD
-	    Invoke CreateFontIndirect, Addr lfnt
+        mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
+        Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
+        Invoke CreateFontIndirect, Addr ncm.lfMessageFont
+        mov hFont, eax
+        Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
+        mov lfnt.lfHeight, -16d
+        ;mov lfnt.lfWeight, FW_BOLD
+        Invoke CreateFontIndirect, Addr lfnt
         mov hMUIButtonFont, eax
         
         mov lfnt.lfHeight, -12d
@@ -676,9 +676,9 @@ _MUI_ButtonInit PROC PRIVATE hControl:DWORD
         Invoke CreateFontIndirect, Addr lfnt
         mov hMUIButtonNotifyFont, eax
         
-	    mov lfnt.lfHeight, -12d
-	    mov lfnt.lfWeight, FW_NORMAL
-	    Invoke CreateFontIndirect, Addr lfnt
+        mov lfnt.lfHeight, -12d
+        mov lfnt.lfWeight, FW_NORMAL
+        Invoke CreateFontIndirect, Addr lfnt
         mov hMUIButtonNoteFont, eax
         
         Invoke DeleteObject, hFont
@@ -882,52 +882,52 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     ; Setup Double Buffering
     ;----------------------------------------------------------
     Invoke GetClientRect, hWin, Addr rect
-	Invoke CreateCompatibleDC, hdc
-	mov hdcMem, eax
-	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-	mov hbmMem, eax
-	Invoke SelectObject, hdcMem, hbmMem
-	mov hOldBitmap, eax
-	
-	;----------------------------------------------------------
-	; Get some property values
-	;----------------------------------------------------------	
+    Invoke CreateCompatibleDC, hdc
+    mov hdcMem, eax
+    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+    mov hbmMem, eax
+    Invoke SelectObject, hdcMem, hbmMem
+    mov hOldBitmap, eax
+    
+    ;----------------------------------------------------------
+    ; Get some property values
+    ;---------------------------------------------------------- 
     Invoke MUIGetIntProperty, hWin, @ButtonEnabledState
     mov EnabledState, eax
-	Invoke MUIGetIntProperty, hWin, @ButtonMouseOver
+    Invoke MUIGetIntProperty, hWin, @ButtonMouseOver
     mov MouseOver, eax
-	Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
+    Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
     mov SelectedState, eax    
-	
-	;----------------------------------------------------------
-	; Background
-	;----------------------------------------------------------
-	Invoke _MUI_ButtonPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+    ;----------------------------------------------------------
+    ; Background
+    ;----------------------------------------------------------
+    Invoke _MUI_ButtonPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
-	;----------------------------------------------------------
-	; Accent
-	;----------------------------------------------------------
+    ;----------------------------------------------------------
+    ; Accent
+    ;----------------------------------------------------------
     Invoke _MUI_ButtonPaintAccent, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
-	;----------------------------------------------------------
-	; calc positions for text and images
-	;----------------------------------------------------------    
+    ;----------------------------------------------------------
+    ; calc positions for text and images
+    ;----------------------------------------------------------    
     Invoke _MUI_ButtonCalcPositions, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
-	;----------------------------------------------------------
-	; Images
-	;----------------------------------------------------------
+    ;----------------------------------------------------------
+    ; Images
+    ;----------------------------------------------------------
     Invoke _MUI_ButtonPaintImages, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
-	;----------------------------------------------------------
-	; Text
-	;----------------------------------------------------------
-	Invoke _MUI_ButtonPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    ;----------------------------------------------------------
+    ; Text
+    ;----------------------------------------------------------
+    Invoke _MUI_ButtonPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
-	;----------------------------------------------------------
-	; Border
-	;----------------------------------------------------------
-	Invoke _MUI_ButtonPaintBorder, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    ;----------------------------------------------------------
+    ; Border
+    ;----------------------------------------------------------
+    Invoke _MUI_ButtonPaintBorder, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
@@ -942,7 +942,7 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
         Invoke DeleteObject, hOldBitmap
-    .ENDIF		
+    .ENDIF      
      
     Invoke EndPaint, hWin, Addr ps
 
@@ -1635,7 +1635,7 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
     .ENDIF
 
     
-	Invoke SelectObject, hdc, hFont
+    Invoke SelectObject, hdc, hFont
     mov hOldFont, eax
     Invoke GetWindowText, hWin, Addr szText, sizeof szText
 
@@ -1750,7 +1750,7 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
             sub rect.right, 4d
     
     
-    	    Invoke SelectObject, hdc, hFont
+            Invoke SelectObject, hdc, hFont
             mov hOldFont, eax
             
             Invoke SetBkMode, hdc, OPAQUE
@@ -2241,145 +2241,145 @@ _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwP
         Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue
     .ENDIF
     
-	mov eax, dwProperty
-	.IF eax == @ButtonTextColor ; set other text colors to this if they are not set
-	    Invoke MUIGetExtProperty, hWin, @ButtonTextColorAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonTextColorAlt, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @ButtonTextColorSel
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonTextColorSel, dwPropertyValue
-	    .ENDIF
-	    ; except this, if sel has a color, then use this for selalt if it has a value
-	    Invoke MUIGetExtProperty, hWin, @ButtonTextColorSelAlt
-	    .IF eax == 0
-	        Invoke MUIGetExtProperty, hWin, @ButtonTextColorSel
-	        .IF eax == 0
-	            Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, dwPropertyValue
-	        .ELSE
-	            Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, eax
-	        .ENDIF
-	    .ENDIF
+    mov eax, dwProperty
+    .IF eax == @ButtonTextColor ; set other text colors to this if they are not set
+        Invoke MUIGetExtProperty, hWin, @ButtonTextColorAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonTextColorAlt, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @ButtonTextColorSel
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonTextColorSel, dwPropertyValue
+        .ENDIF
+        ; except this, if sel has a color, then use this for selalt if it has a value
+        Invoke MUIGetExtProperty, hWin, @ButtonTextColorSelAlt
+        .IF eax == 0
+            Invoke MUIGetExtProperty, hWin, @ButtonTextColorSel
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, dwPropertyValue
+            .ELSE
+                Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, eax
+            .ENDIF
+        .ENDIF
         Invoke MUIGetExtProperty, hWin, @ButtonNotifyTextColor
         .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonNotifyTextColor, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @ButtonNoteTextColor
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonNoteTextColor, dwPropertyValue
-	    .ENDIF
-	
-	.ELSEIF eax == @ButtonTextColorSel
-	    Invoke MUIGetExtProperty, hWin, @ButtonTextColorSelAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, dwPropertyValue
-	    .ENDIF
-	
-	.ELSEIF eax == @ButtonBackColor
-	    Invoke MUIGetExtProperty, hWin, @ButtonBackColorAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonBackColorAlt, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @ButtonBackColorSel
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonBackColorSel, dwPropertyValue
-	    .ENDIF
-	    ; except this, if sel has a color, then use this for selalt if it has a value
-	    Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelAlt
-	    .IF eax == 0
-	        Invoke MUIGetExtProperty, hWin, @ButtonBackColorSel
-	        .IF eax == 0
-	            Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, dwPropertyValue
-	        .ELSE
-	            Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, eax
-	        .ENDIF
-	    .ENDIF
+            Invoke MUISetExtProperty, hWin, @ButtonNotifyTextColor, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @ButtonNoteTextColor
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonNoteTextColor, dwPropertyValue
+        .ENDIF
+    
+    .ELSEIF eax == @ButtonTextColorSel
+        Invoke MUIGetExtProperty, hWin, @ButtonTextColorSelAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, dwPropertyValue
+        .ENDIF
+    
+    .ELSEIF eax == @ButtonBackColor
+        Invoke MUIGetExtProperty, hWin, @ButtonBackColorAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorAlt, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @ButtonBackColorSel
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorSel, dwPropertyValue
+        .ENDIF
+        ; except this, if sel has a color, then use this for selalt if it has a value
+        Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelAlt
+        .IF eax == 0
+            Invoke MUIGetExtProperty, hWin, @ButtonBackColorSel
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, dwPropertyValue
+            .ELSE
+                Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, eax
+            .ENDIF
+        .ENDIF
         Invoke MUIGetExtProperty, hWin, @ButtonNotifyBackColor
         .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonNotifyBackColor, dwPropertyValue
-	    .ENDIF
+            Invoke MUISetExtProperty, hWin, @ButtonNotifyBackColor, dwPropertyValue
+        .ENDIF
 
-	.ELSEIF eax == @ButtonBorderColor
-	    Invoke MUIGetExtProperty, hWin, @ButtonBorderColorAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSel
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonBorderColorSel, dwPropertyValue
-	    .ENDIF
-	    ; except this, if sel has a color, then use this for selalt if it has a value
-	    Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSelAlt
-	    .IF eax == 0
-	        Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSel
-	        .IF eax == 0
-	            Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, dwPropertyValue
-	        .ELSE
-	            Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, eax
-	        .ENDIF
-	    .ENDIF	
+    .ELSEIF eax == @ButtonBorderColor
+        Invoke MUIGetExtProperty, hWin, @ButtonBorderColorAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSel
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonBorderColorSel, dwPropertyValue
+        .ENDIF
+        ; except this, if sel has a color, then use this for selalt if it has a value
+        Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSelAlt
+        .IF eax == 0
+            Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSel
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, dwPropertyValue
+            .ELSE
+                Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, eax
+            .ENDIF
+        .ENDIF  
 
-	.ELSEIF eax == @ButtonAccentColor
-	    Invoke MUIGetExtProperty, hWin, @ButtonAccentColorAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSel
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, dwPropertyValue
-	    .ENDIF
-	    ; except this, if sel has a color, then use this for selalt if it has a value
-	    Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSelAlt
-	    .IF eax == 0
-	        Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSel
-	        .IF eax == 0
-	            Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, dwPropertyValue
-	        .ELSE
-	            Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, eax
-	        .ENDIF
-	    .ENDIF		
+    .ELSEIF eax == @ButtonAccentColor
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentColorAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSel
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, dwPropertyValue
+        .ENDIF
+        ; except this, if sel has a color, then use this for selalt if it has a value
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSelAlt
+        .IF eax == 0
+            Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSel
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, dwPropertyValue
+            .ELSE
+                Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, eax
+            .ENDIF
+        .ENDIF      
 
-	.ELSEIF eax == @ButtonAccentStyle
-	    Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonAccentStyleAlt, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleSel
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSel, dwPropertyValue
-	    .ENDIF
-	    ; except this, if sel has a color, then use this for selalt if it has a value
-	    Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleSelAlt
-	    .IF eax == 0
-	        Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleSel
-	        .IF eax == 0
-	            Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSelAlt, dwPropertyValue
-	        .ELSE
-	            Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSelAlt, eax
-	        .ENDIF
-	    .ENDIF		
+    .ELSEIF eax == @ButtonAccentStyle
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonAccentStyleAlt, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleSel
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSel, dwPropertyValue
+        .ENDIF
+        ; except this, if sel has a color, then use this for selalt if it has a value
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleSelAlt
+        .IF eax == 0
+            Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleSel
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSelAlt, dwPropertyValue
+            .ELSE
+                Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSelAlt, eax
+            .ENDIF
+        .ENDIF      
 
-	.ELSEIF eax == @ButtonImage
-	    Invoke MUIGetExtProperty, hWin, @ButtonImageAlt
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonImageAlt, dwPropertyValue
-	    .ENDIF
-	    Invoke MUIGetExtProperty, hWin, @ButtonImageSel
-	    .IF eax == 0
-	        Invoke MUISetExtProperty, hWin, @ButtonImageSel, dwPropertyValue
-	    .ENDIF
-	    ; except this, if sel has a color, then use this for selalt if it has a value
-	    Invoke MUIGetExtProperty, hWin, @ButtonImageSelAlt
-	    .IF eax == 0
-	        Invoke MUIGetExtProperty, hWin, @ButtonImageSel
-	        .IF eax == 0
-	            Invoke MUISetExtProperty, hWin, @ButtonImageSelAlt, dwPropertyValue
-	        .ELSE
-	            Invoke MUISetExtProperty, hWin, @ButtonImageSelAlt, eax
-	        .ENDIF
-	    .ENDIF			
-	.ENDIF
+    .ELSEIF eax == @ButtonImage
+        Invoke MUIGetExtProperty, hWin, @ButtonImageAlt
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonImageAlt, dwPropertyValue
+        .ENDIF
+        Invoke MUIGetExtProperty, hWin, @ButtonImageSel
+        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonImageSel, dwPropertyValue
+        .ENDIF
+        ; except this, if sel has a color, then use this for selalt if it has a value
+        Invoke MUIGetExtProperty, hWin, @ButtonImageSelAlt
+        .IF eax == 0
+            Invoke MUIGetExtProperty, hWin, @ButtonImageSel
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonImageSelAlt, dwPropertyValue
+            .ELSE
+                Invoke MUISetExtProperty, hWin, @ButtonImageSelAlt, eax
+            .ENDIF
+        .ENDIF          
+    .ENDIF
 
     ret
 _MUI_ButtonSetPropertyEx ENDP
@@ -2866,9 +2866,9 @@ _MUI_ButtonLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWO
     .ENDIF
     mov hinstance, eax
     
-	Invoke LoadBitmap, hinstance, idResBitmap
+    Invoke LoadBitmap, hinstance, idResBitmap
     Invoke MUISetExtProperty, hWin, dwProperty, eax
-	mov eax, TRUE
+    mov eax, TRUE
     
     ret
 
@@ -2892,10 +2892,10 @@ _MUI_ButtonLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     .ENDIF
     mov hinstance, eax
 
-	Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+    Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
     Invoke MUISetExtProperty, hWin, dwProperty, eax
 
-	mov eax, TRUE
+    mov eax, TRUE
 
     ret
 
@@ -2915,14 +2915,14 @@ _MUI_ButtonLoadIcon ENDP
 ;-------------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
 _MUI_ButtonLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
-	local rcRes:HRSRC
-	local hResData:HRSRC
-	local pResData:HANDLE
-	local sizeOfRes:DWORD
-	local hbuffer:HANDLE
-	local pbuffer:DWORD
-	local pIStream:DWORD
-	local hIStream:DWORD
+    local rcRes:HRSRC
+    local hResData:HRSRC
+    local pResData:HANDLE
+    local sizeOfRes:DWORD
+    local hbuffer:HANDLE
+    local pbuffer:DWORD
+    local pIStream:DWORD
+    local hIStream:DWORD
     LOCAL hinstance:DWORD
     LOCAL pBitmapFromStream:DWORD
 
@@ -2932,67 +2932,67 @@ _MUI_ButtonLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     .ENDIF
     mov hinstance, eax
 
-	; ------------------------------------------------------------------
-	; STEP 1: Find the resource
-	; ------------------------------------------------------------------
-	invoke	FindResource, hinstance, idResPng, RT_RCDATA
-	or 		eax, eax
-	jnz		@f
-	jmp		_MUI_ButtonLoadPng@Close
-@@:	mov		rcRes, eax
-	
-	; ------------------------------------------------------------------
-	; STEP 2: Load the resource
-	; ------------------------------------------------------------------
-	invoke	LoadResource, hinstance, rcRes
-	or		eax, eax
-	jnz		@f
-	ret		; Resource was not loaded
-@@:	mov		hResData, eax
+    ; ------------------------------------------------------------------
+    ; STEP 1: Find the resource
+    ; ------------------------------------------------------------------
+    invoke  FindResource, hinstance, idResPng, RT_RCDATA
+    or      eax, eax
+    jnz     @f
+    jmp     _MUI_ButtonLoadPng@Close
+@@: mov     rcRes, eax
+    
+    ; ------------------------------------------------------------------
+    ; STEP 2: Load the resource
+    ; ------------------------------------------------------------------
+    invoke  LoadResource, hinstance, rcRes
+    or      eax, eax
+    jnz     @f
+    ret     ; Resource was not loaded
+@@: mov     hResData, eax
 
-	; ------------------------------------------------------------------
-	; STEP 3: Create a stream to contain our loaded resource
-	; ------------------------------------------------------------------
-	invoke	SizeofResource, hinstance, rcRes
-	or		eax, eax
-	jnz		@f
-	jmp		_MUI_ButtonLoadPng@Close
-@@:	mov		sizeOfRes, eax
-	
-	invoke	LockResource, hResData
-	or		eax, eax
-	jnz		@f
-	jmp		_MUI_ButtonLoadPng@Close
-@@:	mov		pResData, eax
+    ; ------------------------------------------------------------------
+    ; STEP 3: Create a stream to contain our loaded resource
+    ; ------------------------------------------------------------------
+    invoke  SizeofResource, hinstance, rcRes
+    or      eax, eax
+    jnz     @f
+    jmp     _MUI_ButtonLoadPng@Close
+@@: mov     sizeOfRes, eax
+    
+    invoke  LockResource, hResData
+    or      eax, eax
+    jnz     @f
+    jmp     _MUI_ButtonLoadPng@Close
+@@: mov     pResData, eax
 
-	invoke	GlobalAlloc, GMEM_MOVEABLE, sizeOfRes
-	or		eax, eax
-	jnz		@f
-	jmp		_MUI_ButtonLoadPng@Close
-@@:	mov		hbuffer, eax
+    invoke  GlobalAlloc, GMEM_MOVEABLE, sizeOfRes
+    or      eax, eax
+    jnz     @f
+    jmp     _MUI_ButtonLoadPng@Close
+@@: mov     hbuffer, eax
 
-	invoke	GlobalLock, hbuffer
-	mov		pbuffer, eax
-	
-	invoke	RtlMoveMemory, pbuffer, hResData, sizeOfRes
-	invoke	CreateStreamOnHGlobal, pbuffer, TRUE, addr pIStream
-	or		eax, eax
-	jz		@f
-	jmp		_MUI_ButtonLoadPng@Close
-@@:	
+    invoke  GlobalLock, hbuffer
+    mov     pbuffer, eax
+    
+    invoke  RtlMoveMemory, pbuffer, hResData, sizeOfRes
+    invoke  CreateStreamOnHGlobal, pbuffer, TRUE, addr pIStream
+    or      eax, eax
+    jz      @f
+    jmp     _MUI_ButtonLoadPng@Close
+@@: 
 
-	; ------------------------------------------------------------------
-	; STEP 4: Create an image object from stream
-	; ------------------------------------------------------------------
-	invoke	GdipCreateBitmapFromStream, pIStream, Addr pBitmapFromStream
-	
-	; ------------------------------------------------------------------
-	; STEP 5: Free all used locks and resources
-	; ------------------------------------------------------------------
-	invoke	GetHGlobalFromStream, pIStream, addr hIStream ; had to uncomment as corrupts pngs if left in, googling shows underlying stream needs to be left open for the life of the bitmap
-	;invoke	GlobalFree, hIStream
-	invoke	GlobalUnlock, hbuffer
-	invoke	GlobalFree, hbuffer
+    ; ------------------------------------------------------------------
+    ; STEP 4: Create an image object from stream
+    ; ------------------------------------------------------------------
+    invoke  GdipCreateBitmapFromStream, pIStream, Addr pBitmapFromStream
+    
+    ; ------------------------------------------------------------------
+    ; STEP 5: Free all used locks and resources
+    ; ------------------------------------------------------------------
+    invoke  GetHGlobalFromStream, pIStream, addr hIStream ; had to uncomment as corrupts pngs if left in, googling shows underlying stream needs to be left open for the life of the bitmap
+    ;invoke GlobalFree, hIStream
+    invoke  GlobalUnlock, hbuffer
+    invoke  GlobalFree, hbuffer
 
     Invoke MUISetExtProperty, hWin, dwProperty, pBitmapFromStream
     ;PrintDec dwProperty
@@ -3013,10 +3013,10 @@ _MUI_ButtonLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
         Invoke MUISetIntProperty, hWin, @ButtonNotifyImageStream, hIStream
     .ENDIF
 
-	mov eax, TRUE
-	
+    mov eax, TRUE
+    
 _MUI_ButtonLoadPng@Close:
-	ret
+    ret
 _MUI_ButtonLoadPng endp
 ENDIF
 

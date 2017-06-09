@@ -30,8 +30,8 @@ includelib ModernUI_Checkbox.lib
 ;-----------------------------------------------------------------------------------------
 ; MUICheckbox Prototypes
 ;-----------------------------------------------------------------------------------------
-WinMain					PROTO :DWORD,:DWORD,:DWORD,:DWORD
-WndProc					PROTO :DWORD,:DWORD,:DWORD,:DWORD
+WinMain                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
+WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 
 
 .CONST
@@ -45,19 +45,19 @@ ICO_CHECKMARK           EQU 102
 
 
 ; Main Dialog
-IDD_DIALOG				EQU 1000
+IDD_DIALOG              EQU 1000
 
 ; Main Dialog
-IDD_DIALOG				EQU 1000
+IDD_DIALOG              EQU 1000
 IDC_CAPTIONBAR          EQU 1001
 IDC_CHECKBOX1           EQU 1002
 IDC_CHECKBOX2           EQU 1003
 IDC_CHECKBOX3           EQU 1004
 
 ; Main Menu 
-IDM_MENU				EQU 10000
-IDM_FILE_EXIT			EQU 10001
-IDM_HELP_ABOUT			EQU 10101
+IDM_MENU                EQU 10000
+IDM_FILE_EXIT           EQU 10001
+IDM_HELP_ABOUT          EQU 10101
 
 
 
@@ -65,9 +65,9 @@ IDM_HELP_ABOUT			EQU 10101
 ;-----------------------------------------------------------------------------------------
 ; MUICheckbox Initialized Data
 ;-----------------------------------------------------------------------------------------
-ClassName				DB 'DLGCLASS',0
-AppName					DB 'MUICheckbox Example #1',0
-AboutMsg				DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
+ClassName               DB 'DLGCLASS',0
+AppName                 DB 'MUICheckbox Example #1',0
+AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
 szCheckbox1Text         DB 'Checkbox option 1',0
 szCheckbox2Text         DB 'Checkbox option 2',0
 szCheckbox3Text         DB 'Checkbox option 3',0
@@ -80,10 +80,10 @@ szCheckbox3Text         DB 'Checkbox option 3',0
 ;-----------------------------------------------------------------------------------------
 ; MUICheckbox Uninitialized Data
 ;-----------------------------------------------------------------------------------------
-icc 					INITCOMMONCONTROLSEX <>
-hInstance				DD ?
-CommandLine				DD ?
-hWnd					DD ?
+icc                     INITCOMMONCONTROLSEX <>
+hInstance               DD ?
+CommandLine             DD ?
+hWnd                    DD ?
 hCaptionBar             DD ?
 hChk1                   DD ?
 hChk2                   DD ?
