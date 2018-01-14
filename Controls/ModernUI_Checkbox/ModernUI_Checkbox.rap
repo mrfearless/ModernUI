@@ -74,7 +74,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=29
+MilestoneOnDateDate=12
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=8
 MilestoneOnDateTimeDate=26
@@ -98,15 +98,15 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=22782406
+PTimer=22821655
 [Collapse]
-1=3145728,4,,134349312,
+1=3145728,4,,134218240,
 2=
 6=
 [Size]
-1=0,0,0,0,24186
+1=0,0,0,0,17710
 2=0,0,0,0,5048
-6=0,0,0,0,9500
+6=0,0,0,0,6200
 [GroupExpand]
 GroupExpand=1,1,1,1,0,0
 [BookMark]
@@ -123,5 +123,6 @@ GroupExpand=1,1,1,1,0,0
 [BreakPoint]
 0=
 [Find]
-1="_MUI_CheckboxCleanup"
-2="@CheckboxDllInstance"
+1="icoMUIRadioTick"
+2="_MUI_CheckboxCleanup"
+3="@CheckboxDllInstance"

@@ -266,6 +266,7 @@ MUIPointSizeToLogicalUnit PROC PUBLIC hWin:DWORD, dwPointSize:DWORD
     mov hdc, eax
     Invoke GetDeviceCaps, hdc, LOGPIXELSY
     Invoke MulDiv, dwPointSize, eax, 72d
+    neg eax
     mov dwLogicalUnit, eax
     Invoke ReleaseDC, hWin, hdc
     mov eax, dwLogicalUnit
@@ -741,6 +742,36 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
 MUIPaintBackgroundImage ENDP
 
 
+;-------------------------------------------------------------------------------------
+; Gets parent background color
+; returns in eax, MUI_RGBCOLOR or -1 if NULL brush is set
+; Useful for certain controls to retrieve the parents background color and then to 
+; set their own background color based on the same value.
+;-------------------------------------------------------------------------------------
+MUIGetParentBackgroundColor PROC PUBLIC hControl:DWORD
+    LOCAL hParent:DWORD
+    LOCAL hBrush:DWORD
+    LOCAL logbrush:LOGBRUSH
+    
+    Invoke GetParent, hControl
+    mov hParent, eax
+    
+    Invoke GetClassLong, hParent, GCL_HBRBACKGROUND
+    .IF eax == NULL
+        mov eax, -1
+        ret
+    .ENDIF
+    
+    mov hBrush, eax
+    Invoke GetObject, hBrush, SIZEOF logbrush, Addr logbrush
+    .IF eax == 0
+        mov eax, -1
+        ret
+    .ENDIF
+    mov eax, logbrush.lbColor
+    ret
+MUIGetParentBackgroundColor ENDP
+
 
 ;-------------------------------------------------------------------------------------
 ; MUIGetImageSize
@@ -762,13 +793,23 @@ MUIGetImageSize PROC PRIVATE USES EBX hImage:DWORD, dwImageType:DWORD, lpdwImage
         ret
         
     .ELSEIF eax == MUIIT_BMP ; bitmap/icon
+        Invoke RtlZeroMemory, Addr bm, SIZEOF BITMAP
         Invoke GetObject, hImage, SIZEOF bm, Addr bm
-        mov eax, bm.bmWidth
-        mov ebx, lpdwImageWidth
-        mov [ebx], eax
-        mov eax, bm.bmHeight
-        mov ebx, lpdwImageHeight
-        mov [ebx], eax
+        .IF eax != 0
+            mov eax, bm.bmWidth
+            mov ebx, lpdwImageWidth
+            mov [ebx], eax
+            mov eax, bm.bmHeight
+            mov ebx, lpdwImageHeight
+            mov [ebx], eax
+        .ELSE
+            mov eax, 0
+            mov ebx, lpdwImageWidth
+            mov [ebx], eax
+            mov eax, 0
+            mov ebx, lpdwImageHeight
+            mov [ebx], eax
+        .ENDIF
     
     .ELSEIF eax == MUIIT_ICO ; icon    
         Invoke GetIconInfo, hImage, Addr iinfo ; get icon information

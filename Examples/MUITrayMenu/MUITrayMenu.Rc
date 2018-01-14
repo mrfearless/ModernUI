@@ -1,0 +1,3 @@
+#include "Res/MUITrayMenuVer.rc"
+#include "Res/MUITrayMenuDlg.rc"
+#include "Res/MUITrayMenuRes.rc"

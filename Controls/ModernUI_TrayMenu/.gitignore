@@ -8,13 +8,10 @@ Distribution/
 *.pdb
 *.ilk
 *.exp
-notes.txt
-RAMUIControlIDS.inc
 template/
+RAControl/
 downloads/
 screenshots/
 releases/
 wiki/
 _archive/
-ModernUI_NotifyIcon/
-ModernUI_Image/

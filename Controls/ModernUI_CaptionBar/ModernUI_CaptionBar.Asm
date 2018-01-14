@@ -299,21 +299,25 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         and eax, 0FFFFh
         .IF eax == 1 ; close button
             Invoke GetParent, hWin
-            Invoke SendMessage, eax, WM_CLOSE, 0, 0
+            Invoke SendMessage, eax, WM_SYSCOMMAND, SC_CLOSE, 0
+            ;Invoke SendMessage, eax, WM_CLOSE, 0, 0
             ret
         .ELSEIF eax == 2 ; max button
             Invoke GetParent, hWin
-            Invoke ShowWindow, eax, SW_MAXIMIZE
+            Invoke SendMessage, eax, WM_SYSCOMMAND, SC_MAXIMIZE, 0
+            ;Invoke ShowWindow, eax, SW_MAXIMIZE
             Invoke _MUI_CaptionBarReposition, hWin
             ret            
         .ELSEIF eax == 3 ; res button
             Invoke GetParent, hWin
-            Invoke ShowWindow, eax, SW_RESTORE
+            Invoke SendMessage, eax, WM_SYSCOMMAND, SC_RESTORE, 0
+            ;Invoke ShowWindow, eax, SW_RESTORE
             Invoke _MUI_CaptionBarReposition, hWin
             ret
         .ELSEIF eax == 4 ; min button
             Invoke GetParent, hWin
-            Invoke ShowWindow, eax, SW_MINIMIZE
+            Invoke SendMessage, eax, WM_SYSCOMMAND, SC_MINIMIZE, 0
+            ;Invoke ShowWindow, eax, SW_MINIMIZE
             ret
         .ENDIF
         xor eax, eax
@@ -390,11 +394,11 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         Invoke GetParent, hWin
         mov hParent, eax
          ; sets text of our CaptionBar
-        Invoke SetWindowText, hWin, lParam
+        Invoke DefWindowProc, hWin, uMsg, wParam, lParam
         ; Set main window title
         Invoke SetWindowText, hParent, lParam
-        mov eax, 0
         Invoke InvalidateRect, hWin, NULL, FALSE
+        mov eax, TRUE
         ret
     
     ; custom messages start here
@@ -434,6 +438,7 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
     mov eax, uMsg
     .IF eax == WM_NCDESTROY
         Invoke RemoveWindowSubclass, hWin, Addr _MUI_CaptionBarParentSubClassProc, uIdSubclass ; remove subclass before control destroyed.
+        Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
         ret
     
     ; Handle resize of dialog/window and invalidate it if we are painting a border via MUIPaintBackground
@@ -915,7 +920,8 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
         .IF hDefer == NULL
             Invoke SetWindowPos, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING ;or SWP_NOCOPYBITS
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING    
+            Invoke DeferWindowPos, hDefer, hSysButtonClose, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING
+            mov hDefer, eax    
         .ENDIF
         mov eax, dwSysButtonWidth
         add dwLeftOffset, eax ;32d
@@ -927,7 +933,8 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
         .IF hDefer == NULL
             Invoke SetWindowPos, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING    
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING 
+            Invoke DeferWindowPos, hDefer, hSysButtonMax, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING
+            mov hDefer, eax 
         .ENDIF
 
         mov eax, dwClientWidth
@@ -935,7 +942,8 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
         .IF hDefer == NULL
             Invoke SetWindowPos, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING    
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING  
+            Invoke DeferWindowPos, hDefer, hSysButtonRes, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING
+            mov hDefer, eax  
         .ENDIF
         mov eax, dwSysButtonWidth
         add dwLeftOffset, eax ;32d
@@ -947,7 +955,8 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hCaptionBar:DWORD
         .IF hDefer == NULL
             Invoke SetWindowPos, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING    
         .ELSE
-            Invoke DeferWindowPos, hDefer, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING  
+            Invoke DeferWindowPos, hDefer, hSysButtonMin, NULL, eax, 0, 0, 0, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOSIZE ;or SWP_NOSENDCHANGING
+            mov hDefer, eax  
         .ENDIF
     .ENDIF
 

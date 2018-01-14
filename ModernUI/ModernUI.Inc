@@ -45,7 +45,7 @@ MUIApplyToDialog                PROTO :DWORD, :DWORD                   ; hDialog
 MUICenterWindow                 PROTO :DWORD, :DWORD                   ; hWndChild, hWndParent
 MUIPaintBackground              PROTO :DWORD, :DWORD, :DWORD           ; hDialogWindow, dwBackColor, dwBorderColor
 MUIPaintBackgroundImage         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hDialogWindow, dwBackColor, dwBorderColor, hImage, dwImageType, dwImageLocation
-
+MUIGetParentBackgroundColor     PROTO :DWORD                            ; hControl
 MUIGetImageSize                 PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hImage, dwImageType, lpdwImageWidth, lpdwImageHeight
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
