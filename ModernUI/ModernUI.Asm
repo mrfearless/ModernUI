@@ -758,13 +758,15 @@ MUIGetParentBackgroundColor PROC PUBLIC hControl:DWORD
     
     Invoke GetClassLong, hParent, GCL_HBRBACKGROUND
     .IF eax == NULL
+        ;PrintText 'GetClassLong, hParent, GCL_HBRBACKGROUND = NULL'
         mov eax, -1
         ret
     .ENDIF
     
     mov hBrush, eax
-    Invoke GetObject, hBrush, SIZEOF logbrush, Addr logbrush
+    Invoke GetObject, hBrush, SIZEOF LOGBRUSH, Addr logbrush
     .IF eax == 0
+        ;PrintText 'GetObject, hBrush, SIZEOF LOGBRUSH, Addr logbrush = 0'
         mov eax, -1
         ret
     .ENDIF
