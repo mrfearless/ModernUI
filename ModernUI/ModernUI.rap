@@ -64,7 +64,7 @@ AutoLoad=2,1
 4=
 3=
 2=0,0,0,0,3100
-1=0,0,0,0,11626
+1=0,0,0,0,10487
 [RADebugBP]
 1=
 2=
@@ -78,7 +78,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=17
+MilestoneOnDateDate=31
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=16
@@ -102,10 +102,10 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=57071325
+PTimer=63142384
 [Collapse]
 2=
-1=1342324865,673186305,85
+1=2229263,33562650,1365
 [GroupExpand]
 GroupExpand=1,0
 [BookMark]
@@ -121,3 +121,5 @@ GroupExpand=1,0
 9=
 [BreakPoint]
 0=
+[Find]
+1="MUI_INTERNAL_PROPERTIES"
