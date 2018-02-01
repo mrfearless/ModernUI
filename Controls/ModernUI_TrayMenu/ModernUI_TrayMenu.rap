@@ -71,7 +71,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=31
+MilestoneOnDateDate=1
 MilestoneOnDateTimeYear=2017
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=16
@@ -95,13 +95,13 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=25156627
+PTimer=25643443
 [Collapse]
-1=1073746002,1074270752,1141115152,1080033416,32784,
+1=1074810962,1074270752,1141113104,1080033288,32784,
 2=
 [Size]
-1=0,0,0,0,48780
-2=0,0,0,0,5857
+1=0,0,0,0,7683
+2=0,0,0,0,4108
 [GroupExpand]
 GroupExpand=1,0,0,0,0,0
 [BookMark]
@@ -117,3 +117,5 @@ GroupExpand=1,0,0,0,0,0
 9=
 [BreakPoint]
 0=
+[Find]
+1="MUITrayMenuSetTrayIconText"
