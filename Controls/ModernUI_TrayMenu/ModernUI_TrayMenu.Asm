@@ -19,14 +19,14 @@ option casemap:none
 include \masm32\macros\macros.asm
 
 ;DEBUG32 EQU 1
-
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include user32.inc
@@ -239,12 +239,13 @@ MUITrayMenuCreate PROC PUBLIC hWndParent:DWORD, hTrayMenuIcon:DWORD, lpszTooltip
             Invoke MUISetExtProperty, hControl, @TrayMenuExtraWndHandle, hWndExtra
         .ENDIF
         
-        .IF dwMenuType != NULL
-            Invoke MUISetExtProperty, hControl, @TrayMenuType, dwMenuType
-        .ENDIF
-        .IF dwMenu != NULL
-            Invoke MUISetExtProperty, hControl, @TrayMenuHandleMenu, dwMenu
-        .ENDIF
+        ; otherwise values are set, and MUITrayMenuAssignMenu destroys menu before assigning the prior destoryed handle.
+;        .IF dwMenuType != NULL
+;            Invoke MUISetExtProperty, hControl, @TrayMenuType, dwMenuType
+;        .ENDIF
+;        .IF dwMenu != NULL
+;            Invoke MUISetExtProperty, hControl, @TrayMenuHandleMenu, dwMenu
+;        .ENDIF
 
         Invoke _MUI_TM_AddIconAndTooltip, hControl, hWndParent, hTrayMenuIcon, lpszTooltip
         
@@ -572,6 +573,7 @@ MUITrayMenuAssignMenu PROC PUBLIC USES EBX hControl:DWORD, dwMenuType:DWORD, dwM
     .ENDIF
     
     .IF dwMenuType == MUITMT_POPUPMENU
+        ;PrintText 'MUITMT_POPUPMENU'
         .IF dwMenu != NULL
             Invoke MUISetExtProperty, hControl, @TrayMenuHandleMenu, dwMenu
             mov eax, TRUE
@@ -583,6 +585,7 @@ MUITrayMenuAssignMenu PROC PUBLIC USES EBX hControl:DWORD, dwMenuType:DWORD, dwM
     .ENDIF
     
     .IF dwMenuType == MUITMT_MENUITEMS
+        ;PrintText 'MUITMT_MENUITEMS'
         .IF dwMenu == NULL
             mov eax, FALSE
             ret
@@ -1523,7 +1526,7 @@ _MUI_TM_ShowTrayMenu PROC PRIVATE hWin:DWORD, hControl:DWORD
     
     Invoke MUIGetExtProperty, hControl, @TrayMenuHandleMenu
     mov hTrayMenu, eax
-    
+
     .IF hTrayMenu == NULL
         ret
     .ENDIF
