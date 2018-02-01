@@ -57,7 +57,7 @@ Group=Distribuition,Modules,Assembly,Resources,Misc
 4=1
 5=5
 [AutoLoad]
-AutoLoad=2,1,5
+AutoLoad=2,1,5,3
 [RADebugBP]
 2=
 1=
@@ -71,7 +71,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=21
+MilestoneOnDateDate=31
 MilestoneOnDateTimeYear=2018
 MilestoneOnDateTimeMonth=1
 MilestoneOnDateTimeDate=21
@@ -95,15 +95,17 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=204596
+PTimer=5638970
 [Collapse]
-1=,,
+1=536879752,561410,81920
 5=
 2=
+3=
 [Size]
-1=0,0,0,0,40573
+1=0,0,0,0,11168
 5=0,0,0,0,7306
-2=0,0,0,0,207
+2=0,0,0,0,3840
+3=0,0,0,0,386
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
 [BookMark]
@@ -119,3 +121,5 @@ GroupExpand=1,1,1,0,0,0
 9=
 [BreakPoint]
 0=
+[Find]
+1="_MUI_TooltipSetPositon"

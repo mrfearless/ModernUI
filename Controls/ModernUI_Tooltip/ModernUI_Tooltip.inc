@@ -50,11 +50,12 @@ MUITooltipGetProperty       PROTO :DWORD, :DWORD                                
 MUITTS_POS_BELOW            EQU 0    ; Position tooltip below control
 MUITTS_POS_RIGHT            EQU 1    ; Position tooltip to the right of control
 MUITTS_POS_ABOVE            EQU 2    ; Position tooltip above control
-MUITTS_POS_LEFT             EQU 3    ; Position tooltip to the left of the control
-MUITTS_POS_MOUSE            EQU 4    ; Position tooltip on control at mouse coords
+MUITTS_POS_LEFT             EQU 4    ; Position tooltip to the left of the control
+MUITTS_POS_MOUSE            EQU 8    ; Position tooltip on control at mouse coords
 
-MUITTS_NODROPSHADOW         EQU 8    ; Dont show dropshadow around tooltip - this will affect ALL tooltips
-MUITTS_FADEIN               EQU 16   ; fade in tooltip
+MUITTS_NODROPSHADOW         EQU 16   ; Dont show dropshadow around tooltip - this will affect ALL tooltips
+MUITTS_FADEIN               EQU 32   ; fade in tooltip
+MUITTS_TIMEOUT              EQU 64   ; Uses @TooltipShowTimeout value (or default time if 0) before autohiding tip
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Tooltip Properties: Use with MUITooltipSetProperty / MUITooltipGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
@@ -64,8 +65,10 @@ MUITTS_FADEIN               EQU 16   ; fade in tooltip
 @TooltipBackColor           EQU 8    ; Colorref
 @TooltipBorderColor         EQU 12   ; Colorref
 @TooltipShowDelay           EQU 16   ; DWORD milliseconds delay to show tooltip
-@TooltipInfoTitleText       EQU 24   ; lpszTitleString for title text to display
-
+@TooltipShowTimeout         EQU 24   ; DWORD milliseconds time to keep showing tooltip before hiding it. Requires MUITTS_TIMEOUT style flag
+@TooltipInfoTitleText       EQU 28   ; lpszTitleString for title text to display
+@TooltipOffsetX             EQU 32   ; DWORD Offset x +/- to set position of tip
+@TooltipOffsetY             EQU 36   ; DWORD Offset y +/- to set position of tip
 
 
 

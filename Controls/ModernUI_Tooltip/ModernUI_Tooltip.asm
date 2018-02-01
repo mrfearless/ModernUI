@@ -5,7 +5,7 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-;;DEBUG32 EQU 1
+;DEBUG32 EQU 1
 ;
 ;IFDEF DEBUG32
 ;    PRESERVEXMMREGS equ 1
@@ -43,7 +43,7 @@ _MUI_TooltipPaintText               PROTO :DWORD, :DWORD, :DWORD
 _MUI_TooltipPaintTextAndTitle       PROTO :DWORD, :DWORD, :DWORD
 _MUI_TooltipPaintBorder             PROTO :DWORD, :DWORD, :DWORD
 _MUI_TooltipSize                    PROTO :DWORD, :DWORD, :DWORD
-_MUI_TooltipSetPositon              PROTO :DWORD
+_MUI_TooltipSetPosition              PROTO :DWORD
 _MUI_TooltipCheckWidthMultiline     PROTO :DWORD
 _MUI_TooltipCheckTextMultiline      PROTO :DWORD, :DWORD
 _MUI_TooltipParentSubclass          PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -58,7 +58,10 @@ MUI_TOOLTIP_PROPERTIES          STRUCT
     dwTooltipBackColor          DD ?
     dwTooltipBorderColor        DD ?
     dwTooltipShowDelay          DD ?
+    dwTooltipShowTimeout        DD ?
     dwTooltipInfoTitleText      DD ?
+    dwTooltipOffsetX            DD ?
+    dwTooltipOffsetY            DD ?
 MUI_TOOLTIP_PROPERTIES          ENDS
 
 ; Internal properties
@@ -78,6 +81,7 @@ _MUI_TOOLTIP_PROPERTIES         ENDS
 
 .CONST
 MUI_TOOLTIP_SHOW_DELAY          EQU 1000 ; default time to show tooltip (in ms)
+MUI_TOOLTIP_TIMOUT_DELAY        EQU 
 
 ; Internal properties
 @TooltipHandle                  EQU 0   ; Used in subclass
@@ -278,7 +282,7 @@ _MUI_TooltipWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, l
     
     .ELSEIF eax == WM_SHOWWINDOW
         .IF wParam == TRUE
-            Invoke _MUI_TooltipSetPositon, hWin
+            Invoke _MUI_TooltipSetPosition, hWin
             
             ; Check if fade in effect is to be shown
             Invoke GetWindowLong, hWin, GWL_STYLE
@@ -286,6 +290,21 @@ _MUI_TooltipWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, l
             .IF eax == MUITTS_FADEIN            
                 mov dwFadeInAlphaLevel, 0
                 Invoke SetTimer, hWin, hWin, 10, NULL
+            
+            .ELSE
+                Invoke GetWindowLong, hWin, GWL_STYLE
+                and eax, MUITTS_TIMEOUT
+                .IF eax == MUITTS_TIMEOUT
+                    Invoke MUIGetExtProperty, hWin, @TooltipShowTimeout
+                    .IF eax != 0
+                        Invoke SetTimer, hWin, 1, eax, NULL
+                    .ELSE ; set default timeout
+                        Invoke GetDoubleClickTime
+                        mov ebx, 10
+                        mul ebx
+                        Invoke SetTimer, hWin, 1, eax, NULL                    
+                    .ENDIF
+                .ENDIF
             .ENDIF    
             ;Invoke SetTimer, hWin, hWin, 200, NULL
         .ELSE
@@ -302,14 +321,34 @@ _MUI_TooltipWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, l
         ret
     
     .ELSEIF eax == WM_TIMER
-        ; fade in our tooltip window 
-        .IF dwFadeInAlphaLevel >= 255d
-            mov dwFadeInAlphaLevel, 255d
-            Invoke KillTimer, hWin, hWin
-        .ENDIF    
-        Invoke SetLayeredWindowAttributes, hWin, 0, dwFadeInAlphaLevel, LWA_ALPHA
-        add dwFadeInAlphaLevel, 16d
+        mov eax, wParam
+        .IF eax == hWin
+            ; fade in our tooltip window 
+            .IF dwFadeInAlphaLevel >= 255d
+                Invoke SetLayeredWindowAttributes, hWin, 0, 255d, LWA_ALPHA
+                Invoke KillTimer, hWin, hWin
+                
+                Invoke GetWindowLong, hWin, GWL_STYLE
+                and eax, MUITTS_TIMEOUT
+                .IF eax == MUITTS_TIMEOUT
+                    Invoke MUIGetExtProperty, hWin, @TooltipShowTimeout
+                    .IF eax != 0
+                        Invoke SetTimer, hWin, 1, eax, NULL
+                    .ELSE ; set default timeout
+                        Invoke GetDoubleClickTime
+                        mov ebx, 10
+                        mul ebx
+                        Invoke SetTimer, hWin, 1, eax, NULL                    
+                    .ENDIF
+                .ENDIF
+            .ELSE
+                Invoke SetLayeredWindowAttributes, hWin, 0, dwFadeInAlphaLevel, LWA_ALPHA
+                add dwFadeInAlphaLevel, 32d
+            .ENDIF    
 
+        .ELSEIF eax == 1
+            Invoke ShowWindow, hWin, SW_HIDE
+        .ENDIF
     
 ;    .ELSEIF eax == WM_TIMER
 ;        Invoke MUIGetIntProperty, hWin, @TooltipParent
@@ -362,12 +401,14 @@ _MUI_TooltipWndProc ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_TooltipInit - set initial default values
 ;-------------------------------------------------------------------------------------
-_MUI_TooltipInit PROC PRIVATE hControl:DWORD, hWndParent:DWORD, lpszText:DWORD
+_MUI_TooltipInit PROC USES EBX hControl:DWORD, hWndParent:DWORD, lpszText:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
     LOCAL hFont:DWORD
     LOCAL dwStyle:DWORD
     LOCAL dwClassStyle:DWORD
+    LOCAL dwShowDelay:DWORD
+    LOCAL dwShowTimeout:DWORD
     
     Invoke GetWindowLong, hControl, GWL_STYLE
     mov dwStyle, eax
@@ -394,16 +435,24 @@ _MUI_TooltipInit PROC PRIVATE hControl:DWORD, hWndParent:DWORD, lpszText:DWORD
 ;        Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
 ;    .ENDIF
      
+    Invoke GetDoubleClickTime
+    mov dwShowDelay, eax
+    mov ebx, 10
+    mul ebx
+    mov dwShowTimeout, eax
+
     ; Set default initial internal/external property values  
     Invoke MUISetIntProperty, hControl, @TooltipHandle, hControl   
     Invoke MUISetIntProperty, hControl, @TooltipParent, hWndParent
-    Invoke MUISetIntProperty, hControl, @TooltipHoverTime, MUI_TOOLTIP_SHOW_DELAY
-    
+    Invoke MUISetIntProperty, hControl, @TooltipHoverTime, dwShowDelay ;MUI_TOOLTIP_SHOW_DELAY
+
     Invoke MUISetExtProperty, hControl, @TooltipTextColor, MUI_RGBCOLOR(51,51,51) ;MUI_RGBCOLOR(242,242,242) ; MUI_RGBCOLOR(51,51,51)
     Invoke MUISetExtProperty, hControl, @TooltipBackColor, MUI_RGBCOLOR(242,241,208) ;MUI_RGBCOLOR(242,241,208) ;MUI_RGBCOLOR(25,25,25) ;MUI_RGBCOLOR(242,241,208)
     Invoke MUISetExtProperty, hControl, @TooltipBorderColor, MUI_RGBCOLOR(190,190,190) ;MUI_RGBCOLOR(0,0,0) ;MUI_RGBCOLOR(190,190,190)
-    Invoke MUISetExtProperty, hControl, @TooltipShowDelay, MUI_TOOLTIP_SHOW_DELAY
-    
+    Invoke MUISetExtProperty, hControl, @TooltipShowDelay, dwShowDelay ;MUI_TOOLTIP_SHOW_DELAY
+    Invoke MUISetExtProperty, hControl, @TooltipShowTimeout, dwShowTimeout
+    Invoke MUISetExtProperty, hControl, @TooltipOffsetX, 0
+    Invoke MUISetExtProperty, hControl, @TooltipOffsetY, 0
 
    .IF hMUITooltipFont == 0
         mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
@@ -1034,7 +1083,7 @@ _MUI_TooltipSize PROC PRIVATE USES EBX hWin:DWORD, bMultiline:DWORD, lpszText:DW
     
     
     ;.IF eax != 0 ; check WM_CREATE has set out property structures (otherwise call from WM_SETTEXT will crash)
-        Invoke _MUI_TooltipSetPositon, hWin
+        Invoke _MUI_TooltipSetPosition, hWin
     ;.ENDIF
     
     ret
@@ -1045,17 +1094,24 @@ _MUI_TooltipSize ENDP
 ;-------------------------------------------------------------------------------------
 ; Sets position of the tooltip relative to buddy control or mouse position
 ;-------------------------------------------------------------------------------------
-_MUI_TooltipSetPositon PROC USES EBX hControl:DWORD
+_MUI_TooltipSetPosition PROC USES EBX hControl:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
     LOCAL rect:RECT
     LOCAL tiprect:RECT
     LOCAL pt:POINT
+    LOCAL dwOffsetX:DWORD
+    LOCAL dwOffsetY:DWORD
     
-    ;PrintText '_MUI_TooltipSetPositon'
+    ;PrintText '_MUI_TooltipSetPosition'
     
     Invoke MUIGetIntProperty, hControl, @TooltipParent
     mov hParent, eax
+
+    Invoke MUIGetExtProperty, hControl, @TooltipOffsetX
+    mov dwOffsetX, eax
+    Invoke MUIGetExtProperty, hControl, @TooltipOffsetY
+    mov dwOffsetY, eax    
 
     Invoke GetWindowRect, hParent, Addr rect
     Invoke GetClientRect, hControl, Addr tiprect
@@ -1101,14 +1157,32 @@ _MUI_TooltipSetPositon PROC USES EBX hControl:DWORD
         mov eax, pt.y
         add eax, 8
         mov rect.top, eax
-        
-    .ENDIF
     
+    .ELSE
+        ;PrintText 'Unknown Pos'
+    
+    .ENDIF
+
+    .IF dwOffsetX != 0
+        mov eax, rect.left
+        add eax, dwOffsetX
+        mov rect.left, eax
+    .ENDIF
+
+    ;PrintDec dwOffsetY
+    ;PrintDec rect.top
+    .IF dwOffsetY != 0
+        mov eax, rect.top
+        add eax, dwOffsetY
+        mov rect.top, eax
+    .ENDIF
+    ;PrintDec rect.top
+
     Invoke SetWindowPos, hControl, HWND_TOP, rect.left, rect.top, 0, 0,  SWP_NOACTIVATE or SWP_NOSENDCHANGING or SWP_NOZORDER or SWP_NOSIZE
     
     ret
 
-_MUI_TooltipSetPositon ENDP
+_MUI_TooltipSetPosition ENDP
 
 
 ;-------------------------------------------------------------------------------------
