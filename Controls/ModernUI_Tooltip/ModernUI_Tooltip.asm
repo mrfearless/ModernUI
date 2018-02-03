@@ -43,7 +43,7 @@ _MUI_TooltipPaintText               PROTO :DWORD, :DWORD, :DWORD
 _MUI_TooltipPaintTextAndTitle       PROTO :DWORD, :DWORD, :DWORD
 _MUI_TooltipPaintBorder             PROTO :DWORD, :DWORD, :DWORD
 _MUI_TooltipSize                    PROTO :DWORD, :DWORD, :DWORD
-_MUI_TooltipSetPosition              PROTO :DWORD
+_MUI_TooltipSetPosition             PROTO :DWORD
 _MUI_TooltipCheckWidthMultiline     PROTO :DWORD
 _MUI_TooltipCheckTextMultiline      PROTO :DWORD, :DWORD
 _MUI_TooltipParentSubclass          PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -81,7 +81,7 @@ _MUI_TOOLTIP_PROPERTIES         ENDS
 
 .CONST
 MUI_TOOLTIP_SHOW_DELAY          EQU 1000 ; default time to show tooltip (in ms)
-MUI_TOOLTIP_TIMOUT_DELAY        EQU 
+
 
 ; Internal properties
 @TooltipHandle                  EQU 0   ; Used in subclass
@@ -615,9 +615,6 @@ _MUI_TooltipPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
 
     
     Invoke CopyRect, Addr rect, lpRect
-
-    Invoke GetWindowLong, hWin, GWL_STYLE
-    mov dwStyle, eax
     
     Invoke MUIGetExtProperty, hWin, @TooltipFont        
     mov hFont, eax
@@ -697,9 +694,6 @@ _MUI_TooltipPaintTextAndTitle PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRec
     LOCAL lpszTitleText:DWORD
 
     Invoke CopyRect, Addr rect, lpRect
-
-    Invoke GetWindowLong, hWin, GWL_STYLE
-    mov dwStyle, eax
     
     Invoke MUIGetExtProperty, hWin, @TooltipFont        
     mov hFont, eax
@@ -824,10 +818,7 @@ _MUI_TooltipPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
     LOCAL BorderStyle:DWORD
     LOCAL hBrush:DWORD
     LOCAL hOldBrush:DWORD
-    LOCAL hPen:DWORD
-    LOCAL hOldPen:DWORD
     LOCAL rect:RECT
-    LOCAL pt:POINT
     
     Invoke MUIGetExtProperty, hWin, @TooltipBorderColor
     
@@ -886,6 +877,11 @@ _MUI_TooltipSize PROC PRIVATE USES EBX hWin:DWORD, bMultiline:DWORD, lpszText:DW
     mov sizetitletext.y, 0
     mov sizetext.x, 0
     mov sizetext.y, 0
+
+    mov FinalRect.left,0
+    mov FinalRect.top,0
+    mov FinalRect.right,0
+    mov FinalRect.bottom,0
     
     Invoke GetClientRect, hWin, Addr rect
     mov eax, rect.right
@@ -979,25 +975,25 @@ _MUI_TooltipSize PROC PRIVATE USES EBX hWin:DWORD, bMultiline:DWORD, lpszText:DW
         
     .ELSEIF eax == 0 && bMultiline == TRUE
         ;PrintText 'dwWidth == 0 && bMultiline == TRUE'
-        mov eax, dwPaddingWidth
-        shr eax, 1
-        mov FinalRect.left, eax
-        
-        mov eax, dwPaddingHeight
-        shr eax, 1
-        mov FinalRect.top, eax
+;        mov eax, dwPaddingWidth
+;        shr eax, 1
+;        mov FinalRect.left, eax
+;        
+;        mov eax, dwPaddingHeight
+;        shr eax, 1
+;        mov FinalRect.top, eax
         
         mov eax, 250d
         ;sub eax, dwPaddingWidth
         mov FinalRect.right, eax
         mov FinalRect.bottom, 0
         
-        Invoke DrawText, hdc, lpszText, LenText, Addr FinalRect, DT_CALCRECT ;or DT_WORDBREAK
+        Invoke DrawText, hdc, lpszText, LenText, Addr FinalRect, DT_CALCRECT or DT_WORDBREAK
         
-        mov eax, dwPaddingHeight
-        shr eax, 1
-        add eax, FinalRect.bottom
-        sub eax, 4
+;        mov eax, dwPaddingHeight
+;        shr eax, 1
+;        add eax, FinalRect.bottom
+;        sub eax, 4
         mov dwHeight, eax
 
         mov eax, dwPaddingWidth
@@ -1026,31 +1022,35 @@ _MUI_TooltipSize PROC PRIVATE USES EBX hWin:DWORD, bMultiline:DWORD, lpszText:DW
     .ELSEIF sdword ptr eax > 0 && bMultiline == TRUE
         ;PrintText 'dwWidth > 0 && bMultiline == TRUE'
     
-        mov eax, dwPaddingWidth
-        shr eax, 1
-        mov FinalRect.left, eax
+;        mov eax, dwPaddingWidth
+;        shr eax, 1
+;        mov FinalRect.left, eax
+;        
+;        mov eax, dwPaddingHeight
+;        shr eax, 1
+;        .IF lpszTitleText != 0
+;            add eax, sizetitletext.y
+;            add eax, 4
+;        .ENDIF
+;        mov FinalRect.top, eax
+;        
+;        mov ebx, dwPaddingWidth
+;        shr ebx, 1
+        mov eax, dwWidth
+;        sub eax, ebx
+        mov FinalRect.right, eax
+        mov FinalRect.bottom, 0
         
-        mov eax, dwPaddingHeight
-        shr eax, 1
+        Invoke DrawText, hdc, lpszText, LenText, Addr FinalRect, DT_CALCRECT or DT_WORDBREAK
+
         .IF lpszTitleText != 0
             add eax, sizetitletext.y
             add eax, 4
         .ENDIF
-        mov FinalRect.top, eax
-        
-        mov ebx, dwPaddingWidth
-        shr ebx, 1
-        mov eax, dwWidth
-        sub eax, ebx
-        mov FinalRect.right, eax
-        mov FinalRect.bottom, 0
-        
-        Invoke DrawText, hdc, lpszText, LenText, Addr FinalRect, DT_CALCRECT ;or DT_WORDBREAK
-
-        mov eax, dwPaddingHeight
-        shr eax, 1
-        add eax, FinalRect.bottom
-        sub eax, 4
+;        mov eax, dwPaddingHeight
+;        shr eax, 1
+;        add eax, FinalRect.bottom
+;        sub eax, 4
         mov dwHeight, eax
         
         mov eax, dwPaddingWidth
@@ -1211,7 +1211,6 @@ _MUI_TooltipCheckTextMultiline PROC USES EBX hControl:DWORD, lpszText:DWORD
     LOCAL lenText:DWORD
     LOCAL Cnt:DWORD
     LOCAL bMultiline:DWORD
-    LOCAL dwStyle:DWORD
     
     ;PrintText '_MUI_TooltipCheckTextMultiline'
     .IF lpszText == 0
