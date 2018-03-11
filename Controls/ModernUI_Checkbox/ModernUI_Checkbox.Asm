@@ -18,7 +18,7 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
+;MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
 
 ;DEBUG32 EQU 1
 ;
@@ -525,11 +525,11 @@ _MUI_CheckboxCleanup PROC PRIVATE hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @CheckboxImageType
     mov ImageType, eax
 
-    .IF ImageType == 0
+    .IF ImageType == MUICIT_NONE
         ret
     .ENDIF
     
-    .IF ImageType == 3
+    .IF ImageType == MUICIT_PNG
         IFDEF MUI_USEGDIPLUS
         Invoke MUIGetIntProperty, hControl, @CheckboxImageStream
         mov hIStreamImage, eax
@@ -574,7 +574,7 @@ _MUI_CheckboxCleanup PROC PRIVATE hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @CheckboxImage
     mov hImage, eax
     .IF eax != 0
-        .IF ImageType != 3
+        .IF ImageType != MUICIT_PNG
             Invoke DeleteObject, eax
         .ELSE
             IFDEF MUI_USEGDIPLUS
@@ -585,7 +585,7 @@ _MUI_CheckboxCleanup PROC PRIVATE hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @CheckboxImageAlt
     mov hImageAlt, eax
     .IF eax != 0 && eax != hImage
-        .IF ImageType != 3
+        .IF ImageType != MUICIT_PNG
             Invoke DeleteObject, eax
         .ELSE
             IFDEF MUI_USEGDIPLUS
@@ -596,7 +596,7 @@ _MUI_CheckboxCleanup PROC PRIVATE hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @CheckboxImageSel
     mov hImageSel, eax
     .IF eax != 0 && eax != hImage && eax != hImageAlt
-        .IF ImageType != 3
+        .IF ImageType != MUICIT_PNG
             Invoke DeleteObject, eax
         .ELSE
             IFDEF MUI_USEGDIPLUS
@@ -607,7 +607,7 @@ _MUI_CheckboxCleanup PROC PRIVATE hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @CheckboxImageSelAlt
     mov hImageSelAlt, eax
     .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel
-        .IF ImageType != 3
+        .IF ImageType != MUICIT_PNG
             Invoke DeleteObject, eax
         .ELSE
             IFDEF MUI_USEGDIPLUS
@@ -618,7 +618,7 @@ _MUI_CheckboxCleanup PROC PRIVATE hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @CheckboxImageDisabled
     mov hImageDisabled, eax
     .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel && eax != hImageSelAlt
-        .IF ImageType != 3
+        .IF ImageType != MUICIT_PNG
             Invoke DeleteObject, eax
         .ELSE
             IFDEF MUI_USEGDIPLUS
@@ -629,7 +629,7 @@ _MUI_CheckboxCleanup PROC PRIVATE hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @CheckboxImageDisabledSel
     mov hImageDisabledSel, eax
     .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel && eax != hImageSelAlt && eax != hImageDisabled
-        .IF ImageType != 3
+        .IF ImageType != MUICIT_PNG
             Invoke DeleteObject, eax
         .ELSE
             IFDEF MUI_USEGDIPLUS
