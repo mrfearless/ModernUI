@@ -155,18 +155,18 @@ MUIBS_DROPDOWN                  EQU 80h     ; Show dropdown arrow right side of 
 @ButtonTextColorSel             EQU 12      ; Colorref
 @ButtonTextColorSelAlt          EQU 16      ; Colorref
 @ButtonTextColorDisabled        EQU 20      ; Colorref
-@ButtonBackColor                EQU 24      ; Colorref
+@ButtonBackColor                EQU 24      ; Colorref, -1 = transparent
 @ButtonBackColorAlt             EQU 28      ; Colorref
 @ButtonBackColorSel             EQU 32      ; Colorref
 @ButtonBackColorSelAlt          EQU 36      ; Colorref
 @ButtonBackColorDisabled        EQU 40      ; Colorref
-@ButtonBorderColor              EQU 44      ; Colorref
+@ButtonBorderColor              EQU 44      ; Colorref, -1 = transparent
 @ButtonBorderColorAlt           EQU 48      ; Colorref
 @ButtonBorderColorSel           EQU 52      ; Colorref
 @ButtonBorderColorSelAlt        EQU 56      ; Colorref
 @ButtonBorderColorDisabled      EQU 60      ; Colorref
 @ButtonBorderStyle              EQU 64      ; Button Border Styles - Either MUIBBS_NONE, MUIBBS_ALL or a combination of MUIBBS_LEFT, MUIBBS_TOP, MUIBBS_BOTTOM, MUIBBS_RIGHT
-@ButtonAccentColor              EQU 68      ; Colorref
+@ButtonAccentColor              EQU 68      ; Colorref, -1 = transparent
 @ButtonAccentColorAlt           EQU 72      ; Colorref
 @ButtonAccentColorSel           EQU 76      ; Colorref
 @ButtonAccentColorSelAlt        EQU 80      ; Colorref

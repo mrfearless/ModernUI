@@ -23,13 +23,13 @@ MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
 
 ;DEBUG32 EQU 1
 
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include kernel32.inc
@@ -448,7 +448,9 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         .IF eax == TRUE   
             Invoke MUISetIntProperty, hWin, @ButtonMouseOver, TRUE
             .IF eax != TRUE
+                Invoke ShowWindow, hWin, SW_HIDE
                 Invoke InvalidateRect, hWin, NULL, TRUE
+                Invoke ShowWindow, hWin, SW_SHOW
                 mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
                 mov TE.dwFlags, TME_LEAVE
                 mov eax, hWin
@@ -470,7 +472,9 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
         .ELSE
+            Invoke ShowWindow, hWin, SW_HIDE
             Invoke InvalidateRect, hWin, NULL, FALSE
+            Invoke ShowWindow, hWin, SW_SHOW
             ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
         .ENDIF
 
@@ -492,18 +496,24 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
     
     .ELSEIF eax == WM_ENABLE
         Invoke MUISetIntProperty, hWin, @ButtonEnabledState, wParam
+        Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke ShowWindow, hWin, SW_SHOW
         mov eax, 0
 
     .ELSEIF eax == WM_SETTEXT
         Invoke DefWindowProc, hWin, uMsg, wParam, lParam
+        Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke ShowWindow, hWin, SW_SHOW
         ret
 
     .ELSEIF eax == WM_SETFONT
         Invoke MUISetExtProperty, hWin, @ButtonTextFont, lParam
         .IF lParam == TRUE
+            Invoke ShowWindow, hWin, SW_HIDE
             Invoke InvalidateRect, hWin, NULL, TRUE
+            Invoke ShowWindow, hWin, SW_SHOW
         .ENDIF    
     
     ; custom messages start here
@@ -632,7 +642,13 @@ _MUI_ButtonInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @ButtonTextColorSelAlt, MUI_RGBCOLOR(51,51,51)
     Invoke MUISetExtProperty, hControl, @ButtonTextColorDisabled, MUI_RGBCOLOR(204,204,204)
 
-    Invoke MUISetExtProperty, hControl, @ButtonBackColor, MUI_RGBCOLOR(255,255,255) ;MUI_RGBCOLOR(21,133,181)
+    Invoke MUIGetParentBackgroundColor, hControl
+    .IF eax == -1 ; if background was NULL then try a color as default
+        Invoke GetSysColor, COLOR_WINDOW
+    .ENDIF
+    Invoke MUISetExtProperty, hControl, @ButtonBackColor, eax ;MUI_RGBCOLOR(255,255,255)
+
+    ;Invoke MUISetExtProperty, hControl, @ButtonBackColor, MUI_RGBCOLOR(255,255,255) ;MUI_RGBCOLOR(21,133,181)
     Invoke MUISetExtProperty, hControl, @ButtonBackColorAlt, MUI_RGBCOLOR(221,221,221)
     Invoke MUISetExtProperty, hControl, @ButtonBackColorSel, MUI_RGBCOLOR(255,255,255)
     Invoke MUISetExtProperty, hControl, @ButtonBackColorSelAlt, MUI_RGBCOLOR(221,221,221)
@@ -643,9 +659,13 @@ _MUI_ButtonInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @ButtonBorderColorSel, MUI_RGBCOLOR(27,161,226)
     Invoke MUISetExtProperty, hControl, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(27,161,226)
     Invoke MUISetExtProperty, hControl, @ButtonBorderColorDisabled, MUI_RGBCOLOR(204,204,204)
-    
     Invoke MUISetExtProperty, hControl, @ButtonBorderStyle, MUIBBS_ALL
     
+    Invoke MUISetExtProperty, hControl, @ButtonAccentColor, -1
+    Invoke MUISetExtProperty, hControl, @ButtonAccentColorAlt, -1
+    Invoke MUISetExtProperty, hControl, @ButtonAccentColorSel, -1
+    Invoke MUISetExtProperty, hControl, @ButtonAccentColorSelAlt, -1
+
     Invoke MUISetExtProperty, hControl, @ButtonNotifyTextColor, MUI_RGBCOLOR(51,51,51)
     Invoke MUISetExtProperty, hControl, @ButtonNotifyBackColor, MUI_RGBCOLOR(255,255,255)
     Invoke MUISetExtProperty, hControl, @ButtonNoteTextColor, MUI_RGBCOLOR(96,96,96)
@@ -874,76 +894,122 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL EnabledState:DWORD
     LOCAL MouseOver:DWORD
     LOCAL SelectedState:DWORD
+    LOCAL BackColor:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
     
     ;----------------------------------------------------------
-    ; Setup Double Buffering
-    ;----------------------------------------------------------
-    Invoke GetClientRect, hWin, Addr rect
-    Invoke CreateCompatibleDC, hdc
-    mov hdcMem, eax
-    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-    mov hbmMem, eax
-    Invoke SelectObject, hdcMem, hbmMem
-    mov hOldBitmap, eax
-    
-    ;----------------------------------------------------------
     ; Get some property values
     ;---------------------------------------------------------- 
+    Invoke GetClientRect, hWin, Addr rect
     Invoke MUIGetIntProperty, hWin, @ButtonEnabledState
     mov EnabledState, eax
     Invoke MUIGetIntProperty, hWin, @ButtonMouseOver
     mov MouseOver, eax
     Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
-    mov SelectedState, eax    
+    mov SelectedState, eax       
+
+    .IF EnabledState == TRUE
+        .IF SelectedState == FALSE
+            .IF MouseOver == FALSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColor        ; Normal back color
+            .ELSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorAlt     ; Mouse over back color
+            .ENDIF
+        .ELSE
+            .IF MouseOver == FALSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorSel     ; Selected back color
+            .ELSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelAlt  ; Selected mouse over color 
+            .ENDIF
+        .ENDIF
+    .ELSE
+        Invoke MUIGetExtProperty, hWin, @ButtonBackColorDisabled        ; Disabled back color
+    .ENDIF
+    mov BackColor, eax
+
+    .IF BackColor != -1 ; Not transparent, back color provided
+
+        ;----------------------------------------------------------
+        ; Setup Double Buffering
+        ;----------------------------------------------------------
+        Invoke CreateCompatibleDC, hdc
+        mov hdcMem, eax
+        Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+        mov hbmMem, eax
+        Invoke SelectObject, hdcMem, hbmMem
+        mov hOldBitmap, eax
     
-    ;----------------------------------------------------------
-    ; Background
-    ;----------------------------------------------------------
-    Invoke _MUI_ButtonPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+        ;----------------------------------------------------------
+        ; Background
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; Accent
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintAccent, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; calc positions for text and images
+        ;----------------------------------------------------------    
+        Invoke _MUI_ButtonCalcPositions, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; Images
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintImages, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; Text
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; Border
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintBorder, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; BitBlt from hdcMem back to hdc
+        ;----------------------------------------------------------
+        Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+    
+        ;----------------------------------------------------------
+        ; Cleanup
+        ;----------------------------------------------------------
+        Invoke SelectObject, hdcMem, hOldBitmap
+        Invoke DeleteDC, hdcMem
+        Invoke DeleteObject, hbmMem
+        .IF hOldBitmap != 0
+            Invoke DeleteObject, hOldBitmap
+        .ENDIF      
+    
+    .ELSE ; Transparent background
 
-    ;----------------------------------------------------------
-    ; Accent
-    ;----------------------------------------------------------
-    Invoke _MUI_ButtonPaintAccent, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+        ;----------------------------------------------------------
+        ; Accent
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintAccent, hWin, hdc, Addr rect, EnabledState, MouseOver, SelectedState
 
-    ;----------------------------------------------------------
-    ; calc positions for text and images
-    ;----------------------------------------------------------    
-    Invoke _MUI_ButtonCalcPositions, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
-
-    ;----------------------------------------------------------
-    ; Images
-    ;----------------------------------------------------------
-    Invoke _MUI_ButtonPaintImages, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
-
-    ;----------------------------------------------------------
-    ; Text
-    ;----------------------------------------------------------
-    Invoke _MUI_ButtonPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
-
-    ;----------------------------------------------------------
-    ; Border
-    ;----------------------------------------------------------
-    Invoke _MUI_ButtonPaintBorder, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
-
-    ;----------------------------------------------------------
-    ; BitBlt from hdcMem back to hdc
-    ;----------------------------------------------------------
-    Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
-
-    ;----------------------------------------------------------
-    ; Cleanup
-    ;----------------------------------------------------------
-    Invoke SelectObject, hdcMem, hOldBitmap
-    Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hbmMem
-    .IF hOldBitmap != 0
-        Invoke DeleteObject, hOldBitmap
-    .ENDIF      
-     
+        ;----------------------------------------------------------
+        ; Images
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintImages, hWin, hdc, hdc, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; Text
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintText, hWin, hdc, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; Border
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintBorder, hWin, hdc, Addr rect, EnabledState, MouseOver, SelectedState
+    
+    .ENDIF
+    
     Invoke EndPaint, hWin, Addr ps
 
     ret
@@ -1033,7 +1099,7 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
     .ENDIF
     mov AccentColor, eax
 
-    .IF AccentColor != 0
+    .IF AccentColor != -1 ; not transparent
         
         Invoke CopyRect, Addr rect, lpRect
         
@@ -1645,8 +1711,12 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
     mov hOldBrush, eax
     Invoke SetDCBrushColor, hdc, BackColor
     
-    Invoke SetBkMode, hdc, OPAQUE
-    Invoke SetBkColor, hdc, BackColor    
+    .IF BackColor != -1 ; not transparent
+        Invoke SetBkMode, hdc, OPAQUE
+        Invoke SetBkColor, hdc, BackColor
+    .ELSE 
+        Invoke SetBkMode, hdc, TRANSPARENT
+    .ENDIF
     Invoke SetTextColor, hdc, TextColor
     
     mov dwTextStyle, DT_SINGLELINE
@@ -1793,9 +1863,7 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
     .IF hPen != 0
         Invoke DeleteObject, hPen
     .ENDIF            
-        
 
-    
     ret
 
 _MUI_ButtonPaintText ENDP
@@ -2070,7 +2138,7 @@ _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnable
     .ENDIF
     mov BorderColor, eax
 
-    .IF BorderColor != 0
+    .IF BorderColor != -1
         Invoke MUIGetExtProperty, hWin, @ButtonBorderStyle
         mov BorderStyle, eax
 
@@ -2133,14 +2201,20 @@ _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnable
         .ENDIF
     .ENDIF
 
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdc, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF      
-    
+;    .IF hOldBrush != 0
+;        Invoke SelectObject, hdc, hOldBrush
+;        Invoke DeleteObject, hOldBrush
+;    .ENDIF     
+;    .IF hBrush != 0
+;        Invoke DeleteObject, hBrush
+;    .ENDIF
+;    .IF hOldPen != 0
+;        Invoke SelectObject, hdc, hOldPen
+;        Invoke DeleteObject, hOldPen
+;    .ENDIF     
+;    .IF hPen != 0
+;        Invoke DeleteObject, hPen
+    ;.ENDIF
     ret
 
 _MUI_ButtonPaintBorder ENDP
@@ -2277,68 +2351,144 @@ _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwP
         .ENDIF
     
     .ELSEIF eax == @ButtonBackColor
-        Invoke MUIGetExtProperty, hWin, @ButtonBackColorAlt
-        .IF eax == 0
+    
+        .IF dwPropertyValue == -1 ; set all other related properties to same value
             Invoke MUISetExtProperty, hWin, @ButtonBackColorAlt, dwPropertyValue
-        .ENDIF
-        Invoke MUIGetExtProperty, hWin, @ButtonBackColorSel
-        .IF eax == 0
             Invoke MUISetExtProperty, hWin, @ButtonBackColorSel, dwPropertyValue
-        .ENDIF
-        ; except this, if sel has a color, then use this for selalt if it has a value
-        Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelAlt
-        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, dwPropertyValue
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabled, dwPropertyValue
+        .ELSE
+            Invoke MUIGetExtProperty, hWin, @ButtonBackColorAlt
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonBackColorAlt, dwPropertyValue
+            .ENDIF
             Invoke MUIGetExtProperty, hWin, @ButtonBackColorSel
             .IF eax == 0
-                Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, dwPropertyValue
-            .ELSE
-                Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, eax
+                Invoke MUISetExtProperty, hWin, @ButtonBackColorSel, dwPropertyValue
             .ENDIF
-        .ENDIF
-        Invoke MUIGetExtProperty, hWin, @ButtonNotifyBackColor
-        .IF eax == 0
-            Invoke MUISetExtProperty, hWin, @ButtonNotifyBackColor, dwPropertyValue
+            ; except this, if sel has a color, then use this for selalt if it has a value
+            Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelAlt
+            .IF eax == 0
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorSel
+                .IF eax == 0
+                    Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, dwPropertyValue
+                .ELSE
+                    Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, eax
+                .ENDIF
+            .ENDIF
+            Invoke MUIGetExtProperty, hWin, @ButtonNotifyBackColor
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonNotifyBackColor, dwPropertyValue
+            .ENDIF
         .ENDIF
 
     .ELSEIF eax == @ButtonBorderColor
-        Invoke MUIGetExtProperty, hWin, @ButtonBorderColorAlt
-        .IF eax == 0
+    
+        .IF dwPropertyValue == -1 ; set all other related properties to same value
             Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, dwPropertyValue
-        .ENDIF
-        Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSel
-        .IF eax == 0
             Invoke MUISetExtProperty, hWin, @ButtonBorderColorSel, dwPropertyValue
-        .ENDIF
-        ; except this, if sel has a color, then use this for selalt if it has a value
-        Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSelAlt
-        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, dwPropertyValue
+        .ELSE    
+            Invoke MUIGetExtProperty, hWin, @ButtonBorderColorAlt
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, dwPropertyValue
+            .ENDIF
             Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSel
             .IF eax == 0
-                Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, dwPropertyValue
-            .ELSE
-                Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, eax
+                Invoke MUISetExtProperty, hWin, @ButtonBorderColorSel, dwPropertyValue
             .ENDIF
-        .ENDIF  
+            ; except this, if sel has a color, then use this for selalt if it has a value
+            Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSelAlt
+            .IF eax == 0
+                Invoke MUIGetExtProperty, hWin, @ButtonBorderColorSel
+                .IF eax == 0
+                    Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, dwPropertyValue
+                .ELSE
+                    Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, eax
+                .ENDIF
+            .ENDIF
+            
+            ; if setting border color and style was previously set to none, change to all borders
+            Invoke MUIGetExtProperty, hWin, @ButtonBorderStyle
+            .IF eax == MUIBBS_NONE
+                Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
+            .ENDIF
+        .ENDIF
+
+    .ELSEIF eax == @ButtonBorderColorAlt
+        ; if setting border color and style was previously set to none, change to all borders
+        Invoke MUIGetExtProperty, hWin, @ButtonBorderStyle
+        .IF eax == MUIBBS_NONE
+            Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
+        .ENDIF
+
+    .ELSEIF eax == @ButtonBorderColorSel
+        ; if setting border color and style was previously set to none, change to all borders
+        Invoke MUIGetExtProperty, hWin, @ButtonBorderStyle
+        .IF eax == MUIBBS_NONE
+            Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
+        .ENDIF
+
+    .ELSEIF eax == @ButtonBorderColorSelAlt
+        ; if setting border color and style was previously set to none, change to all borders
+        Invoke MUIGetExtProperty, hWin, @ButtonBorderStyle
+        .IF eax == MUIBBS_NONE
+            Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
+        .ENDIF
 
     .ELSEIF eax == @ButtonAccentColor
-        Invoke MUIGetExtProperty, hWin, @ButtonAccentColorAlt
-        .IF eax == 0
+    
+        .IF dwPropertyValue == -1 ; set all other related properties to same value
             Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, dwPropertyValue
-        .ENDIF
-        Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSel
-        .IF eax == 0
             Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, dwPropertyValue
-        .ENDIF
-        ; except this, if sel has a color, then use this for selalt if it has a value
-        Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSelAlt
-        .IF eax == 0
+            Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, dwPropertyValue
+        .ELSE
+            Invoke MUIGetExtProperty, hWin, @ButtonAccentColorAlt
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, dwPropertyValue
+            .ENDIF
             Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSel
             .IF eax == 0
-                Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, dwPropertyValue
-            .ELSE
-                Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, eax
+                Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, dwPropertyValue
             .ENDIF
-        .ENDIF      
+            ; except this, if sel has a color, then use this for selalt if it has a value
+            Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSelAlt
+            .IF eax == 0
+                Invoke MUIGetExtProperty, hWin, @ButtonAccentColorSel
+                .IF eax == 0
+                    Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, dwPropertyValue
+                .ELSE
+                    Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, eax
+                .ENDIF
+            .ENDIF
+            
+            ; if setting accent color and style was previously set to none, change to default
+            Invoke MUIGetExtProperty, hWin, @ButtonAccentStyle
+            .IF eax == MUIBAS_NONE
+                Invoke MUISetExtProperty, hWin, @ButtonAccentStyle, MUIBAS_LEFT
+            .ENDIF
+        .ENDIF
+
+    .ELSEIF eax == @ButtonAccentColorAlt
+        ; if setting accent color and style was previously set to none, change to default
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleAlt
+        .IF eax == MUIBAS_NONE
+            Invoke MUISetExtProperty, hWin, @ButtonAccentStyleAlt, MUIBAS_LEFT
+        .ENDIF
+
+    .ELSEIF eax == @ButtonAccentColorSel
+        ; if setting accent color and style was previously set to none, change to default
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleSel
+        .IF eax == MUIBAS_NONE
+            Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSel, MUIBAS_LEFT
+        .ENDIF
+
+    .ELSEIF eax == @ButtonAccentColorSelAlt
+        ; if setting accent color and style was previously set to none, change to default
+        Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleSelAlt
+        .IF eax == MUIBAS_NONE
+            Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSelAlt, MUIBAS_LEFT
+        .ENDIF
 
     .ELSEIF eax == @ButtonAccentStyle
         Invoke MUIGetExtProperty, hWin, @ButtonAccentStyleAlt
@@ -2359,6 +2509,9 @@ _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwP
                 Invoke MUISetExtProperty, hWin, @ButtonAccentStyleSelAlt, eax
             .ENDIF
         .ENDIF      
+
+
+    
 
     .ELSEIF eax == @ButtonImage
         Invoke MUIGetExtProperty, hWin, @ButtonImageAlt
