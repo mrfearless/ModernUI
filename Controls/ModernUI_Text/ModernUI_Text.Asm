@@ -260,7 +260,9 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         .IF eax == TRUE   
             Invoke MUISetIntProperty, hWin, @TextMouseOver, TRUE
             .IF eax != TRUE
+                Invoke ShowWindow, hWin, SW_HIDE
                 Invoke InvalidateRect, hWin, NULL, TRUE
+                Invoke ShowWindow, hWin, SW_SHOW
                 mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
                 mov TE.dwFlags, TME_LEAVE
                 mov eax, hWin
@@ -272,7 +274,9 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @TextMouseOver, FALSE
+        Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke ShowWindow, hWin, SW_SHOW
         Invoke LoadCursor, NULL, IDC_ARROW
         Invoke SetCursor, eax
 
@@ -284,20 +288,24 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
 
     .ELSEIF eax == WM_ENABLE
         Invoke MUISetIntProperty, hWin, @TextEnabledState, wParam
+        Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke ShowWindow, hWin, SW_SHOW
         mov eax, 0
 
     .ELSEIF eax == WM_SETTEXT
         Invoke _MUI_TextCheckMultiline, hWin, lParam
         Invoke DefWindowProc, hWin, uMsg, wParam, lParam
+        Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke ShowWindow, hWin, SW_SHOW
         ret
         
-    .ELSEIF eax == WM_SETFONT
-        Invoke MUISetExtProperty, hWin, @TextFont, lParam
-        .IF lParam == TRUE
-            Invoke InvalidateRect, hWin, NULL, TRUE
-        .ENDIF            
+;    .ELSEIF eax == WM_SETFONT
+;        Invoke MUISetExtProperty, hWin, @TextFont, lParam
+;        .IF lParam == TRUE
+;            Invoke InvalidateRect, hWin, NULL, TRUE
+;        .ENDIF            
     
     ; custom messages start here
     
@@ -349,9 +357,15 @@ _MUI_TextInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @TextColor, MUI_RGBCOLOR(51,51,51)
     Invoke MUISetExtProperty, hControl, @TextColorAlt, MUI_RGBCOLOR(51,51,51)
     Invoke MUISetExtProperty, hControl, @TextColorDisabled, MUI_RGBCOLOR(204,204,204)
-    Invoke MUISetExtProperty, hControl, @TextBackColor, MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hControl, @TextBackColorAlt, MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hControl, @TextBackColorDisabled, MUI_RGBCOLOR(192,192,192)
+    
+    Invoke MUIGetParentBackgroundColor, hControl
+    ;.IF eax == -1 ; if background was NULL then try a color as default
+    ;    Invoke GetSysColor, COLOR_WINDOW
+    ;.ENDIF
+    Invoke MUISetExtProperty, hControl, @TextBackColor, eax ;MUI_RGBCOLOR(255,255,255)   
+    ;Invoke MUISetExtProperty, hControl, @TextBackColor, MUI_RGBCOLOR(255,255,255)
+    Invoke MUISetExtProperty, hControl, @TextBackColorAlt, eax ;MUI_RGBCOLOR(255,255,255)
+    Invoke MUISetExtProperty, hControl, @TextBackColorDisabled, eax ;MUI_RGBCOLOR(192,192,192)
     
     mov eax, dwStyle
     and eax, 0F0h
@@ -448,54 +462,67 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
     LOCAL hOldBitmap:DWORD
     LOCAL EnabledState:DWORD
     LOCAL MouseOver:DWORD
-    LOCAL SelectedState:DWORD
+    LOCAL BackColor:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
-    
-    ;----------------------------------------------------------
-    ; Setup Double Buffering
-    ;----------------------------------------------------------
-    Invoke GetClientRect, hWin, Addr rect
-    Invoke CreateCompatibleDC, hdc
-    mov hdcMem, eax
-    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-    mov hbmMem, eax
-    Invoke SelectObject, hdcMem, hbmMem
-    mov hOldBitmap, eax
-    
+
     ;----------------------------------------------------------
     ; Get some property values
-    ;---------------------------------------------------------- 
+    ;----------------------------------------------------------
+    Invoke GetClientRect, hWin, Addr rect
     Invoke MUIGetIntProperty, hWin, @TextEnabledState
     mov EnabledState, eax
     Invoke MUIGetIntProperty, hWin, @TextMouseOver
     mov MouseOver, eax
+    Invoke MUIGetExtProperty, hWin, @TextBackColor
+    mov BackColor, eax
+
+    .IF BackColor != -1 ; Not Transparent, background color is specified
+
+        ;----------------------------------------------------------
+        ; Setup Double Buffering
+        ;----------------------------------------------------------
+        Invoke CreateCompatibleDC, hdc
+        mov hdcMem, eax
+        Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+        mov hbmMem, eax
+        Invoke SelectObject, hdcMem, hbmMem
+        mov hOldBitmap, eax
     
-    ;----------------------------------------------------------
-    ; Background
-    ;----------------------------------------------------------
-    Invoke _MUI_TextPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver
-
-    ;----------------------------------------------------------
-    ; Text
-    ;----------------------------------------------------------
-    Invoke _MUI_TextPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver
-
-    ;----------------------------------------------------------
-    ; BitBlt from hdcMem back to hdc
-    ;----------------------------------------------------------
-    Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
-
-    ;----------------------------------------------------------
-    ; Cleanup
-    ;----------------------------------------------------------
-    Invoke SelectObject, hdcMem, hOldBitmap
-    Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hbmMem
-    .IF hOldBitmap != 0
-        Invoke DeleteObject, hOldBitmap
-    .ENDIF      
+        ;----------------------------------------------------------
+        ; Background
+        ;----------------------------------------------------------
+        Invoke _MUI_TextPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver
+    
+        ;----------------------------------------------------------
+        ; Text
+        ;----------------------------------------------------------
+        Invoke _MUI_TextPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver
+    
+        ;----------------------------------------------------------
+        ; BitBlt from hdcMem back to hdc
+        ;----------------------------------------------------------
+        Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+    
+        ;----------------------------------------------------------
+        ; Cleanup
+        ;----------------------------------------------------------
+        Invoke SelectObject, hdcMem, hOldBitmap
+        Invoke DeleteDC, hdcMem
+        Invoke DeleteObject, hbmMem
+        .IF hOldBitmap != 0
+            Invoke DeleteObject, hOldBitmap
+        .ENDIF
+    
+    .ELSE ; Text on Transparent Background
+    
+        ;----------------------------------------------------------
+        ; Text
+        ;----------------------------------------------------------    
+        Invoke _MUI_TextPaintText, hWin, hdc, Addr rect, EnabledState, MouseOver
+    
+    .ENDIF
      
     Invoke EndPaint, hWin, Addr ps
 
@@ -514,17 +541,21 @@ _MUI_TextPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnab
     
     .IF bEnabledState == TRUE
         .IF bMouseOver == FALSE
-            Invoke MUIGetExtProperty, hWin, @TextBackColor        ; Normal back color
+            Invoke MUIGetExtProperty, hWin, @TextBackColor              ; Normal back color
         .ELSE
-            Invoke MUIGetExtProperty, hWin, @TextBackColorAlt     ; Mouse over back color
+            Invoke MUIGetExtProperty, hWin, @TextBackColorAlt           ; Mouse over back color
         .ENDIF
     .ELSE
-        Invoke MUIGetExtProperty, hWin, @TextBackColorDisabled        ; Disabled back color
+        Invoke MUIGetExtProperty, hWin, @TextBackColorDisabled          ; Disabled back color
     .ENDIF
     .IF eax == 0 ; try to get default back color if others are set to 0
-        Invoke MUIGetExtProperty, hWin, @TextBackColor                ; fallback to default Normal back color
+        Invoke MUIGetExtProperty, hWin, @TextBackColor                  ; fallback to default Normal back color
     .ENDIF
     mov BackColor, eax
+    
+    .IF BackColor == -1 ; transparent
+        ret
+    .ENDIF
 
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
@@ -606,8 +637,12 @@ _MUI_TextPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bE
     Invoke SelectObject, hdc, hFont
     mov hOldFont, eax
 
-    Invoke SetBkMode, hdc, OPAQUE
-    Invoke SetBkColor, hdc, BackColor
+    .IF BackColor != -1 ; transaprent
+        Invoke SetBkMode, hdc, OPAQUE
+        Invoke SetBkColor, hdc, BackColor
+    .ELSE
+        Invoke SetBkMode, hdc, TRANSPARENT
+    .ENDIF
     Invoke SetTextColor, hdc, TextColor
 
     mov eax, dwStyle

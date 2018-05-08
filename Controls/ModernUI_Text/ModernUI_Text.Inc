@@ -79,7 +79,7 @@ MUITS_HAND              EQU 2048 ; Show a hand instead of an arrow when mouse mo
 @TextColor              EQU 4       ; Colorref
 @TextColorAlt           EQU 8       ; Colorref
 @TextColorDisabled      EQU 12      ; Colorref
-@TextBackColor          EQU 16      ; Colorref
+@TextBackColor          EQU 16      ; Colorref, -1 = transparent
 @TextBackColorAlt       EQU 20      ; Colorref
 @TextBackColorDisabled  EQU 24      ; Colorref
 
