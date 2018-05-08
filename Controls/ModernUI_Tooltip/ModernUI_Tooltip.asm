@@ -1100,10 +1100,19 @@ _MUI_TooltipSetPosition PROC USES EBX hControl:DWORD
     LOCAL rect:RECT
     LOCAL tiprect:RECT
     LOCAL pt:POINT
+    LOCAL dwPos:DWORD
     LOCAL dwOffsetX:DWORD
     LOCAL dwOffsetY:DWORD
+    LOCAL hMonitor:DWORD
+    LOCAL lpmi:MONITORINFOEX
+    LOCAL workrect:RECT
+    LOCAL bNegOffsetX:DWORD
+    LOCAL bNegOffsetY:DWORD
     
     ;PrintText '_MUI_TooltipSetPosition'
+    
+    mov bNegOffsetX, FALSE
+    mov bNegOffsetY, FALSE
     
     Invoke MUIGetIntProperty, hControl, @TooltipParent
     mov hParent, eax
@@ -1113,6 +1122,13 @@ _MUI_TooltipSetPosition PROC USES EBX hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @TooltipOffsetY
     mov dwOffsetY, eax    
 
+
+    Invoke MonitorFromWindow, hParent, MONITOR_DEFAULTTONEAREST
+    mov hMonitor, eax
+    mov lpmi.cbSize, SIZEOF MONITORINFOEX
+    Invoke GetMonitorInfo, hMonitor, Addr lpmi
+    Invoke CopyRect, Addr workrect, Addr lpmi.rcWork
+
     Invoke GetWindowRect, hParent, Addr rect
     Invoke GetClientRect, hControl, Addr tiprect
 
@@ -1121,62 +1137,163 @@ _MUI_TooltipSetPosition PROC USES EBX hControl:DWORD
     ;PrintDec dwStyle
     and eax, MUITTS_POS_RIGHT or MUITTS_POS_ABOVE or MUITTS_POS_LEFT or MUITTS_POS_MOUSE
     ;PrintDec eax
-    
-    .IF eax == 0 ; MUITTS_POS_BELOW
-        mov eax, rect.bottom
-        mov ebx, rect.top
-        sub eax, ebx
-        add eax, 2
-        add rect.top, eax
+    mov dwPos, eax
+;    .IF eax == 0 ; MUITTS_POS_BELOW
+;        mov eax, rect.bottom
+;        mov ebx, rect.top
+;        sub eax, ebx
+;        add eax, 2
+;        add rect.top, eax
+;        
+;    .ELSEIF eax == MUITTS_POS_RIGHT
+;        mov eax, rect.right
+;        add eax, 2
+;        mov rect.left, eax
+;        
+;    .ELSEIF eax == MUITTS_POS_ABOVE
+;        mov eax, tiprect.bottom
+;        ;mov ebx, tiprect.top
+;        ;sub eax, ebx
+;        add eax, 2
+;        sub rect.top, eax
+;    
+;    .ELSEIF eax == MUITTS_POS_LEFT
+;        mov eax, tiprect.right
+;        ;mov ebx, tiprect.left
+;        ;sub eax, ebx
+;        add eax, 2
+;        sub rect.left, eax
+;    
+;    .ELSEIF eax == MUITTS_POS_MOUSE
+;        Invoke GetCursorPos, Addr pt
+;        ;Invoke ScreenToClient, hParent, Addr pt
+;        mov eax, pt.x
+;        add eax, 8
+;        mov rect.left, eax
+;        mov eax, pt.y
+;        add eax, 8
+;        mov rect.top, eax
+;    
+;    .ELSE
+;        ;PrintText 'Unknown Pos'
+;    
+;    .ENDIF
+
+    ; check tip can be seen in placement in relation to workrect
+    mov eax, dwPos
+    .IF eax == MUITTS_POS_BELOW ; if bottom > workrect.bottom we swap to top
+        mov eax, rect.top
+        add eax, tiprect.bottom
+        .IF eax > workrect.bottom
+            mov eax, tiprect.bottom
+            add eax, 2
+            sub rect.top, eax
+            mov bNegOffsetY, TRUE
+        .ELSE
+            mov eax, rect.bottom
+            mov ebx, rect.top
+            sub eax, ebx
+            add eax, 2
+            add rect.top, eax            
+        .ENDIF
         
-    .ELSEIF eax == MUITTS_POS_RIGHT
-        mov eax, rect.right
-        add eax, 2
-        mov rect.left, eax
+    .ELSEIF eax == MUITTS_POS_RIGHT ; if right > workrect.right we swap to left 
+        mov eax, rect.left
+        add eax, tiprect.right
+        .IF eax > workrect.right
+            mov eax, tiprect.right
+            add eax, 2
+            sub rect.left, eax
+            mov bNegOffsetX, TRUE
+        .ELSE
+            mov eax, rect.right
+            add eax, 2
+            mov rect.left, eax        
+        .ENDIF
+
+    .ELSEIF eax == MUITTS_POS_LEFT ; if left < 0 we swap to right
+        mov eax, rect.left
+        sub eax, tiprect.right
+        .IF sdword ptr eax < 0
+            mov eax, rect.right
+            add eax, 2
+            mov rect.left, eax
+            mov bNegOffsetX, TRUE
+        .ELSE
+            mov eax, tiprect.right
+            add eax, 2
+            sub rect.left, eax
+        .ENDIF
+    
+    .ELSEIF eax == MUITTS_POS_ABOVE ; if top < 0 we swap to bottom
+        mov eax, rect.top
+        sub eax, tiprect.bottom
+        .IF sdword ptr eax < 0
+            mov eax, rect.bottom
+            mov ebx, rect.top
+            sub eax, ebx
+            add eax, 2
+            add rect.top, eax
+            mov bNegOffsetY, TRUE
+        .ELSE
+            mov eax, tiprect.bottom
+            add eax, 2
+            sub rect.top, eax
+        .ENDIF
         
-    .ELSEIF eax == MUITTS_POS_ABOVE
-        mov eax, tiprect.bottom
-        ;mov ebx, tiprect.top
-        ;sub eax, ebx
-        add eax, 2
-        sub rect.top, eax
-    
-    .ELSEIF eax == MUITTS_POS_LEFT
-        mov eax, tiprect.right
-        ;mov ebx, tiprect.left
-        ;sub eax, ebx
-        add eax, 2
-        sub rect.left, eax
-    
-    .ELSEIF eax == MUITTS_POS_MOUSE
+    .ELSEIF eax == MUITTS_POS_MOUSE ; check all
         Invoke GetCursorPos, Addr pt
         ;Invoke ScreenToClient, hParent, Addr pt
         mov eax, pt.x
         add eax, 8
-        mov rect.left, eax
+        add eax, tiprect.right
+        .IF eax > workrect.right
+            mov eax, pt.x
+            sub eax, 8
+            sub eax, tiprect.right
+            mov rect.left, eax
+            mov bNegOffsetX, TRUE
+        .ELSE
+            mov eax, pt.x
+            add eax, 8
+            mov rect.left, eax
+        .ENDIF
+
         mov eax, pt.y
         add eax, 8
-        mov rect.top, eax
-    
-    .ELSE
-        ;PrintText 'Unknown Pos'
-    
-    .ENDIF
+        add eax, tiprect.bottom
+        .IF eax > workrect.bottom
+            mov eax, pt.y
+            sub eax, 8
+            sub eax, tiprect.bottom
+            mov rect.top, eax
+            mov bNegOffsetY, TRUE
+        .ELSE
+            mov eax, pt.y
+            add eax, 8
+            mov rect.top, eax
+        .ENDIF
 
+    .ENDIF
+    
     .IF dwOffsetX != 0
         mov eax, rect.left
-        add eax, dwOffsetX
+        .IF bNegOffsetX == TRUE
+            sub eax, dwOffsetX
+        .ELSE
+            add eax, dwOffsetX
+        .ENDIF
         mov rect.left, eax
     .ENDIF
-
-    ;PrintDec dwOffsetY
-    ;PrintDec rect.top
     .IF dwOffsetY != 0
         mov eax, rect.top
-        add eax, dwOffsetY
+        .IF bNegOffsetY == TRUE
+            sub eax, dwOffsetY
+        .ELSE
+            add eax, dwOffsetY
+        .ENDIF
         mov rect.top, eax
     .ENDIF
-    ;PrintDec rect.top
 
     Invoke SetWindowPos, hControl, HWND_TOP, rect.left, rect.top, 0, 0,  SWP_NOACTIVATE or SWP_NOSENDCHANGING or SWP_NOZORDER or SWP_NOSIZE
     
