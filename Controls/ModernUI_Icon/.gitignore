@@ -1,0 +1,17 @@
+bak/
+Help/
+Images/
+Distribution/
+*.bat
+*.undo
+*.obj
+*.pdb
+*.ilk
+*.exp
+template/
+RAControl/
+downloads/
+screenshots/
+releases/
+wiki/
+_archive/
