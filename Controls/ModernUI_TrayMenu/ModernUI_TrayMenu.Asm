@@ -236,6 +236,7 @@ MUITrayMenuCreate PROC PUBLIC hWndParent:DWORD, hTrayMenuIcon:DWORD, lpszTooltip
             Invoke MUISetExtProperty, hControl, @TrayMenuTooltipText, lpszTooltip
         .ENDIF
         .IF hWndExtra != NULL
+            ;PrintDec hWndExtra
             Invoke MUISetExtProperty, hControl, @TrayMenuExtraWndHandle, hWndExtra
         .ENDIF
         
@@ -1547,52 +1548,69 @@ _MUI_TM_ShowTrayMenu ENDP
 ;-------------------------------------------------------------------------------------
 _MUI_TM_RestoreFromTray PROC PRIVATE hWin:DWORD, hControl:DWORD
     LOCAL hParent:DWORD
-    ;LOCAL dwStyle:DWORD
+    LOCAL hWndExtra:DWORD
+    LOCAL dwStyle:DWORD
     LOCAL wp:WINDOWPLACEMENT
     IFDEF DEBUG32
         PrintText 'TM_RestoreFromTray'
     ENDIF
 
-;    Invoke GetWindowLong, hControl, GWL_STYLE
-;    mov dwStyle, eax
+    Invoke GetWindowLong, hControl, GWL_STYLE
+    mov dwStyle, eax
 
     Invoke MUIGetExtProperty, hControl, @TrayMenuExtraWndHandle
     .IF eax != NULL
         mov hParent, eax
+        mov hWndExtra, eax
     .ELSE
         mov hParent, 0
+        mov hWndExtra, 0
     .ENDIF
+    ;PrintDec hWndExtra
 
-    ; 22/07/2016 - added to show parent window first if TM is used with a child dialog (x64dbg plugins Snapshot UpdateChecker as an example)
-    .IF hParent != 0
-        Invoke GetWindowPlacement, hParent, Addr wp
-        mov eax, wp.showCmd
-        .IF eax == SW_SHOWMINIMIZED
-            invoke ShowWindow, hParent, SW_RESTORE
-        
-        .ELSEIF eax == SW_HIDE
-            invoke ShowWindow, hParent, SW_SHOW
-        
+
+    
+    ; 20/02/2018 - added to process only hwndextra handle as the main window to process for show/hide only
+    ;PrintDec dwStyle 
+    mov eax, dwStyle
+    and eax, MUITMS_HWNDEXTRA
+    .IF eax == MUITMS_HWNDEXTRA
+        ;PrintText 'MUITMS_HWNDEXTRA'
+        .IF hWndExtra != 0
+            ;PrintText 'Show Window'
+            invoke ShowWindow, hWndExtra, SW_SHOW 
         .ENDIF
-        Invoke SetForegroundWindow, hParent ; Focus main window
-        Invoke SetWindowPos, hParent, HWND_TOP,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW
-        
-        
-    .ENDIF
+    .ELSE
 
-    Invoke IsWindowVisible, hWin
-    .IF eax == 0
-        invoke ShowWindow, hWin, SW_SHOW    
-        invoke ShowWindow, hWin, SW_SHOWNORMAL  
-        Invoke SetForegroundWindow, hWin ; Focus main window
-        ret
+        ; 22/07/2016 - added to show parent window first if TM is used with a child dialog (x64dbg plugins Snapshot UpdateChecker as an example)
+        .IF hParent != 0
+            Invoke GetWindowPlacement, hParent, Addr wp
+            mov eax, wp.showCmd
+            .IF eax == SW_SHOWMINIMIZED
+                invoke ShowWindow, hParent, SW_RESTORE
+            
+            .ELSEIF eax == SW_HIDE
+                invoke ShowWindow, hParent, SW_SHOW
+            
+            .ENDIF
+            Invoke SetForegroundWindow, hParent ; Focus main window
+            Invoke SetWindowPos, hParent, HWND_TOP,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW
+        .ENDIF
+    
+        Invoke IsWindowVisible, hWin
+        .IF eax == 0
+            invoke ShowWindow, hWin, SW_SHOW    
+            invoke ShowWindow, hWin, SW_SHOWNORMAL  
+            Invoke SetForegroundWindow, hWin ; Focus main window
+            ret
+        .ENDIF
+        Invoke IsIconic, hWin
+        .IF eax != 0
+            invoke ShowWindow, hWin, SW_SHOW    
+            invoke ShowWindow, hWin, SW_SHOWNORMAL  
+            Invoke SetForegroundWindow, hWin ; Focus main window
+        .ENDIF
     .ENDIF
-    Invoke IsIconic, hWin
-    .IF eax != 0
-        invoke ShowWindow, hWin, SW_SHOW    
-        invoke ShowWindow, hWin, SW_SHOWNORMAL  
-        Invoke SetForegroundWindow, hWin ; Focus main window
-    .ENDIF    
     ret
 _MUI_TM_RestoreFromTray ENDP
 

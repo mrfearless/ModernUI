@@ -71,7 +71,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=1
+MilestoneOnDateDate=5
 MilestoneOnDateTimeYear=2017
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=16
@@ -95,13 +95,13 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=25643443
+PTimer=28421118
 [Collapse]
-1=1074810962,1074270752,1141113104,1080033288,32784,
+1=4259858,2115714,269493314,27263522,67240000,
 2=
 [Size]
-1=0,0,0,0,7683
-2=0,0,0,0,4108
+1=0,0,0,0,49184
+2=0,0,0,0,6689
 [GroupExpand]
 GroupExpand=1,0,0,0,0,0
 [BookMark]
@@ -118,4 +118,6 @@ GroupExpand=1,0,0,0,0,0
 [BreakPoint]
 0=
 [Find]
-1="MUITrayMenuSetTrayIconText"
+1="_MUI_TM_RestoreFromTray"
+2="WM_INITSUBCLASS"
+3="MUITrayMenuSetTrayIconText"

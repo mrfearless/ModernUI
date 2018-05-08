@@ -89,6 +89,7 @@ MUITMT_NOMENUEVER           EQU 3 ; Specified that no menu is ever added to the 
 MUITMS_DEFAULT              EQU 0 ; default 
 MUITMS_MINONCLOSE           EQU 1 ; minimizes window when close clicked
 MUITMS_HIDEIFMIN            EQU 2 ; hide window when minimized
+MUITMS_HWNDEXTRA            EQU 4 ; use hWndExtra as window to process for hiding/showing
 
 
 ; Tray Menu Notification Icon
