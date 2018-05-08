@@ -280,7 +280,7 @@ MUIPointSizeToLogicalUnit ENDP
 ; flags: WS_POPUP or WS_VISIBLE and optionally with DS_CENTER /DS_CENTERMOUSE / 
 ; WS_CLIPCHILDREN / WS_CLIPSIBLINGS / WS_MINIMIZE / WS_MAXIMIZE
 ;-------------------------------------------------------------------------------------
-MUIApplyToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
+MUIApplyToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD, dwClipping:DWORD
     LOCAL dwStyle:DWORD
     LOCAL dwNewStyle:DWORD
     LOCAL dwClassStyle:DWORD
@@ -319,13 +319,14 @@ MUIApplyToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
         or dwNewStyle, WS_MAXIMIZE
     .ENDIF        
 
-    mov eax, dwStyle
-    and eax, WS_CLIPSIBLINGS
-    .IF eax == WS_CLIPSIBLINGS
-        or dwNewStyle, WS_CLIPSIBLINGS
-    .ENDIF        
-    
-    or dwNewStyle, WS_CLIPCHILDREN
+    .IF dwClipping == TRUE
+        mov eax, dwStyle
+        and eax, WS_CLIPSIBLINGS
+        .IF eax == WS_CLIPSIBLINGS
+            or dwNewStyle, WS_CLIPSIBLINGS
+        .ENDIF        
+        or dwNewStyle, WS_CLIPCHILDREN
+    .ENDIF
 
     Invoke SetWindowLong, hWin, GWL_STYLE, dwNewStyle
     
@@ -1048,7 +1049,109 @@ MUICreateIconFromMemory PROC pIconData:DWORD, iIcon:DWORD
 MUICreateIconFromMemory ENDP
 
 
+;-------------------------------------------------------------------------------------
+; MUILoadRegionFromResource - Loads region from a resource
+;-------------------------------------------------------------------------------------
+MUILoadRegionFromResource PROC USES EBX hInst:DWORD, idRgnRes:DWORD, lpRegion:DWORD, lpdwSizeRegion:DWORD
+    LOCAL hRes:DWORD
+    ; Load region
+    Invoke FindResource, hInst, idRgnRes, RT_RCDATA ; load rng image as raw data
+    .IF eax != NULL
+        mov hRes, eax
+        Invoke SizeofResource, hInst, hRes
+        .IF eax != 0
+            .IF lpdwSizeRegion != NULL
+                mov ebx, lpdwSizeRegion
+                mov [ebx], eax
+            .ELSE
+                mov eax, FALSE
+                ret
+            .ENDIF
+            Invoke LoadResource, hInst, hRes
+            .IF eax != NULL
+                Invoke LockResource, eax
+                .IF eax != NULL
+                    .IF lpRegion != NULL
+                        mov ebx, lpRegion
+                        mov [ebx], eax
+                        mov eax, TRUE
+                    .ELSE
+                        mov eax, FALSE
+                    .ENDIF
+                .ELSE
+                    ;PrintText 'Failed to lock resource'
+                    mov eax, FALSE
+                .ENDIF
+            .ELSE
+                ;PrintText 'Failed to load resource'
+                mov eax, FALSE
+            .ENDIF
+        .ELSE
+            ;PrintText 'Failed to get resource size'
+            mov eax, FALSE
+        .ENDIF
+    .ELSE
+        ;PrintText 'Failed to find resource'
+        mov eax, FALSE
+    .ENDIF    
+    ret
+MUILoadRegionFromResource ENDP
 
+
+;-------------------------------------------------------------------------------------
+; Sets a window/controls region from a region stored as an RC_DATA resource: idRgnRes
+; if lpdwCopyRgn != NULL a copy of region handle is provided (for FrameRgn for example)
+;-------------------------------------------------------------------------------------
+MUISetRegionFromResource PROC USES EBX hWin:DWORD, idRgnRes:DWORD, lpdwCopyRgn:DWORD, bRedraw:DWORD
+    LOCAL hinstance:DWORD
+    LOCAL ptrRegionData:DWORD
+    LOCAL dwRegionDataSize:DWORD
+    LOCAL hRgn:DWORD
+    
+    .IF idRgnRes == NULL
+        Invoke SetWindowRgn, hWin, NULL, FALSE
+        ret
+    .ENDIF
+ 
+    Invoke GetModuleHandle, NULL
+    mov hinstance, eax
+    
+    Invoke MUILoadRegionFromResource, hinstance, idRgnRes, Addr ptrRegionData, Addr dwRegionDataSize
+    .IF eax == FALSE
+        .IF lpdwCopyRgn != NULL
+            mov eax, NULL
+            mov ebx, lpdwCopyRgn
+            mov [ebx], eax
+        .ENDIF
+        mov eax, FALSE    
+        ret
+    .ENDIF
+    
+    Invoke SetWindowRgn, hWin, NULL, FALSE
+    Invoke ExtCreateRegion, NULL, dwRegionDataSize, ptrRegionData
+    mov hRgn, eax
+    .IF eax == NULL
+        .IF lpdwCopyRgn != NULL
+            mov eax, NULL
+            mov ebx, lpdwCopyRgn
+            mov [ebx], eax
+        .ENDIF
+        mov eax, FALSE
+        ret
+    .ENDIF
+    Invoke SetWindowRgn, hWin, hRgn, bRedraw
+    
+    .IF lpdwCopyRgn != NULL
+        Invoke ExtCreateRegion, NULL, dwRegionDataSize, ptrRegionData
+        mov hRgn, eax
+        mov ebx, lpdwCopyRgn
+        mov [ebx], eax
+    .ENDIF
+
+    mov eax, TRUE    
+    ret
+
+MUISetRegionFromResource ENDP
 
 
 MUITransparentBitmap PROC hdc:DWORD, hBitmap:DWORD, xStart:DWORD, yStart:DWORD, cTransparentColor:DWORD

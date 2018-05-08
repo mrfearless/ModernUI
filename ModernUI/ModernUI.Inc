@@ -41,11 +41,11 @@ MUIGetIntProperty               PROTO :DWORD, :DWORD                   ; hContro
 MUISetIntProperty               PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
 
 MUIPointSizeToLogicalUnit       PROTO :DWORD, :DWORD                   ; hControl, dwPointSize
-MUIApplyToDialog                PROTO :DWORD, :DWORD                   ; hDialogWindow, dwDropShadow (true to set drop shadow)
+MUIApplyToDialog                PROTO :DWORD, :DWORD, :DWORD           ; hDialogWindow, dwDropShadow (true to set drop shadow), dwClipping (true to set clipping on)
 MUICenterWindow                 PROTO :DWORD, :DWORD                   ; hWndChild, hWndParent
 MUIPaintBackground              PROTO :DWORD, :DWORD, :DWORD           ; hDialogWindow, dwBackColor, dwBorderColor
 MUIPaintBackgroundImage         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hDialogWindow, dwBackColor, dwBorderColor, hImage, dwImageType, dwImageLocation
-MUIGetParentBackgroundColor     PROTO :DWORD                            ; hControl
+MUIGetParentBackgroundColor     PROTO :DWORD                           ; hControl
 MUIGetImageSize                 PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hImage, dwImageType, lpdwImageWidth, lpdwImageHeight
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -59,6 +59,9 @@ MUIFreeMemProperties            PROTO :DWORD, :DWORD                   ; hContro
 
 MUIAllocStructureMemory         PROTO :DWORD, :DWORD, :DWORD           ; dwPtrStructMem, TotalItems, ItemSize
 MUICreateIconFromMemory         PROTO :DWORD, :DWORD                   ; pIconData, iIcon
+
+MUILoadRegionFromResource       PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hInstance, idRgnRes, lpRegion, lpdwSizeRegion
+MUISetRegionFromResource        PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hWin, idRgnRes, lpdwCopyRgn, bRedraw
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; LTLI ModernUI Structures
