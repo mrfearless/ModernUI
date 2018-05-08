@@ -357,7 +357,7 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
 
     .ELSEIF eax == WM_NCHITTEST
         Invoke MUIGetIntProperty, hWin, @CaptionBarNoMoveWindow
-        .IF eax == TRUE
+        .IF eax == FALSE
             Invoke GetParent, hWin
             Invoke SendMessage, eax, WM_NCLBUTTONDOWN, HTCAPTION, 0
         .ENDIF
