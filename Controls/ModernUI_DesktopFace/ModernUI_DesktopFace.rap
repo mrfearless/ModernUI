@@ -95,7 +95,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=4985605
+PTimer=4990036
 [Collapse]
 1=1115820544,243272992,
 2=
@@ -104,7 +104,7 @@ PTimer=4985605
 2=0,0,0,0,2667
 3=
 [GroupExpand]
-GroupExpand=1,1,1,1,0,0
+GroupExpand=1,1,0,1,0,0
 [BookMark]
 0=
 1=

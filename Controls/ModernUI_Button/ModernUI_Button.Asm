@@ -139,6 +139,7 @@ MUI_BUTTON_PROPERTIES                       STRUCT
     dwButtonPaddingStyle                    DD ?
     dwButtonPaddingTextImage                DD ?  
     dwButtonDllInstance                     DD ? ; Set to hInstance of dll before calling MUIButtonLoadImages or MUIButtonNotifyLoadImage if used within a dll
+    dwButtonParam                           DD ?
 MUI_BUTTON_PROPERTIES                       ENDS
 ENDIF
 
@@ -411,9 +412,19 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             sub rect.top, 1
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
+            
+            Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, FALSE
+            Invoke ShowWindow, hWin, SW_SHOW                
+            
         .ELSE
             Invoke InvalidateRect, hWin, NULL, TRUE
-            Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
+            Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
+            
+            Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, FALSE
+            Invoke ShowWindow, hWin, SW_SHOW                
+            
         .ENDIF
         
         Invoke GetWindowLong, hWin, GWL_STYLE
@@ -439,9 +450,20 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             add rect.top, 1
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, TRUE
+            
+            Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, FALSE
+            Invoke ShowWindow, hWin, SW_SHOW              
+
         .ELSE
             Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
+            
+            Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, FALSE
+            Invoke ShowWindow, hWin, SW_SHOW              
+
         .ENDIF
+
 
     .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @ButtonEnabledState
@@ -471,6 +493,11 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             sub rect.top, 1
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
+            
+            Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, FALSE
+            Invoke ShowWindow, hWin, SW_SHOW            
+            
         .ELSE
             Invoke ShowWindow, hWin, SW_HIDE
             Invoke InvalidateRect, hWin, NULL, FALSE
@@ -509,12 +536,12 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         ret
 
     .ELSEIF eax == WM_SETFONT
-        Invoke MUISetExtProperty, hWin, @ButtonTextFont, lParam
+        Invoke MUISetExtProperty, hWin, @ButtonTextFont, wParam
         .IF lParam == TRUE
             Invoke ShowWindow, hWin, SW_HIDE
             Invoke InvalidateRect, hWin, NULL, TRUE
             Invoke ShowWindow, hWin, SW_SHOW
-        .ENDIF    
+        .ENDIF
     
     ; custom messages start here
     
@@ -886,6 +913,7 @@ _MUI_ButtonCleanup ENDP
 _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
+    LOCAL rectWin:RECT
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
     LOCAL hbmMem:DWORD
@@ -895,6 +923,7 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL MouseOver:DWORD
     LOCAL SelectedState:DWORD
     LOCAL BackColor:DWORD
+    LOCAL hParent:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
@@ -987,26 +1016,61 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
         .ENDIF      
     
     .ELSE ; Transparent background
+        
+;        Invoke GetParent, hWin
+;        mov hParent, eax
+;        Invoke GetWindowRect, hWin, Addr rectWin;
+;        Invoke ScreenToClient, hParent, Addr rectWin; // Convert to the parent's co-ordinates
+;        ;Invoke GetClipBox, parDc, Addr rectWin        
+;        
+;        Invoke RedrawWindow, hParent, Addr rectWin, 0, RDW_UPDATENOW
+;        
+        ;----------------------------------------------------------
+        ; Setup Double Buffering
+        ;----------------------------------------------------------
+        Invoke CreateCompatibleDC, hdc
+        mov hdcMem, eax
+
+        Invoke MUIGetParentBackgroundBitmap, hWin
+        mov hbmMem, eax
+        
+        Invoke SelectObject, hdcMem, hbmMem
+        mov hOldBitmap, eax
 
         ;----------------------------------------------------------
         ; Accent
         ;----------------------------------------------------------
-        Invoke _MUI_ButtonPaintAccent, hWin, hdc, Addr rect, EnabledState, MouseOver, SelectedState
+        Invoke _MUI_ButtonPaintAccent, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
         ;----------------------------------------------------------
         ; Images
         ;----------------------------------------------------------
-        Invoke _MUI_ButtonPaintImages, hWin, hdc, hdc, Addr rect, EnabledState, MouseOver, SelectedState
+        Invoke _MUI_ButtonPaintImages, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
     
         ;----------------------------------------------------------
         ; Text
         ;----------------------------------------------------------
-        Invoke _MUI_ButtonPaintText, hWin, hdc, Addr rect, EnabledState, MouseOver, SelectedState
+        Invoke _MUI_ButtonPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
     
         ;----------------------------------------------------------
         ; Border
         ;----------------------------------------------------------
-        Invoke _MUI_ButtonPaintBorder, hWin, hdc, Addr rect, EnabledState, MouseOver, SelectedState
+        Invoke _MUI_ButtonPaintBorder, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    
+        ;----------------------------------------------------------
+        ; BitBlt from hdcMem back to hdc
+        ;----------------------------------------------------------
+        Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+    
+        ;----------------------------------------------------------
+        ; Cleanup
+        ;----------------------------------------------------------
+        Invoke SelectObject, hdcMem, hOldBitmap
+        Invoke DeleteDC, hdcMem
+        Invoke DeleteObject, hbmMem
+        .IF hOldBitmap != 0
+            Invoke DeleteObject, hOldBitmap
+        .ENDIF          
     
     .ENDIF
     
@@ -2306,14 +2370,16 @@ _MUI_ButtonPaintBorder ENDP
 ;-------------------------------------------------------------------------------------
 _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     
-    mov eax, dwProperty
-    .IF eax == @ButtonTextFont || eax == @ButtonNoteTextFont || eax == @ButtonNotifyTextFont
-        .IF dwPropertyValue != 0
-            Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue 
-        .ENDIF    
-    .ELSE
-        Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue
-    .ENDIF
+;    mov eax, dwProperty
+;    .IF eax == @ButtonTextFont || eax == @ButtonNoteTextFont || eax == @ButtonNotifyTextFont
+;        .IF dwPropertyValue != 0
+;            Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue 
+;        .ENDIF    
+;    .ELSE
+;        Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue
+;    .ENDIF
+    
+    Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue
     
     mov eax, dwProperty
     .IF eax == @ButtonTextColor ; set other text colors to this if they are not set
@@ -3007,7 +3073,9 @@ MUIButtonSetAllProperties ENDP
 ;-------------------------------------------------------------------------------------
 _MUI_ButtonLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
     LOCAL hinstance:DWORD
-
+    LOCAL dwStyle:DWORD
+    LOCAL bKeepImages:DWORD
+    
     .IF idResBitmap == NULL
         mov eax, FALSE
         ret
@@ -3018,7 +3086,23 @@ _MUI_ButtonLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWO
         Invoke GetModuleHandle, NULL
     .ENDIF
     mov hinstance, eax
-    
+
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
+    and eax, MUIBS_KEEPIMAGES
+    .IF eax == MUIBS_KEEPIMAGES
+        mov bKeepImages, TRUE
+    .ELSE
+        mov bKeepImages, FALSE
+    .ENDIF
+
+    Invoke MUIGetExtProperty, hWin, dwProperty
+    .IF eax != 0 ; image handle already in use, delete object?
+        .IF bKeepImages == FALSE
+            Invoke DeleteObject, eax
+        .ENDIF
+    .ENDIF
+
     Invoke LoadBitmap, hinstance, idResBitmap
     Invoke MUISetExtProperty, hWin, dwProperty, eax
     mov eax, TRUE
@@ -3034,7 +3118,9 @@ _MUI_ButtonLoadBitmap ENDP
 ;-------------------------------------------------------------------------------------
 _MUI_ButtonLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     LOCAL hinstance:DWORD
-
+    LOCAL dwStyle:DWORD
+    LOCAL bKeepImages:DWORD
+    
     .IF idResIcon == NULL
         mov eax, FALSE
         ret
@@ -3045,7 +3131,27 @@ _MUI_ButtonLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     .ENDIF
     mov hinstance, eax
 
-    Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
+    and eax, MUIBS_KEEPIMAGES
+    .IF eax == MUIBS_KEEPIMAGES
+        mov bKeepImages, TRUE
+    .ELSE
+        mov bKeepImages, FALSE
+    .ENDIF
+
+    Invoke MUIGetExtProperty, hWin, dwProperty
+    .IF eax != 0 ; image icon handle already in use, delete object?
+        .IF bKeepImages == FALSE
+            Invoke DeleteObject, eax
+        .ENDIF
+    .ENDIF
+
+    .IF bKeepImages == FALSE
+        Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+    .ELSE
+        Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, LR_SHARED
+    .ENDIF
     Invoke MUISetExtProperty, hWin, dwProperty, eax
 
     mov eax, TRUE
@@ -3078,12 +3184,30 @@ _MUI_ButtonLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     local hIStream:DWORD
     LOCAL hinstance:DWORD
     LOCAL pBitmapFromStream:DWORD
+    LOCAL dwStyle:DWORD
+    LOCAL bKeepImages:DWORD    
 
     Invoke MUIGetExtProperty, hWin, @ButtonDllInstance
     .IF eax == 0
         Invoke GetModuleHandle, NULL
     .ENDIF
     mov hinstance, eax
+
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
+    and eax, MUIBS_KEEPIMAGES
+    .IF eax == MUIBS_KEEPIMAGES
+        mov bKeepImages, TRUE
+    .ELSE
+        mov bKeepImages, FALSE
+    .ENDIF
+
+    Invoke MUIGetExtProperty, hWin, dwProperty
+    .IF eax != 0 ; image icon handle already in use, delete object?
+        .IF bKeepImages == FALSE
+            Invoke _MUI_ButtonPngReleaseIStream, eax        
+        .ENDIF
+    .ENDIF
 
     ; ------------------------------------------------------------------
     ; STEP 1: Find the resource

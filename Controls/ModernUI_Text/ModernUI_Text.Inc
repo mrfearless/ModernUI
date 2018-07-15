@@ -41,6 +41,19 @@ MUITextGetProperty      PROTO :DWORD, :DWORD                                    
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Text Structures
 ;--------------------------------------------------------------------------------------------------------------------------------------
+IFNDEF @MUIText
+@MUIText                    STRUCT
+    Font                    DD ?
+    Color                   DD ?
+    ColorAlt                DD ?
+    ColorDisabled           DD ?
+    STRUCT                  Back
+        Color               DD ?
+        ColorAlt            DD ?
+        ColorDisabled       DD ?
+    ENDS  
+@MUIText                    ENDS
+ENDIF
 
 
 .CONST
@@ -59,13 +72,14 @@ MUITS_SUBHEADER         EQU 6  ; 34px
 MUITS_HEADER            EQU 7  ; 46px
 
 
-MUITS_FONT_SEGOE        EQU 1 shl 4
-MUITS_FONT_TAHOMA       EQU 2 shl 4
-MUITS_FONT_SANS         EQU 3 shl 4
-MUITS_FONT_ARIAL        EQU 4 shl 4
-MUITS_FONT_TIMES        EQU 5 shl 4
-MUITS_FONT_COURIER      EQU 6 shl 4
-MUITS_FONT_VERDANA      EQU 7 shl 4
+MUITS_FONT_SETFONT      EQU 1 shl 4 ; user will set font
+MUITS_FONT_DIALOG       EQU 2 shl 4 ; use default dialog font
+MUITS_FONT_SEGOE        EQU 3 shl 4
+MUITS_FONT_TAHOMA       EQU 4 shl 4
+MUITS_FONT_ARIAL        EQU 5 shl 4
+MUITS_FONT_TIMES        EQU 6 shl 4
+MUITS_FONT_COURIER      EQU 7 shl 4
+MUITS_FONT_VERDANA      EQU 8 shl 4
 
 MUITS_ALIGN_RIGHT       EQU 256 ; right aligned text
 MUITS_ALIGN_CENTER      EQU 512 ; center aligned text
@@ -82,6 +96,7 @@ MUITS_HAND              EQU 2048 ; Show a hand instead of an arrow when mouse mo
 @TextBackColor          EQU 16      ; Colorref, -1 = transparent
 @TextBackColorAlt       EQU 20      ; Colorref
 @TextBackColorDisabled  EQU 24      ; Colorref
+
 
 
 

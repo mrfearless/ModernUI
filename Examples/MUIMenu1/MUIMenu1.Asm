@@ -91,7 +91,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; Applies the ModernUI base style to the dialog, turning it into a borderless, caption less form
         ; we set our own caption and system buttons with the ModernUI_CaptionBar control
-        Invoke MUIApplyToDialog, hWin, TRUE
+        Invoke MUIApplyToDialog, hWin, TRUE, TRUE
         
         ; Create CaptionBar control and save handle
         Invoke MUICaptionBarCreate, hWin, Addr AppName, 32, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
@@ -110,19 +110,19 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         Invoke MUIButtonCreate, hWin, Addr szMenu1Text, 20, 50, 200, 45, IDC_MENUITEM1, MUIBS_LEFT + MUIBS_HAND
         mov hMenu1, eax
         Invoke MUIButtonLoadImages, hMenu1, MUIBIT_ICO, ICO_IMAGE, ICO_IMAGE, ICO_IMAGE, ICO_IMAGE, ICO_IMAGE
-        Invoke MUIButtonSetAllProperties, hMenu1, Addr MUI_MENUITEM_DARKTHEME, SIZEOF MUI_BUTTON_PROPERTIES
+        Invoke MUIButtonSetAllProperties, hMenu1, Addr MUI_MENUITEM_DARK_THEME, SIZEOF MUI_BUTTON_PROPERTIES
 
         ; Create our ModernUI_Button control
         Invoke MUIButtonCreate, hWin, Addr szMenu2Text, 20, 94, 200, 45, IDC_MENUITEM2, MUIBS_LEFT + MUIBS_HAND
         mov hMenu2, eax
         Invoke MUIButtonLoadImages, hMenu2, MUIBIT_ICO, ICO_FILE, ICO_FILE, ICO_FILE, ICO_FILE, ICO_FILE
-        Invoke MUIButtonSetAllProperties, hMenu2, Addr MUI_MENUITEM_DARKTHEME, SIZEOF MUI_BUTTON_PROPERTIES
+        Invoke MUIButtonSetAllProperties, hMenu2, Addr MUI_MENUITEM_DARK_THEME, SIZEOF MUI_BUTTON_PROPERTIES
         
         ; Create our ModernUI_Button control
         Invoke MUIButtonCreate, hWin, Addr szMenu3Text, 20, 138, 200, 45, IDC_MENUITEM3, MUIBS_LEFT + MUIBS_HAND
         mov hMenu3, eax
         Invoke MUIButtonLoadImages, hMenu3, MUIBIT_ICO, ICO_FOLDER, ICO_FOLDER, ICO_FOLDER, ICO_FOLDER, ICO_FOLDER
-        Invoke MUIButtonSetAllProperties, hMenu3, Addr MUI_MENUITEM_DARKTHEME, SIZEOF MUI_BUTTON_PROPERTIES
+        Invoke MUIButtonSetAllProperties, hMenu3, Addr MUI_MENUITEM_DARK_THEME, SIZEOF MUI_BUTTON_PROPERTIES
 
 
 ;        Invoke MUIButtonSetProperty, hMenu1, @ButtonBackColor, MUI_RGBCOLOR(51,51,51) ; 28,43,54 51,51,51

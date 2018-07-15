@@ -109,6 +109,7 @@ MUI_BUTTON_PROPERTIES           STRUCT
     dwButtonPaddingStyle        DD ?       ; 
     dwButtonPaddingTextImage    DD ?       ; 
     dwButtonDllInstance         DD ?
+    dwButtonParam               DD ?
 MUI_BUTTON_PROPERTIES           ENDS
 ENDIF
 
@@ -199,6 +200,7 @@ MUIBS_DROPDOWN                  EQU 80h     ; Show dropdown arrow right side of 
 @ButtonPaddingStyle             EQU 188     ; Button Padding Style - Where to apply @ButtonPaddingGeneral: defaults to MUIBPS_ALL when control is created
 @ButtonPaddingTextImage         EQU 192     ; dwPixels - No of pixels between left images and text. Defaults to 8 when control is created
 @ButtonDllInstance              EQU 196     ; Set to hInstance of dll before calling MUIButtonLoadImages or MUIButtonNotifyLoadImage if used within a dll
+@ButtonParam                    EQU 200     ; Custom user data
 
 ; Button Border Styles
 MUIBBS_NONE                     EQU 0

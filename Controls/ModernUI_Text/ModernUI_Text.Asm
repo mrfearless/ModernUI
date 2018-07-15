@@ -19,14 +19,14 @@ option casemap:none
 include \masm32\macros\macros.asm
 
 ;DEBUG32 EQU 1
-
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include user32.inc
@@ -93,7 +93,6 @@ MUITextFont                     DD 0
 
 szMUITextFontSegoe              DB 'Segoe UI',0 
 szMUITextFontTahoma             DB 'Tahoma',0
-szMUITextFontSans               DB 'MS Sans Serif',0
 szMUITextFontArial              DB 'Arial',0
 szMUITextFontTimes              DB 'Times New Roman',0
 szMUITextFontCourier            DB 'Courier New',0
@@ -171,7 +170,7 @@ MUITextRegister ENDP
 ;-------------------------------------------------------------------------------------
 ; MUITextCreate - Returns handle in eax of newly created control
 ;-------------------------------------------------------------------------------------
-MUITextCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+MUITextCreate PROC PUBLIC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
     LOCAL hControl:DWORD
@@ -301,12 +300,20 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         Invoke ShowWindow, hWin, SW_SHOW
         ret
         
-;    .ELSEIF eax == WM_SETFONT
-;        Invoke MUISetExtProperty, hWin, @TextFont, lParam
-;        .IF lParam == TRUE
-;            Invoke InvalidateRect, hWin, NULL, TRUE
-;        .ENDIF            
-    
+    .ELSEIF eax == WM_SETFONT
+        ;PrintText '_MUI_TextWndProc::WM_SETFONT'
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, 0F0h
+        .IF eax == 0 || eax == MUITS_FONT_DIALOG || eax == MUITS_FONT_SETFONT
+            ;PrintDec wParam
+            Invoke MUISetExtProperty, hWin, @TextFont, wParam
+            .IF lParam == TRUE
+                Invoke InvalidateRect, hWin, NULL, TRUE
+            .ENDIF            
+        .ELSE
+            ret
+        .ENDIF
+        
     ; custom messages start here
     
     .ELSEIF eax == MUI_GETPROPERTY
@@ -371,79 +378,86 @@ _MUI_TextInit PROC PRIVATE hControl:DWORD
     and eax, 0F0h
     mov dwFontFamily, eax
  
-    .IF eax == MUITS_FONT_SEGOE
-        lea eax, szMUITextFontSegoe
-    .ELSEIF eax == MUITS_FONT_TAHOMA
-        lea eax, szMUITextFontTahoma
-    .ELSEIF eax == MUITS_FONT_SANS
-        lea eax, szMUITextFontSans
-    .ELSEIF eax == MUITS_FONT_ARIAL
-        lea eax, szMUITextFontArial
-    .ELSEIF eax == MUITS_FONT_TIMES
-        lea eax, szMUITextFontTimes
-    .ELSEIF eax == MUITS_FONT_COURIER
-        lea eax, szMUITextFontCourier
-    .ELSEIF eax == MUITS_FONT_VERDANA    
-        lea eax, szMUITextFontVerdana
+    .IF eax == 0 || eax == MUITS_FONT_DIALOG || eax == MUITS_FONT_SETFONT
+        Invoke SendMessage, hControl, WM_GETFONT, 0, 0
+        mov hFont, eax
+        Invoke MUISetExtProperty, hControl, @TextFont, hFont
     .ELSE
-        lea eax, szMUITextFontSegoe
-    .ENDIF
-    mov MUITextFont, eax
-    
-    mov eax, dwStyle
-    and eax, 15d
-    mov dwFontSize, eax
-
-    .IF eax == MUITS_DEFAULT ; 8px
-        Invoke MUIPointSizeToLogicalUnit, hControl, 8
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_NORMAL
-
-    .ELSEIF eax == MUITS_HEADER ; 46px
-        Invoke MUIPointSizeToLogicalUnit, hControl, 46d
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_BOLD
-
-    .ELSEIF eax == MUITS_SUBHEADER ; 34px
-        Invoke MUIPointSizeToLogicalUnit, hControl, 34d
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_SEMIBOLD
-
-    .ELSEIF eax == MUITS_TITLE; 24px
-        Invoke MUIPointSizeToLogicalUnit, hControl, 24d
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_MEDIUM
-
-    .ELSEIF eax == MUITS_SUBTITLE; 20px
-        Invoke MUIPointSizeToLogicalUnit, hControl, 20d
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_NORMAL
-
-    .ELSEIF eax == MUITS_BODYTITLE; 15px
-        Invoke MUIPointSizeToLogicalUnit, hControl, 15d
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_SEMIBOLD
         
-    .ELSEIF eax == MUITS_BODY ; 15px
-        Invoke MUIPointSizeToLogicalUnit, hControl, 15d
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_NORMAL
+        .IF eax == MUITS_FONT_SEGOE
+            lea eax, szMUITextFontSegoe
+        .ELSEIF eax == MUITS_FONT_TAHOMA
+            lea eax, szMUITextFontTahoma
+        .ELSEIF eax == MUITS_FONT_ARIAL
+            lea eax, szMUITextFontArial
+        .ELSEIF eax == MUITS_FONT_TIMES
+            lea eax, szMUITextFontTimes
+        .ELSEIF eax == MUITS_FONT_COURIER
+            lea eax, szMUITextFontCourier
+        .ELSEIF eax == MUITS_FONT_VERDANA    
+            lea eax, szMUITextFontVerdana
+        .ELSE
+            lea eax, szMUITextFontSegoe
+        .ENDIF
+        mov MUITextFont, eax
         
-    .ELSEIF eax == MUITS_CAPTION ; 12px
-        Invoke MUIPointSizeToLogicalUnit, hControl, 12d
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_NORMAL
+        mov eax, dwStyle
+        and eax, 15d
+        mov dwFontSize, eax
     
-    .ELSE
-        Invoke MUIPointSizeToLogicalUnit, hControl, 8
-        mov dwFontHeight, eax
-        mov dwFontWeight, FW_NORMAL
+        .IF eax == MUITS_DEFAULT ; 8px
+            Invoke MUIPointSizeToLogicalUnit, hControl, 8
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
     
+        .ELSEIF eax == MUITS_HEADER ; 46px
+            Invoke MUIPointSizeToLogicalUnit, hControl, 46d
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_BOLD
+    
+        .ELSEIF eax == MUITS_SUBHEADER ; 34px
+            Invoke MUIPointSizeToLogicalUnit, hControl, 34d
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_SEMIBOLD
+    
+        .ELSEIF eax == MUITS_TITLE; 24px
+            Invoke MUIPointSizeToLogicalUnit, hControl, 24d
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_MEDIUM
+    
+        .ELSEIF eax == MUITS_SUBTITLE; 20px
+            Invoke MUIPointSizeToLogicalUnit, hControl, 20d
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+    
+        .ELSEIF eax == MUITS_BODYTITLE; 15px
+            Invoke MUIPointSizeToLogicalUnit, hControl, 15d
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_SEMIBOLD
+            
+        .ELSEIF eax == MUITS_BODY ; 15px
+            Invoke MUIPointSizeToLogicalUnit, hControl, 15d
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+            
+        .ELSEIF eax == MUITS_CAPTION ; 12px
+            Invoke MUIPointSizeToLogicalUnit, hControl, 12d
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+        
+        .ELSE
+            Invoke MUIPointSizeToLogicalUnit, hControl, 8
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+        
+        .ENDIF
+        
+        Invoke CreateFont, dwFontHeight, 0,0,0, dwFontWeight, 0,0,0,0,0,0, PROOF_QUALITY, FF_SWISS, MUITextFont
+        mov hFont, eax
+        Invoke MUISetExtProperty, hControl, @TextFont, hFont
     .ENDIF
     
-    Invoke CreateFont, dwFontHeight, 0,0,0, dwFontWeight, 0,0,0,0,0,0, PROOF_QUALITY, FF_SWISS, MUITextFont
-    mov hFont, eax
-    Invoke MUISetExtProperty, hControl, @TextFont, hFont
+    
     ret
 
 _MUI_TextInit ENDP

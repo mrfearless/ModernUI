@@ -57,14 +57,15 @@ Group=Distribuition,Modules,Assembly,Resources,Misc
 4=5
 5=1
 [AutoLoad]
-AutoLoad=2,1
+AutoLoad=2,1,4
 [RADebugBP]
 2=
 1=
 [Size]
 3=0,0,0,0,0
-1=0,0,0,0,10942
-2=0,0,0,0,4741
+1=0,0,0,0,6572
+2=0,0,0,0,2993
+4=0,0,0,0,791
 [VersionControl]
 Settings=1278
 Milestones=129
@@ -75,7 +76,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=8
+MilestoneOnDateDate=6
 MilestoneOnDateTimeYear=2017
 MilestoneOnDateTimeMonth=2
 MilestoneOnDateTimeDate=22
@@ -99,11 +100,12 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=23456404
+PTimer=34300333
 [Collapse]
-1=574652432,
+1=1073774608,512
 2=
 3=
+4=
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
 [BookMark]
@@ -119,3 +121,6 @@ GroupExpand=1,1,1,0,0,0
 9=
 [BreakPoint]
 0=
+[Find]
+1="mov eax, hBitmap"
+2="@TextFont"

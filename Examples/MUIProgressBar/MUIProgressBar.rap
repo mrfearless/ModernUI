@@ -7,6 +7,7 @@ Group=1
 GroupExpand=1
 Ver.rc=1
 Res.rc=1
+Debug=1
 [Files]
 1=MUIProgressBar.Asm
 2=MUIProgressBar.Inc
@@ -116,13 +117,13 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=15683279
+PTimer=17600843
 [Collapse]
 1=16
 2=
 [Size]
-1=0,0,0,0,3279
-2=0,0,0,0,1346
+1=0,0,0,0,6471
+2=0,0,0,0,1809
 4=0,0,0,0
 [GroupExpand]
 GroupExpand=1,0,1,0

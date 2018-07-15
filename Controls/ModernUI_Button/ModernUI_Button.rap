@@ -71,7 +71,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=8
+MilestoneOnDateDate=7
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=30
@@ -95,14 +95,14 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=229599092
+PTimer=246308842
 [Collapse]
-1=,4096,,,268435472,,8388609,33685504,285212674,5242880,
+1=524352,4194304,131104,,,32,256,33554433,4,536870916,1
 2=
 3=
 [Size]
-1=0,0,0,0,98334
-2=0,0,0,0,3200
+1=0,0,0,0,103465
+2=0,0,0,0,8293
 3=0,0,0,0,458
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
@@ -120,12 +120,13 @@ GroupExpand=1,1,1,0,0,0
 [BreakPoint]
 0=
 [Find]
-1="CreateFont"
-2="IUnknown"
-3="@ButtonPaddingGeneral"
-4="_MUI_ButtonGetImageSize"
-5="MUIBS_KEEPIMAGES"
-6="DD ? "
-7="       EQU"
-8="       EQU 0    ; "
-9="    @Button"
+1="mov eax, hBitmap"
+2="@ButtonTextFont"
+3="CreateFont"
+4="IUnknown"
+5="@ButtonPaddingGeneral"
+6="_MUI_ButtonGetImageSize"
+7="MUIBS_KEEPIMAGES"
+8="DD ? "
+9="       EQU"
+10="       EQU 0    ; "

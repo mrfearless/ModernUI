@@ -19,14 +19,14 @@ option casemap:none
 include \masm32\macros\macros.asm
 
 ;DEBUG32 EQU 1
-
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include user32.inc
@@ -47,6 +47,7 @@ include ModernUI_SmartPanel.inc
 _MUI_SmartPanelWndProc                  PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_SmartPanelInit                     PROTO :DWORD
 _MUI_SmartPanelCleanup                  PROTO :DWORD
+_MUI_SmartPanelPaint                    PROTO :DWORD
 _MUI_SmartPanelGetPanelHandle           PROTO :DWORD, :DWORD
 _MUI_SmartPanelNavNotify                PROTO :DWORD, :DWORD, :DWORD
 _MUI_SmartPanelSlidePanels              PROTO :DWORD, :DWORD, :DWORD, :DWORD
@@ -70,6 +71,7 @@ _MUI_SMARTPANEL_PROPERTIES              STRUCT
     dwTotalPanels                       DD ?
     dwPanelsArray                       DD ?
     lpdwIsDlgMsgVar                     DD ?
+    hBitmap                             DD ?
 _MUI_SMARTPANEL_PROPERTIES              ENDS
 
 IFNDEF MUISP_ITEM ; SmartPanel Notification Item
@@ -107,6 +109,7 @@ SlideVFast                              EQU 3
 @SmartPanelTotalPanels                  EQU 12
 @SmartPanelPanelsArray                  EQU 16
 @SmartPanellpdwIsDlgMsgVar              EQU 20
+@SmartPanelBitmap                       EQU 24
 ; External public properties
 
 
@@ -160,7 +163,7 @@ MUISmartPanelRegister PROC PUBLIC
         mov wc.hIconSm, 0
         mov wc.lpszMenuName, NULL
         mov wc.hbrBackground, NULL
-        mov wc.style, NULL
+        mov wc.style,  NULL
         mov wc.cbClsExtra, 0
         mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
         Invoke RegisterClassEx, addr wc
@@ -232,6 +235,15 @@ _MUI_SmartPanelWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         mov eax, 0
         ret
     
+;    .ELSEIF eax == WM_ERASEBKGND
+;        mov eax, 1
+;        ret
+;
+;    .ELSEIF eax == WM_PAINT
+;        Invoke _MUI_SmartPanelPaint, hWin
+;        mov eax, 0
+;        ret
+    
     ; custom messages start here
     
     .ELSEIF eax == MUI_GETPROPERTY
@@ -281,9 +293,18 @@ _MUI_SmartPanelWndProc ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_SmartPanelInit - set initial default values
 ;-------------------------------------------------------------------------------------
-_MUI_SmartPanelInit PROC PRIVATE hControl:DWORD
+_MUI_SmartPanelInit PROC USES EBX hControl:DWORD 
     LOCAL dwStyle:DWORD
     LOCAL dwExStyle:DWORD
+    LOCAL hParent:DWORD
+    LOCAL hdc:DWORD
+    LOCAL hDCMem:DWORD
+    LOCAL hBitmap:DWORD
+    LOCAL hOldBitmap:DWORD
+    LOCAL dwWidth:DWORD
+    LOCAL dwHeight:DWORD
+    LOCAL rect:RECT
+    LOCAL pt:POINT
     
     ; get style and check it is our default at least
     Invoke GetWindowLong, hControl, GWL_STYLE
@@ -313,6 +334,58 @@ _MUI_SmartPanelInit PROC PRIVATE hControl:DWORD
     Invoke MUISetIntProperty, hControl, @SmartPanelPanelsArray, 0
     Invoke MUISetIntProperty, hControl, @SmartPanellpdwIsDlgMsgVar, 0
     Invoke MUISetExtProperty, hControl, @SmartPanelDllInstance, 0
+    
+;    Invoke MUIGetParentBackgroundColor, hControl
+;    .IF eax == -1
+;    
+;        PrintText 'Get parent background'
+;    
+;        Invoke GetParent, hControl
+;        mov hParent, eax
+;        
+;        Invoke GetDC, hParent
+;        mov hdc, eax
+;    
+;        Invoke CreateCompatibleDC, hdc
+;        mov hDCMem, eax        
+;        
+;        Invoke GetWindowRect, hControl, Addr rect
+;        mov eax, rect.right
+;        mov ebx, rect.left
+;        sub eax, ebx
+;        mov dwWidth, eax
+;        
+;        mov eax, rect.bottom
+;        mov ebx, rect.top
+;        sub eax, ebx
+;        mov dwHeight, eax
+;        
+;        Invoke CreateCompatibleBitmap, hdc, dwWidth, dwHeight
+;        mov hBitmap, eax
+;        
+;        Invoke SelectObject, hDCMem, hBitmap
+;        mov hOldBitmap, eax        
+;        
+;        mov eax, rect.left
+;        mov pt.x, eax
+;        mov eax, rect.top
+;        mov pt.y, eax
+;        
+;        Invoke ScreenToClient, hParent, Addr pt
+;        
+;        Invoke BitBlt, hDCMem, 0, 0, dwWidth, dwHeight, hdc, pt.x, pt.y, SRCCOPY
+;        
+;        Invoke SelectObject, hDCMem, hOldBitmap
+;    
+;        Invoke DeleteDC, hDCMem        
+;        
+;        Invoke ReleaseDC, hParent, hdc
+;        PrintDec hBitmap
+;        Invoke MUISetIntProperty, hControl, @SmartPanelBitmap, hBitmap
+;        
+;    .ENDIF
+    
+    
     ret
 
 _MUI_SmartPanelInit ENDP
@@ -339,6 +412,51 @@ _MUI_SmartPanelCleanup PROC PRIVATE hControl:DWORD
     ret
 
 _MUI_SmartPanelCleanup ENDP
+
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_SmartPanelPaint - 
+;-------------------------------------------------------------------------------------
+_MUI_SmartPanelPaint PROC hWin:DWORD
+    LOCAL ps:PAINTSTRUCT 
+    LOCAL rect:RECT
+    LOCAL hdc:HDC
+    LOCAL hdcMem:DWORD
+    LOCAL hBitmap:DWORD
+    LOCAL hbmOld:DWORD
+
+    Invoke BeginPaint, hWin, Addr ps
+    mov hdc, eax
+
+    Invoke MUIGetIntProperty, hWin, @SmartPanelBitmap
+    mov hBitmap, eax
+    
+    .IF eax != 0
+
+        Invoke GetClientRect, hWin, Addr rect
+
+        Invoke CreateCompatibleDC, hdc
+        mov hdcMem, eax
+        Invoke SelectObject, hdcMem, hBitmap
+        mov hbmOld, eax
+
+        Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+
+        Invoke SelectObject, hdcMem, hbmOld
+        Invoke DeleteDC, hdcMem
+        .IF hbmOld != 0
+            Invoke DeleteObject, hbmOld
+        .ENDIF
+
+    .ENDIF
+
+    Invoke EndPaint, hWin, Addr ps
+    ret
+
+_MUI_SmartPanelPaint ENDP
+
+
 
 
 

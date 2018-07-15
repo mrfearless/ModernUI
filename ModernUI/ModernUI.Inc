@@ -46,6 +46,7 @@ MUICenterWindow                 PROTO :DWORD, :DWORD                   ; hWndChi
 MUIPaintBackground              PROTO :DWORD, :DWORD, :DWORD           ; hDialogWindow, dwBackColor, dwBorderColor
 MUIPaintBackgroundImage         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hDialogWindow, dwBackColor, dwBorderColor, hImage, dwImageType, dwImageLocation
 MUIGetParentBackgroundColor     PROTO :DWORD                           ; hControl
+MUIGetParentBackgroundBitmap    PROTO :DWORD                           ; hControl
 MUIGetImageSize                 PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hImage, dwImageType, lpdwImageWidth, lpdwImageHeight
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
