@@ -21,7 +21,7 @@ start:
     
     ; To be able to use the RadASM custom control on the main dialog resource
     ; MUICaptionBar.dlg - we have to call this function to register our 
-    ; caption bar control. Then we enter 'ModernUICaptionBar' as our class
+    ; caption bar control. Then we enter 'ModernUI_CaptionBar' as our class
     ; in the RadASM custom control. The control is thus created automatically
     ; for us when the dialog is instantiated.
     

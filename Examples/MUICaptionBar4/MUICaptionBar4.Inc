@@ -23,7 +23,7 @@ includelib ModernUI_CaptionBar.lib
 
 
 ;-----------------------------------------------------------------------------------------
-; MUICaptionBar Prototypes
+; MUICaptionBar4 Prototypes
 ;-----------------------------------------------------------------------------------------
 WinMain                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
@@ -31,7 +31,7 @@ WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 
 .CONST
 ;-----------------------------------------------------------------------------------------
-; MUICaptionBar Constants
+; MUICaptionBar4 Constants
 ;-----------------------------------------------------------------------------------------
 ; Main Dialog
 IDD_DIALOG              EQU 1000
@@ -50,11 +50,11 @@ ICO_CLOSE               EQU 104
 
 .DATA
 ;-----------------------------------------------------------------------------------------
-; MUICaptionBar Initialized Data
+; MUICaptionBar4 Initialized Data
 ;-----------------------------------------------------------------------------------------
 ClassName               DB 'DLGCLASS',0
-AppName                 DB 'MUICaptionBar Example #4',0
-AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
+AppName                 DB 'MUICaptionBar4',0
+AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2017',0
 
 
 
@@ -62,7 +62,7 @@ AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016
 
 .DATA?
 ;-----------------------------------------------------------------------------------------
-; MUICaptionBar Uninitialized Data
+; MUICaptionBar4 Uninitialized Data
 ;-----------------------------------------------------------------------------------------
 icc                     INITCOMMONCONTROLSEX <>
 hInstance               DD ?

@@ -21,7 +21,7 @@ start:
     
     ; To be able to use the RadASM custom control on the main dialog resource
     ; MUICaptionBar.dlg - we have to call this function to register our 
-    ; caption bar control. Then we enter 'ModernUICaptionBar' as our class
+    ; caption bar control. Then we enter 'ModernUI_CaptionBar' as our class
     ; in the RadASM custom control. The control is thus created automatically
     ; for us when the dialog is instantiated.
     
@@ -81,7 +81,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         
         ; Applies the ModernUI base style to the dialog, turning it into a borderless, caption less form
         ; we set our own caption and system buttons with the ModernUI_CaptionBar control
-        Invoke MUIApplyToDialog, hWin, TRUE
+        Invoke MUIApplyToDialog, hWin, TRUE, TRUE
         
         ; Get CaptionBar control handle from resource id and save handle
         Invoke GetDlgItem, hWin, IDC_CAPTIONBAR
@@ -146,7 +146,7 @@ SomeOtherDlgProc PROC hWin:HWND, iMsg:UINT, wParam:WPARAM, lParam:LPARAM
         
         ; However, if we do wish to add the dropshadow effect to the dialog we can do so with MUIApplyToDialog 
         ; (the 2nd param if TRUE will enable the CS_DROPSHADOW style on the dialog)
-        Invoke MUIApplyToDialog, hWin, TRUE
+        Invoke MUIApplyToDialog, hWin, TRUE, TRUE
         
         ; Get CaptionBar control handle from resource id and save handle
         Invoke GetDlgItem, hWin, IDC_SOMEOTHERCAPTIONBAR

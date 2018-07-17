@@ -90,7 +90,7 @@ szTrayMenuExit          DB "Exit",0
 ;
 ;                          Menu Text Var       Menu ID         Menu State  Notes
 ;                          __________________  ______________  __________  ____________________________
-MUITRAYMENU TrayMenu1
+MUITRAYMENU TrayMenu1                                                      ; Variable for this Menu
     MUITRAYMENU_ITEM       szTest0,            IDM_TEST0,      ENABLED     ; Test 0
     MUITRAYMENU_ITEM       ------------------                              ; Seperator
     MUITRAYMENU_ITEM       szTest1,            IDM_TEST1,      ENABLED     ; Test 1

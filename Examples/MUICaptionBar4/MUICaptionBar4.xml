@@ -8,7 +8,7 @@
         name="Company.Product.Application"
         type="Win32"
     />
-    <description>MUICaptionBar1</description>
+    <description>MUICaptionBar4</description>
     <dependency>
         <dependentAssembly>
             <assemblyIdentity

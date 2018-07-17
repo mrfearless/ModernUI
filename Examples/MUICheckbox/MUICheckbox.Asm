@@ -91,7 +91,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; Applies the ModernUI base style to the dialog, turning it into a borderless, caption less form
         ; we set our own caption and system buttons with the ModernUI_CaptionBar control
-        Invoke MUIApplyToDialog, hWin, TRUE
+        Invoke MUIApplyToDialog, hWin, TRUE, TRUE
         
         ; Create CaptionBar control and save handle
         Invoke MUICaptionBarCreate, hWin, Addr AppName, 32, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
