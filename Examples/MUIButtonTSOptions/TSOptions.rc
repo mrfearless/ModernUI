@@ -1,0 +1,4 @@
+#include "Res/TSOptionsMnu.rc"
+#include "Res/TSOptionsVer.rc"
+#include "Res/TSOptionsDlg.rc"
+#include "Res/TSOptionsRes.rc"

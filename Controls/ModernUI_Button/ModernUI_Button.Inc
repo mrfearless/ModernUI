@@ -379,7 +379,20 @@ MUI_MENUITEM_DARK_THEME_BLANK_2 DD 0                                            
 MUI_TEXT_DOS_PROMPT             TEXTEQU <MUI_MENUITEM_DARK_THEME_BLANK_2>
 
 
-
+MUI_BUTTON_TEAMSPEAK            DD 0                                                    ; Font 
+                                DD 0, 0, 0, 0, 05C5C5Ch                                 ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
+                                DD 0FFFFFFh, 0FFFAF5h, 0FFECDCh, 0FDE4D0h, 08C8C8Ch     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD 0FFFFFFh, 0FCD7B9h, 0DDAC84h, 0CEA27Dh, 08C8C8Ch     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
+                                DD MUIBBS_ALL                                           ; BorderStyle
+                                DD 0, 0, 0, 0                                           ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
+                                DD MUIBAS_NONE, MUIBAS_NONE, MUIBAS_NONE, MUIBAS_NONE   ; AccentStyle, AccentStyleAlt, AccentStyleSel, AccentStyleSelAlt
+                                DD MUIBIT_NONE                                          ; ImageType
+                                DD 0, 0, 0, 0, 0                                        ; Image, ImageAlt, ImageSel, ImageSelAlt, ImageDisabled
+                                DD 0, 0, 0, 0, 0                                        ; RightImage, RightImageAlt, RightImageSel, RightImageSelAlt, RightImageDisabled
+                                DD 0, 0, 0, 4, MUIBIT_NONE, 0                           ; NotifyTextFont, NotifyTextColor, NotifyBackColor, NotifyRound, NotifyImageType, NotifyImage
+                                DD 0, 0, 0                                              ; NoteTextFont, NoteTextColor, NoteTextColorDisabled
+                                DD 0, 4, MUIBPS_ALL, 8                                  ; PaddingLeftIndent, PaddingGeneral, PaddingStyle, PaddingTextImage
+                                DD 0    
 
 
 
