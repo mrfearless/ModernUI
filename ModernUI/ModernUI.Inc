@@ -59,7 +59,10 @@ MUIAllocMemProperties           PROTO :DWORD, :DWORD, :DWORD           ; hContro
 MUIFreeMemProperties            PROTO :DWORD, :DWORD                   ; hControl, cbWndExtraOffset
 
 MUIAllocStructureMemory         PROTO :DWORD, :DWORD, :DWORD           ; dwPtrStructMem, TotalItems, ItemSize
+
 MUICreateIconFromMemory         PROTO :DWORD, :DWORD                   ; pIconData, iIcon
+MUICreateCursorFromMemory       PROTO :DWORD                           ; pCursorData
+MUICreateBitmapFromMemory       PROTO :DWORD                           ; pBitmapData
 
 MUILoadRegionFromResource       PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hInstance, idRgnRes, lpRegion, lpdwSizeRegion
 MUISetRegionFromResource        PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hWin, idRgnRes, lpdwCopyRgn, bRedraw

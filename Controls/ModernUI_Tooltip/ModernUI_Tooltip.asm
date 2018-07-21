@@ -105,6 +105,9 @@ szMUITooltipText                DB 2048 DUP (0)             ; buffer for text (g
 dwFadeInAlphaLevel              DD 0                        ; alpha level (global)
 
 .CODE
+
+align 4
+
 ;-------------------------------------------------------------------------------------
 ; Set property for ModernUI_Tooltip control
 ;-------------------------------------------------------------------------------------

@@ -91,6 +91,9 @@ szMUIIconClass					DB 'ModernUI_Icon',0 	; Class name for creating our ModernUI_
 
 
 .CODE
+
+align 4
+
 ;-------------------------------------------------------------------------------------
 ; Set property for ModernUI_Icon control
 ;-------------------------------------------------------------------------------------

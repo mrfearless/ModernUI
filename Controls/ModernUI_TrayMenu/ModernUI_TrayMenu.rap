@@ -62,7 +62,7 @@ AutoLoad=2,1
 2=
 1=
 [VersionControl]
-Settings=1279
+Settings=1278
 Milestones=129
 MilestoneEvery=10
 MilestoneEveryCurrent=0
@@ -71,7 +71,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=16
+MilestoneOnDateDate=21
 MilestoneOnDateTimeYear=2017
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=16
@@ -95,12 +95,12 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=33638696
+PTimer=34740953
 [Collapse]
-1=4259858,18560,269493312,27263522,84017218,
+1=4276304,2115714,269485122,27263522,84017218,
 2=
 [Size]
-1=0,0,0,0,7683
+1=0,0,0,0,5280
 2=0,0,0,0,7960
 [GroupExpand]
 GroupExpand=1,0,0,0,0,0
@@ -118,6 +118,8 @@ GroupExpand=1,0,0,0,0,0
 [BreakPoint]
 0=
 [Find]
-1="_MUI_TM_RestoreFromTray"
-2="WM_INITSUBCLASS"
-3="MUITrayMenuSetTrayIconText"
+1="szMUITrayIconDisplayDC"
+2="CreateDC"
+3="_MUI_TM_RestoreFromTray"
+4="WM_INITSUBCLASS"
+5="MUITrayMenuSetTrayIconText"

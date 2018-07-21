@@ -122,6 +122,9 @@ szMUIDesktopFaceClass					DB 'ModernUI_DesktopFace',0 	; Class name for creating
 DFNM                                    MUIDF_NOTIFY <>
 
 .CODE
+
+align 4
+
 ;-------------------------------------------------------------------------------------
 ; Set property for ModernUI_DesktopFace control
 ;-------------------------------------------------------------------------------------
