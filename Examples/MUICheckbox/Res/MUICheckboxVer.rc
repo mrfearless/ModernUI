@@ -1,7 +1,7 @@
 #define VERINF1 1
 VERINF1 VERSIONINFO
-FILEVERSION 0,0,4,1
-PRODUCTVERSION 0,0,4,1
+FILEVERSION 0,0,4,4
+PRODUCTVERSION 0,0,4,4
 FILEOS 0x00000004
 FILETYPE 0x00000001
 BEGIN
@@ -9,12 +9,12 @@ BEGIN
   BEGIN
     BLOCK "040904B0"
     BEGIN
-      VALUE "FileVersion", "0.0.4.1\0"
+      VALUE "FileVersion", "0.0.4.4\0"
       VALUE "FileDescription", "MUICheckbox Example #1\0"
       VALUE "InternalName", "MUICheckbox1\0"
       VALUE "OriginalFilename", "MUICheckbox1\0"
       VALUE "ProductName", "MUICheckbox1\0"
-      VALUE "ProductVersion", "0.0.4.1\0"
+      VALUE "ProductVersion", "0.0.4.4\0"
     END
   END
   BLOCK "VarFileInfo"

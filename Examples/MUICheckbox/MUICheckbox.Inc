@@ -67,7 +67,7 @@ IDM_HELP_ABOUT          EQU 10101
 ;-----------------------------------------------------------------------------------------
 ClassName               DB 'DLGCLASS',0
 AppName                 DB 'MUICheckbox Example #1',0
-AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
+AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2018',0
 szCheckbox1Text         DB 'Checkbox option 1',0
 szCheckbox2Text         DB 'Checkbox option 2',0
 szCheckbox3Text         DB 'Checkbox option 3',0
