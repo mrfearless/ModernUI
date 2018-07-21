@@ -1,0 +1,4 @@
+#include "Res/RB1Mnu.rc"
+#include "Res/RB1Ver.rc"
+#include "Res/RB1Dlg.rc"
+#include "Res/RB1Res.rc"

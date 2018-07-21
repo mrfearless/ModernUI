@@ -1,0 +1,3 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "RB1.xml"
+200						BITMAP    DISCARDABLE "water600x600lighter2.bmp"
