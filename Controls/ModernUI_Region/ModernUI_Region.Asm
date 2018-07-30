@@ -278,7 +278,7 @@ _MUI_RegionButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
 
     .ELSEIF eax == WM_KEYDOWN
         Invoke GetWindowLong, hWin, GWL_STYLE
-        and eax, MUIRB_MOVE ; check if the SBBS_HAND style flag was specified
+        and eax, MUIRB_MOVE ; check if the MUIRB_MOVE style flag was specified
         .IF eax == MUIRB_MOVE
             Invoke GetParent, hWin
             mov hParent, eax
