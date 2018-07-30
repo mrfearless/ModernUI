@@ -369,9 +369,9 @@ _MUI_TextInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @TextColorDisabled, MUI_RGBCOLOR(204,204,204)
     
     Invoke MUIGetParentBackgroundColor, hControl
-    ;.IF eax == -1 ; if background was NULL then try a color as default
-    ;    Invoke GetSysColor, COLOR_WINDOW
-    ;.ENDIF
+    .IF eax == -1 ; if background was NULL then try a color as default
+        Invoke GetSysColor, COLOR_WINDOW
+    .ENDIF
     Invoke MUISetExtProperty, hControl, @TextBackColor, eax ;MUI_RGBCOLOR(255,255,255)   
     ;Invoke MUISetExtProperty, hControl, @TextBackColor, MUI_RGBCOLOR(255,255,255)
     Invoke MUISetExtProperty, hControl, @TextBackColorAlt, eax ;MUI_RGBCOLOR(255,255,255)
