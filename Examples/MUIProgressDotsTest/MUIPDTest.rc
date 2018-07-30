@@ -1,0 +1,3 @@
+#include "Res/MUIPDTestVer.rc"
+#include "Res/MUIPDTestDlg.rc"
+#include "Res/MUIPDTestRes.rc"
