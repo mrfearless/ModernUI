@@ -63,8 +63,8 @@ AutoLoad=2,1
 5=
 4=
 3=
-2=0,0,0,0,3428
-1=0,0,0,0,54185
+2=0,0,0,0,2971
+1=0,0,0,0,11217
 [RADebugBP]
 1=
 2=
@@ -78,7 +78,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=21
+MilestoneOnDateDate=30
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=16
@@ -102,7 +102,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=85300656
+PTimer=93485139
 [Collapse]
 2=
 1=,,,
@@ -122,8 +122,9 @@ GroupExpand=1,0
 [BreakPoint]
 0=
 [Find]
-1="dwClipping"
-2="MUICreateIconFromMemory"
-3="mov eax, hBitmap"
-4="ptrRegionData"
-5="MUI_INTERNAL_PROPERTIES"
+1="_MUISetProperty"
+2="dwClipping"
+3="MUICreateIconFromMemory"
+4="mov eax, hBitmap"
+5="ptrRegionData"
+6="MUI_INTERNAL_PROPERTIES"
