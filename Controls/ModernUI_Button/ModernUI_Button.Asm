@@ -2219,6 +2219,15 @@ _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnable
                 mov hOldBrush, eax
                 Invoke SetDCBrushColor, hdc, BorderColor
                 Invoke FrameRect, hdc, lpRect, hBrush
+                
+                .IF hOldBrush != 0
+                    Invoke SelectObject, hdc, hOldBrush
+                    Invoke DeleteObject, hOldBrush
+                .ENDIF     
+                .IF hBrush != 0
+                    Invoke DeleteObject, hBrush
+                .ENDIF                
+                
             .ELSE
                 Invoke CreatePen, PS_SOLID, 1, BorderColor
                 mov hPen, eax
@@ -2268,13 +2277,7 @@ _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnable
         .ENDIF
     .ENDIF
 
-;    .IF hOldBrush != 0
-;        Invoke SelectObject, hdc, hOldBrush
-;        Invoke DeleteObject, hOldBrush
-;    .ENDIF     
-;    .IF hBrush != 0
-;        Invoke DeleteObject, hBrush
-;    .ENDIF
+
 ;    .IF hOldPen != 0
 ;        Invoke SelectObject, hdc, hOldPen
 ;        Invoke DeleteObject, hOldPen
