@@ -18,6 +18,8 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
+;MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
+
 ;DEBUG32 EQU 1
 ;
 ;IFDEF DEBUG32
@@ -29,25 +31,36 @@ include \masm32\macros\macros.asm
 ;ENDIF
 
 include windows.inc
-include user32.inc
 include kernel32.inc
+include user32.inc
 include gdi32.inc
 include comctl32.inc
+
+IFDEF MUI_USEGDIPLUS
+include gdiplus.inc
+include ole32.inc
+ENDIF
+
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
 includelib comctl32.lib
+
+IFDEF MUI_USEGDIPLUS
+includelib gdiplus.lib
+includelib ole32.lib
+ENDIF
 
 include ModernUI.inc
 includelib ModernUI.lib
 
 include ModernUI_CaptionBar.inc
 
-IFNDEF LIBEND
-    LIBEND TEXTEQU <END>
-ELSE
-    LIBEND TEXTEQU <>
-ENDIF
+;IFNDEF LIBEND
+;    LIBEND TEXTEQU <END>
+;ELSE
+;    LIBEND TEXTEQU <>
+;ENDIF
 
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -57,10 +70,16 @@ ENDIF
 
 _MUI_CaptionBarWndProc                      PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CaptionBarInit                         PROTO :DWORD
+_MUI_CaptionBarCleanup                      PROTO :DWORD
 _MUI_CaptionBarPaint                        PROTO :DWORD
+_MUI_CaptionBarPaintBackground              PROTO :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarPaintImage                   PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CaptionBarReposition                   PROTO :DWORD
 _MUI_CaptionBarParentSubClassProc           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CaptionBarSetSysButtonProperty         PROTO :DWORD, :DWORD, :DWORD
+
+_MUI_CaptionBarBackLoadBitmap               PROTO :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarBackLoadIcon                 PROTO :DWORD, :DWORD, :DWORD
 
 _MUI_CreateCaptionBarSysButtons             PROTO :DWORD, :DWORD
 _MUI_CreateSysButton                        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -80,6 +99,8 @@ MUI_CAPTIONBAR_PROPERTIES                   STRUCT
     dwTextColor                             DD ?
     dwTextFont                              DD ?
     dwBackColor                             DD ?
+    dwBackImageType                         DD ?
+    dwBackImage                             DD ?
     dwSysButtonTextRollColor                DD ?
     dwSysButtonBackRollColor                DD ?
     dwSysButtonsWidth                       DD ? ; defaults to 32
@@ -93,6 +114,7 @@ MUI_CAPTIONBAR_PROPERTIES                   STRUCT
     dwBtnIcoClose                           DD ?
     dwBtnIcoCloseAlt                        DD ?
     dwDllInstance                           DD ?
+    dwCaptionBarParam                       DD ?
 MUI_CAPTIONBAR_PROPERTIES                   ENDS
 
 ; CaptionBar Internal Poperties
@@ -293,6 +315,7 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         ret    
 
     .ELSEIF eax == WM_NCDESTROY
+        Invoke _MUI_CaptionBarCleanup, hWin
         Invoke MUIFreeMemProperties, hWin, 0
         Invoke MUIFreeMemProperties, hWin, 4
 
@@ -576,6 +599,44 @@ _MUI_CaptionBarInit ENDP
 
 
 ;-------------------------------------------------------------------------------------
+; _MUI_CaptionBarCleanup - cleanup a few things before control is destroyed
+;-------------------------------------------------------------------------------------
+_MUI_CaptionBarCleanup PROC PRIVATE hControl:DWORD
+    LOCAL ImageType:DWORD
+    LOCAL hImage:DWORD
+
+    IFDEF DEBUG32
+    PrintText '_MUI_CaptionBarCleanup'
+    ENDIF
+
+    Invoke MUIGetExtProperty, hControl, @CaptionBarBackImageType
+    mov ImageType, eax
+
+    .IF ImageType == 0
+        ret
+    .ENDIF
+
+    Invoke MUIGetExtProperty, hControl, @CaptionBarBackImage
+    mov hImage, eax
+    .IF eax != 0
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        ;.ELSE
+        ;    IFDEF MUI_USEGDIPLUS
+        ;    Invoke GdipDisposeImage, eax
+        ;    ENDIF
+        .ENDIF
+    .ENDIF
+
+    IFDEF DEBUG32
+    PrintText '_MUI_CaptionBarCleanup::Notify Image Handles cleared'
+    ENDIF
+    ret
+
+_MUI_CaptionBarCleanup ENDP
+
+
+;-------------------------------------------------------------------------------------
 ; _MUI_CaptionBarPaint - main CaptionBar painting
 ;-------------------------------------------------------------------------------------
 _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
@@ -629,21 +690,27 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     ;----------------------------------------------------------
     ; Fill background
     ;----------------------------------------------------------
+    Invoke _MUI_CaptionBarPaintBackground, hWin, hdcMem, Addr rect
+
+    ;----------------------------------------------------------
+    ; Image (if any)
+    ;----------------------------------------------------------
+    Invoke _MUI_CaptionBarPaintImage, hWin, hdc, hdcMem, Addr rect
+
+    ;----------------------------------------------------------
+    ; Draw Text
+    ;----------------------------------------------------------
     Invoke SetBkMode, hdcMem, OPAQUE
     Invoke SetBkColor, hdcMem, BackColor
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
     Invoke SelectObject, hdcMem, eax
     Invoke SetDCBrushColor, hdcMem, BackColor
-    Invoke FillRect, hdcMem, Addr rect, hBrush
-
-
+    ;Invoke FillRect, hdcMem, Addr rect, hBrush
     mov eax, dwStyle
     and eax, MUICS_NOCAPTIONTITLETEXT
     .IF eax != MUICS_NOCAPTIONTITLETEXT
-        ;----------------------------------------------------------
-        ; Draw Text
-        ;----------------------------------------------------------
+
         Invoke SelectObject, hdcMem, hFont
         mov hOldFont, eax
         Invoke GetWindowText, hWin, Addr szText, sizeof szText
@@ -659,6 +726,7 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
             sub rect.left, 6d
         .ENDIF
     .ENDIF
+    
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
     ;----------------------------------------------------------
@@ -683,10 +751,119 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     .ENDIF
     
     Invoke EndPaint, hWin, Addr ps
-    
 
     ret
 _MUI_CaptionBarPaint ENDP
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_CaptionBarPaintBackground
+;-------------------------------------------------------------------------------------
+_MUI_CaptionBarPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
+    LOCAL BackColor:DWORD
+    LOCAL hBrush:DWORD
+    LOCAL hOldBrush:DWORD
+    
+    Invoke MUIGetExtProperty, hWin, @CaptionBarBackColor
+    mov BackColor, eax
+    
+    Invoke GetStockObject, DC_BRUSH
+    mov hBrush, eax
+    Invoke SelectObject, hdc, eax
+    mov hOldBrush, eax
+    Invoke SetDCBrushColor, hdc, BackColor
+    Invoke FillRect, hdc, lpRect, hBrush
+    
+    .IF hOldBrush != 0
+        Invoke SelectObject, hdc, hOldBrush
+        Invoke DeleteObject, hOldBrush
+    .ENDIF     
+    .IF hBrush != 0
+        Invoke DeleteObject, hBrush
+    .ENDIF      
+    ret
+_MUI_CaptionBarPaintBackground ENDP
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_CaptionBarPaintImage
+;-------------------------------------------------------------------------------------
+_MUI_CaptionBarPaintImage PROC PRIVATE hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD
+    LOCAL ImageType:DWORD
+    LOCAL hImage:DWORD
+    LOCAL hdcMem:HDC
+    LOCAL hbmOld:DWORD    
+    LOCAL pGraphics:DWORD
+    LOCAL pGraphicsBuffer:DWORD
+    LOCAL pBitmap:DWORD
+    LOCAL ImageWidth:DWORD
+    LOCAL ImageHeight:DWORD    
+    LOCAL rect:RECT
+    LOCAL pt:POINT
+    
+    Invoke MUIGetExtProperty, hWin, @CaptionBarBackImageType        
+    mov ImageType, eax ; 0 = none, 1 = bitmap, 2 = icon, 3 = png
+    
+    .IF ImageType == 0
+        ret
+    .ENDIF
+    
+    Invoke MUIGetExtProperty, hWin, @CaptionBarBackImage
+    mov hImage, eax    
+    
+    .IF hImage != 0
+    
+        Invoke CopyRect, Addr rect, lpRect
+        
+        Invoke MUIGetImageSize, hImage, ImageType, Addr ImageWidth, Addr ImageHeight
+
+        mov pt.x, 1
+        mov pt.y, 1
+        
+        mov eax, ImageType
+        .IF eax == MUICBIT_BMP ; bitmap
+            
+            Invoke CreateCompatibleDC, hdcMain
+            mov hdcMem, eax
+            Invoke SelectObject, hdcMem, hImage
+            mov hbmOld, eax
+    
+            Invoke BitBlt, hdcDest, pt.x, pt.y, ImageWidth, ImageHeight, hdcMem, 0, 0, SRCCOPY
+    
+            Invoke SelectObject, hdcMem, hbmOld
+            Invoke DeleteDC, hdcMem
+            .IF hbmOld != 0
+                Invoke DeleteObject, hbmOld
+            .ENDIF
+            
+        .ELSEIF eax == MUICBIT_ICO ; icon
+            Invoke DrawIconEx, hdcDest, pt.x, pt.y, hImage, 0, 0, 0, 0, DI_NORMAL
+        
+;        .ELSEIF eax == MUICBIT_PNG ; png
+;            IFDEF MUI_USEGDIPLUS
+;
+;            Invoke GdipCreateFromHDC, hdcDest, Addr pGraphics
+;            
+;            Invoke GdipCreateBitmapFromGraphics, ImageWidth, ImageHeight, pGraphics, Addr pBitmap
+;            Invoke GdipGetImageGraphicsContext, pBitmap, Addr pGraphicsBuffer            
+;            Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
+;            Invoke GdipDrawImageRectI, pGraphics, pBitmap, pt.x, pt.y, ImageWidth, ImageHeight
+;            .IF pBitmap != NULL
+;                Invoke GdipDisposeImage, pBitmap
+;            .ENDIF
+;            .IF pGraphicsBuffer != NULL
+;                Invoke GdipDeleteGraphics, pGraphicsBuffer
+;            .ENDIF
+;            .IF pGraphics != NULL
+;                Invoke GdipDeleteGraphics, pGraphics
+;            .ENDIF
+;            ENDIF
+        .ENDIF
+    
+    .ENDIF     
+
+    ret
+_MUI_CaptionBarPaintImage ENDP
 
 
 ;-------------------------------------------------------------------------------------
@@ -1723,9 +1900,100 @@ MUICaptionBarLoadIconsDll PROC PUBLIC hCaptionBar:DWORD, hInst:DWORD, idResMin:D
 MUICaptionBarLoadIconsDll ENDP
 
 
+;-------------------------------------------------------------------------------------
+; _MUI_CaptionBarBackLoadBitmap - if succesful, loads specified bitmap resource into the specified
+; external property and returns TRUE in eax, otherwise FALSE.
+;-------------------------------------------------------------------------------------
+_MUI_CaptionBarBackLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
+    LOCAL hinstance:DWORD
+
+    .IF idResBitmap == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+
+    Invoke MUIGetExtProperty, hWin, @CaptionBarDllInstance
+    .IF eax == 0
+        Invoke GetModuleHandle, NULL
+    .ENDIF
+    mov hinstance, eax
+
+    Invoke MUIGetExtProperty, hWin, dwProperty
+    .IF eax != 0 ; image handle already in use, delete object?
+        Invoke DeleteObject, eax
+    .ENDIF
+
+    Invoke LoadBitmap, hinstance, idResBitmap
+    Invoke MUISetExtProperty, hWin, dwProperty, eax
+    mov eax, TRUE
+
+    ret
+_MUI_CaptionBarBackLoadBitmap ENDP
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_CaptionBarBackLoadIcon - if succesful, loads specified icon resource into the specified
+; external property and returns TRUE in eax, otherwise FALSE.
+;-------------------------------------------------------------------------------------
+_MUI_CaptionBarBackLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
+    LOCAL hinstance:DWORD
+
+    .IF idResIcon == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+    Invoke MUIGetExtProperty, hWin, @CaptionBarDllInstance
+    .IF eax == 0
+        Invoke GetModuleHandle, NULL
+    .ENDIF
+    mov hinstance, eax
+
+    Invoke MUIGetExtProperty, hWin, dwProperty
+    .IF eax != 0 ; image icon handle already in use, delete object?
+        Invoke DeleteObject, eax
+    .ENDIF
+
+    Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0 ;LR_SHARED
+
+    Invoke MUISetExtProperty, hWin, dwProperty, eax
+
+    mov eax, TRUE
+    ret
+_MUI_CaptionBarBackLoadIcon ENDP
+
+
+;-------------------------------------------------------------------------------------
+; MUICaptionBarLoadBackImage - Loads images from resource ids and stores the handles in the
+; appropriate property.
+;-------------------------------------------------------------------------------------
+MUICaptionBarLoadBackImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD
+
+    .IF dwImageType == 0
+        ret
+    .ENDIF
+    
+    Invoke MUISetExtProperty, hControl, @CaptionBarBackImageType, dwImageType
+
+    .IF dwResIDImage != 0
+        mov eax, dwImageType
+        .IF eax == MUICBIT_BMP ; bitmap
+            Invoke _MUI_CaptionBarBackLoadBitmap, hControl, @CaptionBarBackImage, dwResIDImage
+        .ELSEIF eax == MUICBIT_ICO ; icon
+            Invoke _MUI_CaptionBarBackLoadIcon, hControl, @CaptionBarBackImage, dwResIDImage
+        ;.ELSEIF eax == MUICBIT_PNG ; png
+        ;    IFDEF MUI_USEGDIPLUS
+        ;    Invoke _MUI_ButtonLoadPng, hControl, @ButtonImage, dwResIDImage
+        ;    ENDIF
+        .ENDIF
+    .ENDIF
+
+    Invoke InvalidateRect, hControl, NULL, TRUE
+
+    ret
+MUICaptionBarLoadBackImage ENDP
 
 
 
 
-
-LIBEND
+END
+;LIBEND

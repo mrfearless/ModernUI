@@ -39,6 +39,8 @@ MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hC
 MUICaptionBarGetProperty    PROTO :DWORD, :DWORD                            ; hCaptionBar, dwProperty
 MUICaptionBarLoadIcons      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
 MUICaptionBarLoadIconsDll   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, hInstance, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
+MUICaptionBarLoadBackImage  PROTO :DWORD, :DWORD, :DWORD                    ; hCaptionBar, dwImageType, dwResIDImage
+
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Caption Structures
@@ -70,18 +72,25 @@ MUICS_NOCAPTIONTITLETEXT    EQU 400h ; Dont draw a title text value, use lpszCap
 @CaptionBarTextColor        EQU 0   ; Text color for caption text and system buttons (min/max/restore/close)
 @CaptionBarTextFont         EQU 4   ; Font for caption text
 @CaptionBarBackColor        EQU 8   ; Background color of caption and system buttons
-@CaptionBarBtnTxtRollColor  EQU 12  ; Text color for system buttons when mouse moves over button
-@CaptionBarBtnBckRollColor  EQU 16  ; Background color for system buttons when mouse moves over button
-@CaptionBarBtnWidth         EQU 20  ; System buttons width, defaults to 32px
-@CaptionBarBtnHeight        EQU 24  ; System buttons height, defaults to 24px
-@CaptionBarBtnIcoMin        EQU 28  ; hIcon for minimize button
-@CaptionBarBtnIcoMinAlt     EQU 32  ; hIcon for minimize button when mouse moves over button
-@CaptionBarBtnIcoMax        EQU 36  ; hIcon for maximize button
-@CaptionBarBtnIcoMaxAlt     EQU 40  ; hIcon for maximize button when mouse moves over button
-@CaptionBarBtnIcoRes        EQU 44  ; hIcon for restore button
-@CaptionBarBtnIcoResAlt     EQU 48  ; hIcon for restore button when mouse moves over button
-@CaptionBarBtnIcoClose      EQU 52  ; hIcon for close button
-@CaptionBarBtnIcoCloseAlt   EQU 56  ; hIcon for close button when mouse moves over button
-@CaptionBarDllInstance      EQU 60  ; hInstance for loading resources (icons) - normally set to 0 (current module) but when resources are in a dll set this before calling MUICaptionBarLoadIcons
+@CaptionBarBackImageType    EQU 12  ; Image Type - One of the following: MUICBIT_NONE,MUICBIT_BMP, MUICBIT_ICO, MUICBIT_PNG
+@CaptionBarBackImage        EQU 16  ; hImage
+@CaptionBarBtnTxtRollColor  EQU 20  ; Text color for system buttons when mouse moves over button
+@CaptionBarBtnBckRollColor  EQU 24  ; Background color for system buttons when mouse moves over button
+@CaptionBarBtnWidth         EQU 28  ; System buttons width, defaults to 32px
+@CaptionBarBtnHeight        EQU 32  ; System buttons height, defaults to 24px
+@CaptionBarBtnIcoMin        EQU 36  ; hIcon for minimize button
+@CaptionBarBtnIcoMinAlt     EQU 40  ; hIcon for minimize button when mouse moves over button
+@CaptionBarBtnIcoMax        EQU 44  ; hIcon for maximize button
+@CaptionBarBtnIcoMaxAlt     EQU 48  ; hIcon for maximize button when mouse moves over button
+@CaptionBarBtnIcoRes        EQU 52  ; hIcon for restore button
+@CaptionBarBtnIcoResAlt     EQU 56  ; hIcon for restore button when mouse moves over button
+@CaptionBarBtnIcoClose      EQU 60  ; hIcon for close button
+@CaptionBarBtnIcoCloseAlt   EQU 64  ; hIcon for close button when mouse moves over button
+@CaptionBarDllInstance      EQU 68  ; hInstance for loading resources (icons) - normally set to 0 (current module) but when resources are in a dll set this before calling MUICaptionBarLoadIcons
+@CaptionBarParam            EQU 72  ; Custom user data
 
-
+; CaptionBar Back Image Types
+MUICBIT_NONE                EQU 0
+MUICBIT_BMP                 EQU 1
+MUICBIT_ICO                 EQU 2
+MUICBIT_PNG                 EQU 3
