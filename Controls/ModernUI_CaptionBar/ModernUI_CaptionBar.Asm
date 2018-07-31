@@ -1626,9 +1626,7 @@ _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
     LOCAL dwStyle:DWORD
     LOCAL dwNewStyle:DWORD
     LOCAL dwClassStyle:DWORD
-    
-    Invoke SendMessage, hWin, WM_SETREDRAW, FALSE, 0
-    
+
     mov dwNewStyle, WS_POPUP
     
     Invoke GetWindowLong, hWin, GWL_STYLE
@@ -1701,7 +1699,7 @@ _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
     .ENDIF
     
     Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED
-    Invoke SendMessage, hWin, WM_SETREDRAW, TRUE, 0    
+ 
     
     ret
 
