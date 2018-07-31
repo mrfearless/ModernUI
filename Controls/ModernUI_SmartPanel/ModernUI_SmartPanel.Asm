@@ -417,7 +417,6 @@ _MUI_SmartPanelCleanup PROC PRIVATE hControl:DWORD
 _MUI_SmartPanelCleanup ENDP
 
 
-
 ;-------------------------------------------------------------------------------------
 ; _MUI_SmartPanelPaint - 
 ;-------------------------------------------------------------------------------------
@@ -458,9 +457,6 @@ _MUI_SmartPanelPaint PROC hWin:DWORD
     ret
 
 _MUI_SmartPanelPaint ENDP
-
-
-
 
 
 ;-------------------------------------------------------------------------------------
@@ -527,10 +523,11 @@ MUISmartPanelRegisterPanel endp
 
 
 ;-------------------------------------------------------------------------------------
-; MUISmartPanelGetCurrentPanel
+; MUISmartPanelGetCurrentPanel - Returns in eax the handle of the current panel or NULL
 ;-------------------------------------------------------------------------------------
 MUISmartPanelGetCurrentPanel PROC hControl:DWORD
-    Invoke MUIGetExtProperty, hControl, @SmartPanelCurrentPanel
+    Invoke MUIGetIntProperty, hControl, @SmartPanelCurrentPanel
+    Invoke _MUI_SmartPanelGetPanelHandle, hControl, eax
     ret
 MUISmartPanelGetCurrentPanel ENDP
 
@@ -724,47 +721,69 @@ _MUI_SmartPanelSlidePanels PROC PRIVATE USES EBX hControl:DWORD, OldSelection:DW
     LOCAL hCurrentPanel:DWORD
     LOCAL hNextPanel:DWORD
     LOCAL nPanel:DWORD
-   
-    mov eax, NewSelection
-    .IF eax < OldSelection ; moving down = left, so slide right till we get to it
-        
-        mov eax, OldSelection
-        mov nPanel, eax
-        .WHILE eax > NewSelection
+    LOCAL dwStyle:DWORD
     
-            Invoke _MUI_SmartPanelGetPanelHandle, hControl, nPanel
-            mov hCurrentPanel, eax
-            mov eax, nPanel
-            dec eax
-            Invoke _MUI_SmartPanelGetPanelHandle, hControl, eax
-            mov hNextPanel, eax
-            
+    Invoke GetWindowLong, hControl, GWL_STYLE
+    mov dwStyle, eax
+    and eax, MUISPS_SPS_SKIPBETWEEN
+    .IF eax == MUISPS_SPS_SKIPBETWEEN
+
+        Invoke _MUI_SmartPanelGetPanelHandle, hControl, OldSelection
+        mov hCurrentPanel, eax
+        
+        Invoke _MUI_SmartPanelGetPanelHandle, hControl, NewSelection
+        mov hNextPanel, eax
+
+        mov eax, NewSelection
+        .IF eax < OldSelection ; moving down = left, so slide right 
             Invoke _MUI_SmartPanelSlidePanelsRight, hControl, hCurrentPanel, hNextPanel, SlideSpeed
-            dec nPanel
-            mov eax, nPanel
-        .ENDW
-    
-    .ELSE ; moving up = right, so slide left till we get to it
-        
-        mov eax, OldSelection     
-        mov nPanel, eax
-        .WHILE eax < NewSelection
-    
-            Invoke _MUI_SmartPanelGetPanelHandle, hControl, nPanel
-            mov hCurrentPanel, eax
-            mov eax, nPanel
-            inc eax
-            Invoke _MUI_SmartPanelGetPanelHandle, hControl, eax
-            mov hNextPanel, eax
-            
+        .ELSE ; moving up = right, so slide left   
             Invoke _MUI_SmartPanelSlidePanelsLeft, hControl, hCurrentPanel, hNextPanel, SlideSpeed
-            inc nPanel
-            mov eax, nPanel
-        .ENDW
+        .ENDIF
+
+    .ELSE
+        
+        mov eax, NewSelection
+        .IF eax < OldSelection ; moving down = left, so slide right till we get to it
+            
+            mov eax, OldSelection
+            mov nPanel, eax
+            .WHILE eax > NewSelection
+        
+                Invoke _MUI_SmartPanelGetPanelHandle, hControl, nPanel
+                mov hCurrentPanel, eax
+                mov eax, nPanel
+                dec eax
+                Invoke _MUI_SmartPanelGetPanelHandle, hControl, eax
+                mov hNextPanel, eax
+                
+                Invoke _MUI_SmartPanelSlidePanelsRight, hControl, hCurrentPanel, hNextPanel, SlideSpeed
+                dec nPanel
+                mov eax, nPanel
+            .ENDW
+        
+        .ELSE ; moving up = right, so slide left till we get to it
+            
+            mov eax, OldSelection     
+            mov nPanel, eax
+            .WHILE eax < NewSelection
+        
+                Invoke _MUI_SmartPanelGetPanelHandle, hControl, nPanel
+                mov hCurrentPanel, eax
+                mov eax, nPanel
+                inc eax
+                Invoke _MUI_SmartPanelGetPanelHandle, hControl, eax
+                mov hNextPanel, eax
+                
+                Invoke _MUI_SmartPanelSlidePanelsLeft, hControl, hCurrentPanel, hNextPanel, SlideSpeed
+                inc nPanel
+                mov eax, nPanel
+            .ENDW
+            
+        .ENDIF
         
     .ENDIF
     ret
-
 _MUI_SmartPanelSlidePanels endp
 
 
@@ -1127,16 +1146,19 @@ MUISmartPanelSetIsDlgMsgVar PROC hControl:DWORD, lpdwIsDlgMsgVar:DWORD
 MUISmartPanelSetIsDlgMsgVar ENDP
 
 
-
-
 ;--------------------------------------------------------------------------------------------------------------------
-; _MUI_SmartPanelGetPanelHandle
+; _MUI_SmartPanelGetPanelHandle, returns in eax handle or NULL if error
 ;--------------------------------------------------------------------------------------------------------------------
 _MUI_SmartPanelGetPanelHandle PROC PRIVATE USES EBX hControl:DWORD, nItem:DWORD
     LOCAL TotalItems:DWORD
     LOCAL pItemData:DWORD
     LOCAL pItemDataEntry:DWORD
-
+    
+    .IF nItem == -1
+        mov eax, NULL
+        ret
+    .ENDIF
+    
     Invoke MUIGetIntProperty, hControl, @SmartPanelTotalPanels
     mov TotalItems, eax
     .IF TotalItems == 0
@@ -1160,7 +1182,13 @@ _MUI_SmartPanelGetPanelHandle PROC PRIVATE USES EBX hControl:DWORD, nItem:DWORD
 _MUI_SmartPanelGetPanelHandle endp
 
 
-
+;--------------------------------------------------------------------------------------------------------------------
+; MUISmartPanelCurrentPanelIndex - returns current selected panel as a numerical index in eax, or -1 if error.
+;--------------------------------------------------------------------------------------------------------------------
+MUISmartPanelCurrentPanelIndex PROC PUBLIC USES EBX hControl:DWORD
+    Invoke MUIGetIntProperty, hControl, @SmartPanelCurrentPanel
+    ret
+MUISmartPanelCurrentPanelIndex ENDP
 
 
 

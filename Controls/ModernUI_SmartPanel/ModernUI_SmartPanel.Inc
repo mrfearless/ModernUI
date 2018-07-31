@@ -38,8 +38,10 @@ MUISmartPanelCreate            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DW
 MUISmartPanelSetProperty       PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_SmartPanel, dwProperty, dwPropertyValue
 MUISmartPanelGetProperty       PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, dwProperty
 
-MUISmartPanelGetCurrentPanel   PROTO :DWORD                                                            ; hModernUI_SmartPanel
+MUISmartPanelGetCurrentPanel   PROTO :DWORD                                                            ; hModernUI_SmartPanel. Returns hDialog in eax.
 MUISmartPanelSetCurrentPanel   PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_SmartPanel, PanelIndex, bNotify
+MUISmartPanelCurrentPanelIndex PROTO :DWORD                                                            ; hModernUI_SmartPanel. Returns PanelIndex in eax
+
 MUISmartPanelNextPanel         PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, bNotify
 MUISmartPanelPrevPanel         PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, bNotify
 MUISmartPanelSetIsDlgMsgVar    PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, Addr lpdwVar
@@ -93,6 +95,8 @@ MUISPS_SLIDEPANELS_FAST         EQU 04h
 MUISPS_SLIDEPANELS_VFAST        EQU 08h
 MUISPS_SLIDEPANELS_INSTANT      EQU MUISPS_NORMAL
 MUISPS_SPS_WRAPAROUND           EQU 10h ; for next/prev and showcase, if at end, moves to the right and starts again, otherwise if not specified, at last panel, scrolls left all the way back to start showing all panels along the way.
+MUISPS_SPS_SKIPBETWEEN          EQU 20h ; skips any in between panels, just moves from one to another.
+
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_SmartPanel Properties: Use with MUIModernUI_SmartPanelSetProperty / MUIModernUI_SmartPanelGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
