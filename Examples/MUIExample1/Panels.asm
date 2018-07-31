@@ -135,9 +135,7 @@ Panel1Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
             Invoke SendMessage, hWnd, WM_CLOSE, 0, 0
         
         .ELSEIF eax == IDC_BTNCONFIRMNO
-            
-            PrintDec dwInstallStage
-            
+
             mov eax, dwInstallStage
             .IF eax == 0 ; before prep has finished
                 Invoke MUISmartPanelSetCurrentPanel, hMUISmartPanel, 1, FALSE ; 2nd dialog - prep install
@@ -329,7 +327,6 @@ Panel3Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         and eax,0FFFFh
 
         .IF eax == IDC_BTNCHOOSECANCEL
-            PrintDec dwInstallStage
             Invoke MUISmartPanelSetCurrentPanel, hMUISmartPanel, 0, FALSE
         .ELSEIF eax == IDC_BTNCHOOSENEXT
             mov dwInstallStage, 2
@@ -402,7 +399,8 @@ Panel4Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         mov eax,wParam
         and eax,0FFFFh
         
-        .IF eax == hMUIBtnFinish
+        .IF eax == IDC_BTNFINISH
+            mov dwInstallStage, 3
             Invoke SendMessage, hWnd, WM_CLOSE, 0, 0
         .ENDIF
 
@@ -430,4 +428,8 @@ Panel4Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
     ret
 
 Panel4Proc ENDP
+
+
+
+
 
