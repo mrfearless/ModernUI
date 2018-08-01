@@ -100,7 +100,10 @@ MUISPS_SPS_SKIPBETWEEN          EQU 20h ; skips any in between panels, just move
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_SmartPanel Properties: Use with MUIModernUI_SmartPanelSetProperty / MUIModernUI_SmartPanelGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
-@SmartPanelDllInstance          EQU 0
+@SmartPanelPanelsColor          EQU 0   ; RGBCOLOR for panel's background. -1 = ignore, use system default. Default value is -1
+@SmartPanelBorderColor          EQU 4   ; RGBCOLOR for border color of MUISmartPanel. -1 = none. Default value is -1
+@SmartPanelDllInstance          EQU 8   ; reserved for future use
+@SmartPanelParam                EQU 12  ; user custom data
 
 
 
