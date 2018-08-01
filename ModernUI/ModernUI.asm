@@ -286,6 +286,7 @@ MUIPointSizeToLogicalUnit PROC PUBLIC hWin:DWORD, dwPointSize:DWORD
     
     Invoke GetDC, hWin
     mov hdc, eax
+    Invoke SetMapMode, hdc, MM_TEXT
     Invoke GetDeviceCaps, hdc, LOGPIXELSY
     Invoke MulDiv, dwPointSize, eax, 72d
     neg eax
@@ -514,10 +515,15 @@ MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWOR
     LOCAL hbmMem:DWORD
     LOCAL hOldBitmap:DWORD
     LOCAL hBrush:DWORD
+    LOCAL hOldBrush:DWORD
 
-    invoke BeginPaint, hWin, addr ps
+    Invoke BeginPaint, hWin, addr ps
     mov hdc, eax
     Invoke GetClientRect, hWin, Addr rect
+    
+    ;----------------------------------------------------------
+    ; Setup Double Buffering
+    ;----------------------------------------------------------    
     Invoke CreateCompatibleDC, hdc
     mov hdcMem, eax
     Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
@@ -525,20 +531,35 @@ MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWOR
     Invoke SelectObject, hdcMem, hbmMem
     mov hOldBitmap, eax 
 
+    ;----------------------------------------------------------
+    ; Fill background
+    ;----------------------------------------------------------
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
     Invoke SelectObject, hdcMem, eax
+    mov hOldBrush, eax
     Invoke SetDCBrushColor, hdcMem, dwBackcolor
     Invoke FillRect, hdcMem, Addr rect, hBrush
 
+    ;----------------------------------------------------------
+    ; Draw border if !0
+    ;----------------------------------------------------------
     .IF dwBorderColor != 0
+        .IF hOldBrush != 0
+            Invoke SelectObject, hdcMem, hOldBrush
+            Invoke DeleteObject, hOldBrush
+        .ENDIF        
         Invoke GetStockObject, DC_BRUSH
         mov hBrush, eax
         Invoke SelectObject, hdcMem, eax
+        mov hOldBrush, eax
         Invoke SetDCBrushColor, hdcMem, dwBorderColor
         Invoke FrameRect, hdcMem, Addr rect, hBrush
     .ENDIF
     
+    ;----------------------------------------------------------
+    ; BitBlt from hdcMem back to hdc
+    ;----------------------------------------------------------
     Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
 
 ;    .IF dwBorderColor != 0
@@ -549,15 +570,24 @@ MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWOR
 ;        Invoke FrameRect, hdc, Addr rect, hBrush
 ;    .ENDIF
 
+    ;----------------------------------------------------------
+    ; Cleanup
+    ;----------------------------------------------------------
+    .IF hOldBrush != 0
+        Invoke SelectObject, hdcMem, hOldBrush
+        Invoke DeleteObject, hOldBrush
+    .ENDIF     
+    .IF hBrush != 0
+        Invoke DeleteObject, hBrush
+    .ENDIF
+
     Invoke SelectObject, hdcMem, hbmMem
     Invoke DeleteObject, hbmMem
     Invoke DeleteDC, hdcMem
     Invoke DeleteObject, hOldBitmap
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF
-    invoke ReleaseDC, hWin, hdc
-    invoke EndPaint, hWin, addr ps
+    Invoke ReleaseDC, hWin, hdc
+    
+    Invoke EndPaint, hWin, addr ps
     mov eax, 0
     ret
 
@@ -580,6 +610,7 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
     LOCAL hbmMemBmp:DWORD
     LOCAL hOldBitmap:DWORD
     LOCAL hBrush:DWORD
+    LOCAL hOldBrush:DWORD
     LOCAL ImageWidth:DWORD
     LOCAL ImageHeight:DWORD
     LOCAL pGraphics:DWORD
@@ -592,9 +623,13 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
         mov pBitmap, 0
     .ENDIF
     
-    invoke BeginPaint, hWin, addr ps
+    Invoke BeginPaint, hWin, addr ps
     mov hdc, eax
     Invoke GetClientRect, hWin, Addr rect
+    
+    ;----------------------------------------------------------
+    ; Setup Double Buffering
+    ;----------------------------------------------------------      
     Invoke CreateCompatibleDC, hdc
     mov hdcMem, eax
     Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
@@ -602,16 +637,28 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
     Invoke SelectObject, hdcMem, hbmMem
     mov hOldBitmap, eax 
 
+    ;----------------------------------------------------------
+    ; Fill background
+    ;----------------------------------------------------------
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
     Invoke SelectObject, hdcMem, eax
+    mov hOldBrush, eax
     Invoke SetDCBrushColor, hdcMem, dwBackcolor
     Invoke FillRect, hdcMem, Addr rect, hBrush
 
+    ;----------------------------------------------------------
+    ; Draw border if !0
+    ;----------------------------------------------------------
     .IF dwBorderColor != 0
+        .IF hOldBrush != 0
+            Invoke SelectObject, hdcMem, hOldBrush
+            Invoke DeleteObject, hOldBrush
+        .ENDIF    
         Invoke GetStockObject, DC_BRUSH
         mov hBrush, eax
         Invoke SelectObject, hdcMem, eax
+        mov hOldBrush, eax
         Invoke SetDCBrushColor, hdcMem, dwBorderColor
         Invoke FrameRect, hdcMem, Addr rect, hBrush
     .ENDIF
@@ -749,17 +796,28 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
         .ENDIF
         
     .ENDIF
-    
+
+    ;----------------------------------------------------------
+    ; BitBlt from hdcMem back to hdc
+    ;----------------------------------------------------------
     Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
 
+    ;----------------------------------------------------------
+    ; Cleanup
+    ;----------------------------------------------------------
+    .IF hOldBrush != 0
+        Invoke SelectObject, hdcMem, hOldBrush
+        Invoke DeleteObject, hOldBrush
+    .ENDIF     
+    .IF hBrush != 0
+        Invoke DeleteObject, hBrush
+    .ENDIF
     Invoke SelectObject, hdcMem, hbmMem
     Invoke DeleteObject, hbmMem
     Invoke DeleteDC, hdcMem
     Invoke DeleteObject, hOldBitmap
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF
     invoke ReleaseDC, hWin, hdc
+    
     invoke EndPaint, hWin, addr ps
     mov eax, 0
     ret
