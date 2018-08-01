@@ -55,14 +55,14 @@ Menu=1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0
 17=0,0,"$E\x32dbg.exe",5
 [Resource]
 1=,1,8,MUIExample1.xml
-2=,100,2,Images\ModernUI.ico
+2=,100,2,Images\ra.ico
 3=,200,0,Images\RadasmStudio.bmp
 [StringTable]
 [VerInf]
-FV=0.2.3.9
-FileVersion=0.2.3.9
-PV=0.2.3.9
-ProductVersion=0.2.3.9
+FV=0.2.4.0
+FileVersion=0.2.4.0
+PV=0.2.4.0
+ProductVersion=0.2.4.0
 [Group]
 Group=Assembly,Resources,Misc
 1=1
@@ -86,7 +86,7 @@ AutoLoad=1,4,5
 Settings=1279
 Milestones=129
 MilestoneEvery=10
-MilestoneEveryCurrent=2
+MilestoneEveryCurrent=3
 MilestoneOnBuild=0.0.0.0
 MilestoneOnTime=2
 MilestoneOnDate=0
@@ -116,7 +116,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=39042167
+PTimer=39130573
 [Collapse]
 1=4103
 2=
