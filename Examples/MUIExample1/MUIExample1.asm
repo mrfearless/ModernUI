@@ -168,12 +168,13 @@ InitGUI PROC hWin:DWORD
     ;-----------------------------------------------------------------------------------------------------
     ; ModernUI_CaptionBar
     ;-----------------------------------------------------------------------------------------------------      
-    Invoke MUICaptionBarCreate, hWin, Addr AppName, 50d, IDC_CAPTIONBAR, MUICS_NOCAPTIONTITLETEXT or MUICS_LEFT or MUICS_NOMAXBUTTON or MUICS_NOMINBUTTON or MUICS_WINNODROPSHADOW; or MUICS_NOCAPTIONTITLETEXT ;or MUICS_NOMAXBUTTON
+    Invoke MUICaptionBarCreate, hWin, Addr AppName, 50d, IDC_CAPTIONBAR, MUICS_NOCAPTIONTITLETEXT or MUICS_LEFT or MUICS_NOMAXBUTTON or MUICS_WINNODROPSHADOW; or MUICS_NOCAPTIONTITLETEXT ;or MUICS_NOMAXBUTTON
     mov hMUICaptionBar, eax
     Invoke MUICaptionBarSetProperty, hMUICaptionBar, @CaptionBarBackColor, MUI_RGBCOLOR(45,45,48)
     Invoke MUICaptionBarSetProperty, hMUICaptionBar, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(255,255,255)
     Invoke MUICaptionBarSetProperty, hMUICaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(66,66,68)
-    Invoke MUICaptionBarSetProperty, hMUICaptionBar, @CaptionBarBtnWidth, 36d
+    Invoke MUICaptionBarSetProperty, hMUICaptionBar, @CaptionBarBtnWidth, 28d
+    Invoke MUICaptionBarSetProperty, hMUICaptionBar, @CaptionBarBtnBorderRollColor, MUI_RGBCOLOR(56,163,254)
     Invoke MUICaptionBarLoadBackImage, hMUICaptionBar, MUICBIT_BMP, BMP_RSLOGO
 
 
