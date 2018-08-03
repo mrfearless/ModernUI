@@ -35,37 +35,41 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; PUBLIC ModernUI Prototypes for users of controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUIGetExtProperty               PROTO :DWORD, :DWORD                   ; hControl, dwProperty
-MUISetExtProperty               PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
-MUIGetIntProperty               PROTO :DWORD, :DWORD                   ; hControl, dwProperty
-MUISetIntProperty               PROTO :DWORD, :DWORD, :DWORD           ; hControl, dwProperty, dwPropertyValue
+MUIGetExtProperty               PROTO :DWORD,:DWORD                             ; hControl, dwProperty
+MUISetExtProperty               PROTO :DWORD,:DWORD,:DWORD                      ; hControl, dwProperty, dwPropertyValue
+MUIGetIntProperty               PROTO :DWORD,:DWORD                             ; hControl, dwProperty
+MUISetIntProperty               PROTO :DWORD,:DWORD,:DWORD                      ; hControl, dwProperty, dwPropertyValue
 
-MUIPointSizeToLogicalUnit       PROTO :DWORD, :DWORD                   ; hControl, dwPointSize
-MUIApplyToDialog                PROTO :DWORD, :DWORD, :DWORD           ; hDialogWindow, dwDropShadow (true to set drop shadow), dwClipping (true to set clipping on)
-MUICenterWindow                 PROTO :DWORD, :DWORD                   ; hWndChild, hWndParent
-MUIPaintBackground              PROTO :DWORD, :DWORD, :DWORD           ; hDialogWindow, dwBackColor, dwBorderColor
-MUIPaintBackgroundImage         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hDialogWindow, dwBackColor, dwBorderColor, hImage, dwImageType, dwImageLocation
-MUIGetParentBackgroundColor     PROTO :DWORD                           ; hControl
-MUIGetParentBackgroundBitmap    PROTO :DWORD                           ; hControl
-MUIGetImageSize                 PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hImage, dwImageType, lpdwImageWidth, lpdwImageHeight
+MUIPointSizeToLogicalUnit       PROTO :DWORD,:DWORD                             ; hControl, dwPointSize
+MUIApplyToDialog                PROTO :DWORD,:DWORD,:DWORD                      ; hDialogWindow, dwDropShadow (true to set drop shadow), dwClipping (true to set clipping on)
+MUICenterWindow                 PROTO :DWORD,:DWORD                             ; hWndChild, hWndParent
+
+MUIGDIDoubleBufferStart         PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hWin, hdcSource, lpHDCBuffer, lpClientRect, lpBufferBitmap, lpPreBufferBitamp
+MUIGDIDoubleBufferFinish        PROTO :DWORD,:DWORD,:DWORD                      ; hdcBuffer, hBufferBitmap, hPreBufferBitamp
+
+MUIPaintBackground              PROTO :DWORD,:DWORD,:DWORD                      ; hDialogWindow, dwBackColor, dwBorderColor
+MUIPaintBackgroundImage         PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hDialogWindow, dwBackColor, dwBorderColor, hImage, dwImageType, dwImageLocation
+MUIGetParentBackgroundColor     PROTO :DWORD                                    ; hControl
+MUIGetParentBackgroundBitmap    PROTO :DWORD                                    ; hControl
+MUIGetImageSize                 PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hImage, dwImageType, lpdwImageWidth, lpdwImageHeight
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; PRIVATE ModernUI Prototypes for control creators to use with their controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUIGDIPlusStart                 PROTO                                  ; Wrapper for GDIPlus startup
-MUIGDIPlusFinish                PROTO                                  ; Wrapper for GDIPlus shutdown
+MUIGDIPlusStart                 PROTO                                           ; Wrapper for GDIPlus startup
+MUIGDIPlusFinish                PROTO                                           ; Wrapper for GDIPlus shutdown
 
-MUIAllocMemProperties           PROTO :DWORD, :DWORD, :DWORD           ; hControl, cbWndExtraOffset, dwSizeToAllocate
-MUIFreeMemProperties            PROTO :DWORD, :DWORD                   ; hControl, cbWndExtraOffset
+MUIAllocMemProperties           PROTO :DWORD,:DWORD,:DWORD                      ; hControl, cbWndExtraOffset, dwSizeToAllocate
+MUIFreeMemProperties            PROTO :DWORD,:DWORD                             ; hControl, cbWndExtraOffset
 
-MUIAllocStructureMemory         PROTO :DWORD, :DWORD, :DWORD           ; dwPtrStructMem, TotalItems, ItemSize
+MUIAllocStructureMemory         PROTO :DWORD,:DWORD,:DWORD                      ; dwPtrStructMem, TotalItems, ItemSize
 
-MUICreateIconFromMemory         PROTO :DWORD, :DWORD                   ; pIconData, iIcon
-MUICreateCursorFromMemory       PROTO :DWORD                           ; pCursorData
-MUICreateBitmapFromMemory       PROTO :DWORD                           ; pBitmapData
+MUICreateIconFromMemory         PROTO :DWORD,:DWORD                             ; pIconData, iIcon
+MUICreateCursorFromMemory       PROTO :DWORD                                    ; pCursorData
+MUICreateBitmapFromMemory       PROTO :DWORD                                    ; pBitmapData
 
-MUILoadRegionFromResource       PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hInstance, idRgnRes, lpRegion, lpdwSizeRegion
-MUISetRegionFromResource        PROTO :DWORD, :DWORD, :DWORD, :DWORD   ; hWin, idRgnRes, lpdwCopyRgn, bRedraw
+MUILoadRegionFromResource       PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hInstance, idRgnRes, lpRegion, lpdwSizeRegion
+MUISetRegionFromResource        PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, idRgnRes, lpdwCopyRgn, bRedraw
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; LTLI ModernUI Structures
@@ -81,10 +85,10 @@ MUI_EXTERNAL_PROPERTIES         EQU 4
 
 
 ; ModernUI Custom Messages - each control should handle these
-MUI_GETPROPERTY                 EQU WM_USER + 1800                      ; wParam = dwProperty, lParam = NULL
-MUI_SETPROPERTY                 EQU WM_USER + 1799                      ; wParam = dwProperty, lParam = dwPropertyValue
-;MUI_GETTHEME                    EQU WM_USER + 1798                      ; wParam = NULL, lParam = NULL. Returns in eax lpMUITHEMEStructure
-;MUI_SETTHEME                    EQU WM_USER + 1797                      ; wParam = lpMUITHEMEStructure, lParam = NULL
+MUI_GETPROPERTY                 EQU WM_USER + 1800                              ; wParam = dwProperty, lParam = NULL
+MUI_SETPROPERTY                 EQU WM_USER + 1799                              ; wParam = dwProperty, lParam = dwPropertyValue
+;MUI_GETTHEME                   EQU WM_USER + 1798                              ; wParam = NULL, lParam = NULL. Returns in eax lpMUITHEMEStructure
+;MUI_SETTHEME                   EQU WM_USER + 1797                              ; wParam = lpMUITHEMEStructure, lParam = NULL
 
 
 ; Image Types

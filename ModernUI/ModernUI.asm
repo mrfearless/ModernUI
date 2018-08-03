@@ -165,7 +165,6 @@ ENDIF
 ; and some other offset for superclassed window control
 ;-------------------------------------------------------------------------------------
 _MUIGetProperty PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwProperty:DWORD
-    
     Invoke GetWindowLong, hControl, cbWndExtraOffset
     .IF eax == 0
         ret
@@ -173,9 +172,7 @@ _MUIGetProperty PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwP
     mov ebx, eax
     add ebx, dwProperty
     mov eax, [ebx]
-    
     ret
-
 _MUIGetProperty ENDP
 
 
@@ -196,7 +193,6 @@ _MUISetProperty PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwP
     mov [ebx], eax
     mov eax, dwPrevValue
     ret
-
 _MUISetProperty ENDP
 
 
@@ -490,6 +486,55 @@ MUICenterWindow PROC hWndChild:DWORD, hWndParent:DWORD
 MUICenterWindow ENDP
 
 
+;-------------------------------------------------------------------------------------
+; MUIGDIDoubleBufferStart - Starts double buffering. Used in a WM_PAINT event. 
+; Place after BeginPaint call
+;-------------------------------------------------------------------------------------
+MUIGDIDoubleBufferStart PROC USES EBX hWin:DWORD, hdcSource:HDC, lpHDCBuffer:DWORD, lpClientRect:DWORD, lpBufferBitmap:DWORD, lpPreBufferBitamp:DWORD
+    LOCAL hdcBuffer:DWORD
+    LOCAL hBitmap:DWORD
+
+    .IF lpHDCBuffer == 0 || lpClientRect == 0 || lpBufferBitmap == 0 || lpPreBufferBitamp == 0
+        mov eax, FALSE
+        ret
+    .ENDIF
+    Invoke GetClientRect, hWin, lpClientRect
+    Invoke CreateCompatibleDC, hdcSource
+    mov hdcBuffer, eax
+    mov ebx, lpHDCBuffer
+    mov [ebx], eax
+    mov ebx, lpClientRect
+    Invoke CreateCompatibleBitmap, hdcSource, [ebx].RECT.right, [ebx].RECT.bottom
+    mov hBitmap, eax
+    mov ebx, lpBufferBitmap
+    mov [ebx], eax
+    Invoke SelectObject, hdcBuffer, hBitmap
+    mov ebx, lpPreBufferBitamp
+    mov [ebx], eax
+    mov eax, TRUE
+    ret
+MUIGDIDoubleBufferStart ENDP
+
+
+;-------------------------------------------------------------------------------------
+; MUIGDIDoubleBufferFinish - Finishes double buffering - cleans up afterwards.
+; Used in a WM_PAINT event. Place before EndPaint call and after all Blt calls
+;-------------------------------------------------------------------------------------
+MUIGDIDoubleBufferFinish PROC hdcBuffer:HDC, hBufferBitmap:HBITMAP, hPreBufferBitamp:HBITMAP
+    .IF hBufferBitmap != 0
+        Invoke SelectObject, hdcBuffer, hBufferBitmap
+        Invoke DeleteObject, hBufferBitmap
+    .ENDIF
+    .IF hPreBufferBitamp != 0
+        Invoke SelectObject, hdcBuffer, hPreBufferBitamp
+        Invoke DeleteObject, hPreBufferBitamp
+    .ENDIF
+    .IF hdcBuffer != 0
+        Invoke DeleteDC, hdcBuffer
+    .ENDIF
+    ret
+MUIGDIDoubleBufferFinish ENDP
+
 
 
 ;-------------------------------------------------------------------------------------
@@ -580,13 +625,14 @@ MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWOR
     .IF hBrush != 0
         Invoke DeleteObject, hBrush
     .ENDIF
-
+    .IF hOldBitmap != 0
+        Invoke SelectObject, hdcMem, hOldBitmap
+        Invoke DeleteObject, hOldBitmap
+    .ENDIF
     Invoke SelectObject, hdcMem, hbmMem
     Invoke DeleteObject, hbmMem
     Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hOldBitmap
-    Invoke ReleaseDC, hWin, hdc
-    
+
     Invoke EndPaint, hWin, addr ps
     mov eax, 0
     ret
@@ -812,12 +858,14 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
     .IF hBrush != 0
         Invoke DeleteObject, hBrush
     .ENDIF
+    .IF hOldBitmap != 0
+        Invoke SelectObject, hdcMem, hOldBitmap
+        Invoke DeleteObject, hOldBitmap
+    .ENDIF
     Invoke SelectObject, hdcMem, hbmMem
     Invoke DeleteObject, hbmMem
     Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hOldBitmap
-    invoke ReleaseDC, hWin, hdc
-    
+
     invoke EndPaint, hWin, addr ps
     mov eax, 0
     ret
