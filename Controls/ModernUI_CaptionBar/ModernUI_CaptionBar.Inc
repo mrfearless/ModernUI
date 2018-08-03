@@ -53,41 +53,47 @@ MUICaptionBarLoadBackImage  PROTO :DWORD, :DWORD, :DWORD                    ; hC
 ;--------------------------------------------------------------------------------------------------------------------------------------
 
 ; CaptionBar Styles
-MUICS_LEFT                  EQU 0h   ; left align caption bar text
-MUICS_CENTER                EQU 1h   ; center align caption bar text
-MUICS_NOMINBUTTON           EQU 2h   ; no minimize button
-MUICS_NOMAXBUTTON           EQU 4h   ; no maximize/restore button
-MUICS_NOCLOSEBUTTON         EQU 8h   ; no close button
-MUICS_REDCLOSEBUTTON        EQU 10h  ; close button uses win8+ red background color
-MUICS_NOMOVEWINDOW          EQU 20h  ; Dont allow window to move when caption bar is clicked and dragged, if not specified will allow this.
-MUICS_WINNOMUISTYLE         EQU 40h  ; Dont apply MUI borderless frame style to window/dialog, if not specified will apply MUI style.
-MUICS_WINNODROPSHADOW       EQU 80h  ; Dont apply drop shadow to window/dialog. If not specified will apply dropshadow if MUICS_WINDOWNOMUISTYLE not specified.
-MUICS_USEICONSFORBUTTONS    EQU 100h ; Use icons instead of text for the min/max/res/close buttons: Load icons via the MUICaptionBarLoadIcons functions or set handles via @CaptionBarBtnIcoXXX properties
-MUICS_KEEPICONS             EQU 200h ; Dont delete icons handles when control is destoyed. Essential if icon handles are used in multiple controls or where set directly with properties 
-MUICS_NOCAPTIONTITLETEXT    EQU 400h ; Dont draw a title text value, use lpszCaptionText for taskbar name of app only.
+MUICS_LEFT                      EQU 0h   ; left align caption bar text
+MUICS_CENTER                    EQU 1h   ; center align caption bar text
+MUICS_NOMINBUTTON               EQU 2h   ; no minimize button
+MUICS_NOMAXBUTTON               EQU 4h   ; no maximize/restore button
+MUICS_NOCLOSEBUTTON             EQU 8h   ; no close button
+MUICS_REDCLOSEBUTTON            EQU 10h  ; close button uses win8+ red background color
+MUICS_NOMOVEWINDOW              EQU 20h  ; Dont allow window to move when caption bar is clicked and dragged, if not specified will allow this.
+MUICS_WINNOMUISTYLE             EQU 40h  ; Dont apply MUI borderless frame style to window/dialog, if not specified will apply MUI style.
+MUICS_WINNODROPSHADOW           EQU 80h  ; Dont apply drop shadow to window/dialog. If not specified will apply dropshadow if MUICS_WINDOWNOMUISTYLE not specified.
+MUICS_USEICONSFORBUTTONS        EQU 100h ; Use icons instead of text (Marlett font glyphs) for the min/max/res/close buttons: Load icons via the MUICaptionBarLoadIcons functions or set handles via @CaptionBarBtnIcoXXX properties
+MUICS_KEEPICONS                 EQU 200h ; Dont delete icons handles when control is destoyed. Essential if icon handles are used in multiple controls or where set directly with properties 
+MUICS_NOCAPTIONTITLETEXT        EQU 400h ; Dont draw a title text value, use lpszCaptionText for taskbar name of app only.
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Caption Properties: Use with MUICaptionBarSetProperty / MUICaptionBarGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
-@CaptionBarTextColor        EQU 0   ; Text color for caption text and system buttons (min/max/restore/close)
-@CaptionBarTextFont         EQU 4   ; Font for caption text
-@CaptionBarBackColor        EQU 8   ; Background color of caption and system buttons
-@CaptionBarBackImageType    EQU 12  ; Image Type - One of the following: MUICBIT_NONE,MUICBIT_BMP, MUICBIT_ICO, MUICBIT_PNG
-@CaptionBarBackImage        EQU 16  ; hImage
-@CaptionBarBtnTxtRollColor  EQU 20  ; Text color for system buttons when mouse moves over button
-@CaptionBarBtnBckRollColor  EQU 24  ; Background color for system buttons when mouse moves over button
-@CaptionBarBtnWidth         EQU 28  ; System buttons width, defaults to 32px
-@CaptionBarBtnHeight        EQU 32  ; System buttons height, defaults to 24px
-@CaptionBarBtnIcoMin        EQU 36  ; hIcon for minimize button
-@CaptionBarBtnIcoMinAlt     EQU 40  ; hIcon for minimize button when mouse moves over button
-@CaptionBarBtnIcoMax        EQU 44  ; hIcon for maximize button
-@CaptionBarBtnIcoMaxAlt     EQU 48  ; hIcon for maximize button when mouse moves over button
-@CaptionBarBtnIcoRes        EQU 52  ; hIcon for restore button
-@CaptionBarBtnIcoResAlt     EQU 56  ; hIcon for restore button when mouse moves over button
-@CaptionBarBtnIcoClose      EQU 60  ; hIcon for close button
-@CaptionBarBtnIcoCloseAlt   EQU 64  ; hIcon for close button when mouse moves over button
-@CaptionBarDllInstance      EQU 68  ; hInstance for loading resources (icons) - normally set to 0 (current module) but when resources are in a dll set this before calling MUICaptionBarLoadIcons
-@CaptionBarParam            EQU 72  ; Custom user data
+@CaptionBarTextColor            EQU 0   ; RGBCOLOR. Text color for captionbar text and system buttons (min/max/restore/close)
+@CaptionBarTextFont             EQU 4   ; hFont. Font for captionbar text
+@CaptionBarBackColor            EQU 8   ; RGBCOLOR. Background color of captionbar and system buttons (min/max/restore/close)
+@CaptionBarBackImageType        EQU 12  ; DWORD. Image Type - One of the following: MUICBIT_NONE,MUICBIT_BMP, MUICBIT_ICO, MUICBIT_PNG
+@CaptionBarBackImage            EQU 16  ; hImage. Image to display in captionbar background.
+@CaptionBarBackImageOffsetX     EQU 20  ; DWORD. Offset x +/- to set position of hImage. Default = 0
+@CaptionBarBackImageOffsetY     EQU 24  ; DWORD. Offset y +/- to set position of hImage. Default = 0
+@CaptionBarBtnTxtRollColor      EQU 28  ; RGBCOLOR. Text color for system buttons (min/max/restore/close) when mouse moves over button
+@CaptionBarBtnBckRollColor      EQU 32  ; RGBCOLOR. Background color for system buttons (min/max/restore/close) when mouse moves over button
+@CaptionBarBtnBorderColor       EQU 36  ; RGBCOLOR. Border color for system buttons (min/max/restore/close). 0 = use same as @CaptionBarBackColor
+@CaptionBarBtnBorderRollColor   EQU 40  ; RGBCOLOR. Border color for system buttons (min/max/restore/close) when mouse moves over button. 0 = use @CaptionBarBtnBckRollColor
+@CaptionBarBtnWidth             EQU 44  ; DWORD. System buttons width. Defaults = 32px
+@CaptionBarBtnHeight            EQU 48  ; DWORD. System buttons height. Defaults = 28px
+@CaptionBarBtnOffsetX           EQU 52  ; DWORD. Offset y +/- to set position of system buttons (min/max/restore/close) in relation to right of captionbar
+@CaptionBarBtnOffsetY           EQU 56  ; DWORD. Offset y + to set position of system buttons (min/max/restore/close) in relation to top of captionbar
+@CaptionBarBtnIcoMin            EQU 60  ; hIcon. For minimize button
+@CaptionBarBtnIcoMinAlt         EQU 64  ; hIcon. For minimize button when mouse moves over button
+@CaptionBarBtnIcoMax            EQU 68  ; hIcon. For maximize button
+@CaptionBarBtnIcoMaxAlt         EQU 72  ; hIcon. For maximize button when mouse moves over button
+@CaptionBarBtnIcoRes            EQU 76  ; hIcon. For restore button
+@CaptionBarBtnIcoResAlt         EQU 80  ; hIcon. For restore button when mouse moves over button
+@CaptionBarBtnIcoClose          EQU 84  ; hIcon. For close button
+@CaptionBarBtnIcoCloseAlt       EQU 88  ; hIcon. For close button when mouse moves over button
+@CaptionBarDllInstance          EQU 92  ; hInstance. For loading resources (icons) - normally set to 0 (current module) but when resources are in a dll set this before calling MUICaptionBarLoadIcons
+@CaptionBarParam                EQU 96  ; DWORD. Custom user data
 
 ; CaptionBar Back Image Types
 MUICBIT_NONE                EQU 0
