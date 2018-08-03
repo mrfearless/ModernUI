@@ -714,25 +714,25 @@ MUIRegionButtonSetBitmap ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_RegionButtonPaint
 ;-------------------------------------------------------------------------------------
-_MUI_RegionButtonPaint PROC PRIVATE hControl:DWORD
+_MUI_RegionButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
-    LOCAL hbmMem:DWORD
-    LOCAL hBitmap:DWORD
+    LOCAL hbmMem:HBITMAP
+    LOCAL hBitmap:HBITMAP
     LOCAL hOldBitmap:DWORD
     LOCAL EnabledState:DWORD
     LOCAL MouseOver:DWORD
     LOCAL SelectedState:DWORD
     
-    Invoke BeginPaint, hControl, Addr ps
+    Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
     
     ;----------------------------------------------------------
     ; Setup Double Buffering
     ;----------------------------------------------------------
-    Invoke GetClientRect, hControl, Addr rect
+    Invoke GetClientRect, hWin, Addr rect
     Invoke CreateCompatibleDC, hdc
     mov hdcMem, eax
     Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
@@ -743,22 +743,22 @@ _MUI_RegionButtonPaint PROC PRIVATE hControl:DWORD
     ;----------------------------------------------------------
     ; Get some property values
     ;---------------------------------------------------------- 
-    Invoke MUIGetIntProperty, hControl, @RegionButtonEnabledState
+    Invoke MUIGetIntProperty, hWin, @RegionButtonEnabledState
     mov EnabledState, eax
-    Invoke MUIGetIntProperty, hControl, @RegionButtonMouseOver
+    Invoke MUIGetIntProperty, hWin, @RegionButtonMouseOver
     mov MouseOver, eax
-    Invoke MUIGetIntProperty, hControl, @RegionButtonSelectedState
+    Invoke MUIGetIntProperty, hWin, @RegionButtonSelectedState
     mov SelectedState, eax  
 
     ;----------------------------------------------------------
     ; Background
     ;----------------------------------------------------------
-    Invoke _MUI_RegionButtonPaintBackground, hControl, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    Invoke _MUI_RegionButtonPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
     ;----------------------------------------------------------
     ; Border
     ;----------------------------------------------------------
-    Invoke _MUI_RegionButtonPaintBorder, hControl, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    Invoke _MUI_RegionButtonPaintBorder, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
@@ -768,14 +768,15 @@ _MUI_RegionButtonPaint PROC PRIVATE hControl:DWORD
     ;----------------------------------------------------------
     ; Cleanup
     ;----------------------------------------------------------
-    Invoke SelectObject, hdcMem, hOldBitmap
-    Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
+        Invoke SelectObject, hdcMem, hOldBitmap
         Invoke DeleteObject, hOldBitmap
-    .ENDIF      
-     
-    Invoke EndPaint, hControl, Addr ps
+    .ENDIF
+    Invoke SelectObject, hdcMem, hbmMem
+    Invoke DeleteObject, hbmMem
+    Invoke DeleteDC, hdcMem
+
+    Invoke EndPaint, hWin, Addr ps
 
     ret
 _MUI_RegionButtonPaint ENDP

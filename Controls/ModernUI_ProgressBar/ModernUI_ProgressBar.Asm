@@ -158,19 +158,15 @@ MUIProgressBarCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, cont
     mov hinstance, eax
 
     Invoke MUIProgressBarRegister
-    
-    ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
-    ; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
-    
+
     Invoke CreateWindowEx, NULL, Addr szMUIProgressBarClass, NULL, WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
     mov hControl, eax
     .IF eax != NULL
-        
+
     .ENDIF
     mov eax, hControl
     ret
 MUIProgressBarCreate ENDP
-
 
 
 ;-------------------------------------------------------------------------------------
@@ -260,9 +256,11 @@ _MUI_ProgressBarInit PROC PRIVATE hControl:DWORD
         mov dwStyle, eax
         Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
     .ENDIF
-    ;PrintDec dwStyle
-    
-    ; Set default initial external property values     
+
+    ; Set default initial internal property values     
+    Invoke MUISetIntProperty, hControl, @ProgressBarWidth, 0
+
+    ; Set default initial external property values 
     Invoke MUISetExtProperty, hControl, @ProgressBarTextColor, MUI_RGBCOLOR(255,255,255)
     Invoke MUISetExtProperty, hControl, @ProgressBarBackColor, MUI_RGBCOLOR(193,193,193)
     Invoke MUISetExtProperty, hControl, @ProgressBarBorderColor, 0 ; MUI_RGBCOLOR(163,163,163)
@@ -271,8 +269,7 @@ _MUI_ProgressBarInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @ProgressBarPercent, 0
     Invoke MUISetExtProperty, hControl, @ProgressBarMin, 0
     Invoke MUISetExtProperty, hControl, @ProgressBarMax, 100
-    Invoke MUISetIntProperty, hControl, @ProgressBarWidth, 0
-    
+
     .IF hMUIProgressBarFont == 0
         mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
         Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
@@ -286,11 +283,8 @@ _MUI_ProgressBarInit PROC PRIVATE hControl:DWORD
         Invoke DeleteObject, hFont
     .ENDIF
     Invoke MUISetExtProperty, hControl, @ProgressBarTextFont, hMUIProgressBarFont
-
     ;Invoke _MUI_ProgressBarCalcIncrementRemainder, hControl
-
     ret
-
 _MUI_ProgressBarInit ENDP
 
 
@@ -301,29 +295,22 @@ _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rectprogress:RECT
     LOCAL rect:RECT
-    LOCAL pt:POINT
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
     LOCAL hbmMem:DWORD
     LOCAL hBitmap:DWORD
     LOCAL hOldBitmap:DWORD
     LOCAL hBrush:DWORD
-    LOCAL hPen:DWORD
     LOCAL hOldBrush:DWORD
-    LOCAL hOldPen:DWORD
-    LOCAL hFont:DWORD
-    LOCAL hOldFont:DWORD
     LOCAL Percent:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
     LOCAL BorderColor:DWORD
     LOCAL ProgressColor:DWORD
-    LOCAL hParent:DWORD
-    LOCAL dwStyle:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
-    
+
     ;----------------------------------------------------------
     ; Setup Double Buffering
     ;----------------------------------------------------------
@@ -334,32 +321,22 @@ _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
     mov hbmMem, eax
     Invoke SelectObject, hdcMem, hbmMem
     mov hOldBitmap, eax
-    
+
     ;----------------------------------------------------------
     ; Get some property values
     ;---------------------------------------------------------- 
-    ; Use Invoke _MUIGetProperty, hWin, 4, @Property 
-    ; to get property required: text, back, border colors etc
-    ; save them to local vars for processing later in function
-    Invoke GetWindowLong, hWin, GWL_STYLE
-    mov dwStyle, eax
-
-    Invoke MUIGetExtProperty, hWin, @ProgressBarTextColor        ; normal text color
+    Invoke MUIGetExtProperty, hWin, @ProgressBarTextColor
     mov TextColor, eax
-    Invoke MUIGetExtProperty, hWin, @ProgressBarBackColor        ; normal back color
+    Invoke MUIGetExtProperty, hWin, @ProgressBarBackColor
     mov BackColor, eax
-    Invoke MUIGetExtProperty, hWin, @ProgressBarBorderColor        ; normal back color
+    Invoke MUIGetExtProperty, hWin, @ProgressBarBorderColor
     mov BorderColor, eax
-    Invoke MUIGetExtProperty, hWin, @ProgressBarTextFont        
-    mov hFont, eax  
     Invoke MUIGetExtProperty, hWin, @ProgressBarPercent        
     mov Percent, eax    
     Invoke MUIGetExtProperty, hWin, @ProgressBarProgressColor
     mov ProgressColor, eax
-    
-
     Invoke CopyRect, Addr rectprogress, Addr rect
-    
+
     ;----------------------------------------------------------
     ; Fill background
     ;----------------------------------------------------------
@@ -373,14 +350,14 @@ _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
     ;----------------------------------------------------------
     ; Draw Progress
     ;----------------------------------------------------------
+    .IF hOldBrush != 0
+        Invoke SelectObject, hdcMem, hOldBrush
+        Invoke DeleteObject, hOldBrush
+    .ENDIF     
     .IF hBrush != 0
         Invoke DeleteObject, hBrush
     .ENDIF
-    .IF hOldBrush != 0
-        Invoke DeleteObject, hOldBrush
-    .ENDIF 
-    
-    
+
     Invoke MUIGetIntProperty, hWin, @ProgressBarWidth
     mov rectprogress.right, eax
 
@@ -395,12 +372,10 @@ _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
     ; Border
     ;----------------------------------------------------------
     .IF BorderColor != 0
-        .IF hBrush != 0
-            Invoke DeleteObject, hBrush
-        .ENDIF
         .IF hOldBrush != 0
+            Invoke SelectObject, hdcMem, hOldBrush
             Invoke DeleteObject, hOldBrush
-        .ENDIF    
+        .ENDIF     
         Invoke GetStockObject, DC_BRUSH
         mov hBrush, eax
         Invoke SelectObject, hdcMem, eax
@@ -417,31 +392,26 @@ _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
     ;----------------------------------------------------------
     ; Cleanup
     ;----------------------------------------------------------
-    Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hbmMem
-    .IF hOldBitmap != 0
-        Invoke DeleteObject, hOldBitmap
-    .ENDIF      
-    .IF hOldFont != 0
-        Invoke DeleteObject, hOldFont
-    .ENDIF
-    .IF hOldPen != 0
-        Invoke DeleteObject, hOldPen
-    .ENDIF
     .IF hOldBrush != 0
+        Invoke SelectObject, hdcMem, hOldBrush
         Invoke DeleteObject, hOldBrush
-    .ENDIF        
-    .IF hPen != 0
-        Invoke DeleteObject, hPen
-    .ENDIF
+    .ENDIF     
     .IF hBrush != 0
         Invoke DeleteObject, hBrush
     .ENDIF
-    
+    .IF hOldBitmap != 0
+        Invoke SelectObject, hdcMem, hOldBitmap
+        Invoke DeleteObject, hOldBitmap
+    .ENDIF
+    Invoke SelectObject, hdcMem, hbmMem
+    Invoke DeleteObject, hbmMem
+    Invoke DeleteDC, hdcMem
+
     Invoke EndPaint, hWin, Addr ps
 
     ret
 _MUI_ProgressBarPaint ENDP
+
 
 ;-------------------------------------------------------------------------------------
 ; _MUI_ProgressBarCalcWidth ;ECX EDX
@@ -480,7 +450,7 @@ _MUI_ProgressBarCalcWidth ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; 
+; MUIProgressBarSetMinMax
 ;-------------------------------------------------------------------------------------
 MUIProgressBarSetMinMax PROC hControl:DWORD, dwMin:DWORD, dwMax:DWORD
     Invoke MUISetExtProperty, hControl, @ProgressBarMin, dwMin
@@ -488,8 +458,9 @@ MUIProgressBarSetMinMax PROC hControl:DWORD, dwMin:DWORD, dwMax:DWORD
     ret
 MUIProgressBarSetMinMax ENDP
 
+
 ;-------------------------------------------------------------------------------------
-; 
+; MUIProgressBarSetPercent
 ;-------------------------------------------------------------------------------------
 MUIProgressBarSetPercent PROC hControl:DWORD, dwPercent:DWORD
     LOCAL dwOldPercent:DWORD
@@ -503,17 +474,13 @@ MUIProgressBarSetPercent PROC hControl:DWORD, dwPercent:DWORD
     
     mov eax, dwPercent
     mov dwNewPercent, eax
-    
-    
 
-    
     .IF sdword ptr dwNewPercent >= 0 && sdword ptr dwNewPercent <= 100
         ;Invoke MUISetExtProperty, hControl, @ProgressBarPercent, dwPercent
         ;Invoke InvalidateRect, hControl, NULL, TRUE
-        
-    ;PrintDec dwOldPercent
-    ;PrintDec dwNewPercent
-        
+        ;PrintDec dwOldPercent
+        ;PrintDec dwNewPercent
+
         Invoke _MUI_ProgressBarCalcWidth, hControl, dwOldPercent
         mov dwOldWidth, eax
         mov dwCurrentWidth, eax
@@ -530,7 +497,6 @@ MUIProgressBarSetPercent PROC hControl:DWORD, dwPercent:DWORD
                 Invoke InvalidateRect, hControl, NULL, FALSE
                 Invoke UpdateWindow, hControl
                 ;Invoke Sleep, 1
-                
                 ;PrintDec dwCurrentWidth
                 inc dwCurrentWidth
                 mov eax, dwCurrentWidth
@@ -544,34 +510,33 @@ MUIProgressBarSetPercent PROC hControl:DWORD, dwPercent:DWORD
                 Invoke InvalidateRect, hControl, NULL, FALSE
                 Invoke UpdateWindow, hControl
                 ;Invoke Sleep, 1
-                
                 ;PrintDec dwCurrentWidth
                 dec dwCurrentWidth
                 mov eax, dwCurrentWidth
             .ENDW
         
         .ENDIF
-        
+
         Invoke MUISetExtProperty, hControl, @ProgressBarPercent, dwNewPercent        
         Invoke UpdateWindow, hControl
     .ENDIF
-    
+
     mov eax, dwNewPercent
-    
     ret
 MUIProgressBarSetPercent ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; 
+; MUIProgressBarGetPercent
 ;-------------------------------------------------------------------------------------
 MUIProgressBarGetPercent PROC hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @ProgressBarPercent
     ret
 MUIProgressBarGetPercent ENDP
 
+
 ;-------------------------------------------------------------------------------------
-; 
+; MUIProgressBarStep
 ;-------------------------------------------------------------------------------------
 MUIProgressBarStep PROC hControl:DWORD
     LOCAL dwOldPercent:DWORD
@@ -579,16 +544,13 @@ MUIProgressBarStep PROC hControl:DWORD
     LOCAL dwOldWidth:DWORD
     LOCAL dwNewWidth:DWORD
     LOCAL dwCurrentWidth:DWORD
-    
-    ;PrintText 'MUIProgressBarStep'
-    
+
     Invoke MUIGetExtProperty, hControl, @ProgressBarPercent
     mov dwOldPercent, eax
     inc eax
     mov dwNewPercent, eax
     .IF sdword ptr dwNewPercent >= 0 && sdword ptr dwNewPercent <= 100
-        
-        
+
         Invoke _MUI_ProgressBarCalcWidth, hControl, dwOldPercent
         mov dwOldWidth, eax
         mov dwCurrentWidth, eax
@@ -603,8 +565,6 @@ MUIProgressBarStep PROC hControl:DWORD
             Invoke InvalidateRect, hControl, NULL, FALSE
             Invoke UpdateWindow, hControl
             Invoke Sleep, 1
-            
-            ;PrintDec dwCurrentWidth
             inc dwCurrentWidth
             mov eax, dwCurrentWidth
         .ENDW
@@ -613,8 +573,6 @@ MUIProgressBarStep PROC hControl:DWORD
 
     .ENDIF
     mov eax, dwNewPercent
-    ;PrintDec dwNewPercent
-    
     ret
 MUIProgressBarStep ENDP
 

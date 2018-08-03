@@ -716,12 +716,13 @@ _MUI_MapPaint PROC PRIVATE hControl:DWORD
     ;----------------------------------------------------------
     ; Cleanup
     ;----------------------------------------------------------
-    Invoke SelectObject, hdcMem, hOldBitmap
-    Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
+        Invoke SelectObject, hdcMem, hOldBitmap
         Invoke DeleteObject, hOldBitmap
-    .ENDIF      
+    .ENDIF
+    Invoke SelectObject, hdcMem, hbmMem
+    Invoke DeleteObject, hbmMem
+    Invoke DeleteDC, hdcMem 
      
     Invoke EndPaint, hControl, Addr ps
 

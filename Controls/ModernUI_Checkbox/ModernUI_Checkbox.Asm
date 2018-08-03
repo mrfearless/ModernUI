@@ -261,7 +261,6 @@ MUICheckboxCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypo
 MUICheckboxCreate ENDP
 
 
-
 ;-------------------------------------------------------------------------------------
 ; _MUI_CheckboxWndProc - Main processing window for our control
 ;-------------------------------------------------------------------------------------
@@ -425,10 +424,12 @@ _MUI_CheckboxInit PROC PRIVATE hControl:DWORD
         or dwStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
     .ENDIF
-    ;PrintDec dwStyle
-    
-    ; Set default initial external property values     
+
+
+    ; Set default initial internal property values
     Invoke MUISetIntProperty, hControl, @CheckboxEnabledState, TRUE
+    
+    ; Set default initial external property values
     Invoke MUISetExtProperty, hControl, @CheckboxTextColor, MUI_RGBCOLOR(51,51,51)
     Invoke MUISetExtProperty, hControl, @CheckboxTextColorAlt, MUI_RGBCOLOR(41,122,185)
     Invoke MUISetExtProperty, hControl, @CheckboxTextColorSel, MUI_RGBCOLOR(51,51,51)
@@ -437,9 +438,8 @@ _MUI_CheckboxInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @CheckboxBackColor, MUI_RGBCOLOR(240,240,240) ;MUI_RGBCOLOR(21,133,181)
     Invoke MUISetExtProperty, hControl, @CheckboxDllInstance, 0
     ;Invoke MUISetExtProperty, hControl, @CheckboxImageType, MUICIT_NONE
-    
-    ;PrintDec hMUICheckboxFont
-    
+
+
     .IF hMUICheckboxFont == 0
         mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
         Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
@@ -454,7 +454,6 @@ _MUI_CheckboxInit PROC PRIVATE hControl:DWORD
     .ENDIF
     Invoke MUISetExtProperty, hControl, @CheckboxTextFont, hMUICheckboxFont
 
-    ;PrintDec hMUICheckboxFont
 
     ; create default icons for use if user hasnt specified any images
     .IF hDefault_icoMUICheckboxTick == 0
@@ -474,12 +473,8 @@ _MUI_CheckboxInit PROC PRIVATE hControl:DWORD
         mov hDefault_icoMUIRadioEmpty, eax
     .ENDIF
     Invoke MUISetExtProperty, hControl, @CheckboxImageType, MUICIT_ICO
-    
-    ;PrintDec hDefault_icoMUICheckboxTick
-    ;PrintDec hDefault_icoMUICheckboxEmpty
-    ;PrintDec hDefault_icoMUIRadioTick
-    ;PrintDec hDefault_icoMUIRadioEmpty
-    
+
+
     mov eax, dwStyle
     and eax, MUICS_RADIO
     .IF eax == MUICS_RADIO
@@ -496,7 +491,6 @@ _MUI_CheckboxInit PROC PRIVATE hControl:DWORD
     ret
 
 _MUI_CheckboxInit ENDP
-
 
 
 ;-------------------------------------------------------------------------------------
@@ -651,7 +645,6 @@ _MUI_CheckboxCleanup PROC PRIVATE hControl:DWORD
 _MUI_CheckboxCleanup ENDP
 
 
-
 ;-------------------------------------------------------------------------------------
 ; _MUI_CheckboxPaint
 ;-------------------------------------------------------------------------------------
@@ -690,27 +683,20 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     mov MouseOver, eax
     Invoke MUIGetIntProperty, hWin, @CheckboxSelectedState
     mov SelectedState, eax    
-    
-    ;PrintDec EnabledState
-    ;PrintDec MouseOver
-    ;PrintDec SelectedState
-    
+
     ;----------------------------------------------------------
     ; Background
     ;----------------------------------------------------------
-    ;PrintText '_MUI_CheckboxPaintBackground'
     Invoke _MUI_CheckboxPaintBackground, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
     ;----------------------------------------------------------
     ; Images
     ;----------------------------------------------------------
-    ;PrintText '_MUI_CheckboxPaintImages'
     Invoke _MUI_CheckboxPaintImages, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
     ;----------------------------------------------------------
     ; Text
     ;----------------------------------------------------------
-    ;PrintText '_MUI_CheckboxPaintText'
     Invoke _MUI_CheckboxPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
     ;----------------------------------------------------------
@@ -721,18 +707,18 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     ;----------------------------------------------------------
     ; Cleanup
     ;----------------------------------------------------------
-    Invoke SelectObject, hdcMem, hOldBitmap
-    Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
+        Invoke SelectObject, hdcMem, hOldBitmap
         Invoke DeleteObject, hOldBitmap
-    .ENDIF      
-     
+    .ENDIF
+    Invoke SelectObject, hdcMem, hbmMem
+    Invoke DeleteObject, hbmMem
+    Invoke DeleteDC, hdcMem
+
     Invoke EndPaint, hWin, Addr ps
 
     ret
 _MUI_CheckboxPaint ENDP
-
 
 
 ;-------------------------------------------------------------------------------------
@@ -745,7 +731,6 @@ _MUI_CheckboxPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledS
     
     Invoke MUIGetExtProperty, hWin, @CheckboxBackColor
     mov BackColor, eax
-    ;PrintDec BackColor
 
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
@@ -791,15 +776,12 @@ _MUI_CheckboxPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:D
 
     Invoke MUIGetExtProperty, hWin, @CheckboxBackColor
     mov BackColor, eax
-    ;PrintDec BackColor
     
     Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
     
     Invoke MUIGetExtProperty, hWin, @CheckboxTextFont        
     mov hFont, eax
-    
-    ;PrintDec hFont
 
     .IF bEnabledState == TRUE
         .IF bSelectedState == FALSE
@@ -822,10 +804,8 @@ _MUI_CheckboxPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:D
         Invoke MUIGetExtProperty, hWin, @CheckboxTextColor                ; fallback to default Normal text color
     .ENDIF  
     mov TextColor, eax
-    
-    
-    ;PrintDec TextColor
-    
+
+
     Invoke MUIGetExtProperty, hWin, @CheckboxImageType        
     mov ImageType, eax ; 0 = none, 1 = bitmap, 2 = icon, 3 = png
 
@@ -884,10 +864,8 @@ _MUI_CheckboxPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:D
     Invoke SetBkMode, hdc, OPAQUE
     Invoke SetBkColor, hdc, BackColor    
     Invoke SetTextColor, hdc, TextColor
-    
-    ;PrintDec rect.right
-    ;mov dwTextStyle, 
-    
+
+
     Invoke DrawText, hdc, Addr szText, -1, Addr rect, DT_SINGLELINE or DT_LEFT or DT_VCENTER
     
     .IF hOldFont != 0
@@ -905,7 +883,6 @@ _MUI_CheckboxPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:D
     ret
 
 _MUI_CheckboxPaintText ENDP
-
 
 
 ;-------------------------------------------------------------------------------------
@@ -930,9 +907,7 @@ _MUI_CheckboxPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDes
     
     Invoke MUIGetExtProperty, hWin, @CheckboxImageType        
     mov ImageType, eax ; 0 = none, 1 = bitmap, 2 = icon, 3 = png
-    
-    ;PrintDec ImageType
-    
+
     .IF ImageType == 0
         ret
     .ENDIF    
@@ -1027,7 +1002,6 @@ _MUI_CheckboxPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDes
     ret
 
 _MUI_CheckboxPaintImages ENDP
-
 
 
 ;-------------------------------------------------------------------------------------
@@ -1234,7 +1208,6 @@ MUICheckboxSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD
 MUICheckboxSetImages ENDP
 
 
-
 ;-------------------------------------------------------------------------------------
 ; MUICheckboxGetState
 ;-------------------------------------------------------------------------------------
@@ -1250,9 +1223,6 @@ MUICheckboxSetState PROC PUBLIC hControl:DWORD, bState:DWORD
     Invoke SendMessage, hControl, MUICM_SETSTATE, bState, 0
     ret
 MUICheckboxSetState ENDP
-
-
-
 
 
 ;-------------------------------------------------------------------------------------
@@ -1307,7 +1277,6 @@ _MUI_CheckboxLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     ret
 
 _MUI_CheckboxLoadIcon ENDP
-
 
 
 ;-------------------------------------------------------------------------------------

@@ -70,7 +70,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=1
+MilestoneOnDateDate=3
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=18
@@ -94,14 +94,14 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=35639147
+PTimer=35790249
 [Collapse]
 2=
-1=4195072,263312,244467712,
+1=4195072,537134224,244336648,
 3=
 [Size]
 2=0,0,0,0,3024
-1=0,0,0,0,4611
+1=0,0,0,0,23551
 3=0,0,0,0,333
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
@@ -119,8 +119,9 @@ GroupExpand=1,1,1,0,0,0
 [BreakPoint]
 0=
 [Find]
-1="Invoke MUISetIntProperty, hControl, @SmartPanelCurrentPanel"
-2="MUISetExtProperty"
-3="MUIGetExtProperty"
-4="@SmartPanelPanelsArray"
-5="hinstance"
+1="SetWindowLong"
+2="Invoke MUISetIntProperty, hControl, @SmartPanelCurrentPanel"
+3="MUISetExtProperty"
+4="MUIGetExtProperty"
+5="@SmartPanelPanelsArray"
+6="hinstance"

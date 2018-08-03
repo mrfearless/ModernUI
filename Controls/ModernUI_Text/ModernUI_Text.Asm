@@ -525,13 +525,14 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
         ;----------------------------------------------------------
         ; Cleanup
         ;----------------------------------------------------------
-        Invoke SelectObject, hdcMem, hOldBitmap
-        Invoke DeleteDC, hdcMem
-        Invoke DeleteObject, hbmMem
         .IF hOldBitmap != 0
+            Invoke SelectObject, hdcMem, hOldBitmap
             Invoke DeleteObject, hOldBitmap
         .ENDIF
-    
+        Invoke SelectObject, hdcMem, hbmMem
+        Invoke DeleteObject, hbmMem
+        Invoke DeleteDC, hdcMem
+
     .ELSE ; Text on Transparent Background
     
         ;----------------------------------------------------------

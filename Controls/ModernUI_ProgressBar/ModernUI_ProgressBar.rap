@@ -70,7 +70,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=21
+MilestoneOnDateDate=3
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=19
@@ -94,13 +94,13 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=29865032
+PTimer=34644621
 [Collapse]
 2=
-1=301989888,
+1=1965033228,
 [Size]
-2=0,0,0,0,4068
-1=0,0,0,0,3199
+2=0,0,0,0,4386
+1=0,0,0,0,10667
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
 [BookMark]
@@ -116,3 +116,5 @@ GroupExpand=1,1,1,0,0,0
 9=
 [BreakPoint]
 0=
+[Find]
+1="_MUI_ProgressBarCalcWidth"

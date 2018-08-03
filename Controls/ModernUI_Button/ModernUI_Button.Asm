@@ -916,7 +916,6 @@ _MUI_ButtonCleanup ENDP
 _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
-    LOCAL rectWin:RECT
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
     LOCAL hbmMem:DWORD
@@ -1011,13 +1010,14 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
         ;----------------------------------------------------------
         ; Cleanup
         ;----------------------------------------------------------
-        Invoke SelectObject, hdcMem, hOldBitmap
-        Invoke DeleteDC, hdcMem
-        Invoke DeleteObject, hbmMem
         .IF hOldBitmap != 0
+            Invoke SelectObject, hdcMem, hOldBitmap
             Invoke DeleteObject, hOldBitmap
-        .ENDIF      
-    
+        .ENDIF
+        Invoke SelectObject, hdcMem, hbmMem
+        Invoke DeleteObject, hbmMem
+        Invoke DeleteDC, hdcMem
+
     .ELSE ; Transparent background
         
 ;        Invoke GetParent, hWin
@@ -1068,13 +1068,14 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
         ;----------------------------------------------------------
         ; Cleanup
         ;----------------------------------------------------------
-        Invoke SelectObject, hdcMem, hOldBitmap
-        Invoke DeleteDC, hdcMem
-        Invoke DeleteObject, hbmMem
         .IF hOldBitmap != 0
+            Invoke SelectObject, hdcMem, hOldBitmap
             Invoke DeleteObject, hOldBitmap
-        .ENDIF          
-    
+        .ENDIF
+        Invoke SelectObject, hdcMem, hbmMem
+        Invoke DeleteObject, hbmMem
+        Invoke DeleteDC, hdcMem
+
     .ENDIF
     
     Invoke EndPaint, hWin, Addr ps
@@ -2276,17 +2277,7 @@ _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnable
             .ENDIF
         .ENDIF
     .ENDIF
-
-
-;    .IF hOldPen != 0
-;        Invoke SelectObject, hdc, hOldPen
-;        Invoke DeleteObject, hOldPen
-;    .ENDIF     
-;    .IF hPen != 0
-;        Invoke DeleteObject, hPen
-    ;.ENDIF
     ret
-
 _MUI_ButtonPaintBorder ENDP
 
 
