@@ -1,2 +1,3 @@
-#define MANIFEST 24
-1 MANIFEST DISCARDABLE "MUICaptionBar1.xml"
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUICaptionBar1.xml"
+100						ICON      DISCARDABLE "ModernUI.ico"

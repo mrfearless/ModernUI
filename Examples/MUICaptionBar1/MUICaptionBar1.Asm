@@ -39,9 +39,9 @@ WinMain proc hInst:HINSTANCE,hPrevInst:HINSTANCE,CmdLine:LPSTR,CmdShow:DWORD
     mov     wc.hbrBackground, COLOR_BTNFACE+1 ; COLOR_WINDOW+1
     mov     wc.lpszMenuName, NULL ;IDM_MENU
     mov     wc.lpszClassName, offset ClassName
-    Invoke LoadIcon, NULL, IDI_APPLICATION
-    ;Invoke LoadIcon, hInstance, ICO_MAIN ; resource icon for main application icon
-    ;mov hIcoMain, eax ; main application icon
+    ;Invoke LoadIcon, NULL, IDI_APPLICATION
+    Invoke LoadIcon, hInstance, ICO_MAIN ; resource icon for main application icon
+    mov hIcoMain, eax ; main application icon
     mov     wc.hIcon, eax
     mov     wc.hIconSm, eax
     Invoke LoadCursor, NULL, IDC_ARROW
@@ -72,13 +72,24 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         pop hWnd
         
         ; Create CaptionBar control via MUI api
-        Invoke MUICaptionBarCreate, hWin, Addr AppName, 32d, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
+        Invoke MUICaptionBarCreate, hWin, Addr AppName, 40d, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
         mov hCaptionBar, eax
         
         ; Set some properties for our CaptionBar control 
         Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackColor, MUI_RGBCOLOR(51,51,51)
         Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(228,228,228)
         Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBckRollColor, MUI_RGBCOLOR(81,81,81)
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnBorderRollColor, MUI_RGBCOLOR(65,152,210)
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnHeight, 28
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnWidth, 30
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnOffsetX, 4
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnOffsetY, 5
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackImageOffsetY, 2
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackImageOffsetX, 2
+        
+        Invoke LoadImage, hInstance, ICO_MAIN, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR ; resource icon for main application icon
+        mov hIcoMain, eax ; main application icon
+        Invoke SendMessage, hCaptionBar, WM_SETICON, ICON_SMALL, hIcoMain        
 
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1

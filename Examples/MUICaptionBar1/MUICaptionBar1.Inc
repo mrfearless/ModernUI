@@ -33,6 +33,9 @@ WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 ;-----------------------------------------------------------------------------------------
 ; MUICaptionBar Constants
 ;-----------------------------------------------------------------------------------------
+
+ICO_MAIN                EQU 100
+
 ; Main Dialog
 IDD_DIALOG              EQU 1000
 IDC_CAPTIONBAR          EQU 1001
@@ -65,7 +68,7 @@ hInstance               DD ?
 CommandLine             DD ?
 hWnd                    DD ?
 hCaptionBar             DD ?
-
+hIcoMain                DD ?
 
 
 
