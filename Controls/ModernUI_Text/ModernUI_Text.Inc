@@ -41,19 +41,6 @@ MUITextGetProperty      PROTO :DWORD, :DWORD                                    
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Text Structures
 ;--------------------------------------------------------------------------------------------------------------------------------------
-IFNDEF @MUIText
-@MUIText                    STRUCT
-    Font                    DD ?
-    Color                   DD ?
-    ColorAlt                DD ?
-    ColorDisabled           DD ?
-    STRUCT                  Back
-        Color               DD ?
-        ColorAlt            DD ?
-        ColorDisabled       DD ?
-    ENDS  
-@MUIText                    ENDS
-ENDIF
 
 
 .CONST
@@ -62,14 +49,24 @@ ENDIF
 ;--------------------------------------------------------------------------------------------------------------------------------------
 
 ; ModernUI_Text Styles
-MUITS_DEFAULT           EQU 0  ; 8px
-MUITS_CAPTION           EQU 1  ; 12px
-MUITS_BODY              EQU 2  ; 15px
-MUITS_BODYTITLE         EQU 3  ; 15px
-MUITS_SUBTITLE          EQU 4  ; 20px
-MUITS_TITLE             EQU 5  ; 24px
-MUITS_SUBHEADER         EQU 6  ; 34px
-MUITS_HEADER            EQU 7  ; 46px
+MUITS_8PT               EQU 0  ; 8pt
+MUITS_9PT_BOLD          EQU 1  ; 9pt Bold
+MUITS_10PT              EQU 2  ; 10pt
+MUITS_11PT_BOLD         EQU 3  ; 11pt Bold
+MUITS_12PT              EQU 4  ; 12pt
+MUITS_13PT_BOLD         EQU 5  ; 13pt Bold
+MUITS_14PT              EQU 6  ; 14pt
+MUITS_15PT_BOLD         EQU 7  ; 15pt Bold
+
+MUITS_DEFAULT           EQU MUITS_8PT
+MUITS_CAPTION           EQU MUITS_9PT_BOLD
+MUITS_BODY              EQU MUITS_10PT
+MUITS_BODYTITLE         EQU MUITS_11PT_BOLD
+MUITS_SUBTITLE          EQU MUITS_12PT
+MUITS_TITLE             EQU MUITS_13PT_BOLD
+MUITS_SUBHEADER         EQU MUITS_14PT
+MUITS_HEADER            EQU MUITS_15PT_BOLD
+
 
 
 MUITS_FONT_SETFONT      EQU 1 shl 4 ; user will set font
@@ -81,10 +78,11 @@ MUITS_FONT_TIMES        EQU 6 shl 4
 MUITS_FONT_COURIER      EQU 7 shl 4
 MUITS_FONT_VERDANA      EQU 8 shl 4
 
-MUITS_ALIGN_RIGHT       EQU 256 ; right aligned text
-MUITS_ALIGN_CENTER      EQU 512 ; center aligned text
-MUITS_SINGLELINE        EQU 1024
-MUITS_HAND              EQU 2048 ; Show a hand instead of an arrow when mouse moves over text
+MUITS_ALIGN_RIGHT       EQU 100h ; right aligned text
+MUITS_ALIGN_CENTER      EQU 200h ; center aligned text
+MUITS_SINGLELINE        EQU 400h
+MUITS_HAND              EQU 800h ; Show a hand instead of an arrow when mouse moves over text
+MUITS_LORUMIPSUM        EQU 1000h ; show lorum ipsum in text box - for demo purposes etc.
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Text Properties: Use with MUITextSetProperty / MUITextGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs

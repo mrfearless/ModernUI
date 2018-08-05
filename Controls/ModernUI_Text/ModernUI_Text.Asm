@@ -50,6 +50,7 @@ _MUI_TextPaint                  PROTO :DWORD
 _MUI_TextPaintBackground        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TextPaintText              PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TextCheckMultiline         PROTO :DWORD, :DWORD
+_MUI_TextSetFontFamilySize      PROTO :DWORD, :DWORD
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Structures for internal use
@@ -73,23 +74,33 @@ _MUI_TEXT_PROPERTIES            ENDS
 
 
 .CONST
+MUI_TEXT_MAX_CHARS              EQU 2048
+MUI_TEXT_NO_FONTTYPES           EQU 6
+MUI_TEXT_NO_FONTSIZES           EQU 8
+
 ; Internal properties
 @TextEnabledState               EQU 0
 @TextMouseOver                  EQU 4
 
-; External public properties
 
 
 .DATA
-szLorumIpsumText                DB "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. " 
-                                DB "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " 
-                                DB "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " 
-                                DB "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",0
-                                
+;szLorumIpsumText                DB "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. " 
+;                                DB "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " 
+;                                DB "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " 
+;                                DB "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",0
+
+szLorumIpsumText                DB "Lorem ipsum dolor sit amet, cu meis summo platonem ius. Est solet abhorreant constituto id, minim nominavi appetere at qui. "
+                                DB "Sed ea feugait officiis. Cu commodo persecuti nam, et minimum omittam prodesset mei. Usu ei duis feugiat platonem.",13,10,13,10
+                                DB "Autem antiopam eam et. Qui omnesque concludaturque no, duo ad accusam philosophia. Graeci convenire theophrastus ea has, "
+                                DB "eu mei paulo forensibus concludaturque. Ad sea ignota habemus adipiscing.",13,10,13,10
+                                DB "Duo iusto minimum id, eos animal graecis et, eu mel tota minimum corpora. Te vix latine conclusionemque, cu eam brute posse primis. "
+                                DB "Has an cibo elitr voluptatum, legere tritani te his. Consul libris gloriatur in nam, unum meliore sea an, graeci gloriatur id has. "
+                                DB "Justo ornatus mnesarchum ius eu, ex suscipit voluptua incorrupte vim.",0,0,0,0     
+
 szMUITextClass                  DB 'ModernUI_Text',0    ; Class name for creating our ModernUI_Text control
 szMUITextFont                   DB 'Segoe UI',0                ; Font used for ModernUI_Text text
 
-MUITextFont                     DD 0
 
 szMUITextFontSegoe              DB 'Segoe UI',0 
 szMUITextFontTahoma             DB 'Tahoma',0
@@ -98,19 +109,12 @@ szMUITextFontTimes              DB 'Times New Roman',0
 szMUITextFontCourier            DB 'Courier New',0
 szMUITextFontVerdana            DB 'Verdana',0
 
-
-
-
-
-;hMUITextFontDefault             DD 0                           ; Handle to ModernUI_Text font (segoe ui)
-;hMUITextFontHeader              DD 0  ; 46px
-;hMUITextFontSubHeader           DD 0  ; 34px
-;hMUITextFontTitle               DD 0  ; 24px
-;hMUITextFontSubTitle            DD 0  ; 20px
-;hMUITextFontBodyTitle           DD 0  ; 15px
-;hMUITextFontBody                DD 0  ; 15px
-;hMUITextFontCaption             DD 0  ; 12px
-
+MUITextFontSegoeHandles         DD MUI_TEXT_NO_FONTSIZES DUP (0)
+MUITextFontTahomaHandles        DD MUI_TEXT_NO_FONTSIZES DUP (0)
+MUITextFontArialHandles         DD MUI_TEXT_NO_FONTSIZES DUP (0)
+MUITextFontTimesHandles         DD MUI_TEXT_NO_FONTSIZES DUP (0)
+MUITextFontCourierHandles       DD MUI_TEXT_NO_FONTSIZES DUP (0)
+MUITextFontVerdanaHandles       DD MUI_TEXT_NO_FONTSIZES DUP (0)
 
 .CODE
 
@@ -262,9 +266,9 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         .IF eax == TRUE   
             Invoke MUISetIntProperty, hWin, @TextMouseOver, TRUE
             .IF eax != TRUE
-                Invoke ShowWindow, hWin, SW_HIDE
+                ;Invoke ShowWindow, hWin, SW_HIDE
                 Invoke InvalidateRect, hWin, NULL, TRUE
-                Invoke ShowWindow, hWin, SW_SHOW
+                ;Invoke ShowWindow, hWin, SW_SHOW
                 mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
                 mov TE.dwFlags, TME_LEAVE
                 mov eax, hWin
@@ -276,9 +280,9 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @TextMouseOver, FALSE
-        Invoke ShowWindow, hWin, SW_HIDE
+        ;Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
-        Invoke ShowWindow, hWin, SW_SHOW
+        ;Invoke ShowWindow, hWin, SW_SHOW
         Invoke LoadCursor, NULL, IDC_ARROW
         Invoke SetCursor, eax
 
@@ -338,129 +342,47 @@ _MUI_TextWndProc ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_TextInit - set initial default values
 ;-------------------------------------------------------------------------------------
-_MUI_TextInit PROC PRIVATE hControl:DWORD
-    LOCAL lfnt:LOGFONT
-    LOCAL hFont:DWORD
+_MUI_TextInit PROC PRIVATE hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
-    LOCAL dwFontSize:DWORD
-    LOCAL dwFontFamily:DWORD
-    LOCAL dwFontHeight:DWORD
-    LOCAL dwFontWeight:DWORD
-    
-    Invoke GetParent, hControl
+
+    Invoke GetParent, hWin
     mov hParent, eax
     
     ; get style and check it is our default at least
-    Invoke GetWindowLong, hControl, GWL_STYLE
+    Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
     and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov eax, dwStyle
         or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov dwStyle, eax
-        Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
+        Invoke SetWindowLong, hWin, GWL_STYLE, dwStyle
     .ENDIF
      
     ; Set default initial external property values  
-    Invoke MUISetIntProperty, hControl, @TextEnabledState, TRUE   
-    Invoke MUISetExtProperty, hControl, @TextColor, MUI_RGBCOLOR(51,51,51)
-    Invoke MUISetExtProperty, hControl, @TextColorAlt, MUI_RGBCOLOR(51,51,51)
-    Invoke MUISetExtProperty, hControl, @TextColorDisabled, MUI_RGBCOLOR(204,204,204)
+    Invoke MUISetIntProperty, hWin, @TextEnabledState, TRUE   
+    Invoke MUISetExtProperty, hWin, @TextColor, MUI_RGBCOLOR(51,51,51)
+    Invoke MUISetExtProperty, hWin, @TextColorAlt, MUI_RGBCOLOR(51,51,51)
+    Invoke MUISetExtProperty, hWin, @TextColorDisabled, MUI_RGBCOLOR(204,204,204)
     
-    Invoke MUIGetParentBackgroundColor, hControl
+    Invoke MUIGetParentBackgroundColor, hWin
     .IF eax == -1 ; if background was NULL then try a color as default
         Invoke GetSysColor, COLOR_WINDOW
     .ENDIF
-    Invoke MUISetExtProperty, hControl, @TextBackColor, eax ;MUI_RGBCOLOR(255,255,255)   
-    ;Invoke MUISetExtProperty, hControl, @TextBackColor, MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hControl, @TextBackColorAlt, eax ;MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hControl, @TextBackColorDisabled, eax ;MUI_RGBCOLOR(192,192,192)
+    Invoke MUISetExtProperty, hWin, @TextBackColor, eax ;MUI_RGBCOLOR(255,255,255)   
+    ;Invoke MUISetExtProperty, hWin, @TextBackColor, MUI_RGBCOLOR(255,255,255)
+    Invoke MUISetExtProperty, hWin, @TextBackColorAlt, eax ;MUI_RGBCOLOR(255,255,255)
+    Invoke MUISetExtProperty, hWin, @TextBackColorDisabled, eax ;MUI_RGBCOLOR(192,192,192)
     
+    Invoke _MUI_TextSetFontFamilySize, hWin, dwStyle
+
     mov eax, dwStyle
-    and eax, 0F0h
-    mov dwFontFamily, eax
- 
-    .IF eax == 0 || eax == MUITS_FONT_DIALOG || eax == MUITS_FONT_SETFONT
-        Invoke SendMessage, hControl, WM_GETFONT, 0, 0
-        mov hFont, eax
-        Invoke MUISetExtProperty, hControl, @TextFont, hFont
-    .ELSE
-        
-        .IF eax == MUITS_FONT_SEGOE
-            lea eax, szMUITextFontSegoe
-        .ELSEIF eax == MUITS_FONT_TAHOMA
-            lea eax, szMUITextFontTahoma
-        .ELSEIF eax == MUITS_FONT_ARIAL
-            lea eax, szMUITextFontArial
-        .ELSEIF eax == MUITS_FONT_TIMES
-            lea eax, szMUITextFontTimes
-        .ELSEIF eax == MUITS_FONT_COURIER
-            lea eax, szMUITextFontCourier
-        .ELSEIF eax == MUITS_FONT_VERDANA    
-            lea eax, szMUITextFontVerdana
-        .ELSE
-            lea eax, szMUITextFontSegoe
-        .ENDIF
-        mov MUITextFont, eax
-        
-        mov eax, dwStyle
-        and eax, 15d
-        mov dwFontSize, eax
-    
-        .IF eax == MUITS_DEFAULT ; 8px
-            Invoke MUIPointSizeToLogicalUnit, hControl, 8
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-    
-        .ELSEIF eax == MUITS_HEADER ; 46px
-            Invoke MUIPointSizeToLogicalUnit, hControl, 46d
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_BOLD
-    
-        .ELSEIF eax == MUITS_SUBHEADER ; 34px
-            Invoke MUIPointSizeToLogicalUnit, hControl, 34d
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_SEMIBOLD
-    
-        .ELSEIF eax == MUITS_TITLE; 24px
-            Invoke MUIPointSizeToLogicalUnit, hControl, 24d
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_MEDIUM
-    
-        .ELSEIF eax == MUITS_SUBTITLE; 20px
-            Invoke MUIPointSizeToLogicalUnit, hControl, 20d
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-    
-        .ELSEIF eax == MUITS_BODYTITLE; 15px
-            Invoke MUIPointSizeToLogicalUnit, hControl, 15d
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_SEMIBOLD
-            
-        .ELSEIF eax == MUITS_BODY ; 15px
-            Invoke MUIPointSizeToLogicalUnit, hControl, 15d
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-            
-        .ELSEIF eax == MUITS_CAPTION ; 12px
-            Invoke MUIPointSizeToLogicalUnit, hControl, 12d
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-        
-        .ELSE
-            Invoke MUIPointSizeToLogicalUnit, hControl, 8
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-        
-        .ENDIF
-        
-        Invoke CreateFont, dwFontHeight, 0,0,0, dwFontWeight, 0,0,0,0,0,0, PROOF_QUALITY, FF_SWISS, MUITextFont
-        mov hFont, eax
-        Invoke MUISetExtProperty, hControl, @TextFont, hFont
+    and eax, MUITS_LORUMIPSUM
+    .IF eax == MUITS_LORUMIPSUM
+        Invoke SetWindowText, hWin, Addr szLorumIpsumText
     .ENDIF
-    
-    
+
     ret
 
 _MUI_TextInit ENDP
@@ -555,8 +477,7 @@ _MUI_TextPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnab
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
     LOCAL hOldBrush:DWORD
-    LOCAL LogBrush:LOGBRUSH
-    
+
     .IF bEnabledState == TRUE
         .IF bMouseOver == FALSE
             Invoke MUIGetExtProperty, hWin, @TextBackColor              ; Normal back color
@@ -603,13 +524,11 @@ _MUI_TextPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bE
     LOCAL BackColor:DWORD
     LOCAL hFont:DWORD
     LOCAL hOldFont:DWORD
-    ;LOCAL hBrush:DWORD
-    ;LOCAL hOldBrush:DWORD    
     LOCAL LenText:DWORD    
     LOCAL dwTextStyle:DWORD
     LOCAL dwStyle:DWORD
     LOCAL rect:RECT
-    LOCAL szText[2048]:BYTE
+    LOCAL szMUITextBuffer[MUI_TEXT_MAX_CHARS]:BYTE
     
     Invoke CopyRect, Addr rect, lpRect
 
@@ -647,9 +566,9 @@ _MUI_TextPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bE
     .ENDIF  
     mov TextColor, eax
     
-    Invoke GetWindowText, hWin, Addr szText, SIZEOF szText
+    Invoke GetWindowText, hWin, Addr szMUITextBuffer, MUI_TEXT_MAX_CHARS;SIZEOF szText
     
-    Invoke lstrlen, Addr szText
+    Invoke lstrlen, Addr szMUITextBuffer ;szText
     mov LenText, eax
     
     Invoke SelectObject, hdc, hFont
@@ -680,20 +599,13 @@ _MUI_TextPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bE
         or dwTextStyle, DT_LEFT
     .ENDIF
 
-    Invoke DrawText, hdc, Addr szText, LenText, Addr rect, dwTextStyle
+    Invoke DrawText, hdc, Addr szMUITextBuffer, LenText, Addr rect, dwTextStyle
     
     .IF hOldFont != 0
         Invoke SelectObject, hdc, hOldFont
         Invoke DeleteObject, hOldFont
     .ENDIF
-;    .IF hOldBrush != 0
-;        Invoke SelectObject, hdc, hOldBrush
-;        Invoke DeleteObject, hOldBrush
-;    .ENDIF     
-;    .IF hBrush != 0
-;        Invoke DeleteObject, hBrush
-;    .ENDIF
-    
+
     ret
 _MUI_TextPaintText ENDP
 
@@ -701,7 +613,7 @@ _MUI_TextPaintText ENDP
 ;-------------------------------------------------------------------------------------
 ; Returns TRUE if CR LF found in string, otherwise returns FALSE
 ;-------------------------------------------------------------------------------------
-_MUI_TextCheckMultiline PROC USES EBX hControl:DWORD, lpszText:DWORD
+_MUI_TextCheckMultiline PROC USES EBX hWin:DWORD, lpszText:DWORD
     LOCAL lenText:DWORD
     LOCAL Cnt:DWORD
     LOCAL bMultiline:DWORD
@@ -733,7 +645,7 @@ _MUI_TextCheckMultiline PROC USES EBX hControl:DWORD, lpszText:DWORD
         mov eax, Cnt
     .ENDW
 
-    Invoke GetWindowLong, hControl, GWL_STYLE
+    Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax  
     mov eax, dwStyle
     .IF bMultiline == FALSE
@@ -742,7 +654,7 @@ _MUI_TextCheckMultiline PROC USES EBX hControl:DWORD, lpszText:DWORD
         and eax, (-1 xor MUITS_SINGLELINE)
     .ENDIF
     mov dwStyle, eax
-    Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
+    Invoke SetWindowLong, hWin, GWL_STYLE, dwStyle
 
     mov eax, bMultiline
     ret
@@ -750,7 +662,142 @@ _MUI_TextCheckMultiline PROC USES EBX hControl:DWORD, lpszText:DWORD
 _MUI_TextCheckMultiline ENDP
 
 
+;-------------------------------------------------------------------------------------
+; Create Text size and font family based on style flags passed to control
+;-------------------------------------------------------------------------------------
+_MUI_TextSetFontFamilySize PROC USES EBX hWin:DWORD, dwStyle:DWORD
+    LOCAL MUITextFont:DWORD
+    LOCAL hFont:DWORD
+    LOCAL dwFontHeight:DWORD
+    LOCAL dwFontWeight:DWORD
+    LOCAL dwFontFamily:DWORD
+    LOCAL dwFontSize:DWORD
+    LOCAL ptrFontHandles:DWORD
+    LOCAL dwFontSizeIndex:DWORD
 
+    Invoke MUIGetExtProperty, hWin, @TextFont
+    mov hFont, eax
+    .IF hFont != NULL
+        Invoke DeleteObject, hFont
+    .ENDIF
+
+    mov eax, dwStyle
+    and eax, 0F0h
+    mov dwFontFamily, eax
+ 
+    .IF eax == 0 || eax == MUITS_FONT_DIALOG || eax == MUITS_FONT_SETFONT
+        Invoke GetParent, hWin
+        Invoke SendMessage, eax, WM_GETFONT, 0, 0 ; hope parent is the dialog or container that has a font being used.
+        mov hFont, eax
+        Invoke MUISetExtProperty, hWin, @TextFont, hFont
+    .ELSE
+
+        .IF eax == MUITS_FONT_SEGOE
+            lea eax, szMUITextFontSegoe
+            lea ebx, MUITextFontSegoeHandles
+        .ELSEIF eax == MUITS_FONT_TAHOMA
+            lea eax, szMUITextFontTahoma
+            lea ebx, MUITextFontTahomaHandles
+        .ELSEIF eax == MUITS_FONT_ARIAL
+            lea eax, szMUITextFontArial
+            lea ebx, MUITextFontArialHandles
+        .ELSEIF eax == MUITS_FONT_TIMES
+            lea eax, szMUITextFontTimes
+            lea ebx, MUITextFontTimesHandles
+        .ELSEIF eax == MUITS_FONT_COURIER
+            lea eax, szMUITextFontCourier
+            lea ebx, MUITextFontCourierHandles
+        .ELSEIF eax == MUITS_FONT_VERDANA    
+            lea eax, szMUITextFontVerdana
+            lea ebx, MUITextFontVerdanaHandles
+        .ELSE
+            lea eax, szMUITextFontSegoe
+            lea ebx, MUITextFontSegoeHandles
+        .ENDIF
+        mov MUITextFont, eax
+        mov ptrFontHandles, ebx
+        
+        mov eax, dwStyle
+        and eax, 15d
+        mov dwFontSize, eax
+
+        .IF eax == MUITS_8PT ; 8pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 8
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+            mov dwFontSizeIndex, 0
+        .ELSEIF eax == MUITS_9PT_BOLD ; 9pt bold
+            Invoke MUIPointSizeToLogicalUnit, hWin, 9
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_BOLD
+            mov dwFontSizeIndex, 1
+        .ELSEIF eax == MUITS_10PT ; 10pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 10
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+            mov dwFontSizeIndex, 2
+        .ELSEIF eax == MUITS_11PT_BOLD; 11pt bold
+            Invoke MUIPointSizeToLogicalUnit, hWin, 11
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_BOLD
+            mov dwFontSizeIndex, 3
+        .ELSEIF eax == MUITS_12PT; 12pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 12
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+            mov dwFontSizeIndex, 4
+        .ELSEIF eax == MUITS_13PT_BOLD; 13pt bold
+            Invoke MUIPointSizeToLogicalUnit, hWin, 13
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_BOLD
+            mov dwFontSizeIndex, 5
+        .ELSEIF eax == MUITS_14PT ; 14pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 14
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+            mov dwFontSizeIndex, 6
+        .ELSEIF eax == MUITS_15PT_BOLD ; 15pt bold
+            Invoke MUIPointSizeToLogicalUnit, hWin, 15
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_BOLD
+            mov dwFontSizeIndex, 7
+        .ELSE
+            Invoke MUIPointSizeToLogicalUnit, hWin, 8
+            mov dwFontHeight, eax
+            mov dwFontWeight, FW_NORMAL
+            mov dwFontSizeIndex, 0
+        .ENDIF
+        
+        ; check if font already created, if so use that, instead of creating another font
+        
+        mov ebx, ptrFontHandles
+        mov eax, dwFontSizeIndex
+        lea ebx, [ebx+eax*SIZEOF DWORD]
+        mov eax, [ebx]
+        mov hFont, eax
+        .IF eax == 0
+            ;PrintText 'New Font'
+            Invoke CreateFont, dwFontHeight, 0,0,0, dwFontWeight, 0,0,0,0,0,0, PROOF_QUALITY, FF_SWISS, MUITextFont
+            mov hFont, eax
+            ; save handle to fonthandles
+            mov ebx, ptrFontHandles
+            mov eax, dwFontSizeIndex
+            lea ebx, [ebx+eax*SIZEOF DWORD]
+            mov eax, hFont
+            mov [ebx], eax
+            ;PrintDec hFont
+        .ELSE
+            ;PrintText 'reusing an existing font handle'
+            ;PrintDec ptrFontHandles
+            ;PrintDec dwFontSizeIndex
+            ;PrintDec hFont
+        .ENDIF
+        Invoke MUISetExtProperty, hWin, @TextFont, hFont
+    .ENDIF
+    mov eax, hFont
+    ret
+
+_MUI_TextSetFontFamilySize ENDP
 
 
 
