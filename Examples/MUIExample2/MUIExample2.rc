@@ -1,0 +1,7 @@
+#include "Res/Panel4Dlg.rc"
+#include "Res/Panel3Dlg.rc"
+#include "Res/Panel2Dlg.rc"
+#include "Res/Panel1Dlg.rc"
+#include "Res/MUIExample2Ver.rc"
+#include "Res/MUIExample2Dlg.rc"
+#include "Res/MUIExample2Res.rc"

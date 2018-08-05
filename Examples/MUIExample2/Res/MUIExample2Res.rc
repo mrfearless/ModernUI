@@ -1,0 +1,4 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUIExample2.xml"
+100						ICON      DISCARDABLE "Images/ra.ico"
+200						BITMAP    DISCARDABLE "Images/RadasmStudio.bmp"
