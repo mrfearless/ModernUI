@@ -1,16 +1,19 @@
 #define VERINF1 1
 VERINF1 VERSIONINFO
-FILEVERSION 0,2,4,5
-PRODUCTVERSION 0,2,4,5
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
 FILEOS 0x00000004
-FILETYPE 0x00000000
+FILETYPE 0x00000001
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
     BLOCK "040904B0"
     BEGIN
-      VALUE "FileVersion", "0.2.4.5\0"
-      VALUE "ProductVersion", "0.2.4.5\0"
+      VALUE "FileVersion", "1.0.0.0\0"
+      VALUE "FileDescription", "MUIExample1\0"
+      VALUE "InternalName", "MUIExample1\0"
+      VALUE "ProductName", "MUIExample1\0"
+      VALUE "ProductVersion", "1.0.0.0\0"
     END
   END
   BLOCK "VarFileInfo"

@@ -5,17 +5,6 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-;DEBUG32 EQU 1
-;
-;IFDEF DEBUG32
-;    PRESERVEXMMREGS equ 1
-;    includelib M:\Masm32\lib\Debug32.lib
-;    DBG32LIB equ 1
-;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-;    include M:\Masm32\include\debug32.inc
-;ENDIF
-
-
 include MUIExample1.inc
 
 include Panels.asm
@@ -164,7 +153,26 @@ WndProc endp
 ; InitGUI - initialize GUI
 ;-------------------------------------------------------------------------------------
 InitGUI PROC hWin:DWORD
-    
+
+    ;-----------------------------------------------------------------------------------------------------
+    ; NOTES
+    ;-----------------------------------------------------------------------------------------------------
+    ; This MUIExample1 example project, programmatically creates the ModernUI controls we require.
+    ; 
+    ; We manually create the ModernUI_SmartPanel control early on, which will host our dialogs.
+    ;
+    ; Each dialog panel is registered with the ModernUI_SmartPanel control, which initializes each dialog.
+    ;
+    ; At initialization of each dialog, we also handle the creation of any ModernUI controls required
+    ; during the WM_INITDIALOG event.
+    ;
+    ; We then set some properties of each control.
+    ;
+    ; The MUIExample2 project, whilst similar to this project, creates the ModernUI controls via dialog
+    ; resources instead of programmatically.
+    ;-----------------------------------------------------------------------------------------------------
+
+
     ;-----------------------------------------------------------------------------------------------------
     ; ModernUI_CaptionBar
     ;-----------------------------------------------------------------------------------------------------      
@@ -201,7 +209,7 @@ InitGUI PROC hWin:DWORD
     ;-----------------------------------------------------------------------------------------------------
     ; ModernUI_Text: Community Edition 2018
     ;-----------------------------------------------------------------------------------------------------        
-    Invoke MUITextCreate, hWin, Addr szRSHeader, 17, 70, 457, 30, IDC_TEXTRSHEADER, MUITS_CAPTION or MUITS_FONT_SEGOE 
+    Invoke MUITextCreate, hWin, Addr szRSHeader, 17, 65, 431, 30, IDC_TEXTRSHEADER, MUITS_13PT_BOLD  or MUITS_FONT_SEGOE 
     mov hMUITextRSHeader, eax
     Invoke MUITextSetProperty, hMUITextRSHeader, @TextColor, MUI_RGBCOLOR(179,179,179)
     Invoke MUITextSetProperty, hMUITextRSHeader, @TextColorAlt, MUI_RGBCOLOR(179,179,179)
@@ -231,7 +239,7 @@ PreInstallationThread PROC dwParam:DWORD
     mov dwInstallStage, 0
     
     ; Pretend we are doing something here for the preperation of the installation
-    Invoke SleepEx, 5000, FALSE
+    Invoke SleepEx, 10000, TRUE
 
     ; Finally, we finished the prep part, now move on to next dialog for user to 
     ; choose components or installation location or something

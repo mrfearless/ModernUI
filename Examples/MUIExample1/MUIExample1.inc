@@ -34,7 +34,7 @@ include ModernUI_ProgressDots.inc
 includelib ModernUI_ProgressDots.lib
 
 ;-----------------------------------------------------------------------------------------
-; MUIPLTest Prototypes
+; MUIExample1 Prototypes
 ;-----------------------------------------------------------------------------------------
 WinMain					PROTO :DWORD,:DWORD,:DWORD,:DWORD
 WndProc					PROTO :DWORD,:DWORD,:DWORD,:DWORD
@@ -46,7 +46,7 @@ PreInstallationThread   PROTO :DWORD
 
 .CONST
 ;-----------------------------------------------------------------------------------------
-; MUIPLTest Constants
+; MUIExample1 Constants
 ;-----------------------------------------------------------------------------------------
 
 ICO_MAIN                EQU 100
@@ -65,7 +65,7 @@ IDC_CAPTIONBAR          EQU 1019
 
 .DATA
 ;-----------------------------------------------------------------------------------------
-; MUIPLTest Initialized Data
+; MUIExample1 Initialized Data
 ;-----------------------------------------------------------------------------------------
 ClassName				DB 'DLGCLASS',0
 AppName					DB 'Radasm Studio Installer',0
@@ -80,7 +80,7 @@ lpThreadID              DD 0
 
 .DATA?
 ;-----------------------------------------------------------------------------------------
-; MUIPLTest Uninitialized Data
+; MUIExample1 Uninitialized Data
 ;-----------------------------------------------------------------------------------------
 icc 					INITCOMMONCONTROLSEX <>
 hInstance				DD ?

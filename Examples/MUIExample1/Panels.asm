@@ -30,14 +30,15 @@ IDC_TEXTFINISHED                EQU 2801
 IDC_BTNFINISH                   EQU 2802
 
 .DATA
-; Panel1
-szBtnCancelText                 DB "Cancel",0
-szInstalling                    DB "Preparing installation environment, please wait...",0
 
-; Panel2
+; Panel1
 szConfirmCancel                 DB "Are you sure you want to cancel setup?",0
 szConfirmYes                    DB "Yes",0
 szConfirmNo                     DB "No",0
+
+; Panel2
+szBtnCancelText                 DB "Cancel",0
+szInstalling                    DB "Preparing installation environment, please wait...",0
 
 ; Panel3
 szChooseComponents              DB "Choose components to install.",0
@@ -115,7 +116,7 @@ Panel1Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Text: Confirm Cancellation of installer
         ;-----------------------------------------------------------------------------------------------------        
-        Invoke MUITextCreate, hWin, Addr szConfirmCancel, 3, 250, 450, 80, IDC_TEXTCONFIRMCANCEL, MUITS_ALIGN_CENTER or MUITS_CAPTION or MUITS_FONT_SEGOE 
+        Invoke MUITextCreate, hWin, Addr szConfirmCancel, 3, 250, 450, 80, IDC_TEXTCONFIRMCANCEL, MUITS_11PT_BOLD or MUITS_ALIGN_CENTER or MUITS_FONT_SEGOE 
         mov hMUITextConfirmCancel, eax
         Invoke MUITextSetProperty, hMUITextConfirmCancel, @TextColor, MUI_RGBCOLOR(179,179,179)
         Invoke MUITextSetProperty, hMUITextConfirmCancel, @TextColorAlt, MUI_RGBCOLOR(179,179,179)
@@ -209,7 +210,7 @@ Panel2Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Text: Installing...
         ;-----------------------------------------------------------------------------------------------------        
-        Invoke MUITextCreate, hWin, Addr szInstalling, 15, 20, 379, 80, IDC_TEXTINSTALLING, MUITS_CAPTION or MUITS_FONT_SEGOE
+        Invoke MUITextCreate, hWin, Addr szInstalling, 15, 20, 379, 80, IDC_TEXTINSTALLING, MUITS_10PT or MUITS_FONT_SEGOE
         mov hMUITextInstalling, eax
         Invoke MUITextSetProperty, hMUITextInstalling, @TextColor, MUI_RGBCOLOR(179,179,179)
         Invoke MUITextSetProperty, hMUITextInstalling, @TextColorAlt, MUI_RGBCOLOR(179,179,179)
@@ -311,7 +312,7 @@ Panel3Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Text: Choose components
         ;-----------------------------------------------------------------------------------------------------        
-        Invoke MUITextCreate, hWin, Addr szChooseComponents, 15, 20, 379, 80, IDC_TEXTCHOOSE, MUITS_CAPTION or MUITS_FONT_SEGOE
+        Invoke MUITextCreate, hWin, Addr szChooseComponents, 15, 20, 379, 80, IDC_TEXTCHOOSE, MUITS_10PT or MUITS_FONT_SEGOE
         mov hMUITextChoose, eax
         Invoke MUITextSetProperty, hMUITextChoose, @TextColor, MUI_RGBCOLOR(179,179,179)
         Invoke MUITextSetProperty, hMUITextChoose, @TextColorAlt, MUI_RGBCOLOR(179,179,179)
@@ -384,7 +385,7 @@ Panel4Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Text: Installation completed
         ;-----------------------------------------------------------------------------------------------------        
-        Invoke MUITextCreate, hWin, Addr szFinished, 15, 20, 379, 80, IDC_TEXTFINISHED, MUITS_CAPTION or MUITS_FONT_SEGOE
+        Invoke MUITextCreate, hWin, Addr szFinished, 15, 20, 379, 80, IDC_TEXTFINISHED, MUITS_10PT or MUITS_FONT_SEGOE
         mov hMUITextFinished, eax
         Invoke MUITextSetProperty, hMUITextFinished, @TextColor, MUI_RGBCOLOR(179,179,179)
         Invoke MUITextSetProperty, hMUITextFinished, @TextColorAlt, MUI_RGBCOLOR(179,179,179)
