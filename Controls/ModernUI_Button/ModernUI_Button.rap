@@ -95,15 +95,15 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=266248609
+PTimer=266986758
 [Collapse]
-1=64,4194304,32,536870912,16384,128,1024,134217732,,268435456,2053
+1=,,,,65537,512,,536870928,,,8212
 2=
 3=
 4=
 [Size]
-1=0,0,0,0,40325
-2=0,0,0,0,315
+1=0,0,0,0,21436
+2=0,0,0,0,10535
 3=0,0,0,0,458
 4=0,0,0,0,0
 [GroupExpand]
@@ -122,13 +122,13 @@ GroupExpand=1,1,1,0,0,0
 [BreakPoint]
 0=
 [Find]
-1="mov eax, hBitmap"
+1="MUISetExtProperty"
 2="@ButtonTextFont"
-3="CreateFont"
-4="IUnknown"
-5="@ButtonPaddingGeneral"
-6="_MUI_ButtonGetImageSize"
-7="MUIBS_KEEPIMAGES"
-8="DD ? "
-9="       EQU"
-10="       EQU 0    ; "
+3="mov eax, hBitmap"
+4="CreateFont"
+5="IUnknown"
+6="@ButtonPaddingGeneral"
+7="_MUI_ButtonGetImageSize"
+8="MUIBS_KEEPIMAGES"
+9="DD ? "
+10="       EQU"

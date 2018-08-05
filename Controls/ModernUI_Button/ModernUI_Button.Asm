@@ -416,17 +416,17 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
             
-            Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, FALSE
-            Invoke ShowWindow, hWin, SW_SHOW                
+            ;Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            ;Invoke ShowWindow, hWin, SW_SHOW                
             
         .ELSE
             Invoke InvalidateRect, hWin, NULL, TRUE
             Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
             
-            Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, FALSE
-            Invoke ShowWindow, hWin, SW_SHOW                
+            ;Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            ;Invoke ShowWindow, hWin, SW_SHOW                
             
         .ENDIF
         
@@ -454,16 +454,16 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, TRUE
             
-            Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, FALSE
-            Invoke ShowWindow, hWin, SW_SHOW              
+            ;Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            ;Invoke ShowWindow, hWin, SW_SHOW              
 
         .ELSE
             Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
             
-            Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, FALSE
-            Invoke ShowWindow, hWin, SW_SHOW              
+            ;Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            ;Invoke ShowWindow, hWin, SW_SHOW              
 
         .ENDIF
 
@@ -473,9 +473,9 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         .IF eax == TRUE   
             Invoke MUISetIntProperty, hWin, @ButtonMouseOver, TRUE
             .IF eax != TRUE
-                Invoke ShowWindow, hWin, SW_HIDE
+                ;Invoke ShowWindow, hWin, SW_HIDE
                 Invoke InvalidateRect, hWin, NULL, TRUE
-                Invoke ShowWindow, hWin, SW_SHOW
+                ;Invoke ShowWindow, hWin, SW_SHOW
                 mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
                 mov TE.dwFlags, TME_LEAVE
                 mov eax, hWin
@@ -497,14 +497,14 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
             
-            Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, FALSE
-            Invoke ShowWindow, hWin, SW_SHOW            
+            ;Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            ;Invoke ShowWindow, hWin, SW_SHOW            
             
         .ELSE
-            Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, FALSE
-            Invoke ShowWindow, hWin, SW_SHOW
+            ;Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            ;Invoke ShowWindow, hWin, SW_SHOW
             ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
         .ENDIF
 
@@ -520,22 +520,22 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
         .ELSE
-            Invoke InvalidateRect, hWin, NULL, FALSE
+            Invoke InvalidateRect, hWin, NULL, TRUE
             ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
         .ENDIF
     
     .ELSEIF eax == WM_ENABLE
         Invoke MUISetIntProperty, hWin, @ButtonEnabledState, wParam
-        Invoke ShowWindow, hWin, SW_HIDE
+        ;Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
-        Invoke ShowWindow, hWin, SW_SHOW
+        ;Invoke ShowWindow, hWin, SW_SHOW
         mov eax, 0
 
     .ELSEIF eax == WM_SETTEXT
         Invoke DefWindowProc, hWin, uMsg, wParam, lParam
-        Invoke ShowWindow, hWin, SW_HIDE
+        ;Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
-        Invoke ShowWindow, hWin, SW_SHOW
+        ;Invoke ShowWindow, hWin, SW_SHOW
         ret
 
     .ELSEIF eax == WM_SETFONT
@@ -2366,14 +2366,13 @@ _MUI_ButtonPaintBorder ENDP
 ;-------------------------------------------------------------------------------------
 _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     
-;    mov eax, dwProperty
-;    .IF eax == @ButtonTextFont || eax == @ButtonNoteTextFont || eax == @ButtonNotifyTextFont
-;        .IF dwPropertyValue != 0
-;            Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue 
-;        .ENDIF    
-;    .ELSE
-;        Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue
-;    .ENDIF
+    mov eax, dwProperty
+    .IF eax == @ButtonTextFont || eax == @ButtonNoteTextFont || eax == @ButtonNotifyTextFont
+        .IF dwPropertyValue != 0
+            Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue
+            ret
+        .ENDIF    
+    .ENDIF
     
     Invoke MUISetExtProperty, hWin, dwProperty, dwPropertyValue
     
