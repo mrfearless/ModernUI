@@ -102,7 +102,7 @@ DOTS_SHOW_INTERVAL                      EQU 16 ; countdown til dot starts showin
 DOTS_TIME_INTERVAL                      EQU 10 ; Milliseconds for timer firing, 10 seems fine, increasing this will slow down animations
 DOTS_SPEED                              EQU 2  ; Speed of the fastest dots before and after middle section
 DOTS_DEFAULT_SIZE                       EQU 4  ; Default height and width of control and also dots
-
+DOTS_MIN_SIZE                           EQU 3  ; min size
 
 
 ; Internal properties
@@ -205,7 +205,9 @@ MUIProgressDotsCreate PROC PUBLIC hWndParent:DWORD, ypos:DWORD, controlheight:DW
     
     mov eax, controlheight
     .IF eax == 0
-        mov eax, DOTS_DEFAULT_SIZE
+        mov eax, DOTS_DEFAULT_SIZE 
+    .ELSEIF sdword ptr eax < DOTS_MIN_SIZE 
+        mov eax, DOTS_MIN_SIZE
     .ENDIF
     mov dwHeight, eax
 
@@ -406,11 +408,30 @@ _MUI_ProgressDotsResize PROC PRIVATE USES EBX EDX hWin:DWORD
     LOCAL dwMarkerStart:DWORD
     LOCAL dwMarkerFinish:DWORD
     LOCAL hDefer:DWORD
+    LOCAL AnimateState:DWORD
+    
+    ;PrintText '_MUI_ProgressDotsResize'
+    
+    Invoke MUIGetIntProperty, hWin, @ProgressDotsAnimateState
+    mov AnimateState, eax
+    .IF AnimateState == TRUE
+        Invoke MUIProgressDotsAnimateStop, hWin ; stop animation whilst resize occurs
+    .ENDIF
 
-    Invoke GetClientRect, hWin, Addr rect
+    Invoke GetWindowRect, hWin, Addr rect
     mov eax, rect.bottom
     sub eax, rect.top
+    ;PrintDec eax
+    .IF eax == 0
+        mov eax, DOTS_DEFAULT_SIZE
+    .ELSEIF eax == 1 || eax == 2
+        mov eax, DOTS_MIN_SIZE
+    .ELSE
+        inc eax
+    .ENDIF
     mov dwHeight, eax
+    
+    ;PrintDec dwHeight
 
     Invoke GetParent, hWin
     mov hParent, eax
@@ -425,9 +446,9 @@ _MUI_ProgressDotsResize PROC PRIVATE USES EBX EDX hWin:DWORD
     Invoke BeginDeferWindowPos, 1
     mov hDefer, eax
     .IF hDefer == NULL
-        Invoke SetWindowPos, hWin, NULL, 0, 0, dwWidth, dwHeight, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOMOVE ;or SWP_NOSENDCHANGING ;or SWP_NOCOPYBITS
+        Invoke SetWindowPos, hWin, NULL, 0, 0, dwWidth, dwHeight, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOMOVE or SWP_NOSENDCHANGING ;or SWP_NOCOPYBITS
     .ELSE
-        Invoke DeferWindowPos, hDefer, hWin, NULL, 0, 0, dwWidth, dwHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOMOVE ;or SWP_NOSENDCHANGING
+        Invoke DeferWindowPos, hDefer, hWin, NULL, 0, 0, dwWidth, dwHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOMOVE or SWP_NOSENDCHANGING
         mov hDefer, eax
     .ENDIF
     .IF hDefer != NULL
@@ -454,6 +475,10 @@ _MUI_ProgressDotsResize PROC PRIVATE USES EBX EDX hWin:DWORD
     
     ; reset everything otherwise graphically it looks odd
     Invoke _MUI_ProgressDotsInitDots, hWin
+    
+    .IF AnimateState == TRUE
+        Invoke MUIProgressDotsAnimateStart, hWin ; restart animation if it was started previously
+    .ENDIF    
     
     ret
 
@@ -694,11 +719,10 @@ _MUI_ProgressDotsPaintDots PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcD
     mov pCurrentDot, eax
     
     Invoke CopyRect, Addr rect, lpRect
-
     mov eax, rect.bottom
     sub eax, rect.top
     mov dwSize, eax
-
+ 
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
     Invoke SelectObject, hdcDest, eax
