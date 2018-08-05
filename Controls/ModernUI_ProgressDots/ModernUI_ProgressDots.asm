@@ -313,7 +313,7 @@ _MUI_ProgressDotsParentSubClassProc ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ProgressDotsInit - set initial default values
 ;-------------------------------------------------------------------------------------
-_MUI_ProgressDotsInit PROC PRIVATE USES EBX EDX hControl:DWORD
+_MUI_ProgressDotsInit PROC PRIVATE USES EBX EDX hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
     LOCAL pDotsArray:DWORD
@@ -322,41 +322,41 @@ _MUI_ProgressDotsInit PROC PRIVATE USES EBX EDX hControl:DWORD
     LOCAL dwMarkerStart:DWORD
     LOCAL dwMarkerFinish:DWORD    
     
-    Invoke GetParent, hControl
+    Invoke GetParent, hWin
     mov hParent, eax
     
     ; get style and check it is our default at least
-    Invoke GetWindowLong, hControl, GWL_STYLE
+    Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
     and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov eax, dwStyle
         or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov dwStyle, eax
-        Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
+        Invoke SetWindowLong, hWin, GWL_STYLE, dwStyle
     .ENDIF
 
     ; Set default initial internal property values
-    Invoke MUISetIntProperty, hControl, @ProgressDotsAnimateState, FALSE
+    Invoke MUISetIntProperty, hWin, @ProgressDotsAnimateState, FALSE
     IFDEF DOTS_USE_TIMERQUEUE
-        Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, TRUE
-        Invoke MUISetIntProperty, hControl, @ProgressDotsQueue, 0
-        Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, 0
+        Invoke MUISetIntProperty, hWin, @ProgressDotsUseTimerQueue, TRUE
+        Invoke MUISetIntProperty, hWin, @ProgressDotsQueue, 0
+        Invoke MUISetIntProperty, hWin, @ProgressDotsTimer, 0
     ENDIF
 
     ; Set default initial external property values
-    Invoke MUIGetParentBackgroundColor, hControl
+    Invoke MUIGetParentBackgroundColor, hWin
     .IF eax == -1 ; if background was NULL then try a color as default
         Invoke GetSysColor, COLOR_WINDOW
     .ENDIF
-    Invoke MUISetExtProperty, hControl, @ProgressDotsBackColor, eax ;MUI_RGBCOLOR(48,48,48) ;eax    
-    Invoke MUISetExtProperty, hControl, @ProgressDotsDotColor, MUI_RGBCOLOR(53,133,211)
-    Invoke MUISetExtProperty, hControl, @ProgressDotsShowInterval, DOTS_SHOW_INTERVAL
-    Invoke MUISetExtProperty, hControl, @ProgressDotsTimeInterval, DOTS_TIME_INTERVAL
-    Invoke MUISetExtProperty, hControl, @ProgressDotsSpeed, DOTS_SPEED    
+    Invoke MUISetExtProperty, hWin, @ProgressDotsBackColor, eax ;MUI_RGBCOLOR(48,48,48) ;eax    
+    Invoke MUISetExtProperty, hWin, @ProgressDotsDotColor, MUI_RGBCOLOR(53,133,211)
+    Invoke MUISetExtProperty, hWin, @ProgressDotsShowInterval, DOTS_SHOW_INTERVAL
+    Invoke MUISetExtProperty, hWin, @ProgressDotsTimeInterval, DOTS_TIME_INTERVAL
+    Invoke MUISetExtProperty, hWin, @ProgressDotsSpeed, DOTS_SPEED    
 
     ; Calc makers for middle section of control, where dots are slowest
-    Invoke GetClientRect, hControl, Addr rect
+    Invoke GetClientRect, hWin, Addr rect
     mov eax, rect.right
     sub eax, rect.left
     mov dwWidth, eax
@@ -370,8 +370,8 @@ _MUI_ProgressDotsInit PROC PRIVATE USES EBX EDX hControl:DWORD
     mov dwMarkerStart, edx
     add edx, edx
     mov dwMarkerFinish, edx    
-    Invoke MUISetIntProperty, hControl, @ProgressDotsMarkerStart, dwMarkerStart
-    Invoke MUISetIntProperty, hControl, @ProgressDotsMarkerFinish, dwMarkerFinish
+    Invoke MUISetIntProperty, hWin, @ProgressDotsMarkerStart, dwMarkerStart
+    Invoke MUISetIntProperty, hWin, @ProgressDotsMarkerFinish, dwMarkerFinish
 
     ; Calc space for allocating no of dots to show
     mov ebx, MAX_DOTS
@@ -383,10 +383,10 @@ _MUI_ProgressDotsInit PROC PRIVATE USES EBX EDX hControl:DWORD
         ret
     .ENDIF
     mov pDotsArray, eax
-    Invoke MUISetIntProperty, hControl, @ProgressDotsDotsArray, pDotsArray
+    Invoke MUISetIntProperty, hWin, @ProgressDotsDotsArray, pDotsArray
     
     ; subclass parent to react to resize notifications, to reset our controls animation and internal markers etc
-    Invoke SetWindowSubclass, hParent, Addr _MUI_ProgressDotsParentSubClassProc, hControl, hControl
+    Invoke SetWindowSubclass, hParent, Addr _MUI_ProgressDotsParentSubClassProc, hWin, hWin
 
     mov eax, 0
     ret
@@ -397,7 +397,7 @@ _MUI_ProgressDotsInit ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ProgressDotsResize
 ;-------------------------------------------------------------------------------------
-_MUI_ProgressDotsResize PROC PRIVATE hControl:DWORD
+_MUI_ProgressDotsResize PROC PRIVATE USES EBX EDX hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL rect:RECT
     LOCAL parentrect:RECT
@@ -407,12 +407,12 @@ _MUI_ProgressDotsResize PROC PRIVATE hControl:DWORD
     LOCAL dwMarkerFinish:DWORD
     LOCAL hDefer:DWORD
 
-    Invoke GetClientRect, hControl, Addr rect
+    Invoke GetClientRect, hWin, Addr rect
     mov eax, rect.bottom
     sub eax, rect.top
     mov dwHeight, eax
 
-    Invoke GetParent, hControl
+    Invoke GetParent, hWin
     mov hParent, eax
     
     Invoke GetWindowRect, hParent, Addr parentrect
@@ -425,9 +425,9 @@ _MUI_ProgressDotsResize PROC PRIVATE hControl:DWORD
     Invoke BeginDeferWindowPos, 1
     mov hDefer, eax
     .IF hDefer == NULL
-        Invoke SetWindowPos, hControl, NULL, 0, 0, dwWidth, dwHeight, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOMOVE ;or SWP_NOSENDCHANGING ;or SWP_NOCOPYBITS
+        Invoke SetWindowPos, hWin, NULL, 0, 0, dwWidth, dwHeight, SWP_NOZORDER or SWP_NOOWNERZORDER  or SWP_NOACTIVATE or SWP_NOMOVE ;or SWP_NOSENDCHANGING ;or SWP_NOCOPYBITS
     .ELSE
-        Invoke DeferWindowPos, hDefer, hControl, NULL, 0, 0, dwWidth, dwHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOMOVE ;or SWP_NOSENDCHANGING
+        Invoke DeferWindowPos, hDefer, hWin, NULL, 0, 0, dwWidth, dwHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE or SWP_NOMOVE ;or SWP_NOSENDCHANGING
         mov hDefer, eax
     .ENDIF
     .IF hDefer != NULL
@@ -435,7 +435,7 @@ _MUI_ProgressDotsResize PROC PRIVATE hControl:DWORD
     .ENDIF    
 
     ;Invoke InvalidateRect, hControl, NULL, TRUE
-    Invoke GetClientRect, hControl, Addr rect
+    Invoke GetClientRect, hWin, Addr rect
     mov eax, rect.right
     sub eax, rect.left
     mov dwWidth, eax
@@ -449,11 +449,11 @@ _MUI_ProgressDotsResize PROC PRIVATE hControl:DWORD
     mov dwMarkerStart, edx
     add edx, edx
     mov dwMarkerFinish, edx    
-    Invoke MUISetIntProperty, hControl, @ProgressDotsMarkerStart, dwMarkerStart
-    Invoke MUISetIntProperty, hControl, @ProgressDotsMarkerFinish, dwMarkerFinish    
+    Invoke MUISetIntProperty, hWin, @ProgressDotsMarkerStart, dwMarkerStart
+    Invoke MUISetIntProperty, hWin, @ProgressDotsMarkerFinish, dwMarkerFinish    
     
     ; reset everything otherwise graphically it looks odd
-    Invoke _MUI_ProgressDotsInitDots, hControl
+    Invoke _MUI_ProgressDotsInitDots, hWin
     
     ret
 

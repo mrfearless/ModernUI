@@ -925,7 +925,6 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL MouseOver:DWORD
     LOCAL SelectedState:DWORD
     LOCAL BackColor:DWORD
-    LOCAL hParent:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax

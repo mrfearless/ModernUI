@@ -988,7 +988,7 @@ _MUI_CaptionBarPaintImage ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_CreateCaptionBarSysButtons - create all specified system buttons
 ;-------------------------------------------------------------------------------------
-_MUI_CreateCaptionBarSysButtons PROC PRIVATE USES EBX hWin:DWORD, hCaptionBarParent:DWORD
+_MUI_CreateCaptionBarSysButtons PROC PRIVATE hWin:DWORD, hCaptionBarParent:DWORD
     LOCAL wp:WINDOWPLACEMENT
     LOCAL dwClientWidth:DWORD
     LOCAL dwLeftOffset:DWORD
@@ -1026,8 +1026,7 @@ _MUI_CreateCaptionBarSysButtons PROC PRIVATE USES EBX hWin:DWORD, hCaptionBarPar
     mov dwStyle, eax
 
     mov eax, rect.right
-    mov ebx, rect.left
-    sub eax, ebx
+    sub eax, rect.left
     mov dwClientWidth, eax    
     
     mov eax, dwStyle
@@ -1127,7 +1126,7 @@ _MUI_CreateCaptionBarSysButtons ENDP
 ; _MUI_CaptionBarReposition - Reposition window and child system buttons after main
 ; window resizes - called via SendMessage, hControl, WM_SIZE, 0, 0
 ;-------------------------------------------------------------------------------------
-_MUI_CaptionBarReposition PROC PRIVATE USES EBX hWin:DWORD
+_MUI_CaptionBarReposition PROC PRIVATE hWin:DWORD
     LOCAL wp:WINDOWPLACEMENT
     LOCAL hDefer:DWORD
     LOCAL dwClientWidth:DWORD
@@ -1190,12 +1189,10 @@ _MUI_CaptionBarReposition PROC PRIVATE USES EBX hWin:DWORD
         Invoke GetWindowRect, hParent, Addr rect
     .ENDIF
     mov eax, rect.right
-    mov ebx, rect.left
-    sub eax, ebx
+    sub eax, rect.left
     mov dwClientWidth, eax
     mov eax, rect.bottom
-    mov ebx, rect.top
-    sub eax, ebx
+    sub eax, rect.top
     mov dwClientHeight, eax
 
     mov TotalItems, 0
@@ -1298,7 +1295,7 @@ _MUI_CaptionBarReposition ENDP
 ; _MUI_CaptionBarSetSysButtonProperty - Sets the system button properties from the message
 ; MUIM_SETPROPERTY set to the parent CaptionBar control 
 ;-------------------------------------------------------------------------------------
-_MUI_CaptionBarSetSysButtonProperty PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+_MUI_CaptionBarSetSysButtonProperty PROC PRIVATE hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     LOCAL hSysButtonClose:DWORD
     LOCAL hSysButtonMax:DWORD
     LOCAL hSysButtonRes:DWORD

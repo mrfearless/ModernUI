@@ -918,7 +918,7 @@ MUIGetParentBackgroundColor ENDP
 ; For use in setting background of child to 'transparent'
 ; returns hBitmap or NULL
 ;-------------------------------------------------------------------------------------
-MUIGetParentBackgroundBitmap PROC PUBLIC USES EBX hControl:DWORD
+MUIGetParentBackgroundBitmap PROC PUBLIC hControl:DWORD
     LOCAL rcWin:RECT
     LOCAL rcWnd:RECT
     LOCAL parWnd:DWORD
@@ -937,15 +937,14 @@ MUIGetParentBackgroundBitmap PROC PUBLIC USES EBX hControl:DWORD
     Invoke GetWindowRect, hControl, Addr rcWnd;
     Invoke ScreenToClient, parWnd, Addr rcWnd; // Convert to the parent's co-ordinates
     Invoke GetClipBox, parDc, Addr rcWin
+    
     ; Copy from parent DC.
     mov eax, rcWin.right
-    mov ebx, rcWin.left
-    sub eax, ebx
+    sub eax, rcWin.left
     mov dwWidth, eax
-    
+
     mov eax, rcWin.bottom
-    mov ebx, rcWin.top
-    sub eax, ebx
+    sub eax, rcWin.top
     mov dwHeight, eax    
 
     ;----------------------------------------------------------
@@ -965,7 +964,7 @@ MUIGetParentBackgroundBitmap PROC PUBLIC USES EBX hControl:DWORD
     ;----------------------------------------------------------
     Invoke SelectObject, hdcMem, hOldBitmap
     Invoke DeleteDC, hdcMem
-    ;Invoke DeleteObject, hbmMem
+    ;Invoke DeleteObject, hbmMem ; need to keep this bitmap to return it
     .IF hOldBitmap != 0
         Invoke DeleteObject, hOldBitmap
     .ENDIF          

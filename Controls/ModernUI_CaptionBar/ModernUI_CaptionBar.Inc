@@ -33,13 +33,13 @@
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_CaptionBar Prototypes for users of controls
 ;--------------------------------------------------------------------------------------------------------------------------------------
-MUICaptionBarRegister       PROTO                                           ; Use 'ModernUICaptionBar' as class in RadASM custom class control
+MUICaptionBarRegister       PROTO                                           ; Use 'ModernUI_CaptionBar' as class in RadASM custom class control
 MUICaptionBarCreate         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszCaptionText, dwCaptionHeight, dwResourceID, dwStyle
-MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hCaptionBar, dwProperty, dwPropertyValue
-MUICaptionBarGetProperty    PROTO :DWORD, :DWORD                            ; hCaptionBar, dwProperty
+MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hModernUI_CaptionBar, dwProperty, dwPropertyValue
+MUICaptionBarGetProperty    PROTO :DWORD, :DWORD                            ; hModernUI_CaptionBar, dwProperty
 MUICaptionBarLoadIcons      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
 MUICaptionBarLoadIconsDll   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, hInstance, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
-MUICaptionBarLoadBackImage  PROTO :DWORD, :DWORD, :DWORD                    ; hCaptionBar, dwImageType, dwResIDImage
+MUICaptionBarLoadBackImage  PROTO :DWORD, :DWORD, :DWORD                    ; hModernUI_CaptionBar, dwImageType, dwResIDImage
 
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
