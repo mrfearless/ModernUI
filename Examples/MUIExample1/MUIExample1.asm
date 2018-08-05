@@ -196,7 +196,7 @@ InitGUI PROC hWin:DWORD
     ; hCurrentPanel (for use with IsDialogMessage)
     Invoke MUISmartPanelSetCurrentPanel, hMUISmartPanel, 1, FALSE
     Invoke MUISmartPanelSetIsDlgMsgVar, hMUISmartPanel, Addr hCurrentPanel
-
+    ;Invoke MUISmartPanelSetProperty, hMUISmartPanel, @SmartPanelPanelsColor, MUI_RGBCOLOR(45,45,48)
 
     ;-----------------------------------------------------------------------------------------------------
     ; ModernUI_Text: Community Edition 2018
