@@ -96,6 +96,7 @@ MUISPS_SLIDEPANELS_VFAST        EQU 08h
 MUISPS_SLIDEPANELS_INSTANT      EQU MUISPS_NORMAL
 MUISPS_SPS_WRAPAROUND           EQU 10h ; for next/prev and showcase, if at end, moves to the right and starts again, otherwise if not specified, at last panel, scrolls left all the way back to start showing all panels along the way.
 MUISPS_SPS_SKIPBETWEEN          EQU 20h ; skips any in between panels, just moves from one to another.
+MUISPS_DESIGN_INFO              EQU 1000h ; only used at design time to show text, which can be toggled off by user
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_SmartPanel Properties: Use with MUIModernUI_SmartPanelSetProperty / MUIModernUI_SmartPanelGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs

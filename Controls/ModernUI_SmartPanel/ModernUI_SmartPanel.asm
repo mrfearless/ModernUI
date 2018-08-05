@@ -316,7 +316,7 @@ _MUI_SmartPanelWndProc ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_SmartPanelInit - set initial default values
 ;-------------------------------------------------------------------------------------
-_MUI_SmartPanelInit PROC USES EBX hControl:DWORD 
+_MUI_SmartPanelInit PROC USES EBX hWin:DWORD 
     LOCAL dwStyle:DWORD
     LOCAL dwExStyle:DWORD
     LOCAL hParent:DWORD
@@ -330,37 +330,37 @@ _MUI_SmartPanelInit PROC USES EBX hControl:DWORD
     LOCAL pt:POINT
     
     ; get style and check it is our default at least
-    Invoke GetWindowLong, hControl, GWL_STYLE
+    Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
     and eax, DS_CONTROL or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .IF eax != DS_CONTROL or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov eax, dwStyle
         or eax, DS_CONTROL or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov dwStyle, eax
-        Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
+        Invoke SetWindowLong, hWin, GWL_STYLE, dwStyle
     .ENDIF
     
-    Invoke GetWindowLong, hControl, GWL_EXSTYLE
+    Invoke GetWindowLong, hWin, GWL_EXSTYLE
     mov dwExStyle, eax
     and eax, WS_EX_CONTROLPARENT
     .IF eax != WS_EX_CONTROLPARENT
         mov eax, dwExStyle
         or eax, WS_EX_CONTROLPARENT
         mov dwExStyle, eax
-        Invoke SetWindowLong, hControl, GWL_EXSTYLE, dwExStyle
+        Invoke SetWindowLong, hWin, GWL_EXSTYLE, dwExStyle
     .ENDIF
     ;PrintDec dwStyle
     
     ; Set default initial internal property values     
-    Invoke MUISetIntProperty, hControl, @SmartPanelCurrentPanel, -1
-    Invoke MUISetIntProperty, hControl, @SmartPanelTotalPanels, 0
-    Invoke MUISetIntProperty, hControl, @SmartPanelPanelsArray, 0
-    Invoke MUISetIntProperty, hControl, @SmartPanellpdwIsDlgMsgVar, 0
+    Invoke MUISetIntProperty, hWin, @SmartPanelCurrentPanel, -1
+    Invoke MUISetIntProperty, hWin, @SmartPanelTotalPanels, 0
+    Invoke MUISetIntProperty, hWin, @SmartPanelPanelsArray, 0
+    Invoke MUISetIntProperty, hWin, @SmartPanellpdwIsDlgMsgVar, 0
     
     ; Set default initial external property values
-    Invoke MUISetExtProperty, hControl, @SmartPanelPanelsColor, -1
-    Invoke MUISetExtProperty, hControl, @SmartPanelBorderColor, -1
-    Invoke MUISetExtProperty, hControl, @SmartPanelDllInstance, 0
+    Invoke MUISetExtProperty, hWin, @SmartPanelPanelsColor, -1
+    Invoke MUISetExtProperty, hWin, @SmartPanelBorderColor, -1
+    Invoke MUISetExtProperty, hWin, @SmartPanelDllInstance, 0
     
 ;    Invoke MUIGetParentBackgroundColor, hControl
 ;    .IF eax == -1
@@ -421,14 +421,14 @@ _MUI_SmartPanelInit ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_SmartPanelCleanup - cleanup a few things before control is destroyed
 ;-------------------------------------------------------------------------------------
-_MUI_SmartPanelCleanup PROC PRIVATE hControl:DWORD
+_MUI_SmartPanelCleanup PROC PRIVATE hWin:DWORD
     LOCAL TotalItems:DWORD
 
-    Invoke MUIGetIntProperty, hControl, @SmartPanelTotalPanels
+    Invoke MUIGetIntProperty, hWin, @SmartPanelTotalPanels
     mov TotalItems, eax
 
     .IF TotalItems != 0
-        Invoke MUIGetIntProperty, hControl, @SmartPanelPanelsArray
+        Invoke MUIGetIntProperty, hWin, @SmartPanelPanelsArray
         ;mov pItemData, eax
         .IF eax != NULL
             Invoke GlobalFree, eax
@@ -533,9 +533,9 @@ MUISmartPanelRegisterPanel PROC PRIVATE USES EBX hControl:DWORD, idPanelDlg:DWOR
     Invoke MUISetIntProperty, hControl, @SmartPanelTotalPanels, TotalItems
     Invoke MUISetIntProperty, hControl, @SmartPanelPanelsArray, pItemData
         
-    Invoke SetWindowLongPtr, hPanelDlg, GWL_EXSTYLE, WS_EX_CONTROLPARENT    
-    Invoke SetWindowLongPtr, hPanelDlg, GWL_STYLE, WS_CHILD + DS_CONTROL + WS_CLIPCHILDREN;+ WS_TABSTOP ; 40000000d ; WS_CHILD
-    Invoke SetWindowPos, hPanelDlg, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED ; 
+    ;Invoke SetWindowLongPtr, hPanelDlg, GWL_EXSTYLE, WS_EX_CONTROLPARENT    
+    Invoke SetWindowLongPtr, hPanelDlg, GWL_STYLE, WS_CHILD or DS_CONTROL or WS_CLIPCHILDREN; 40000000d ; WS_CHILD
+    Invoke SetWindowPos, hPanelDlg, NULL, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED ; 
     Invoke GetClientRect, hControl, Addr rect
     ;sub rect.right, 2d
     ;sub rect.bottom, 2d
@@ -792,7 +792,7 @@ MUISmartPanelSetCurrentPanel ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_SmartPanelNavNotify
 ;-------------------------------------------------------------------------------------
-_MUI_SmartPanelNavNotify PROC PRIVATE USES EBX hControl:DWORD, OldSelection:DWORD, NewSelection:DWORD
+_MUI_SmartPanelNavNotify PROC PRIVATE USES EBX hWin:DWORD, OldSelection:DWORD, NewSelection:DWORD
     LOCAL pItemData:DWORD
     LOCAL pOldItemDataEntry:DWORD
     LOCAL pNewItemDataEntry:DWORD
@@ -802,15 +802,15 @@ _MUI_SmartPanelNavNotify PROC PRIVATE USES EBX hControl:DWORD, OldSelection:DWOR
     LOCAL hParent:DWORD
     LOCAL idControl:DWORD
     
-    Invoke GetParent, hControl
+    Invoke GetParent, hWin
     mov hParent, eax
 
-    mov eax, hControl
+    mov eax, hWin
     mov SPNM.hdr.hwndFrom, eax
     mov eax, MUISPN_SELCHANGED
     mov SPNM.hdr.code, eax
     
-    Invoke MUIGetIntProperty, hControl, @SmartPanelPanelsArray
+    Invoke MUIGetIntProperty, hWin, @SmartPanelPanelsArray
     mov pItemData, eax
     
     mov eax, OldSelection
@@ -843,7 +843,7 @@ _MUI_SmartPanelNavNotify PROC PRIVATE USES EBX hControl:DWORD, OldSelection:DWOR
     mov eax, [ebx].MUISP_ITEM.hPanel
     mov SPNM.itemNew.hPanel, eax
     
-    Invoke GetDlgCtrlID, hControl
+    Invoke GetDlgCtrlID, hWin
     mov idControl, eax
     
     Invoke GetParent, hParent
@@ -861,28 +861,28 @@ _MUI_SmartPanelNavNotify endp
 ;-------------------------------------------------------------------------------------
 ; _MUI_SmartPanelSlidePanels - SlideSpeed 0 slow, 1 fast, 2 very fast
 ;-------------------------------------------------------------------------------------
-_MUI_SmartPanelSlidePanels PROC PRIVATE USES EBX hControl:DWORD, OldSelection:DWORD, NewSelection:DWORD, SlideSpeed:DWORD 
+_MUI_SmartPanelSlidePanels PROC PRIVATE USES EBX hWin:DWORD, OldSelection:DWORD, NewSelection:DWORD, SlideSpeed:DWORD 
     LOCAL hCurrentPanel:DWORD
     LOCAL hNextPanel:DWORD
     LOCAL nPanel:DWORD
     LOCAL dwStyle:DWORD
     
-    Invoke GetWindowLong, hControl, GWL_STYLE
+    Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
     and eax, MUISPS_SPS_SKIPBETWEEN
     .IF eax == MUISPS_SPS_SKIPBETWEEN
 
-        Invoke _MUI_SmartPanelGetPanelHandle, hControl, OldSelection
+        Invoke _MUI_SmartPanelGetPanelHandle, hWin, OldSelection
         mov hCurrentPanel, eax
         
-        Invoke _MUI_SmartPanelGetPanelHandle, hControl, NewSelection
+        Invoke _MUI_SmartPanelGetPanelHandle, hWin, NewSelection
         mov hNextPanel, eax
 
         mov eax, NewSelection
         .IF eax < OldSelection ; moving down = left, so slide right 
-            Invoke _MUI_SmartPanelSlidePanelsRight, hControl, hCurrentPanel, hNextPanel, SlideSpeed
+            Invoke _MUI_SmartPanelSlidePanelsRight, hWin, hCurrentPanel, hNextPanel, SlideSpeed
         .ELSE ; moving up = right, so slide left   
-            Invoke _MUI_SmartPanelSlidePanelsLeft, hControl, hCurrentPanel, hNextPanel, SlideSpeed
+            Invoke _MUI_SmartPanelSlidePanelsLeft, hWin, hCurrentPanel, hNextPanel, SlideSpeed
         .ENDIF
 
     .ELSE
@@ -894,14 +894,14 @@ _MUI_SmartPanelSlidePanels PROC PRIVATE USES EBX hControl:DWORD, OldSelection:DW
             mov nPanel, eax
             .WHILE eax > NewSelection
         
-                Invoke _MUI_SmartPanelGetPanelHandle, hControl, nPanel
+                Invoke _MUI_SmartPanelGetPanelHandle, hWin, nPanel
                 mov hCurrentPanel, eax
                 mov eax, nPanel
                 dec eax
-                Invoke _MUI_SmartPanelGetPanelHandle, hControl, eax
+                Invoke _MUI_SmartPanelGetPanelHandle, hWin, eax
                 mov hNextPanel, eax
                 
-                Invoke _MUI_SmartPanelSlidePanelsRight, hControl, hCurrentPanel, hNextPanel, SlideSpeed
+                Invoke _MUI_SmartPanelSlidePanelsRight, hWin, hCurrentPanel, hNextPanel, SlideSpeed
                 dec nPanel
                 mov eax, nPanel
             .ENDW
@@ -912,14 +912,14 @@ _MUI_SmartPanelSlidePanels PROC PRIVATE USES EBX hControl:DWORD, OldSelection:DW
             mov nPanel, eax
             .WHILE eax < NewSelection
         
-                Invoke _MUI_SmartPanelGetPanelHandle, hControl, nPanel
+                Invoke _MUI_SmartPanelGetPanelHandle, hWin, nPanel
                 mov hCurrentPanel, eax
                 mov eax, nPanel
                 inc eax
-                Invoke _MUI_SmartPanelGetPanelHandle, hControl, eax
+                Invoke _MUI_SmartPanelGetPanelHandle, hWin, eax
                 mov hNextPanel, eax
                 
-                Invoke _MUI_SmartPanelSlidePanelsLeft, hControl, hCurrentPanel, hNextPanel, SlideSpeed
+                Invoke _MUI_SmartPanelSlidePanelsLeft, hWin, hCurrentPanel, hNextPanel, SlideSpeed
                 inc nPanel
                 mov eax, nPanel
             .ENDW
@@ -934,7 +934,7 @@ _MUI_SmartPanelSlidePanels endp
 ;-------------------------------------------------------------------------------------
 ; _MUI_SmartPanelSlidePanelsLeft - Slides current and next panel left till we show next panel only
 ;-------------------------------------------------------------------------------------
-_MUI_SmartPanelSlidePanelsLeft PROC hControl:DWORD, hCurrentPanel:DWORD, hNextPanel:DWORD, SlideSpeed:DWORD
+_MUI_SmartPanelSlidePanelsLeft PROC hWin:DWORD, hCurrentPanel:DWORD, hNextPanel:DWORD, SlideSpeed:DWORD
     LOCAL rect:RECT
     LOCAL xposnextpanel:SDWORD
     LOCAL xposcurrentpanel:SDWORD    
@@ -942,7 +942,7 @@ _MUI_SmartPanelSlidePanelsLeft PROC hControl:DWORD, hCurrentPanel:DWORD, hNextPa
     IFDEF DEBUG32
     PrintText 'SP_SlidePanelsLeft'
     ENDIF
-    Invoke GetClientRect, hControl, Addr rect
+    Invoke GetClientRect, hWin, Addr rect
     mov eax, rect.right
     mov xposnextpanel, eax
     mov xposcurrentpanel, 1
@@ -998,6 +998,8 @@ _MUI_SmartPanelSlidePanelsLeft PROC hControl:DWORD, hCurrentPanel:DWORD, hNextPa
     Invoke ShowWindow, hNextPanel, SW_SHOWDEFAULT
     Invoke SetFocus, hNextPanel    
     
+    ;Invoke InvalidateRect, hNextPanel, NULL, TRUE
+    ;Invoke UpdateWindow, hNextPanel
     ret
 
 _MUI_SmartPanelSlidePanelsLeft endp
@@ -1006,7 +1008,7 @@ _MUI_SmartPanelSlidePanelsLeft endp
 ;-------------------------------------------------------------------------------------
 ; _MUI_SmartPanelSlidePanelsRight - Slides current and next panel right till we show next panel only
 ;-------------------------------------------------------------------------------------
-_MUI_SmartPanelSlidePanelsRight PROC hControl:DWORD, hCurrentPanel:DWORD, hNextPanel:DWORD, SlideSpeed:DWORD
+_MUI_SmartPanelSlidePanelsRight PROC hWin:DWORD, hCurrentPanel:DWORD, hNextPanel:DWORD, SlideSpeed:DWORD
     LOCAL rect:RECT
     LOCAL xposnextpanel:SDWORD
     LOCAL xposcurrentpanel:SDWORD
@@ -1014,7 +1016,7 @@ _MUI_SmartPanelSlidePanelsRight PROC hControl:DWORD, hCurrentPanel:DWORD, hNextP
     IFDEF DEBUG32
     PrintText 'SP_SlidePanelsRight'
     ENDIF
-    Invoke GetClientRect, hControl, Addr rect
+    Invoke GetClientRect, hWin, Addr rect
     mov eax, 0
     sub eax, rect.right ;sdword ptr sdword ptr 
     mov xposnextpanel, eax ;-570
@@ -1067,7 +1069,10 @@ _MUI_SmartPanelSlidePanelsRight PROC hControl:DWORD, hCurrentPanel:DWORD, hNextP
     Invoke ShowWindow, hCurrentPanel, SW_HIDE
     Invoke SetWindowPos, hNextPanel, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOZORDER + SWP_NOSENDCHANGING + SWP_NOACTIVATE ;+ SWP_NOMOVE  +SWP_NOCOPYBITS  
     Invoke ShowWindow, hNextPanel, SW_SHOWDEFAULT
-    Invoke SetFocus, hNextPanel 
+    Invoke SetFocus, hNextPanel
+    
+    ;Invoke InvalidateRect, hNextPanel, NULL, TRUE
+    ;Invoke UpdateWindow, hNextPanel    
     ret
 
 _MUI_SmartPanelSlidePanelsRight endp
@@ -1293,7 +1298,7 @@ MUISmartPanelSetIsDlgMsgVar ENDP
 ;--------------------------------------------------------------------------------------------------------------------
 ; _MUI_SmartPanelGetPanelHandle, returns in eax handle or NULL if error
 ;--------------------------------------------------------------------------------------------------------------------
-_MUI_SmartPanelGetPanelHandle PROC PRIVATE USES EBX hControl:DWORD, nItem:DWORD
+_MUI_SmartPanelGetPanelHandle PROC PRIVATE USES EBX hWin:DWORD, nItem:DWORD
     LOCAL TotalItems:DWORD
     LOCAL pItemData:DWORD
     LOCAL pItemDataEntry:DWORD
@@ -1303,14 +1308,14 @@ _MUI_SmartPanelGetPanelHandle PROC PRIVATE USES EBX hControl:DWORD, nItem:DWORD
         ret
     .ENDIF
     
-    Invoke MUIGetIntProperty, hControl, @SmartPanelTotalPanels
+    Invoke MUIGetIntProperty, hWin, @SmartPanelTotalPanels
     mov TotalItems, eax
     .IF TotalItems == 0
         mov eax, NULL
         ret
     .ENDIF
 
-    Invoke MUIGetIntProperty, hControl, @SmartPanelPanelsArray
+    Invoke MUIGetIntProperty, hWin, @SmartPanelPanelsArray
     mov pItemData, eax
 
     mov eax, nItem
@@ -1338,7 +1343,7 @@ MUISmartPanelCurrentPanelIndex ENDP
 ;--------------------------------------------------------------------------------------------------------------------
 ; _MUI_SP_ResizePanels - Resize panels to match SmartPanel size
 ;--------------------------------------------------------------------------------------------------------------------
-_MUI_SP_ResizePanels PROC USES EBX hControl:DWORD
+_MUI_SP_ResizePanels PROC USES EBX hWin:DWORD
     LOCAL rect:RECT
     LOCAL hPanelDlg:DWORD
     LOCAL dwTotalPanels:DWORD
@@ -1350,18 +1355,18 @@ _MUI_SP_ResizePanels PROC USES EBX hControl:DWORD
     ; check if size hasnt been sent at init, before properties can be checked?
     ; check if sliding currently?
     
-    Invoke MUIGetIntProperty, hControl, @SmartPanelTotalPanels
+    Invoke MUIGetIntProperty, hWin, @SmartPanelTotalPanels
     mov dwTotalPanels, eax
     .IF dwTotalPanels == 0
         xor eax, eax
         ret
     .ENDIF
 
-    Invoke MUIGetIntProperty, hControl, @SmartPanelPanelsArray
+    Invoke MUIGetIntProperty, hWin, @SmartPanelPanelsArray
     mov pItemData, eax
     mov pItemDataEntry, eax
     
-    Invoke GetClientRect, hControl, Addr rect
+    Invoke GetClientRect, hWin, Addr rect
 
     Invoke BeginDeferWindowPos, dwTotalPanels
     mov hDefer, eax
