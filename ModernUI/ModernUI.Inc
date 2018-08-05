@@ -2,7 +2,7 @@
 ;
 ; ModernUI Library v0.0.0.5
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
