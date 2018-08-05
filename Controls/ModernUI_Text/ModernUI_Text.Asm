@@ -205,7 +205,6 @@ MUITextCreate PROC PUBLIC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWO
 MUITextCreate ENDP
 
 
-
 ;-------------------------------------------------------------------------------------
 ; _MUI_TextWndProc - Main processing window for our control
 ;-------------------------------------------------------------------------------------
@@ -215,7 +214,6 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
-        ; sets text of our control, delete if not required.
         Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName   
         mov eax, TRUE
         ret
@@ -328,9 +326,19 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         ret
         
     .ELSEIF eax == MUI_SETPROPERTY  
-        Invoke MUISetExtProperty, hWin, wParam, lParam
+        mov eax, wParam
+        .IF eax == @TextFont
+            Invoke MUIGetExtProperty, hWin, @TextFont
+            .IF eax != NULL
+                Invoke DeleteObject, eax
+            .ENDIF
+            Invoke MUISetExtProperty, hWin, wParam, lParam
+            Invoke InvalidateRect, hWin, NULL, TRUE
+        .ELSE
+            Invoke MUISetExtProperty, hWin, wParam, lParam
+        .ENDIF
         ret
-        
+
     .ENDIF
     
     Invoke DefWindowProc, hWin, uMsg, wParam, lParam
@@ -519,7 +527,7 @@ _MUI_TextPaintBackground ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_TextPaintText
 ;-------------------------------------------------------------------------------------
-_MUI_TextPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD
+_MUI_TextPaintText PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
     LOCAL hFont:DWORD
