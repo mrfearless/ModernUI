@@ -144,6 +144,7 @@ MUIBS_PUSHBUTTON                EQU 10h     ; Simulate button movement down slig
 MUIBS_HAND                      EQU 20h     ; Show a hand instead of an arrow when mouse moves over button.
 MUIBS_KEEPIMAGES                EQU 40h     ; Dont delete image handles when control is destoyed. Essential if image handles are used in multiple controls.
 MUIBS_DROPDOWN                  EQU 80h     ; Show dropdown arrow right side of control
+MUIBS_THEME                     EQU 8000h   ; Use default windows theme colors and react to WM_THEMECHANGED
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Button Properties: Use with MUIButtonSetProperty / MUIButtonGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs

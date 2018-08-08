@@ -22,7 +22,7 @@ MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
 
 
 ;DEBUG32 EQU 1
-
+;
 ;IFDEF DEBUG32
 ;    PRESERVEXMMREGS equ 1
 ;    includelib M:\Masm32\lib\Debug32.lib
@@ -68,7 +68,11 @@ _MUI_ButtonPaintAccent                      PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintText                        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintImages                      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintBorder                      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_ButtonPaintFocusRect                   PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonCalcPositions                    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+
+_MUI_ButtonButtonDown                       PROTO :DWORD ; WM_LBUTTONDOWN, WM_KEYDOWN + VK_SPACE
+_MUI_ButtonButtonUp                         PROTO :DWORD ; WM_LBUTTONUP, WM_KEYUP + VK_SPACE
 
 
 _MUI_ButtonLoadBitmap                       PROTO :DWORD, :DWORD, :DWORD
@@ -148,6 +152,7 @@ _MUI_BUTTON_PROPERTIES                      STRUCT
     dwEnabledState                          DD ?
     dwMouseOver                             DD ?
     dwSelectedState                         DD ?
+    dwFocusedState                          DD ?
     dwMouseDown                             DD ?
     dwNotifyState                           DD ?
     lpszNotifyText                          DD ?
@@ -200,39 +205,40 @@ IStream ENDS
 ENDIF
 
 .CONST
-ACCENTWIDTH                                 EQU 6d
-
+MUI_BUTTON_ACCENTWIDTH_DEFAULT              EQU 6d ; default width of accent (accent is the small extra area that gives button an extra highlight)
+MUI_BUTTON_FOCUSRECT_OFFSET                 EQU -2 ; change this to higher negative value to shrink focus rect within button
 
 ; Internal properties
 @ButtonEnabledState                         EQU 0
 @ButtonMouseOver                            EQU 4
 @ButtonSelectedState                        EQU 8
-@ButtonMouseDown                            EQU 12
-@ButtonNotifyState                          EQU 16
-@ButtonszNotifyText                         EQU 20
-@ButtonszNoteText                           EQU 24
-@ButtonImageStream                          EQU 28
-@ButtonImageAltStream                       EQU 32
-@ButtonImageSelStream                       EQU 36
-@ButtonImageSelAltStream                    EQU 40
-@ButtonImageDisabledStream                  EQU 44
-@ButtonRightImageStream                     EQU 48
-@ButtonRightImageAltStream                  EQU 52
-@ButtonRightImageSelStream                  EQU 56
-@ButtonRightImageSelAltStream               EQU 60
-@ButtonRightImageDisabledStream             EQU 64  
-@ButtonNotifyImageStream                    EQU 68
-@ButtonImageXposition                       EQU 72
-@ButtonImageYposition                       EQU 76
-@ButtonRightImageXposition                  EQU 80
-@ButtonRightImageYposition                  EQU 84
-@ButtonNotifyImageXposition                 EQU 88
-@ButtonNotifyImageYposition                 EQU 92
-@ButtonTextXposition                        EQU 96
-@ButtonTextYposition                        EQU 100
-@ButtonNoteXposition                        EQU 104
-@ButtonNoteYposition                        EQU 108
-@ButtonRecalcPositions                      EQU 112
+@ButtonFocusedState                         EQU 12
+@ButtonMouseDown                            EQU 16
+@ButtonNotifyState                          EQU 20
+@ButtonszNotifyText                         EQU 24
+@ButtonszNoteText                           EQU 28
+@ButtonImageStream                          EQU 32
+@ButtonImageAltStream                       EQU 36
+@ButtonImageSelStream                       EQU 40
+@ButtonImageSelAltStream                    EQU 44
+@ButtonImageDisabledStream                  EQU 48
+@ButtonRightImageStream                     EQU 52
+@ButtonRightImageAltStream                  EQU 56
+@ButtonRightImageSelStream                  EQU 60
+@ButtonRightImageSelAltStream               EQU 64
+@ButtonRightImageDisabledStream             EQU 68  
+@ButtonNotifyImageStream                    EQU 72
+@ButtonImageXposition                       EQU 76
+@ButtonImageYposition                       EQU 80
+@ButtonRightImageXposition                  EQU 84
+@ButtonRightImageYposition                  EQU 88
+@ButtonNotifyImageXposition                 EQU 92
+@ButtonNotifyImageYposition                 EQU 96
+@ButtonTextXposition                        EQU 100
+@ButtonTextYposition                        EQU 104
+@ButtonNoteXposition                        EQU 108
+@ButtonNoteYposition                        EQU 112
+@ButtonRecalcPositions                      EQU 116
 
 ; External public properties
 
@@ -321,21 +327,19 @@ MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:
     mov hinstance, eax
 
     Invoke MUIButtonRegister
-    
-    ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
-    ; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
 
     mov eax, dwStyle
     mov dwNewStyle, eax
-    and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-    .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-        or dwNewStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+    and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN ;or WS_TABSTOP
+    .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN ;or WS_TABSTOP
+        ;PrintText 'MUIButtonCreate setting style to WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN'
+        or dwNewStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN ;or WS_TABSTOP
     .ENDIF
     
     Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
     mov hControl, eax
     .IF eax != NULL
-        
+        ;PrintDec hControl
     .ENDIF
     mov eax, hControl
     ret
@@ -349,7 +353,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL hParent:DWORD
     LOCAL rect:RECT
-    
+
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
@@ -399,74 +403,45 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         mov eax, 0
         ret        
 
+;    .ELSEIF eax == WM_GETDLGCODE
+;        mov eax, DLGC_WANTALLKEYS or DLGC_WANTTAB
+;        ret
+
+    .ELSEIF eax == WM_KEYUP
+        mov eax, wParam
+        .IF eax == VK_SPACE
+            IFDEF DEBUG32
+                ;PrintText 'WM_KEYUP VK_SPACE'
+            ENDIF
+            Invoke _MUI_ButtonButtonUp, hWin
+;        .ELSEIF eax == VK_TAB
+;            Invoke GetParent, hWin
+;            mov hParent, eax
+;            Invoke GetAsyncKeyState, VK_SHIFT
+;            .IF eax != 0
+;                Invoke GetWindow, hWin, GW_HWNDPREV
+;            .ELSE
+;                Invoke GetWindow, hWin, GW_HWNDNEXT
+;            .ENDIF
+;            .IF eax != 0
+;                Invoke SetFocus, eax
+;            .ENDIF
+        .ENDIF
+
+    .ELSEIF eax == WM_KEYDOWN
+        mov eax, wParam
+        .IF eax == VK_SPACE
+            IFDEF DEBUG32
+                ;PrintText 'WM_KEYDOWN VK_SPACE'
+            ENDIF        
+            Invoke _MUI_ButtonButtonDown, hWin
+        .ENDIF
+
     .ELSEIF eax == WM_LBUTTONUP
-        ; simulates click on our control, delete if not required.
-        Invoke GetDlgCtrlID, hWin
-        mov ebx,eax
-        Invoke GetParent, hWin
-        Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
-        
-        Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
-        .IF eax == TRUE
-            invoke GetClientRect, hWin, addr rect
-            Invoke GetParent, hWin
-            mov hParent, eax            
-            invoke MapWindowPoints, hWin, hParent, addr rect, 2   
-            sub rect.top, 1
-            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
-            Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
-            
-            ;Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, TRUE
-            ;Invoke ShowWindow, hWin, SW_SHOW                
-            
-        .ELSE
-            Invoke InvalidateRect, hWin, NULL, TRUE
-            Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
-            
-            ;Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, TRUE
-            ;Invoke ShowWindow, hWin, SW_SHOW                
-            
-        .ENDIF
-        
-        Invoke GetWindowLong, hWin, GWL_STYLE
-        and eax, MUIBS_AUTOSTATE
-        .IF eax == MUIBS_AUTOSTATE
-            Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
-            .IF eax == FALSE
-                Invoke MUISetIntProperty, hWin, @ButtonSelectedState, TRUE
-            .ELSE
-                Invoke MUISetIntProperty, hWin, @ButtonSelectedState, FALSE
-            .ENDIF
-            Invoke InvalidateRect, hWin, NULL, TRUE
-        .ENDIF
+        Invoke _MUI_ButtonButtonUp, hWin
 
     .ELSEIF eax == WM_LBUTTONDOWN
-        Invoke GetWindowLong, hWin, GWL_STYLE
-        and eax, MUIBS_PUSHBUTTON
-        .IF eax == MUIBS_PUSHBUTTON
-            invoke GetClientRect, hWin, addr rect
-            Invoke GetParent, hWin
-            mov hParent, eax
-            invoke MapWindowPoints, hWin, hParent, addr rect, 2        
-            add rect.top, 1
-            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
-            Invoke MUISetIntProperty, hWin, @ButtonMouseDown, TRUE
-            
-            ;Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, TRUE
-            ;Invoke ShowWindow, hWin, SW_SHOW              
-
-        .ELSE
-            Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
-            
-            ;Invoke ShowWindow, hWin, SW_HIDE
-            Invoke InvalidateRect, hWin, NULL, TRUE
-            ;Invoke ShowWindow, hWin, SW_SHOW              
-
-        .ENDIF
-
+        Invoke _MUI_ButtonButtonDown, hWin
 
     .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @ButtonEnabledState
@@ -486,7 +461,11 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         .ENDIF
 
     .ELSEIF eax == WM_MOUSELEAVE
-        Invoke MUISetIntProperty, hWin, @ButtonMouseOver, FALSE
+        ;Invoke MUISetIntProperty, hWin, @ButtonFocusedState, FALSE
+        Invoke MUIGetIntProperty, hWin, @ButtonFocusedState
+        .IF eax == FALSE
+            Invoke MUISetIntProperty, hWin, @ButtonMouseOver, FALSE
+        .ENDIF
         Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
         .IF eax == TRUE     
             invoke GetClientRect, hWin, addr rect
@@ -496,19 +475,25 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             sub rect.top, 1
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
-            
             ;Invoke ShowWindow, hWin, SW_HIDE
             Invoke InvalidateRect, hWin, NULL, TRUE
             ;Invoke ShowWindow, hWin, SW_SHOW            
-            
         .ELSE
             ;Invoke ShowWindow, hWin, SW_HIDE
             Invoke InvalidateRect, hWin, NULL, TRUE
             ;Invoke ShowWindow, hWin, SW_SHOW
             ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
         .ENDIF
+    
+    .ELSEIF eax == WM_SETFOCUS
+        Invoke MUISetIntProperty, hWin, @ButtonFocusedState, TRUE
+        Invoke MUISetIntProperty, hWin, @ButtonMouseOver, TRUE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        mov eax, 0
+        ret
 
     .ELSEIF eax == WM_KILLFOCUS
+        Invoke MUISetIntProperty, hWin, @ButtonFocusedState, FALSE
         Invoke MUISetIntProperty, hWin, @ButtonMouseOver, FALSE
         Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
         .IF eax == TRUE     
@@ -519,10 +504,15 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             sub rect.top, 1
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
+            Invoke InvalidateRect, hWin, NULL, TRUE
         .ELSE
             Invoke InvalidateRect, hWin, NULL, TRUE
             ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
         .ENDIF
+        mov eax, 0
+        ret
+    
+    ; todo - weird issue, focus on one button, click and hold, tab to next button - tab order reverses like as if shift-tab was pressed.
     
     .ELSEIF eax == WM_ENABLE
         Invoke MUISetIntProperty, hWin, @ButtonEnabledState, wParam
@@ -642,72 +632,133 @@ _MUI_ButtonWndProc ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonInit - set initial default values
 ;-------------------------------------------------------------------------------------
-_MUI_ButtonInit PROC PRIVATE hControl:DWORD
+_MUI_ButtonInit PROC PRIVATE hWin:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
     LOCAL hFont:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
     
-    Invoke GetParent, hControl
+    Invoke GetParent, hWin
     mov hParent, eax
     
     ; get style and check it is our default at least
-    Invoke GetWindowLong, hControl, GWL_STYLE
+    Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
-    and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-    .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-        or dwStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-        Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
+    and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN ;or WS_TABSTOP
+    .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN ;or WS_TABSTOP
+        ;PrintText '_MUI_ButtonInit setting style to WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN'
+        or dwStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN ;or WS_TABSTOP
+        Invoke SetWindowLong, hWin, GWL_STYLE, dwStyle
     .ENDIF
-
+    
     ;PrintDec dwStyle
     
-    ; Set default initial external property values
-    Invoke MUISetIntProperty, hControl, @ButtonEnabledState, TRUE
-
-    Invoke MUISetExtProperty, hControl, @ButtonTextColor, MUI_RGBCOLOR(51,51,51)
-    Invoke MUISetExtProperty, hControl, @ButtonTextColorAlt, MUI_RGBCOLOR(51,51,51)
-    Invoke MUISetExtProperty, hControl, @ButtonTextColorSel, MUI_RGBCOLOR(51,51,51)
-    Invoke MUISetExtProperty, hControl, @ButtonTextColorSelAlt, MUI_RGBCOLOR(51,51,51)
-    Invoke MUISetExtProperty, hControl, @ButtonTextColorDisabled, MUI_RGBCOLOR(204,204,204)
-
-    Invoke MUIGetParentBackgroundColor, hControl
-    .IF eax == -1 ; if background was NULL then try a color as default
-        Invoke GetSysColor, COLOR_WINDOW
+    ; Set default initial internal property values
+    mov eax, dwStyle
+    and eax, WS_DISABLED
+    .IF eax == WS_DISABLED
+        Invoke MUISetIntProperty, hWin, @ButtonEnabledState, FALSE
+    .ELSE
+        Invoke MUISetIntProperty, hWin, @ButtonEnabledState, TRUE
     .ENDIF
-    Invoke MUISetExtProperty, hControl, @ButtonBackColor, eax ;MUI_RGBCOLOR(255,255,255)
+    Invoke MUISetIntProperty, hWin, @ButtonFocusedState, FALSE
+    Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
 
-    ;Invoke MUISetExtProperty, hControl, @ButtonBackColor, MUI_RGBCOLOR(255,255,255) ;MUI_RGBCOLOR(21,133,181)
-    Invoke MUISetExtProperty, hControl, @ButtonBackColorAlt, MUI_RGBCOLOR(221,221,221)
-    Invoke MUISetExtProperty, hControl, @ButtonBackColorSel, MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hControl, @ButtonBackColorSelAlt, MUI_RGBCOLOR(221,221,221)
-    Invoke MUISetExtProperty, hControl, @ButtonBackColorDisabled, MUI_RGBCOLOR(192,192,192)
-    
-    Invoke MUISetExtProperty, hControl, @ButtonBorderColor, MUI_RGBCOLOR(204,204,204)
-    Invoke MUISetExtProperty, hControl, @ButtonBorderColorAlt, MUI_RGBCOLOR(204,204,204)
-    Invoke MUISetExtProperty, hControl, @ButtonBorderColorSel, MUI_RGBCOLOR(27,161,226)
-    Invoke MUISetExtProperty, hControl, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(27,161,226)
-    Invoke MUISetExtProperty, hControl, @ButtonBorderColorDisabled, MUI_RGBCOLOR(204,204,204)
-    Invoke MUISetExtProperty, hControl, @ButtonBorderStyle, MUIBBS_ALL
-    
-    Invoke MUISetExtProperty, hControl, @ButtonAccentColor, -1
-    Invoke MUISetExtProperty, hControl, @ButtonAccentColorAlt, -1
-    Invoke MUISetExtProperty, hControl, @ButtonAccentColorSel, -1
-    Invoke MUISetExtProperty, hControl, @ButtonAccentColorSelAlt, -1
 
-    Invoke MUISetExtProperty, hControl, @ButtonNotifyTextColor, MUI_RGBCOLOR(51,51,51)
-    Invoke MUISetExtProperty, hControl, @ButtonNotifyBackColor, MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hControl, @ButtonNoteTextColor, MUI_RGBCOLOR(96,96,96)
-    Invoke MUISetExtProperty, hControl, @ButtonNoteTextColorDisabled, MUI_RGBCOLOR(204,204,204)
+    mov eax, dwStyle
+    and eax, MUIBS_THEME
+    .IF eax == MUIBS_THEME
+
+        Invoke GetSysColor, COLOR_BTNTEXT
+        Invoke MUISetExtProperty, hWin, @ButtonTextColor, eax
+        Invoke GetSysColor, COLOR_BTNTEXT
+        Invoke MUISetExtProperty, hWin, @ButtonTextColorAlt, eax
+        Invoke GetSysColor, COLOR_HIGHLIGHT 
+        Invoke MUISetExtProperty, hWin, @ButtonTextColorSel, eax
+        Invoke GetSysColor, COLOR_BTNTEXT
+        Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, eax
+        Invoke GetSysColor, COLOR_GRAYTEXT
+        Invoke MUISetExtProperty, hWin, @ButtonTextColorDisabled, eax
+        
+        Invoke GetSysColor, COLOR_BTNFACE
+        Invoke MUISetExtProperty, hWin, @ButtonBackColor, eax
+        Invoke GetSysColor, COLOR_BTNFACE
+        Invoke MUISetExtProperty, hWin, @ButtonBackColorAlt, eax
+        Invoke GetSysColor, COLOR_BTNFACE
+        Invoke MUISetExtProperty, hWin, @ButtonBackColorSel, eax
+        Invoke GetSysColor, COLOR_BTNFACE
+        Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, eax
+        Invoke GetSysColor, COLOR_SCROLLBAR
+        Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabled, eax
+
+        Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
+        Invoke GetSysColor, COLOR_SCROLLBAR
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColor, eax
+        Invoke GetSysColor, COLOR_HIGHLIGHT
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, eax
+        Invoke GetSysColor, COLOR_HIGHLIGHT
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColorSel, eax
+        Invoke GetSysColor, COLOR_HIGHLIGHT
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, eax
+        Invoke GetSysColor, COLOR_SCROLLBAR
+        sub eax, 001C1C1Ch
+        and eax, 00ffffffh
+        .IF sdword ptr eax <= 0
+            Invoke GetSysColor, COLOR_SCROLLBAR
+        .ENDIF
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColorDisabled, eax
+        
+        Invoke MUISetExtProperty, hWin, @ButtonAccentColor, -1
+        Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, -1
+        Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, -1
+        Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, -1        
+        
+    .ELSE
+        ; Set default initial external property values
+        Invoke MUISetExtProperty, hWin, @ButtonTextColor, MUI_RGBCOLOR(51,51,51)
+        Invoke MUISetExtProperty, hWin, @ButtonTextColorAlt, MUI_RGBCOLOR(51,51,51)
+        Invoke MUISetExtProperty, hWin, @ButtonTextColorSel, MUI_RGBCOLOR(51,51,51)
+        Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, MUI_RGBCOLOR(51,51,51)
+        Invoke MUISetExtProperty, hWin, @ButtonTextColorDisabled, MUI_RGBCOLOR(204,204,204)
     
+        Invoke MUIGetParentBackgroundColor, hWin
+        .IF eax == -1 ; if background was NULL then try a color as default
+            Invoke GetSysColor, COLOR_WINDOW
+        .ENDIF
+        Invoke MUISetExtProperty, hWin, @ButtonBackColor, eax ;MUI_RGBCOLOR(255,255,255)
     
-    Invoke MUISetExtProperty, hControl, @ButtonPaddingLeftIndent, 0
-    Invoke MUISetExtProperty, hControl, @ButtonPaddingGeneral, 4d
-    Invoke MUISetExtProperty, hControl, @ButtonPaddingStyle, MUIBPS_ALL
-    Invoke MUISetExtProperty, hControl, @ButtonPaddingTextImage, 8    
+        ;Invoke MUISetExtProperty, hWin, @ButtonBackColor, MUI_RGBCOLOR(255,255,255) ;MUI_RGBCOLOR(21,133,181)
+        Invoke MUISetExtProperty, hWin, @ButtonBackColorAlt, MUI_RGBCOLOR(221,221,221)
+        Invoke MUISetExtProperty, hWin, @ButtonBackColorSel, MUI_RGBCOLOR(255,255,255)
+        Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, MUI_RGBCOLOR(221,221,221)
+        Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabled, MUI_RGBCOLOR(192,192,192)
+        
+        Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColor, MUI_RGBCOLOR(204,204,204)
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, MUI_RGBCOLOR(27,161,226);MUI_RGBCOLOR(120,183,203)
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColorSel, MUI_RGBCOLOR(27,161,226)
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(27,161,226)
+        Invoke MUISetExtProperty, hWin, @ButtonBorderColorDisabled, MUI_RGBCOLOR(204,204,204)
+
+        Invoke MUISetExtProperty, hWin, @ButtonAccentColor, -1
+        Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, -1
+        Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, -1
+        Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, -1
     
-    Invoke MUISetExtProperty, hControl, @ButtonDllInstance, 0
+        Invoke MUISetExtProperty, hWin, @ButtonNotifyTextColor, MUI_RGBCOLOR(51,51,51)
+        Invoke MUISetExtProperty, hWin, @ButtonNotifyBackColor, MUI_RGBCOLOR(255,255,255)
+        Invoke MUISetExtProperty, hWin, @ButtonNoteTextColor, MUI_RGBCOLOR(96,96,96)
+        Invoke MUISetExtProperty, hWin, @ButtonNoteTextColorDisabled, MUI_RGBCOLOR(204,204,204)
+    
+    .ENDIF
+    
+    Invoke MUISetExtProperty, hWin, @ButtonPaddingLeftIndent, 0
+    Invoke MUISetExtProperty, hWin, @ButtonPaddingGeneral, 4d
+    Invoke MUISetExtProperty, hWin, @ButtonPaddingStyle, MUIBPS_ALL
+    Invoke MUISetExtProperty, hWin, @ButtonPaddingTextImage, 8    
+    
+    Invoke MUISetExtProperty, hWin, @ButtonDllInstance, 0
     
 
     .IF hMUIButtonFont == 0
@@ -734,10 +785,10 @@ _MUI_ButtonInit PROC PRIVATE hControl:DWORD
         Invoke DeleteObject, hFont
     .ENDIF
 
-    Invoke MUISetExtProperty, hControl, @ButtonTextFont, hMUIButtonFont
-    Invoke MUISetExtProperty, hControl, @ButtonNotifyTextFont, hMUIButtonNotifyFont
-    Invoke MUISetExtProperty, hControl, @ButtonNoteTextFont, hMUIButtonNoteFont
-    
+    Invoke MUISetExtProperty, hWin, @ButtonTextFont, hMUIButtonFont
+    Invoke MUISetExtProperty, hWin, @ButtonNotifyTextFont, hMUIButtonNotifyFont
+    Invoke MUISetExtProperty, hWin, @ButtonNoteTextFont, hMUIButtonNoteFont
+
     ret
 
 _MUI_ButtonInit ENDP
@@ -911,6 +962,101 @@ _MUI_ButtonCleanup ENDP
 
 
 ;-------------------------------------------------------------------------------------
+; _MUI_ButtonButtonDown - Mouse button down or keyboard down from vk_space
+;-------------------------------------------------------------------------------------
+_MUI_ButtonButtonDown PROC hWin:DWORD
+    LOCAL hParent:DWORD
+    LOCAL rect:RECT    
+
+    IFDEF DEBUG32
+        PrintText '_MUI_ButtonButtonDown'
+    ENDIF
+
+    Invoke GetFocus
+    .IF eax != hWin
+        Invoke SetFocus, hWin
+        Invoke MUISetIntProperty, hWin, @ButtonFocusedState, FALSE
+    .ENDIF
+
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    and eax, MUIBS_PUSHBUTTON
+    .IF eax == MUIBS_PUSHBUTTON
+        Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
+        .IF eax == FALSE
+            Invoke GetClientRect, hWin, addr rect
+            Invoke GetParent, hWin
+            mov hParent, eax
+            invoke MapWindowPoints, hWin, hParent, addr rect, 2        
+            add rect.top, 1
+            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
+            Invoke MUISetIntProperty, hWin, @ButtonMouseDown, TRUE
+            ;Invoke ShowWindow, hWin, SW_HIDE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            ;Invoke ShowWindow, hWin, SW_SHOW
+        .ENDIF
+    .ELSE
+        Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
+        ;Invoke ShowWindow, hWin, SW_HIDE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        ;Invoke ShowWindow, hWin, SW_SHOW              
+    .ENDIF
+    ret
+_MUI_ButtonButtonDown ENDP
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_ButtonButtonUp - Mouse button up or keyboard up from vk_space
+;-------------------------------------------------------------------------------------
+_MUI_ButtonButtonUp PROC hWin:DWORD
+    LOCAL hParent:DWORD
+    LOCAL wID:DWORD
+    LOCAL rect:RECT
+    
+    IFDEF DEBUG32
+        PrintText '_MUI_ButtonButtonUp'
+    ENDIF
+
+    Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
+    .IF eax == TRUE
+    
+        Invoke GetDlgCtrlID, hWin
+        mov wID,eax
+        Invoke GetParent, hWin
+        mov hParent, eax
+        Invoke PostMessage, hParent, WM_COMMAND, wID, hWin ; simulates click on our control    
+    
+        Invoke GetClientRect, hWin, addr rect
+        Invoke MapWindowPoints, hWin, hParent, addr rect, 2   
+        sub rect.top, 1
+        Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
+        Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
+        ;Invoke ShowWindow, hWin, SW_HIDE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        ;Invoke ShowWindow, hWin, SW_SHOW                
+    .ELSE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
+        ;Invoke ShowWindow, hWin, SW_HIDE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        ;Invoke ShowWindow, hWin, SW_SHOW                
+    .ENDIF
+    
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    and eax, MUIBS_AUTOSTATE
+    .IF eax == MUIBS_AUTOSTATE
+        Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
+        .IF eax == FALSE
+            Invoke MUISetIntProperty, hWin, @ButtonSelectedState, TRUE
+        .ELSE
+            Invoke MUISetIntProperty, hWin, @ButtonSelectedState, FALSE
+        .ENDIF
+        Invoke InvalidateRect, hWin, NULL, TRUE
+    .ENDIF
+    ret
+_MUI_ButtonButtonUp ENDP
+
+
+;-------------------------------------------------------------------------------------
 ; _MUI_ButtonPaint
 ;-------------------------------------------------------------------------------------
 _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
@@ -925,10 +1071,11 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL MouseOver:DWORD
     LOCAL SelectedState:DWORD
     LOCAL BackColor:DWORD
+    LOCAL FocusedState:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
-    
+
     ;----------------------------------------------------------
     ; Get some property values
     ;---------------------------------------------------------- 
@@ -938,7 +1085,9 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     Invoke MUIGetIntProperty, hWin, @ButtonMouseOver
     mov MouseOver, eax
     Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
-    mov SelectedState, eax       
+    mov SelectedState, eax
+    Invoke MUIGetIntProperty, hWin, @ButtonFocusedState
+    mov FocusedState, eax
 
     .IF EnabledState == TRUE
         .IF SelectedState == FALSE
@@ -1000,12 +1149,18 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
         ; Border
         ;----------------------------------------------------------
         Invoke _MUI_ButtonPaintBorder, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
-    
+        
+        ;----------------------------------------------------------
+        ; Focused state
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintFocusRect, hWin, hdcMem, Addr rect, FocusedState
+        
         ;----------------------------------------------------------
         ; BitBlt from hdcMem back to hdc
         ;----------------------------------------------------------
         Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
-    
+        
+
         ;----------------------------------------------------------
         ; Cleanup
         ;----------------------------------------------------------
@@ -1058,12 +1213,18 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
         ; Border
         ;----------------------------------------------------------
         Invoke _MUI_ButtonPaintBorder, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
-    
+
+        ;----------------------------------------------------------
+        ; Focused state
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintFocusRect, hWin, hdcMem, Addr rect, FocusedState
+
         ;----------------------------------------------------------
         ; BitBlt from hdcMem back to hdc
         ;----------------------------------------------------------
         Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
-    
+
+        
         ;----------------------------------------------------------
         ; Cleanup
         ;----------------------------------------------------------
@@ -1191,7 +1352,7 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
             AND eax, MUIBAS_LEFT
             .IF eax == MUIBAS_LEFT
                 mov AccentRect.left, 0
-                mov eax, ACCENTWIDTH
+                mov eax, MUI_BUTTON_ACCENTWIDTH_DEFAULT
                 mov AccentRect.right, eax
                 mov AccentRect.top, 0
                 mov eax, rect.bottom
@@ -1220,7 +1381,7 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
                 mov eax, rect.right
                 mov AccentRect.right, eax
                 mov AccentRect.top, 0
-                mov eax, ACCENTWIDTH
+                mov eax, MUI_BUTTON_ACCENTWIDTH_DEFAULT
                 mov AccentRect.bottom, eax
 
                 Invoke GetStockObject, DC_BRUSH
@@ -1243,7 +1404,7 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
             AND eax, MUIBAS_RIGHT
             .IF eax == MUIBAS_RIGHT
                 mov eax, rect.right
-                mov ebx, ACCENTWIDTH
+                mov ebx, MUI_BUTTON_ACCENTWIDTH_DEFAULT
                 sub eax, ebx
                 mov AccentRect.left, eax
                 mov eax, rect.right
@@ -1275,7 +1436,7 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
                 mov eax, rect.right
                 mov AccentRect.right, eax
                 mov eax, rect.bottom
-                mov ebx, ACCENTWIDTH
+                mov ebx, MUI_BUTTON_ACCENTWIDTH_DEFAULT
                 sub eax, ebx
                 mov AccentRect.top, eax
                 mov eax, rect.bottom
@@ -1307,7 +1468,7 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
                 Invoke SetDCBrushColor, hdc, AccentColor 
             
                 mov AccentRect.left, 0
-                mov eax, ACCENTWIDTH
+                mov eax, MUI_BUTTON_ACCENTWIDTH_DEFAULT
                 mov AccentRect.right, eax
                 mov AccentRect.top, 0
                 mov eax, rect.bottom
@@ -1318,12 +1479,12 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
                 mov eax, rect.right
                 mov AccentRect.right, eax
                 mov AccentRect.top, 0
-                mov eax, ACCENTWIDTH
+                mov eax, MUI_BUTTON_ACCENTWIDTH_DEFAULT
                 mov AccentRect.bottom, eax
                 Invoke FillRect, hdc, Addr AccentRect, hBrush
                 
                 mov eax, rect.right
-                mov ebx, ACCENTWIDTH
+                mov ebx, MUI_BUTTON_ACCENTWIDTH_DEFAULT
                 sub eax, ebx
                 mov AccentRect.left, eax
                 mov eax, rect.right
@@ -1337,7 +1498,7 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
                 mov eax, rect.right
                 mov AccentRect.right, eax
                 mov eax, rect.bottom
-                mov ebx, ACCENTWIDTH
+                mov ebx, MUI_BUTTON_ACCENTWIDTH_DEFAULT
                 sub eax, ebx
                 mov AccentRect.top, eax
                 mov eax, rect.bottom
@@ -2204,7 +2365,7 @@ _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnable
         Invoke MUIGetExtProperty, hWin, @ButtonBorderColorDisabled        ; Disabled border color
     .ENDIF
     mov BorderColor, eax
-
+    
     .IF BorderColor != -1
         Invoke MUIGetExtProperty, hWin, @ButtonBorderStyle
         mov BorderStyle, eax
@@ -2281,84 +2442,57 @@ _MUI_ButtonPaintBorder ENDP
 
 
 ;-------------------------------------------------------------------------------------
-; _MUI_ButtonGetImageSize
+; _MUI_ButtonPaintFocusRect
 ;-------------------------------------------------------------------------------------
-;_MUI_ButtonGetImageSize PROC PRIVATE USES EBX hWin:DWORD, dwImageType:DWORD, hImage:DWORD, lpdwImageWidth:DWORD, lpdwImageHeight:DWORD
-;    LOCAL bm:BITMAP
-;    LOCAL iinfo:ICONINFO
-;    LOCAL nImageWidth:DWORD
-;    LOCAL nImageHeight:DWORD
-;
-;    mov eax, dwImageType
-;    .IF eax == MUIBIT_NONE
-;        mov eax, 0
-;        mov ebx, lpdwImageWidth
-;        mov [ebx], eax
-;        mov ebx, lpdwImageHeight
-;        mov [ebx], eax    
-;        mov eax, FALSE
-;        ret
-;        
-;    .ELSEIF eax == MUIBIT_BMP ; bitmap/icon
-;        Invoke GetObject, hImage, SIZEOF bm, Addr bm
-;        mov eax, bm.bmWidth
-;        mov ebx, lpdwImageWidth
-;        mov [ebx], eax
-;        mov eax, bm.bmHeight
-;        mov ebx, lpdwImageHeight
-;        mov [ebx], eax
+_MUI_ButtonPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFocusedState:DWORD
+    ;LOCAL hPen:DWORD
+    ;LOCAL hOldPen:DWORD
+    LOCAL rect:RECT
+    ;LOCAL pt:POINT
+    ;LOCAL old_rop:DWORD
+        
+    ;PrintText '_MUI_ButtonPaintFocusRect'
+    
+    .IF bFocusedState == FALSE
+        ret
+    .ENDIF
+
+    Invoke CopyRect, Addr rect, lpRect
+    Invoke InflateRect, Addr rect, MUI_BUTTON_FOCUSRECT_OFFSET, MUI_BUTTON_FOCUSRECT_OFFSET
+    Invoke DrawFocusRect, hdc, Addr rect
+
+;    Invoke CreatePen, PS_DOT, 1, MUI_RGBCOLOR(0,0,0) ;
+;    mov hPen, eax
+;    Invoke SelectObject, hdc, hPen
+;    mov hOldPen, eax 
+;    Invoke SetROP2, hdc, R2_XORPEN
+;    mov old_rop, eax
 ;    
-;    .ELSEIF eax == MUIBIT_ICO ; icon    
-;        Invoke GetIconInfo, hImage, Addr iinfo ; get icon information
-;        mov eax, iinfo.hbmColor ; bitmap info of icon has width/height
-;        .IF eax != NULL
-;            Invoke GetObject, iinfo.hbmColor, SIZEOF bm, Addr bm
-;            mov eax, bm.bmWidth
-;            mov ebx, lpdwImageWidth
-;            mov [ebx], eax
-;            mov eax, bm.bmHeight
-;            mov ebx, lpdwImageHeight
-;            mov [ebx], eax
-;        .ELSE ; Icon has no color plane, image width/height data stored in mask
-;            mov eax, iinfo.hbmMask
-;            .IF eax != NULL
-;                Invoke GetObject, iinfo.hbmMask, SIZEOF bm, Addr bm
-;                mov eax, bm.bmWidth
-;                mov ebx, lpdwImageWidth
-;                mov [ebx], eax
-;                mov eax, bm.bmHeight
-;                shr eax, 1 ;bmp.bmHeight / 2;
-;                mov ebx, lpdwImageHeight
-;                mov [ebx], eax                
-;            .ENDIF
-;        .ENDIF
-;        ; free up color and mask icons created by the GetIconInfo function
-;        mov eax, iinfo.hbmColor
-;        .IF eax != NULL
-;            Invoke DeleteObject, eax
-;        .ENDIF
-;        mov eax, iinfo.hbmMask
-;        .IF eax != NULL
-;            Invoke DeleteObject, eax
-;        .ENDIF
-;    
-;    .ELSEIF eax == MUIBIT_PNG ; png
-;        IFDEF MUI_USEGDIPLUS
-;        Invoke GdipGetImageWidth, hImage, Addr nImageWidth
-;        Invoke GdipGetImageHeight, hImage, Addr nImageHeight
-;        mov eax, nImageWidth
-;        mov ebx, lpdwImageWidth
-;        mov [ebx], eax
-;        mov eax, nImageHeight
-;        mov ebx, lpdwImageHeight
-;        mov [ebx], eax
-;        ENDIF
+;    Invoke MoveToEx, hdc, rect.left, rect.top, Addr pt
+;    Invoke LineTo, hdc, rect.right, rect.top
+;    ;dec rect.right
+;    ;inc rect.bottom                
+;    Invoke MoveToEx, hdc, rect.right, rect.top, Addr pt
+;    Invoke LineTo, hdc, rect.right, rect.bottom
+;    ;inc rect.right
+;    ;dec rect.bottom
+;    Invoke MoveToEx, hdc, rect.left, rect.bottom, Addr pt
+;    Invoke LineTo, hdc, rect.right, rect.bottom
+;    ;inc rect.bottom
+;    Invoke MoveToEx, hdc, rect.left, rect.top, Addr pt
+;    Invoke LineTo, hdc, rect.left, rect.bottom
+;    ;.IF old_rop != 0
+;    ;    Invoke SetROP2, hdc, old_rop
+;    ;.ENDIF
+;    .IF hOldPen != 0
+;        Invoke SelectObject, hdc, hOldPen
+;        Invoke DeleteObject, hOldPen
 ;    .ENDIF
-;    
-;    mov eax, TRUE
-;    ret
-;
-;_MUI_ButtonGetImageSize ENDP
+;    .IF hPen != 0
+;        Invoke DeleteObject, hPen
+;    .ENDIF    
+    ret
+_MUI_ButtonPaintFocusRect ENDP
 
 
 ;-------------------------------------------------------------------------------------
@@ -2611,6 +2745,7 @@ MUIButtonGetState PROC PUBLIC hControl:DWORD
     ret
 MUIButtonGetState ENDP
 
+
 ;-------------------------------------------------------------------------------------
 ; MUIButtonSetState
 ;-------------------------------------------------------------------------------------
@@ -2618,6 +2753,7 @@ MUIButtonSetState PROC PUBLIC hControl:DWORD, bState:DWORD
     Invoke SendMessage, hControl, MUIBM_SETSTATE, bState, 0
     ret
 MUIButtonSetState ENDP
+
 
 ;-------------------------------------------------------------------------------------
 ; MUIButtonLoadImages - Loads images from resource ids and stores the handles in the
