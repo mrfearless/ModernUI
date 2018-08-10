@@ -7,5 +7,5 @@ STYLE 0x40000400
 EXSTYLE 0x00000000
 BEGIN
   CONTROL "Finish",IDC_BTNFINISH,"ModernUI_Button",0x52000034,175,200,45,11,0x00000000
-  CONTROL "Installation of Radasm Studio is now completed.",IDC_TEXTFINISHED,"ModernUI_Text",0x52000032,7,8,189,32,0x00000000
+  CONTROL "Installation of Radasm Studio is now completed.",IDC_TEXTFINISHED,"ModernUI_Text",0x52000013,7,8,189,32,0x00000000
 END

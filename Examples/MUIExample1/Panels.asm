@@ -116,7 +116,7 @@ Panel1Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Text: Confirm Cancellation of installer
         ;-----------------------------------------------------------------------------------------------------        
-        Invoke MUITextCreate, hWin, Addr szConfirmCancel, 3, 250, 450, 80, IDC_TEXTCONFIRMCANCEL, MUITS_11PT_BOLD or MUITS_ALIGN_CENTER or MUITS_FONT_SEGOE 
+        Invoke MUITextCreate, hWin, Addr szConfirmCancel, 3, 250, 450, 80, IDC_TEXTCONFIRMCANCEL, MUITS_11PT or MUITS_FONT_BOLD or MUITS_ALIGN_CENTER or MUITS_FONT_SEGOE 
         mov hMUITextConfirmCancel, eax
         Invoke MUITextSetProperty, hMUITextConfirmCancel, @TextColor, MUI_RGBCOLOR(179,179,179)
         Invoke MUITextSetProperty, hMUITextConfirmCancel, @TextColorAlt, MUI_RGBCOLOR(179,179,179)
