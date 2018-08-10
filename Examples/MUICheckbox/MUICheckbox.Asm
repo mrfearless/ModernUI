@@ -50,7 +50,7 @@ WinMain proc hInst:HINSTANCE,hPrevInst:HINSTANCE,CmdLine:LPSTR,CmdShow:DWORD
     mov     wc.cbWndExtra, DLGWINDOWEXTRA
     push    hInst
     pop     wc.hInstance
-    mov     wc.hbrBackground, COLOR_BTNFACE+1 ; COLOR_WINDOW+1
+    mov     wc.hbrBackground, COLOR_WINDOW+1;COLOR_BTNFACE+1 ; COLOR_WINDOW+1
     mov     wc.lpszMenuName, IDM_MENU
     mov     wc.lpszClassName, offset ClassName
     Invoke LoadIcon, NULL, IDI_APPLICATION
@@ -62,13 +62,17 @@ WinMain proc hInst:HINSTANCE,hPrevInst:HINSTANCE,CmdLine:LPSTR,CmdShow:DWORD
     mov     wc.hCursor,eax
     Invoke RegisterClassEx, addr wc
     Invoke CreateDialogParam, hInstance, IDD_DIALOG, NULL, addr WndProc, NULL
+    mov hWnd, eax
     Invoke ShowWindow, hWnd, SW_SHOWNORMAL
     Invoke UpdateWindow, hWnd
     .WHILE TRUE
-        invoke GetMessage, addr msg, NULL, 0, 0
-      .BREAK .if !eax
-        Invoke TranslateMessage, addr msg
-        Invoke DispatchMessage, addr msg
+        invoke GetMessage, Addr msg, NULL, 0, 0
+        .BREAK .if !eax
+        Invoke IsDialogMessage, hWnd, Addr msg
+        .IF eax == 0
+            Invoke TranslateMessage, Addr msg
+            Invoke DispatchMessage, Addr msg
+        .ENDIF
     .ENDW
     mov eax, msg.wParam
     ret
@@ -105,46 +109,33 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Checkbox Examples:
         ;-----------------------------------------------------------------------------------------------------
-        ; Create our ModernUI_Button control and set to autostate
-;       Invoke MUIButtonCreate, hWin, Addr szCheckbox1Text, 20, 50, 200, 24, IDC_CHECKBOX1, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
-;       mov hChk1, eax
-;       ; Set all properties for checkbox style
-;       Invoke MUIButtonSetAllProperties, hChk1, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
-;       ; load checkbox icons
-;       Invoke MUIButtonLoadImages, hChk1, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
-;
-;       Invoke MUIButtonCreate, hWin, Addr szCheckbox2Text, 20, 75, 200, 24, IDC_CHECKBOX2, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
-;       mov hChk2, eax
-;       ; Set all properties for checkbox style
-;       Invoke MUIButtonSetAllProperties, hChk2, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
-;       ; load checkbox icons
-;       Invoke MUIButtonLoadImages, hChk2, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
-;
-;       Invoke MUIButtonCreate, hWin, Addr szCheckbox3Text, 20, 100, 200, 24, IDC_CHECKBOX3, MUIBS_LEFT + MUIBS_AUTOSTATE + MUIBS_HAND
-;       mov hChk3, eax
-;       ; Set all properties for checkbox style
-;       Invoke MUIButtonSetAllProperties, hChk3, Addr MUI_CHECKBOX_LIGHT_THEME, SIZEOF MUI_BUTTON_PROPERTIES
-;       ; load checkbox icons
-;       Invoke MUIButtonLoadImages, hChk3, MUIBIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK
-        
-
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox1Text, 20, 50, 200, 24, IDC_CHECKBOX1, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox1Text, 20, 50, 300, 24, IDC_CHECKBOX1, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICS_NOFOCUSRECT
         mov hChk1, eax
-        ;Invoke MUICheckboxSetProperty, hChk1, @CheckboxDllInstance, hInstance
-        ;Invoke MUICheckboxLoadImages, hChk1, MUICIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK
+        Invoke MUICheckboxSetState, hChk1, FALSE
 
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox2Text, 20, 75, 200, 24, IDC_CHECKBOX2, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox2Text, 20, 75, 300, 24, IDC_CHECKBOX2, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICS_NOFOCUSRECT
         mov hChk2, eax
-        ;Invoke MUICheckboxSetProperty, hChk2, @CheckboxDllInstance, hInstance
-        ;Invoke MUICheckboxLoadImages, hChk2, MUICIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK
+        Invoke MUICheckboxSetState, hChk2, TRUE
         
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox3Text, 20, 100, 200, 24, IDC_CHECKBOX3, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox3Text, 20, 100, 300, 24, IDC_CHECKBOX3, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICS_NOFOCUSRECT
         mov hChk3, eax
-        ;Invoke MUICheckboxSetProperty, hChk3, @CheckboxDllInstance, hInstance
-        ;Invoke MUICheckboxLoadImages, hChk3, MUICIT_ICO, ICO_NOCHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK, ICO_CHECKMARK, ICO_NOCHECKMARK, ICO_CHECKMARK
-        
 
-        
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox4Text, 20, 125, 300, 24, IDC_CHECKBOX3, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICS_NOFOCUSRECT
+        mov hChk4, eax
+
+        Invoke MUICheckboxCreate, hWin, Addr szRadio1Text, 20, 150, 300, 24, IDC_RADIO1, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICS_RADIO or MUICS_NOFOCUSRECT
+        mov hRadio1, eax
+        Invoke MUICheckboxSetState, hRadio1, FALSE
+
+        Invoke MUICheckboxCreate, hWin, Addr szRadio2Text, 20, 175, 300, 24, IDC_RADIO2, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICS_RADIO or MUICS_NOFOCUSRECT
+        mov hRadio2, eax
+        Invoke MUICheckboxSetState, hRadio2, TRUE
+
+        Invoke MUICheckboxCreate, hWin, Addr szRadio3Text, 20, 200, 300, 24, IDC_RADIO3, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICS_RADIO or MUICS_NOFOCUSRECT
+        mov hRadio3, eax
+
+        Invoke MUICheckboxCreate, hWin, Addr szRadio4Text, 20, 225, 300, 24, IDC_RADIO4, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICS_RADIO or MUICS_NOFOCUSRECT
+        mov hRadio4, eax
 
     ;---------------------------------------------------------------------------------------------------------------
     ; Handle painting of our dialog with our specified background and border color to mimic new Modern style UI feel
@@ -154,7 +145,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ret
 
     .ELSEIF eax == WM_PAINT
-        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(240,240,240), MUI_RGBCOLOR(27,161,226)
+        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(255,255,255), MUI_RGBCOLOR(27,161,226)
         mov eax, 0
         ret
     ;---------------------------------------------------------------------------------------------------------------
