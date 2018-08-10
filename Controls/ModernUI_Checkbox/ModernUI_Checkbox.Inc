@@ -49,21 +49,22 @@ MUICheckboxSetImages            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :D
 ;--------------------------------------------------------------------------------------------------------------------------------------
 IFNDEF MUI_CHECKBOX_PROPERTIES
 MUI_CHECKBOX_PROPERTIES         STRUCT
-    dwTextFont                  DD ?       ; hFont
-    dwTextColor                 DD ?       ; Colorref
-    dwTextColorAlt              DD ?       ; Colorref
-    dwTextColorSel              DD ?       ; Colorref
-    dwTextColorSelAlt           DD ?       ; Colorref
-    dwTextColorDisabled         DD ?       ; Colorref
-    dwBackColor                 DD ?       ; Colorref
-    dwImageType                 DD ?       ; image type
-    dwImage                     DD ?       ; hImage for empty checkbox
-    dwImageAlt                  DD ?       ; hImage for empty checkbox when mouse moves over checkbox
-    dwImageSel                  DD ?       ; hImage for checkbox with checkmark
-    dwImageSelAlt               DD ?       ; hImage for checkbox with checkmark when mouse moves over checkbox
-    dwImageDisabled             DD ?       ; hImage for disabled empty checkbox
-    dwImageDisabledSel          DD ?       ; hImage for disabled checkbox with checkmark
+    dwTextFont                  DD ?        ; hFont
+    dwTextColor                 DD ?        ; Colorref
+    dwTextColorAlt              DD ?        ; Colorref
+    dwTextColorSel              DD ?        ; Colorref
+    dwTextColorSelAlt           DD ?        ; Colorref
+    dwTextColorDisabled         DD ?        ; Colorref
+    dwBackColor                 DD ?        ; Colorref
+    dwImageType                 DD ?        ; image type
+    dwImage                     DD ?        ; hImage for empty checkbox
+    dwImageAlt                  DD ?        ; hImage for empty checkbox when mouse moves over checkbox
+    dwImageSel                  DD ?        ; hImage for checkbox with checkmark
+    dwImageSelAlt               DD ?        ; hImage for checkbox with checkmark when mouse moves over checkbox
+    dwImageDisabled             DD ?        ; hImage for disabled empty checkbox
+    dwImageDisabledSel          DD ?        ; hImage for disabled checkbox with checkmark
     dwCheckboxDllInstance       DD ?
+    dwCheckboxParam             DD ?
 MUI_CHECKBOX_PROPERTIES         ENDS
 ENDIF
 
@@ -81,6 +82,8 @@ MUICM_SETSTATE                  EQU WM_USER + 1778 ; wParam = TRUE/FALSE, lParam
 MUICS_CHECK                     EQU 00h     ;
 MUICS_RADIO                     EQU 01h     ;
 MUICS_HAND                      EQU 20h     ; Show a hand instead of an arrow when mouse moves over checkbox.
+MUICS_NOFOCUSRECT               EQU 100h    ; Dont show focus rect, just use change border to @CheckboxTextColorAlt when setfocus.
+MUICS_THEME                     EQU 8000h   ; Use default windows theme colors and react to WM_THEMECHANGED
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Checkbox Properties: Use with MUICheckboxSetProperty / MUICheckboxGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
@@ -92,15 +95,15 @@ MUICS_HAND                      EQU 20h     ; Show a hand instead of an arrow wh
 @CheckboxTextColorSelAlt        EQU 16      ; Colorref
 @CheckboxTextColorDisabled      EQU 20      ; Colorref
 @CheckboxBackColor              EQU 24      ; Colorref
-@CheckboxImageType              EQU 28     ; Button Image Types - One of the following: MUICIT_NONE, MUICIT_BMP, MUICIT_ICO or MUICIT_PNG
-@CheckboxImage                  EQU 32     ; hImage
-@CheckboxImageAlt               EQU 36     ; hImage
-@CheckboxImageSel               EQU 40     ; hImage
-@CheckboxImageSelAlt            EQU 44     ; hImage
-@CheckboxImageDisabled          EQU 48     ; hImage
-@CheckboxImageDisabledSel       EQU 52     ; hImage
-@CheckboxDllInstance            EQU 56     ; Set to hInstance of dll before calling MUICheckboxLoadImages if used within a dll
-
+@CheckboxImageType              EQU 28      ; Button Image Types - One of the following: MUICIT_NONE, MUICIT_BMP, MUICIT_ICO or MUICIT_PNG
+@CheckboxImage                  EQU 32      ; hImage
+@CheckboxImageAlt               EQU 36      ; hImage
+@CheckboxImageSel               EQU 40      ; hImage
+@CheckboxImageSelAlt            EQU 44      ; hImage
+@CheckboxImageDisabled          EQU 48      ; hImage
+@CheckboxImageDisabledSel       EQU 52      ; hImage
+@CheckboxDllInstance            EQU 56      ; Set to hInstance of dll before calling MUICheckboxLoadImages if used within a dll
+@CheckboxParam                  EQU 60      ; Custom user data
 
 ; Checkbox Image Types
 MUICIT_NONE                     EQU 0
