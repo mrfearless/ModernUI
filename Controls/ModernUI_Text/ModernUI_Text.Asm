@@ -41,6 +41,8 @@ includelib ModernUI.lib
 
 include ModernUI_Text.inc
 
+PUBLIC MUITextFontTable
+
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -51,6 +53,9 @@ _MUI_TextPaintBackground        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TextPaintText              PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TextCheckMultiline         PROTO :DWORD, :DWORD
 _MUI_TextSetFontFamilySize      PROTO :DWORD, :DWORD
+
+_MUI_TextGetFontTableHandle     PROTO :DWORD, :DWORD
+_MUI_TextSetFontTableHandle     PROTO :DWORD, :DWORD, :DWORD
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Structures for internal use
@@ -73,10 +78,32 @@ _MUI_TEXT_PROPERTIES            STRUCT
 _MUI_TEXT_PROPERTIES            ENDS
 
 
+MUI_TEXT_FONT_ENTRY             STRUCT
+    hFont                       DD 0
+    hFontBold                   DD 0
+    hFontItalic                 DD 0
+    hFontUnderline              DD 0
+    hFontBoldItalic             DD 0
+    hFontBoldUnderline          DD 0
+    hFontBoldItalicUnderline    DD 0
+    hFontItalicUnderline        DD 0
+MUI_TEXT_FONT_ENTRY             ENDS
+
+
+
+
+
+
 .CONST
 MUI_TEXT_MAX_CHARS              EQU 2048
-MUI_TEXT_NO_FONTTYPES           EQU 6
-MUI_TEXT_NO_FONTSIZES           EQU 8
+MUI_TEXT_NO_FONTTYPES           EQU 7
+MUI_TEXT_NO_FONTSIZES           EQU 16
+MUI_TEXT_FONT_ENTRIES_SIZE      EQU (MUI_TEXT_NO_FONTSIZES * SIZEOF MUI_TEXT_FONT_ENTRY)
+
+MUI_TEXT_FONTSIZE_MASK          EQU 0000000Fh
+MUI_TEXT_FONTTYPE_MASK          EQU 00000070h
+MUI_TEXT_ALIGN_MASK             EQU 00000300h
+
 
 ; Internal properties
 @TextEnabledState               EQU 0
@@ -90,16 +117,39 @@ MUI_TEXT_NO_FONTSIZES           EQU 8
 ;                                DB "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " 
 ;                                DB "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",0
 
-szLorumIpsumText                DB "Lorem ipsum dolor sit amet, cu meis summo platonem ius. Est solet abhorreant constituto id, minim nominavi appetere at qui. "
-                                DB "Sed ea feugait officiis. Cu commodo persecuti nam, et minimum omittam prodesset mei. Usu ei duis feugiat platonem.",13,10,13,10
-                                DB "Autem antiopam eam et. Qui omnesque concludaturque no, duo ad accusam philosophia. Graeci convenire theophrastus ea has, "
-                                DB "eu mei paulo forensibus concludaturque. Ad sea ignota habemus adipiscing.",13,10,13,10
-                                DB "Duo iusto minimum id, eos animal graecis et, eu mel tota minimum corpora. Te vix latine conclusionemque, cu eam brute posse primis. "
-                                DB "Has an cibo elitr voluptatum, legere tritani te his. Consul libris gloriatur in nam, unum meliore sea an, graeci gloriatur id has. "
-                                DB "Justo ornatus mnesarchum ius eu, ex suscipit voluptua incorrupte vim.",0,0,0,0     
+;szLorumIpsumText                DB "Lorem ipsum dolor sit amet, cu meis summo platonem ius. Est solet abhorreant constituto id, minim nominavi appetere at qui. "
+;                                DB "Sed ea feugait officiis. Cu commodo persecuti nam, et minimum omittam prodesset mei. Usu ei duis feugiat platonem.",13,10,13,10
+;                                DB "Autem antiopam eam et. Qui omnesque concludaturque no, duo ad accusam philosophia. Graeci convenire theophrastus ea has, "
+;                                DB "eu mei paulo forensibus concludaturque. Ad sea ignota habemus adipiscing.",13,10,13,10
+;                                DB "Duo iusto minimum id, eos animal graecis et, eu mel tota minimum corpora. Te vix latine conclusionemque, cu eam brute posse primis. "
+;                                DB "Has an cibo elitr voluptatum, legere tritani te his. Consul libris gloriatur in nam, unum meliore sea an, graeci gloriatur id has. "
+;                                DB "Justo ornatus mnesarchum ius eu, ex suscipit voluptua incorrupte vim.",0,0,0,0     
+
+
+szLorumIpsumText                DB "Lorem ipsum dolor sit amet, explicari maluisset te cum, ea vel debitis omittam. Duis sale feugait id duo, sit minimum deleniti facilisis ne. "
+                                DB "Sea et prompta legendos. Bonorum reprehendunt et nam. Nullam volutpat ut vim, in tempor nostrum assentior sed. In libris singulis gloriatur pri, "
+                                DB "mei cetero comprehensam no. Has ne doming labore salutatus, vix ex timeam argumentum."
+                                DB 13,10,13,10
+                                DB "Quidam melius cum ei. Id invenire percipitur has, dicant partiendo sit ei. Sea et affert percipit nominati, mea ex minimum philosophia, "
+                                DB "ad aliquid ponderum phaedrum nec. At option numquam mea. Nec reque scripta et, te mea regione senserit, sed ea partiendo sapientem delicatissimi. "
+                                DB "Oporteat accommodare sed an. At has ornatus adolescens elaboraret."
+                                DB 13,10,13,10
+                                DB "Cu eam admodum senserit maluisset. Mel id probo elitr instructior. Illud velit efficiantur mea ne, audire adolescens no pri, pro fabellas intellegat ex." 
+                                DB "Vis illum falli constituto ad, eum tantas dolore eirmod cu. Et zril malorum meliore usu."
+                                DB 13,10,13,10
+                                DB "No sea modus menandri scriptorem, nec cu petentium signiferumque. Cu causae suscipiantur duo, nam nibh inani corrumpit ad. Porro causae ut pri. "
+                                DB "Duo paulo aperiri at, qui ne eripuit vulputate, sit facilisi antiopam salutandi id. At vidisse efficiendi cum."
+                                DB 13,10,13,10
+                                DB "Eos vidisse indoctum dissentiunt id. Alia duis tota ne est, in mea deleniti pertinax, amet senserit no his. His mollis intellegebat ut. "
+                                DB "Sed reque quando ei. Ea per atqui integre deseruisse, pri et summo congue. Affert fuisset salutandi per te."
+                                DB 13,10,13,10
+                                DB "Ea dico timeam voluptaria qui, vel ea viderer recteque. Quas scaevola ad vim, harum omnes vulputate his ex, quo accusamus hendrerit id. "
+                                DB "Ex mea solum constituam, no quo tritani definiebas intellegebat. Qui saperet insolens no, ex pri homero accumsan. Ad nemore vocibus qui. "
+                                DB "Mundi volumus comprehensam ad per, in assentior cotidieque sit. Pro ut iudico incorrupte, duo in populo suscipit."
+                                DB 0,0,0,0
+
 
 szMUITextClass                  DB 'ModernUI_Text',0    ; Class name for creating our ModernUI_Text control
-szMUITextFont                   DB 'Segoe UI',0                ; Font used for ModernUI_Text text
 
 
 szMUITextFontSegoe              DB 'Segoe UI',0 
@@ -109,12 +159,8 @@ szMUITextFontTimes              DB 'Times New Roman',0
 szMUITextFontCourier            DB 'Courier New',0
 szMUITextFontVerdana            DB 'Verdana',0
 
-MUITextFontSegoeHandles         DD MUI_TEXT_NO_FONTSIZES DUP (0)
-MUITextFontTahomaHandles        DD MUI_TEXT_NO_FONTSIZES DUP (0)
-MUITextFontArialHandles         DD MUI_TEXT_NO_FONTSIZES DUP (0)
-MUITextFontTimesHandles         DD MUI_TEXT_NO_FONTSIZES DUP (0)
-MUITextFontCourierHandles       DD MUI_TEXT_NO_FONTSIZES DUP (0)
-MUITextFontVerdanaHandles       DD MUI_TEXT_NO_FONTSIZES DUP (0)
+
+MUITextFontTable                MUI_TEXT_FONT_ENTRY ((MUI_TEXT_NO_FONTTYPES+1) * (MUI_TEXT_NO_FONTSIZES+1)) DUP (<>)
 
 .CODE
 
@@ -308,8 +354,8 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
     .ELSEIF eax == WM_SETFONT
         ;PrintText '_MUI_TextWndProc::WM_SETFONT'
         Invoke GetWindowLong, hWin, GWL_STYLE
-        and eax, 0F0h
-        .IF eax == 0 || eax == MUITS_FONT_DIALOG || eax == MUITS_FONT_SETFONT
+        and eax, MUI_TEXT_FONTTYPE_MASK
+        .IF eax == MUITS_FONT_DIALOG
             ;PrintDec wParam
             Invoke MUISetExtProperty, hWin, @TextFont, wParam
             .IF lParam == TRUE
@@ -353,6 +399,7 @@ _MUI_TextWndProc ENDP
 _MUI_TextInit PROC PRIVATE hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
+    LOCAL BackColor:DWORD
 
     Invoke GetParent, hWin
     mov hParent, eax
@@ -369,7 +416,13 @@ _MUI_TextInit PROC PRIVATE hWin:DWORD
     .ENDIF
      
     ; Set default initial external property values  
-    Invoke MUISetIntProperty, hWin, @TextEnabledState, TRUE   
+    mov eax, dwStyle
+    and eax, WS_DISABLED
+    .IF eax == WS_DISABLED
+        Invoke MUISetIntProperty, hWin, @TextEnabledState, FALSE
+    .ELSE
+        Invoke MUISetIntProperty, hWin, @TextEnabledState, TRUE
+    .ENDIF  
     Invoke MUISetExtProperty, hWin, @TextColor, MUI_RGBCOLOR(51,51,51)
     Invoke MUISetExtProperty, hWin, @TextColorAlt, MUI_RGBCOLOR(51,51,51)
     Invoke MUISetExtProperty, hWin, @TextColorDisabled, MUI_RGBCOLOR(204,204,204)
@@ -378,10 +431,11 @@ _MUI_TextInit PROC PRIVATE hWin:DWORD
     .IF eax == -1 ; if background was NULL then try a color as default
         Invoke GetSysColor, COLOR_WINDOW
     .ENDIF
-    Invoke MUISetExtProperty, hWin, @TextBackColor, eax ;MUI_RGBCOLOR(255,255,255)   
+    mov BackColor, eax
+    Invoke MUISetExtProperty, hWin, @TextBackColor, BackColor ;MUI_RGBCOLOR(255,255,255)   
     ;Invoke MUISetExtProperty, hWin, @TextBackColor, MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hWin, @TextBackColorAlt, eax ;MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hWin, @TextBackColorDisabled, eax ;MUI_RGBCOLOR(192,192,192)
+    Invoke MUISetExtProperty, hWin, @TextBackColorAlt, BackColor ;MUI_RGBCOLOR(255,255,255)
+    Invoke MUISetExtProperty, hWin, @TextBackColorDisabled, BackColor ;MUI_RGBCOLOR(192,192,192)
     
     Invoke _MUI_TextSetFontFamilySize, hWin, dwStyle
 
@@ -603,6 +657,8 @@ _MUI_TextPaintText PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledSta
         or dwTextStyle, DT_CENTER
     .ELSEIF eax == MUITS_ALIGN_RIGHT
         or dwTextStyle, DT_RIGHT
+    .ELSEIF eax == MUITS_ALIGN_CENTER or MUITS_ALIGN_RIGHT ; MUITS_ALIGN_JUSTIFY
+        or dwTextStyle, DT_LEFT
     .ELSE
         or dwTextStyle, DT_LEFT
     .ENDIF
@@ -680,8 +736,9 @@ _MUI_TextSetFontFamilySize PROC USES EBX hWin:DWORD, dwStyle:DWORD
     LOCAL dwFontWeight:DWORD
     LOCAL dwFontFamily:DWORD
     LOCAL dwFontSize:DWORD
-    LOCAL ptrFontHandles:DWORD
-    LOCAL dwFontSizeIndex:DWORD
+    LOCAL bFontBold:DWORD
+    LOCAL bFontItalic:DWORD
+    LOCAL bFontUnderline:DWORD
 
     Invoke MUIGetExtProperty, hWin, @TextFont
     mov hFont, eax
@@ -689,116 +746,119 @@ _MUI_TextSetFontFamilySize PROC USES EBX hWin:DWORD, dwStyle:DWORD
         Invoke DeleteObject, hFont
     .ENDIF
 
+    ;--------------------------------
+    ; Get font family
+    ;--------------------------------
     mov eax, dwStyle
-    and eax, 0F0h
+    and eax, MUI_TEXT_FONTTYPE_MASK ;0F0h
     mov dwFontFamily, eax
  
-    .IF eax == 0 || eax == MUITS_FONT_DIALOG || eax == MUITS_FONT_SETFONT
+    .IF eax == MUITS_FONT_DIALOG
         Invoke GetParent, hWin
         Invoke SendMessage, eax, WM_GETFONT, 0, 0 ; hope parent is the dialog or container that has a font being used.
         mov hFont, eax
         Invoke MUISetExtProperty, hWin, @TextFont, hFont
     .ELSE
-
+        mov eax, dwFontFamily
         .IF eax == MUITS_FONT_SEGOE
             lea eax, szMUITextFontSegoe
-            lea ebx, MUITextFontSegoeHandles
         .ELSEIF eax == MUITS_FONT_TAHOMA
             lea eax, szMUITextFontTahoma
-            lea ebx, MUITextFontTahomaHandles
         .ELSEIF eax == MUITS_FONT_ARIAL
             lea eax, szMUITextFontArial
-            lea ebx, MUITextFontArialHandles
         .ELSEIF eax == MUITS_FONT_TIMES
             lea eax, szMUITextFontTimes
-            lea ebx, MUITextFontTimesHandles
         .ELSEIF eax == MUITS_FONT_COURIER
             lea eax, szMUITextFontCourier
-            lea ebx, MUITextFontCourierHandles
         .ELSEIF eax == MUITS_FONT_VERDANA    
             lea eax, szMUITextFontVerdana
-            lea ebx, MUITextFontVerdanaHandles
         .ELSE
             lea eax, szMUITextFontSegoe
-            lea ebx, MUITextFontSegoeHandles
         .ENDIF
         mov MUITextFont, eax
-        mov ptrFontHandles, ebx
-        
-        mov eax, dwStyle
-        and eax, 15d
-        mov dwFontSize, eax
 
-        .IF eax == MUITS_8PT ; 8pt
+        ;--------------------------------
+        ; Get font size
+        ;--------------------------------
+        mov eax, dwStyle
+        and eax, MUI_TEXT_FONTSIZE_MASK
+        mov dwFontSize, eax
+        .IF eax == MUITS_7PT
+            Invoke MUIPointSizeToLogicalUnit, hWin, 7
+        .ELSEIF eax == MUITS_8PT ; 8pt
             Invoke MUIPointSizeToLogicalUnit, hWin, 8
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-            mov dwFontSizeIndex, 0
-        .ELSEIF eax == MUITS_9PT_BOLD ; 9pt bold
+        .ELSEIF eax == MUITS_9PT
             Invoke MUIPointSizeToLogicalUnit, hWin, 9
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_BOLD
-            mov dwFontSizeIndex, 1
-        .ELSEIF eax == MUITS_10PT ; 10pt
+         .ELSEIF eax == MUITS_10PT ; 10pt
             Invoke MUIPointSizeToLogicalUnit, hWin, 10
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-            mov dwFontSizeIndex, 2
-        .ELSEIF eax == MUITS_11PT_BOLD; 11pt bold
+        .ELSEIF eax == MUITS_11PT; 11pt 
             Invoke MUIPointSizeToLogicalUnit, hWin, 11
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_BOLD
-            mov dwFontSizeIndex, 3
         .ELSEIF eax == MUITS_12PT; 12pt
             Invoke MUIPointSizeToLogicalUnit, hWin, 12
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-            mov dwFontSizeIndex, 4
-        .ELSEIF eax == MUITS_13PT_BOLD; 13pt bold
+         .ELSEIF eax == MUITS_13PT; 13pt 
             Invoke MUIPointSizeToLogicalUnit, hWin, 13
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_BOLD
-            mov dwFontSizeIndex, 5
         .ELSEIF eax == MUITS_14PT ; 14pt
             Invoke MUIPointSizeToLogicalUnit, hWin, 14
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_NORMAL
-            mov dwFontSizeIndex, 6
-        .ELSEIF eax == MUITS_15PT_BOLD ; 15pt bold
+         .ELSEIF eax == MUITS_15PT ; 15pt 
             Invoke MUIPointSizeToLogicalUnit, hWin, 15
-            mov dwFontHeight, eax
-            mov dwFontWeight, FW_BOLD
-            mov dwFontSizeIndex, 7
+        .ELSEIF eax == MUITS_16PT ; 16pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 16
+        .ELSEIF eax == MUITS_18PT ; 18pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 18
+        .ELSEIF eax == MUITS_20PT ; 20pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 20
+        .ELSEIF eax == MUITS_22PT ; 22pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 22
+        .ELSEIF eax == MUITS_24PT ; 24pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 24
+        .ELSEIF eax == MUITS_28PT ; 28pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 28
+        .ELSEIF eax == MUITS_32PT ; 32pt
+            Invoke MUIPointSizeToLogicalUnit, hWin, 32
         .ELSE
             Invoke MUIPointSizeToLogicalUnit, hWin, 8
-            mov dwFontHeight, eax
+        .ENDIF
+        mov dwFontHeight, eax
+        
+        ;--------------------------------
+        ; Get font bold, italic, underline
+        ;--------------------------------
+        mov eax, dwStyle
+        and eax, MUITS_FONT_BOLD
+        .IF eax == MUITS_FONT_BOLD
+            mov bFontBold, TRUE
+            mov dwFontWeight, FW_BOLD
+        .ELSE
+            mov bFontBold, FALSE
             mov dwFontWeight, FW_NORMAL
-            mov dwFontSizeIndex, 0
+        .ENDIF
+        mov eax, dwStyle
+        and eax, MUITS_FONT_ITALIC
+        .IF eax == MUITS_FONT_ITALIC
+            mov bFontItalic, TRUE
+        .ELSE
+            mov bFontItalic, FALSE
+        .ENDIF
+        mov eax, dwStyle
+        and eax, MUITS_FONT_UNDERLINE
+        .IF eax == MUITS_FONT_UNDERLINE
+            mov bFontUnderline, TRUE
+        .ELSE
+            mov bFontUnderline, FALSE
         .ENDIF
         
-        ; check if font already created, if so use that, instead of creating another font
-        
-        mov ebx, ptrFontHandles
-        mov eax, dwFontSizeIndex
-        lea ebx, [ebx+eax*SIZEOF DWORD]
-        mov eax, [ebx]
+        ;--------------------------------
+        ; Create font 
+        ;--------------------------------
+        Invoke _MUI_TextGetFontTableHandle, hWin, dwStyle
         mov hFont, eax
-        .IF eax == 0
+        .IF eax == 0 ; no handle found in fonttable
             ;PrintText 'New Font'
-            Invoke CreateFont, dwFontHeight, 0,0,0, dwFontWeight, 0,0,0,0,0,0, PROOF_QUALITY, FF_SWISS, MUITextFont
+            Invoke CreateFont, dwFontHeight, 0,0,0, dwFontWeight, bFontItalic, bFontUnderline,0,0,0,0, PROOF_QUALITY, FF_DONTCARE, MUITextFont
             mov hFont, eax
-            ; save handle to fonthandles
-            mov ebx, ptrFontHandles
-            mov eax, dwFontSizeIndex
-            lea ebx, [ebx+eax*SIZEOF DWORD]
-            mov eax, hFont
-            mov [ebx], eax
-            ;PrintDec hFont
-        .ELSE
-            ;PrintText 'reusing an existing font handle'
-            ;PrintDec ptrFontHandles
-            ;PrintDec dwFontSizeIndex
-            ;PrintDec hFont
+            ; save handle to fonttable
+            Invoke _MUI_TextSetFontTableHandle, hWin, dwStyle, hFont
+        .ELSE ; use handle from fonttable instead
         .ENDIF
         Invoke MUISetExtProperty, hWin, @TextFont, hFont
     .ENDIF
@@ -808,6 +868,217 @@ _MUI_TextSetFontFamilySize PROC USES EBX hWin:DWORD, dwStyle:DWORD
 _MUI_TextSetFontFamilySize ENDP
 
 
+;-------------------------------------------------------------------------------------
+; _MUI_TextGetFontTableHandle
+;
+; Gets handle to font in our font table, allows us to re-use existing font handle
+; if a previous ModernUI_Text control has created that font already. Instead of
+; creating many fonts for each control individually this allows us to share the font
+; handle when its already been created for a specific font family, and size and for
+; bold or italic or underline (or combination)
+;-------------------------------------------------------------------------------------
+_MUI_TextGetFontTableHandle PROC USES EBX hWin:DWORD, dwStyle:DWORD
+    LOCAL dwFontSizeValue:DWORD
+    LOCAL dwFontTypeValue:DWORD
+    LOCAL dwFontTypeIndex:DWORD
+    LOCAL bFontBold:DWORD
+    LOCAL bFontItalic:DWORD
+    LOCAL bFontUnderline:DWORD
+    LOCAL OffsetTextFont:DWORD
+    LOCAL OffsetTextFontSize:DWORD
+    LOCAL ptrTextFontEntry:DWORD
+    
+    lea eax, MUITextFontTable
+    .IF eax == 0
+        ret
+    .ENDIF
+    
+    mov eax, dwStyle
+    and eax, MUITS_FONT_BOLD
+    .IF eax == MUITS_FONT_BOLD
+        mov bFontBold, TRUE
+    .ELSE
+        mov bFontBold, FALSE
+    .ENDIF
+
+    mov eax, dwStyle
+    and eax, MUITS_FONT_ITALIC
+    .IF eax == MUITS_FONT_ITALIC
+        mov bFontItalic, TRUE
+    .ELSE
+        mov bFontItalic, FALSE
+    .ENDIF
+
+    mov eax, dwStyle
+    and eax, MUITS_FONT_UNDERLINE
+    .IF eax == MUITS_FONT_UNDERLINE
+        mov bFontUnderline, TRUE
+    .ELSE
+        mov bFontUnderline, FALSE
+    .ENDIF
+
+    mov eax, dwStyle
+    and eax, MUI_TEXT_FONTSIZE_MASK
+    mov dwFontSizeValue, eax
+
+    ; text font entry is (index * MUI_TEXT_FONT_ENTRIES_SIZE) + (sizevalue * MUI_TEXT_FONT_ENTRY)
+
+    mov eax, dwStyle
+    and eax, MUI_TEXT_FONTTYPE_MASK
+    mov dwFontTypeValue, eax
+    shr eax, 4
+    mov dwFontTypeIndex, eax
+    mov ebx, MUI_TEXT_FONT_ENTRIES_SIZE
+    mul ebx
+    mov OffsetTextFont, eax
+
+    mov ebx, SIZEOF MUI_TEXT_FONT_ENTRY
+    mov eax, dwFontSizeValue
+    mul ebx
+    mov OffsetTextFontSize, eax
+    
+    lea eax, MUITextFontTable
+    add eax, OffsetTextFont
+    add eax, OffsetTextFontSize    
+    mov ptrTextFontEntry, eax
+    
+    mov ebx, ptrTextFontEntry
+    
+    .IF bFontBold == FALSE && bFontItalic == FALSE && bFontUnderline == FALSE ; normal
+        mov eax, [ebx].MUI_TEXT_FONT_ENTRY.hFont
+        
+    .ELSEIF bFontBold == TRUE && bFontItalic == FALSE && bFontUnderline == FALSE ; bold only
+        mov eax, [ebx].MUI_TEXT_FONT_ENTRY.hFontBold
+        
+    .ELSEIF bFontBold == FALSE && bFontItalic == TRUE && bFontUnderline == FALSE ; italic only
+        mov eax, [ebx].MUI_TEXT_FONT_ENTRY.hFontItalic
+    
+    .ELSEIF bFontBold == FALSE && bFontItalic == FALSE && bFontUnderline == TRUE ; underline only 
+        mov eax, [ebx].MUI_TEXT_FONT_ENTRY.hFontUnderline
+    
+    .ELSEIF bFontBold == TRUE && bFontItalic == TRUE && bFontUnderline == FALSE ; bold + italic
+        mov eax, [ebx].MUI_TEXT_FONT_ENTRY.hFontBoldItalic
+    
+    .ELSEIF bFontBold == TRUE && bFontItalic == FALSE && bFontUnderline == TRUE ; bold + underline
+        mov eax, [ebx].MUI_TEXT_FONT_ENTRY.hFontBoldUnderline
+    
+    .ELSEIF bFontBold == TRUE && bFontItalic == TRUE && bFontUnderline == TRUE ; bold + italic + underline
+        mov eax, [ebx].MUI_TEXT_FONT_ENTRY.hFontBoldItalicUnderline
+    
+    .ELSEIF bFontBold == FALSE && bFontItalic == TRUE && bFontUnderline == TRUE ; italic + underline
+        mov eax, [ebx].MUI_TEXT_FONT_ENTRY.hFontItalicUnderline       
+
+    .ENDIF
+
+    ret
+_MUI_TextGetFontTableHandle ENDP
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_TextSetFontTableHandle
+;
+; Sets handle to font in our font table, allows us to re-use existing font handle
+; if a previous ModernUI_Text control has created that font already. Instead of
+; creating many fonts for each control individually this allows us to share the font
+; handle when its already been created for a specific font family, and size and for
+; bold or italic or underline (or combination)
+;-------------------------------------------------------------------------------------
+_MUI_TextSetFontTableHandle PROC USES EBX hWin:DWORD, dwStyle:DWORD, hFont:DWORD
+    LOCAL dwFontSizeValue:DWORD
+    LOCAL dwFontTypeValue:DWORD
+    LOCAL dwFontTypeIndex:DWORD
+    LOCAL bFontBold:DWORD
+    LOCAL bFontItalic:DWORD
+    LOCAL bFontUnderline:DWORD
+    LOCAL OffsetTextFont:DWORD
+    LOCAL OffsetTextFontSize:DWORD
+    LOCAL ptrTextFontEntry:DWORD
+    
+    lea eax, MUITextFontTable
+    .IF eax == 0 || hFont == 0
+        ret
+    .ENDIF
+    
+    mov eax, dwStyle
+    and eax, MUITS_FONT_BOLD
+    .IF eax == MUITS_FONT_BOLD
+        mov bFontBold, TRUE
+    .ELSE
+        mov bFontBold, FALSE
+    .ENDIF
+
+    mov eax, dwStyle
+    and eax, MUITS_FONT_ITALIC
+    .IF eax == MUITS_FONT_ITALIC
+        mov bFontItalic, TRUE
+    .ELSE
+        mov bFontItalic, FALSE
+    .ENDIF
+
+    mov eax, dwStyle
+    and eax, MUITS_FONT_UNDERLINE
+    .IF eax == MUITS_FONT_UNDERLINE
+        mov bFontUnderline, TRUE
+    .ELSE
+        mov bFontUnderline, FALSE
+    .ENDIF
+
+    mov eax, dwStyle
+    and eax, MUI_TEXT_FONTSIZE_MASK
+    mov dwFontSizeValue, eax
+
+    ; text font entry is (index * MUI_TEXT_FONT_ENTRIES_SIZE) + (sizevalue * MUI_TEXT_FONT_ENTRY)
+
+    mov eax, dwStyle
+    and eax, MUI_TEXT_FONTTYPE_MASK
+    mov dwFontTypeValue, eax
+    shr eax, 4
+    mov dwFontTypeIndex, eax
+    mov ebx, MUI_TEXT_FONT_ENTRIES_SIZE
+    mul ebx
+    mov OffsetTextFont, eax
+
+    mov ebx, SIZEOF MUI_TEXT_FONT_ENTRY
+    mov eax, dwFontSizeValue
+    mul ebx
+    mov OffsetTextFontSize, eax
+    
+    lea eax, MUITextFontTable
+    add eax, OffsetTextFont
+    add eax, OffsetTextFontSize    
+    mov ptrTextFontEntry, eax
+
+    mov ebx, ptrTextFontEntry
+    mov eax, hFont
+    
+    .IF bFontBold == FALSE && bFontItalic == FALSE && bFontUnderline == FALSE ; normal
+        mov [ebx].MUI_TEXT_FONT_ENTRY.hFont, eax
+        
+    .ELSEIF bFontBold == TRUE && bFontItalic == FALSE && bFontUnderline == FALSE ; bold only
+        mov [ebx].MUI_TEXT_FONT_ENTRY.hFontBold, eax
+        
+    .ELSEIF bFontBold == FALSE && bFontItalic == TRUE && bFontUnderline == FALSE ; italic only
+        mov [ebx].MUI_TEXT_FONT_ENTRY.hFontItalic, eax
+    
+    .ELSEIF bFontBold == FALSE && bFontItalic == FALSE && bFontUnderline == TRUE ; underline only 
+        mov [ebx].MUI_TEXT_FONT_ENTRY.hFontUnderline, eax
+    
+    .ELSEIF bFontBold == TRUE && bFontItalic == TRUE && bFontUnderline == FALSE ; bold + italic
+        mov [ebx].MUI_TEXT_FONT_ENTRY.hFontBoldItalic, eax
+    
+    .ELSEIF bFontBold == TRUE && bFontItalic == FALSE && bFontUnderline == TRUE ; bold + underline
+        mov [ebx].MUI_TEXT_FONT_ENTRY.hFontBoldUnderline, eax
+    
+    .ELSEIF bFontBold == TRUE && bFontItalic == TRUE && bFontUnderline == TRUE ; bold + italic + underline
+        mov [ebx].MUI_TEXT_FONT_ENTRY.hFontBoldItalicUnderline, eax
+    
+    .ELSEIF bFontBold == FALSE && bFontItalic == TRUE && bFontUnderline == TRUE ; italic + underline
+        mov [ebx].MUI_TEXT_FONT_ENTRY.hFontItalicUnderline, eax
+
+    .ENDIF
+
+    ret
+_MUI_TextSetFontTableHandle ENDP
 
 
 END

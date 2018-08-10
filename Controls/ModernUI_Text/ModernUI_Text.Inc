@@ -49,51 +49,61 @@ MUITextGetProperty      PROTO :DWORD, :DWORD                                    
 ;--------------------------------------------------------------------------------------------------------------------------------------
 
 ; ModernUI_Text Styles
+
+; Font size - AND 0Fh to get value                          : 0000 0000 0000 XXXX
+MUITS_7PT               EQU 1  ; 7pt
 MUITS_8PT               EQU 0  ; 8pt
-MUITS_9PT_BOLD          EQU 1  ; 9pt Bold
-MUITS_10PT              EQU 2  ; 10pt
-MUITS_11PT_BOLD         EQU 3  ; 11pt Bold
-MUITS_12PT              EQU 4  ; 12pt
-MUITS_13PT_BOLD         EQU 5  ; 13pt Bold
-MUITS_14PT              EQU 6  ; 14pt
-MUITS_15PT_BOLD         EQU 7  ; 15pt Bold
+MUITS_9PT               EQU 2  ; 9pt
+MUITS_10PT              EQU 3  ; 10pt
+MUITS_11PT              EQU 4  ; 11pt
+MUITS_12PT              EQU 5  ; 12pt
+MUITS_13PT              EQU 6  ; 13pt
+MUITS_14PT              EQU 7  ; 14pt
+MUITS_15PT              EQU 8  ; 15pt
+MUITS_16PT              EQU 9  ; 16pt
+MUITS_18PT              EQU 10 ; 18pt
+MUITS_20PT              EQU 11 ; 20pt
+MUITS_22PT              EQU 12 ; 22pt
+MUITS_24PT              EQU 13 ; 24pt
+MUITS_28PT              EQU 14 ; 28pt
+MUITS_32PT              EQU 15 ; 32pt
 
-MUITS_DEFAULT           EQU MUITS_8PT
-MUITS_CAPTION           EQU MUITS_9PT_BOLD
-MUITS_BODY              EQU MUITS_10PT
-MUITS_BODYTITLE         EQU MUITS_11PT_BOLD
-MUITS_SUBTITLE          EQU MUITS_12PT
-MUITS_TITLE             EQU MUITS_13PT_BOLD
-MUITS_SUBHEADER         EQU MUITS_14PT
-MUITS_HEADER            EQU MUITS_15PT_BOLD
+; Font familty - AND 0F0h shr 4 to get value                : 0000 0000 0XXX 0000
+MUITS_FONT_DIALOG       EQU 0 shl 4 ; 0000 0000 0000 0000
+MUITS_FONT_SEGOE        EQU 1 shl 4 ; 0000 0000 0001 0000
+MUITS_FONT_TAHOMA       EQU 2 shl 4 ; 0000 0000 0010 0000
+MUITS_FONT_ARIAL        EQU 3 shl 4 ; 0000 0000 0011 0000
+MUITS_FONT_TIMES        EQU 4 shl 4 ; 0000 0000 0100 0000
+MUITS_FONT_COURIER      EQU 5 shl 4 ; 0000 0000 0101 0000
+MUITS_FONT_VERDANA      EQU 6 shl 4 ; 0000 0000 0110 0000
 
+; Text alignment - AND 300h shr 8 to get value              : 0000 00XX 0000 0000
+MUITS_ALIGN_LEFT        EQU 0 shl 8 ; 0000 0000 0000 0000
+MUITS_ALIGN_RIGHT       EQU 1 shl 8 ; 0000 0001 0000 0000
+MUITS_ALIGN_CENTER      EQU 2 shl 8 ; 0000 0010 0000 0000
+MUITS_ALIGN_JUSTIFY     EQU 3 shl 8 ; same as align left
 
+; Font special - direct AND with and check value            : 000X XX00 0000 0000
+MUITS_FONT_NORMAL       EQU 0 shl 10 ; 0000 0000 0000 0000
+MUITS_FONT_BOLD         EQU 1 shl 10 ; 0000 0100 0000 0000
+MUITS_FONT_ITALIC       EQU 1 shl 11 ; 0000 1000 0000 0000
+MUITS_FONT_UNDERLINE    EQU 1 shl 12 ; 0001 0000 0000 0000
 
-MUITS_FONT_SETFONT      EQU 1 shl 4 ; user will set font
-MUITS_FONT_DIALOG       EQU 2 shl 4 ; use default dialog font
-MUITS_FONT_SEGOE        EQU 3 shl 4
-MUITS_FONT_TAHOMA       EQU 4 shl 4
-MUITS_FONT_ARIAL        EQU 5 shl 4
-MUITS_FONT_TIMES        EQU 6 shl 4
-MUITS_FONT_COURIER      EQU 7 shl 4
-MUITS_FONT_VERDANA      EQU 8 shl 4
-
-MUITS_ALIGN_RIGHT       EQU 100h ; right aligned text
-MUITS_ALIGN_CENTER      EQU 200h ; center aligned text
-MUITS_SINGLELINE        EQU 400h
-MUITS_HAND              EQU 800h ; Show a hand instead of an arrow when mouse moves over text
-MUITS_LORUMIPSUM        EQU 1000h ; show lorum ipsum in text box - for demo purposes etc.
+; Misc options - direct AND with and check value            : XXX0 0000 0000 0000
+MUITS_SINGLELINE        EQU 1 shl 13 ; 0010 0000 0000 0000
+MUITS_HAND              EQU 1 shl 14 ; 0100 0000 0000 0000 - Show a hand instead of an arrow when mouse moves over text
+MUITS_LORUMIPSUM        EQU 1 shl 15 ; 1000 0000 0000 0000 - Show lorum ipsum in text box - for demo purposes etc.
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Text Properties: Use with MUITextSetProperty / MUITextGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;--------------------------------------------------------------------------------------------------------------------------------------
 @TextFont               EQU 0       ; hFont
-@TextColor              EQU 4       ; Colorref
-@TextColorAlt           EQU 8       ; Colorref
-@TextColorDisabled      EQU 12      ; Colorref
-@TextBackColor          EQU 16      ; Colorref, -1 = transparent
-@TextBackColorAlt       EQU 20      ; Colorref
-@TextBackColorDisabled  EQU 24      ; Colorref
+@TextColor              EQU 4       ; COLORREF
+@TextColorAlt           EQU 8       ; COLORREF
+@TextColorDisabled      EQU 12      ; COLORREF
+@TextBackColor          EQU 16      ; COLORREF, -1 = transparent
+@TextBackColorAlt       EQU 20      ; COLORREF
+@TextBackColorDisabled  EQU 24      ; COLORREF
 
 
 
