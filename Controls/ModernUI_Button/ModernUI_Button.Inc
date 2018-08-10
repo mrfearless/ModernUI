@@ -144,6 +144,7 @@ MUIBS_PUSHBUTTON                EQU 10h     ; Simulate button movement down slig
 MUIBS_HAND                      EQU 20h     ; Show a hand instead of an arrow when mouse moves over button.
 MUIBS_KEEPIMAGES                EQU 40h     ; Dont delete image handles when control is destoyed. Essential if image handles are used in multiple controls.
 MUIBS_DROPDOWN                  EQU 80h     ; Show dropdown arrow right side of control
+MUIBS_NOFOCUSRECT               EQU 100h    ; Dont show focus rect, just use change border to @ButtonBorderColorAlt when setfocus.
 MUIBS_THEME                     EQU 8000h   ; Use default windows theme colors and react to WM_THEMECHANGED
 
 ;--------------------------------------------------------------------------------------------------------------------------------------

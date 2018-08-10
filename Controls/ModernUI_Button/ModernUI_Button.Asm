@@ -61,8 +61,9 @@ include ModernUI_Button.inc
 _MUI_ButtonWndProc                          PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonInit                             PROTO :DWORD
 _MUI_ButtonCleanup                          PROTO :DWORD
-_MUI_ButtonPaint                            PROTO :DWORD
+_MUI_ButtonSetColors                        PROTO :DWORD, :DWORD
 
+_MUI_ButtonPaint                            PROTO :DWORD
 _MUI_ButtonPaintBackground                  PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintAccent                      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintText                        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -536,6 +537,17 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
             Invoke ShowWindow, hWin, SW_SHOW
         .ENDIF
     
+    .ELSEIF eax == WM_SYSCOLORCHANGE
+        Invoke _MUI_ButtonSetColors, hWin, FALSE
+        ret
+    
+    ; https://www.quppa.net/blog/2013/01/02/retrieving-windows-8-theme-colours/
+    ;.ELSEIF eax == WM_SETTINGCHANGE
+        ; lParam points to string with value:
+        ; "ImmersiveColorSet" or
+        ; "WindowsThemeElement" if high contrast mode enabled
+        ;ret
+
     ; custom messages start here
     
     .ELSEIF eax == MUI_GETPROPERTY
@@ -665,11 +677,226 @@ _MUI_ButtonInit PROC PRIVATE hWin:DWORD
     Invoke MUISetIntProperty, hWin, @ButtonFocusedState, FALSE
     Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
 
+    ; Set default initial external color property values
+    Invoke _MUI_ButtonSetColors, hWin, TRUE
 
-    mov eax, dwStyle
+    Invoke MUISetExtProperty, hWin, @ButtonPaddingLeftIndent, 0
+    Invoke MUISetExtProperty, hWin, @ButtonPaddingGeneral, 4d
+    Invoke MUISetExtProperty, hWin, @ButtonPaddingStyle, MUIBPS_ALL
+    Invoke MUISetExtProperty, hWin, @ButtonPaddingTextImage, 8    
+    
+    Invoke MUISetExtProperty, hWin, @ButtonDllInstance, 0
+    
+
+    .IF hMUIButtonFont == 0
+        mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
+        Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
+        Invoke CreateFontIndirect, Addr ncm.lfMessageFont
+        mov hFont, eax
+        Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
+        mov lfnt.lfHeight, -16d
+        ;mov lfnt.lfWeight, FW_BOLD
+        Invoke CreateFontIndirect, Addr lfnt
+        mov hMUIButtonFont, eax
+        
+        mov lfnt.lfHeight, -12d
+        mov lfnt.lfWeight, FW_BOLD
+        Invoke CreateFontIndirect, Addr lfnt
+        mov hMUIButtonNotifyFont, eax
+        
+        mov lfnt.lfHeight, -12d
+        mov lfnt.lfWeight, FW_NORMAL
+        Invoke CreateFontIndirect, Addr lfnt
+        mov hMUIButtonNoteFont, eax
+        
+        Invoke DeleteObject, hFont
+    .ENDIF
+
+    Invoke MUISetExtProperty, hWin, @ButtonTextFont, hMUIButtonFont
+    Invoke MUISetExtProperty, hWin, @ButtonNotifyTextFont, hMUIButtonNotifyFont
+    Invoke MUISetExtProperty, hWin, @ButtonNoteTextFont, hMUIButtonNoteFont
+
+    ret
+
+_MUI_ButtonInit ENDP
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_ButtonCleanup - cleanup a few things before control is destroyed
+;-------------------------------------------------------------------------------------
+_MUI_ButtonCleanup PROC PRIVATE hWin:DWORD
+    LOCAL ImageType:DWORD
+    LOCAL hIStreamImage:DWORD
+    LOCAL hIStreamImageAlt:DWORD
+    LOCAL hIStreamImageSel:DWORD
+    LOCAL hIStreamImageSelAlt:DWORD
+    LOCAL hIStreamImageDisabled:DWORD
+    LOCAL hIStreamNotify:DWORD
+    LOCAL hImage:DWORD
+    LOCAL hImageAlt:DWORD
+    LOCAL hImageSel:DWORD
+    LOCAL hImageSelAlt:DWORD
+    LOCAL hImageDisabled:DWORD
+    LOCAL hImageNotify:DWORD
+    LOCAL dwStyle:DWORD
+    
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
+    and eax, MUIBS_KEEPIMAGES
+    .IF eax == MUIBS_KEEPIMAGES
+        ret
+    .ENDIF
+    
+    IFDEF DEBUG32
+    PrintText '_MUI_ButtonCleanup'
+    ENDIF
+    ; cleanup any stream handles if png where loaded as resources
+    Invoke MUIGetExtProperty, hWin, @ButtonImageType
+    mov ImageType, eax
+
+    .IF ImageType == 0
+        ret
+    .ENDIF
+    
+    .IF ImageType == 3
+        IFDEF MUI_USEGDIPLUS
+        Invoke MUIGetIntProperty, hWin, @ButtonImageStream
+        mov hIStreamImage, eax
+        .IF eax != 0
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        Invoke MUIGetIntProperty, hWin, @ButtonImageAltStream
+        mov hIStreamImageAlt, eax
+        .IF eax != 0 && eax != hIStreamImage
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        Invoke MUIGetIntProperty, hWin, @ButtonImageSelStream
+        mov hIStreamImageSel, eax
+        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        Invoke MUIGetIntProperty, hWin, @ButtonImageSelAltStream
+        mov hIStreamImageSelAlt, eax
+        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        Invoke MUIGetIntProperty, hWin, @ButtonImageDisabledStream
+        mov hIStreamImageDisabled, eax
+        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel && eax != hIStreamImageSelAlt 
+            Invoke _MUI_ButtonPngReleaseIStream, eax
+        .ENDIF
+        
+        IFDEF DEBUG32
+        ; check to see if handles are cleared.
+        PrintText '_MUI_ButtonCleanup::IStream Handles cleared'
+        ENDIF
+        
+        ENDIF        
+    .ENDIF
+
+    Invoke MUIGetExtProperty, hWin, @ButtonImage
+    mov hImage, eax
+    .IF eax != 0
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            IFDEF MUI_USEGDIPLUS
+            Invoke GdipDisposeImage, eax
+            ENDIF
+        .ENDIF
+    .ENDIF
+    Invoke MUIGetExtProperty, hWin, @ButtonImageAlt
+    mov hImageAlt, eax
+    .IF eax != 0 && eax != hImage
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            IFDEF MUI_USEGDIPLUS
+            Invoke GdipDisposeImage, eax
+            ENDIF
+        .ENDIF
+    .ENDIF    
+    Invoke MUIGetExtProperty, hWin, @ButtonImageSel
+    mov hImageSel, eax
+    .IF eax != 0 && eax != hImage && eax != hImageAlt
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            IFDEF MUI_USEGDIPLUS
+            Invoke GdipDisposeImage, eax
+            ENDIF
+        .ENDIF
+    .ENDIF    
+    Invoke MUIGetExtProperty, hWin, @ButtonImageSelAlt
+    mov hImageSelAlt, eax
+    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            IFDEF MUI_USEGDIPLUS
+            Invoke GdipDisposeImage, eax
+            ENDIF
+        .ENDIF
+    .ENDIF
+    Invoke MUIGetExtProperty, hWin, @ButtonImageDisabled
+    mov hImageDisabled, eax
+    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel && eax != hImageSelAlt
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            IFDEF MUI_USEGDIPLUS
+            Invoke GdipDisposeImage, eax
+            ENDIF
+        .ENDIF
+    .ENDIF
+    
+
+       
+    IFDEF DEBUG32
+    PrintText '_MUI_ButtonCleanup::Image Handles cleared'
+    ENDIF
+    Invoke MUIGetExtProperty, hWin, @ButtonNotifyImageType
+    mov ImageType, eax
+    .IF ImageType == 0
+        ret
+    .ENDIF
+    Invoke MUIGetExtProperty, hWin, @ButtonNotifyImage
+    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel && eax != hImageSelAlt && eax != hImageDisabled
+        .IF ImageType != 3
+            Invoke DeleteObject, eax
+        .ELSE
+            IFDEF MUI_USEGDIPLUS
+            Invoke GdipDisposeImage, eax
+            
+            Invoke MUIGetIntProperty, hWin, @ButtonNotifyImageStream
+            .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel && eax != hIStreamImageSelAlt && eax != hIStreamImageDisabled
+                Invoke GlobalFree, eax
+            .ENDIF
+            IFDEF DEBUG32
+            PrintText '_MUI_ButtonCleanup::Notify IStream Handle cleared'
+            ENDIF
+            
+            ENDIF 
+        .ENDIF
+    .ENDIF
+    
+    IFDEF DEBUG32
+    PrintText '_MUI_ButtonCleanup::Notify Image Handles cleared'
+    ENDIF
+    ret
+
+_MUI_ButtonCleanup ENDP
+
+
+;-------------------------------------------------------------------------------------
+; _MUI_ButtonSetColors - Set colors on init or syscolorchange if MUIBS_THEME style used
+;-------------------------------------------------------------------------------------
+_MUI_ButtonSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
+
+    Invoke GetWindowLong, hWin, GWL_STYLE
     and eax, MUIBS_THEME
     .IF eax == MUIBS_THEME
-
+        ; Set color property values based on system colors
         Invoke GetSysColor, COLOR_BTNTEXT
         Invoke MUISetExtProperty, hWin, @ButtonTextColor, eax
         Invoke GetSysColor, COLOR_BTNTEXT
@@ -715,256 +942,53 @@ _MUI_ButtonInit PROC PRIVATE hWin:DWORD
         Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, -1        
         
     .ELSE
-        ; Set default initial external property values
-        Invoke MUISetExtProperty, hWin, @ButtonTextColor, MUI_RGBCOLOR(51,51,51)
-        Invoke MUISetExtProperty, hWin, @ButtonTextColorAlt, MUI_RGBCOLOR(51,51,51)
-        Invoke MUISetExtProperty, hWin, @ButtonTextColorSel, MUI_RGBCOLOR(51,51,51)
-        Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, MUI_RGBCOLOR(51,51,51)
-        Invoke MUISetExtProperty, hWin, @ButtonTextColorDisabled, MUI_RGBCOLOR(204,204,204)
-    
-        Invoke MUIGetParentBackgroundColor, hWin
-        .IF eax == -1 ; if background was NULL then try a color as default
-            Invoke GetSysColor, COLOR_WINDOW
-        .ENDIF
-        Invoke MUISetExtProperty, hWin, @ButtonBackColor, eax ;MUI_RGBCOLOR(255,255,255)
-    
-        ;Invoke MUISetExtProperty, hWin, @ButtonBackColor, MUI_RGBCOLOR(255,255,255) ;MUI_RGBCOLOR(21,133,181)
-        Invoke MUISetExtProperty, hWin, @ButtonBackColorAlt, MUI_RGBCOLOR(221,221,221)
-        Invoke MUISetExtProperty, hWin, @ButtonBackColorSel, MUI_RGBCOLOR(255,255,255)
-        Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, MUI_RGBCOLOR(221,221,221)
-        Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabled, MUI_RGBCOLOR(192,192,192)
+        .IF bInit == TRUE
+            ; Set color property values based on custom values
+            Invoke MUISetExtProperty, hWin, @ButtonTextColor, MUI_RGBCOLOR(51,51,51)
+            Invoke MUISetExtProperty, hWin, @ButtonTextColorAlt, MUI_RGBCOLOR(51,51,51)
+            Invoke MUISetExtProperty, hWin, @ButtonTextColorSel, MUI_RGBCOLOR(51,51,51)
+            Invoke MUISetExtProperty, hWin, @ButtonTextColorSelAlt, MUI_RGBCOLOR(51,51,51)
+            Invoke MUISetExtProperty, hWin, @ButtonTextColorDisabled, MUI_RGBCOLOR(204,204,204)
         
-        Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
-        Invoke MUISetExtProperty, hWin, @ButtonBorderColor, MUI_RGBCOLOR(204,204,204)
-        Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, MUI_RGBCOLOR(27,161,226);MUI_RGBCOLOR(120,183,203)
-        Invoke MUISetExtProperty, hWin, @ButtonBorderColorSel, MUI_RGBCOLOR(27,161,226)
-        Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(27,161,226)
-        Invoke MUISetExtProperty, hWin, @ButtonBorderColorDisabled, MUI_RGBCOLOR(204,204,204)
-
-        Invoke MUISetExtProperty, hWin, @ButtonAccentColor, -1
-        Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, -1
-        Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, -1
-        Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, -1
-    
-        Invoke MUISetExtProperty, hWin, @ButtonNotifyTextColor, MUI_RGBCOLOR(51,51,51)
-        Invoke MUISetExtProperty, hWin, @ButtonNotifyBackColor, MUI_RGBCOLOR(255,255,255)
-        Invoke MUISetExtProperty, hWin, @ButtonNoteTextColor, MUI_RGBCOLOR(96,96,96)
-        Invoke MUISetExtProperty, hWin, @ButtonNoteTextColorDisabled, MUI_RGBCOLOR(204,204,204)
-    
-    .ENDIF
-    
-    Invoke MUISetExtProperty, hWin, @ButtonPaddingLeftIndent, 0
-    Invoke MUISetExtProperty, hWin, @ButtonPaddingGeneral, 4d
-    Invoke MUISetExtProperty, hWin, @ButtonPaddingStyle, MUIBPS_ALL
-    Invoke MUISetExtProperty, hWin, @ButtonPaddingTextImage, 8    
-    
-    Invoke MUISetExtProperty, hWin, @ButtonDllInstance, 0
-    
-
-    .IF hMUIButtonFont == 0
-        mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
-        Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
-        Invoke CreateFontIndirect, Addr ncm.lfMessageFont
-        mov hFont, eax
-        Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
-        mov lfnt.lfHeight, -16d
-        ;mov lfnt.lfWeight, FW_BOLD
-        Invoke CreateFontIndirect, Addr lfnt
-        mov hMUIButtonFont, eax
-        
-        mov lfnt.lfHeight, -12d
-        mov lfnt.lfWeight, FW_BOLD
-        Invoke CreateFontIndirect, Addr lfnt
-        mov hMUIButtonNotifyFont, eax
-        
-        mov lfnt.lfHeight, -12d
-        mov lfnt.lfWeight, FW_NORMAL
-        Invoke CreateFontIndirect, Addr lfnt
-        mov hMUIButtonNoteFont, eax
-        
-        Invoke DeleteObject, hFont
-    .ENDIF
-
-    Invoke MUISetExtProperty, hWin, @ButtonTextFont, hMUIButtonFont
-    Invoke MUISetExtProperty, hWin, @ButtonNotifyTextFont, hMUIButtonNotifyFont
-    Invoke MUISetExtProperty, hWin, @ButtonNoteTextFont, hMUIButtonNoteFont
-
-    ret
-
-_MUI_ButtonInit ENDP
-
-
-;-------------------------------------------------------------------------------------
-; _MUI_ButtonCleanup - cleanup a few things before control is destroyed
-;-------------------------------------------------------------------------------------
-_MUI_ButtonCleanup PROC PRIVATE hControl:DWORD
-    LOCAL ImageType:DWORD
-    LOCAL hIStreamImage:DWORD
-    LOCAL hIStreamImageAlt:DWORD
-    LOCAL hIStreamImageSel:DWORD
-    LOCAL hIStreamImageSelAlt:DWORD
-    LOCAL hIStreamImageDisabled:DWORD
-    LOCAL hIStreamNotify:DWORD
-    LOCAL hImage:DWORD
-    LOCAL hImageAlt:DWORD
-    LOCAL hImageSel:DWORD
-    LOCAL hImageSelAlt:DWORD
-    LOCAL hImageDisabled:DWORD
-    LOCAL hImageNotify:DWORD
-    LOCAL dwStyle:DWORD
-    
-    Invoke GetWindowLong, hControl, GWL_STYLE
-    mov dwStyle, eax
-    and eax, MUIBS_KEEPIMAGES
-    .IF eax == MUIBS_KEEPIMAGES
-        ret
-    .ENDIF
-    
-    IFDEF DEBUG32
-    PrintText '_MUI_ButtonCleanup'
-    ENDIF
-    ; cleanup any stream handles if png where loaded as resources
-    Invoke MUIGetExtProperty, hControl, @ButtonImageType
-    mov ImageType, eax
-
-    .IF ImageType == 0
-        ret
-    .ENDIF
-    
-    .IF ImageType == 3
-        IFDEF MUI_USEGDIPLUS
-        Invoke MUIGetIntProperty, hControl, @ButtonImageStream
-        mov hIStreamImage, eax
-        .IF eax != 0
-            Invoke _MUI_ButtonPngReleaseIStream, eax
-        .ENDIF
-        Invoke MUIGetIntProperty, hControl, @ButtonImageAltStream
-        mov hIStreamImageAlt, eax
-        .IF eax != 0 && eax != hIStreamImage
-            Invoke _MUI_ButtonPngReleaseIStream, eax
-        .ENDIF
-        Invoke MUIGetIntProperty, hControl, @ButtonImageSelStream
-        mov hIStreamImageSel, eax
-        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt
-            Invoke _MUI_ButtonPngReleaseIStream, eax
-        .ENDIF
-        Invoke MUIGetIntProperty, hControl, @ButtonImageSelAltStream
-        mov hIStreamImageSelAlt, eax
-        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel
-            Invoke _MUI_ButtonPngReleaseIStream, eax
-        .ENDIF
-        Invoke MUIGetIntProperty, hControl, @ButtonImageDisabledStream
-        mov hIStreamImageDisabled, eax
-        .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel && eax != hIStreamImageSelAlt 
-            Invoke _MUI_ButtonPngReleaseIStream, eax
-        .ENDIF
-        
-        IFDEF DEBUG32
-        ; check to see if handles are cleared.
-        PrintText '_MUI_ButtonCleanup::IStream Handles cleared'
-        ENDIF
-        
-        ENDIF        
-    .ENDIF
-
-    Invoke MUIGetExtProperty, hControl, @ButtonImage
-    mov hImage, eax
-    .IF eax != 0
-        .IF ImageType != 3
-            Invoke DeleteObject, eax
-        .ELSE
-            IFDEF MUI_USEGDIPLUS
-            Invoke GdipDisposeImage, eax
-            ENDIF
-        .ENDIF
-    .ENDIF
-    Invoke MUIGetExtProperty, hControl, @ButtonImageAlt
-    mov hImageAlt, eax
-    .IF eax != 0 && eax != hImage
-        .IF ImageType != 3
-            Invoke DeleteObject, eax
-        .ELSE
-            IFDEF MUI_USEGDIPLUS
-            Invoke GdipDisposeImage, eax
-            ENDIF
-        .ENDIF
-    .ENDIF    
-    Invoke MUIGetExtProperty, hControl, @ButtonImageSel
-    mov hImageSel, eax
-    .IF eax != 0 && eax != hImage && eax != hImageAlt
-        .IF ImageType != 3
-            Invoke DeleteObject, eax
-        .ELSE
-            IFDEF MUI_USEGDIPLUS
-            Invoke GdipDisposeImage, eax
-            ENDIF
-        .ENDIF
-    .ENDIF    
-    Invoke MUIGetExtProperty, hControl, @ButtonImageSelAlt
-    mov hImageSelAlt, eax
-    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel
-        .IF ImageType != 3
-            Invoke DeleteObject, eax
-        .ELSE
-            IFDEF MUI_USEGDIPLUS
-            Invoke GdipDisposeImage, eax
-            ENDIF
-        .ENDIF
-    .ENDIF
-    Invoke MUIGetExtProperty, hControl, @ButtonImageDisabled
-    mov hImageDisabled, eax
-    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel && eax != hImageSelAlt
-        .IF ImageType != 3
-            Invoke DeleteObject, eax
-        .ELSE
-            IFDEF MUI_USEGDIPLUS
-            Invoke GdipDisposeImage, eax
-            ENDIF
-        .ENDIF
-    .ENDIF
-    
-
-       
-    IFDEF DEBUG32
-    PrintText '_MUI_ButtonCleanup::Image Handles cleared'
-    ENDIF
-    Invoke MUIGetExtProperty, hControl, @ButtonNotifyImageType
-    mov ImageType, eax
-    .IF ImageType == 0
-        ret
-    .ENDIF
-    Invoke MUIGetExtProperty, hControl, @ButtonNotifyImage
-    .IF eax != 0 && eax != hImage && eax != hImageAlt && eax != hImageSel && eax != hImageSelAlt && eax != hImageDisabled
-        .IF ImageType != 3
-            Invoke DeleteObject, eax
-        .ELSE
-            IFDEF MUI_USEGDIPLUS
-            Invoke GdipDisposeImage, eax
-            
-            Invoke MUIGetIntProperty, hControl, @ButtonNotifyImageStream
-            .IF eax != 0 && eax != hIStreamImage && eax != hIStreamImageAlt && eax != hIStreamImageSel && eax != hIStreamImageSelAlt && eax != hIStreamImageDisabled
-                Invoke GlobalFree, eax
+            Invoke MUIGetParentBackgroundColor, hWin
+            .IF eax == -1 ; if background was NULL then try a color as default
+                Invoke GetSysColor, COLOR_WINDOW
             .ENDIF
-            IFDEF DEBUG32
-            PrintText '_MUI_ButtonCleanup::Notify IStream Handle cleared'
-            ENDIF
+            Invoke MUISetExtProperty, hWin, @ButtonBackColor, eax ;MUI_RGBCOLOR(255,255,255)
+        
+            ;Invoke MUISetExtProperty, hWin, @ButtonBackColor, MUI_RGBCOLOR(255,255,255) ;MUI_RGBCOLOR(21,133,181)
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorAlt, MUI_RGBCOLOR(221,221,221)
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorSel, MUI_RGBCOLOR(255,255,255)
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, MUI_RGBCOLOR(221,221,221)
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabled, MUI_RGBCOLOR(192,192,192)
             
-            ENDIF 
+            Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
+            Invoke MUISetExtProperty, hWin, @ButtonBorderColor, MUI_RGBCOLOR(204,204,204)
+            Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, MUI_RGBCOLOR(27,161,226);MUI_RGBCOLOR(120,183,203)
+            Invoke MUISetExtProperty, hWin, @ButtonBorderColorSel, MUI_RGBCOLOR(27,161,226)
+            Invoke MUISetExtProperty, hWin, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(27,161,226)
+            Invoke MUISetExtProperty, hWin, @ButtonBorderColorDisabled, MUI_RGBCOLOR(204,204,204)
+    
+            Invoke MUISetExtProperty, hWin, @ButtonAccentColor, -1
+            Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, -1
+            Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, -1
+            Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, -1
+        
+            Invoke MUISetExtProperty, hWin, @ButtonNotifyTextColor, MUI_RGBCOLOR(51,51,51)
+            Invoke MUISetExtProperty, hWin, @ButtonNotifyBackColor, MUI_RGBCOLOR(255,255,255)
+            Invoke MUISetExtProperty, hWin, @ButtonNoteTextColor, MUI_RGBCOLOR(96,96,96)
+            Invoke MUISetExtProperty, hWin, @ButtonNoteTextColorDisabled, MUI_RGBCOLOR(204,204,204)
         .ENDIF
     .ENDIF
-    
-    IFDEF DEBUG32
-    PrintText '_MUI_ButtonCleanup::Notify Image Handles cleared'
-    ENDIF
     ret
 
-_MUI_ButtonCleanup ENDP
+_MUI_ButtonSetColors ENDP
 
 
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonButtonDown - Mouse button down or keyboard down from vk_space
 ;-------------------------------------------------------------------------------------
-_MUI_ButtonButtonDown PROC hWin:DWORD
+_MUI_ButtonButtonDown PROC PRIVATE hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL rect:RECT    
 
@@ -1007,7 +1031,7 @@ _MUI_ButtonButtonDown ENDP
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonButtonUp - Mouse button up or keyboard up from vk_space
 ;-------------------------------------------------------------------------------------
-_MUI_ButtonButtonUp PROC hWin:DWORD
+_MUI_ButtonButtonUp PROC PRIVATE hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL wID:DWORD
     LOCAL rect:RECT
@@ -2457,6 +2481,12 @@ _MUI_ButtonPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFoc
         ret
     .ENDIF
 
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    and eax, MUIBS_NOFOCUSRECT
+    .IF eax == MUIBS_NOFOCUSRECT
+        ret
+    .ENDIF
+
     Invoke CopyRect, Addr rect, lpRect
     Invoke InflateRect, Addr rect, MUI_BUTTON_FOCUSRECT_OFFSET, MUI_BUTTON_FOCUSRECT_OFFSET
     Invoke DrawFocusRect, hdc, Addr rect
@@ -2732,6 +2762,7 @@ _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwP
     ret
 _MUI_ButtonSetPropertyEx ENDP
 
+
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Other PUBLIC function wrappers - most equate to same as custom messages
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -2875,6 +2906,7 @@ MUIButtonSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, 
 
 MUIButtonSetImages ENDP
 
+
 ;-------------------------------------------------------------------------------------
 ; MUIButtonNotifySetText
 ;-------------------------------------------------------------------------------------
@@ -2882,6 +2914,7 @@ MUIButtonNotifySetText PROC PUBLIC hControl:DWORD, lpszNotifyText:DWORD, bRedraw
     Invoke SendMessage, hControl, MUIBM_NOTIFYSETTEXT, lpszNotifyText, bRedraw
     ret
 MUIButtonNotifySetText ENDP
+
 
 ;-------------------------------------------------------------------------------------
 ; MUIButtonNotifyLoadImage
@@ -2891,6 +2924,7 @@ MUIButtonNotifyLoadImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDN
     ret
 MUIButtonNotifyLoadImage ENDP
 
+
 ;-------------------------------------------------------------------------------------
 ; MUIButtonNotifySetImage
 ;-------------------------------------------------------------------------------------
@@ -2898,6 +2932,7 @@ MUIButtonNotifySetImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hNotifyIm
     Invoke SendMessage, hControl, MUIBM_NOTIFYSETIMAGE, dwImageType, hNotifyImage
     ret
 MUIButtonNotifySetImage ENDP
+
 
 ;-------------------------------------------------------------------------------------
 ; MUIButtonNotifySetFont
@@ -2907,6 +2942,7 @@ MUIButtonNotifySetFont PROC PUBLIC hControl:DWORD, hFont:DWORD, bRedraw:DWORD
     ret
 MUIButtonNotifySetFont ENDP
 
+
 ;-------------------------------------------------------------------------------------
 ; MUIButtonNotify
 ;-------------------------------------------------------------------------------------
@@ -2915,6 +2951,7 @@ MUIButtonNotify PROC PUBLIC hControl:DWORD, bNotify:DWORD
     ret
 MUIButtonNotify ENDP
 
+
 ;-------------------------------------------------------------------------------------
 ; MUIButtonNoteSetText
 ;-------------------------------------------------------------------------------------
@@ -2922,6 +2959,7 @@ MUIButtonNoteSetText PROC PUBLIC hControl:DWORD, lpszNoteText:DWORD, bRedraw:DWO
     Invoke SendMessage, hControl, MUIBM_NOTESETTEXT, lpszNoteText, bRedraw
     ret
 MUIButtonNoteSetText ENDP
+
 
 ;-------------------------------------------------------------------------------------
 ; MUIButtonNoteSetFont
@@ -3427,6 +3465,7 @@ _MUI_ButtonLoadPng@Close:
     ret
 _MUI_ButtonLoadPng endp
 ENDIF
+
 
 ;-------------------------------------------------------------------------------------
 ; _MUI_ButtonPngReleaseIStream - releases png stream handle
