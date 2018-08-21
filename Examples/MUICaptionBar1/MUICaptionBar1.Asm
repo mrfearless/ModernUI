@@ -84,21 +84,27 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnWidth, 30
         Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnOffsetX, 4
         Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnOffsetY, 5
-        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackImageOffsetY, 2
-        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackImageOffsetX, 2
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackImageOffsetY, 6
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackImageOffsetX, 4
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarWindowBackColor, MUI_RGBCOLOR(206,219,229)
+        Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarWindowBorderColor, -1 ;MUI_RGBCOLOR(51,51,51)
         
-        Invoke LoadImage, hInstance, ICO_MAIN, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR ; resource icon for main application icon
+        Invoke LoadImage, hInstance, ICO_MAIN, IMAGE_ICON, 24, 24, LR_DEFAULTCOLOR ; resource icon for main application icon
         mov hIcoMain, eax ; main application icon
         Invoke SendMessage, hCaptionBar, WM_SETICON, ICON_SMALL, hIcoMain        
 
-    .ELSEIF eax == WM_ERASEBKGND
-        mov eax, 1
-        ret
 
-    .ELSEIF eax == WM_PAINT
-        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(255,255,255), MUI_RGBCOLOR(51,51,51)
-        mov eax, 0
-        ret
+        Invoke MUICaptionBarAddButton, hCaptionBar, NULL, IDC_CAPBTNMENU, ICO_MUI_MENU, ICO_MUI_MENU
+        mov hCapBtnMenu, eax
+
+;    .ELSEIF eax == WM_ERASEBKGND
+;        mov eax, 1
+;        ret
+;
+;    .ELSEIF eax == WM_PAINT
+;        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(255,255,255), MUI_RGBCOLOR(51,51,51)
+;        mov eax, 0
+;        ret
 
     .ELSEIF eax == WM_COMMAND
         mov eax, wParam
@@ -108,6 +114,9 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
             
         .ELSEIF eax == IDM_HELP_ABOUT
             Invoke ShellAbout,hWin,addr AppName,addr AboutMsg,NULL
+        
+        .ELSEIF eax == IDC_CAPBTNMENU
+            Invoke MessageBox, hWin, Addr AppName, Addr AppName, MB_OK
             
         .ENDIF
 

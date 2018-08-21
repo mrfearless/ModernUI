@@ -36,9 +36,16 @@ WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 
 ICO_MAIN                EQU 100
 
+ICO_MUI_MENU            EQU 101
+ICO_MUI_TALK            EQU 102
+
+
 ; Main Dialog
 IDD_DIALOG              EQU 1000
 IDC_CAPTIONBAR          EQU 1001
+
+IDC_CAPBTNMENU          EQU 1098
+IDC_CAPBTNSUPPORT       EQU 1099
 
 ; Main Menu 
 IDM_MENU                EQU 10000
@@ -69,6 +76,7 @@ CommandLine             DD ?
 hWnd                    DD ?
 hCaptionBar             DD ?
 hIcoMain                DD ?
-
+hCapBtnMenu             DD ?
+hCapBtnSupport          DD ?
 
 
