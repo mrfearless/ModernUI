@@ -324,8 +324,8 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
 
     .ELSEIF eax== WM_SETCURSOR
         Invoke GetWindowLong, hWin, GWL_STYLE
-        and eax, MUICS_HAND
-        .IF eax == MUICS_HAND
+        and eax, MUICBS_HAND
+        .IF eax == MUICBS_HAND
             invoke LoadCursor, NULL, IDC_HAND
         .ELSE
             invoke LoadCursor, NULL, IDC_ARROW
@@ -562,8 +562,8 @@ _MUI_CheckboxInit PROC PRIVATE hWin:DWORD
 
 
     mov eax, dwStyle
-    and eax, MUICS_RADIO
-    .IF eax == MUICS_RADIO
+    and eax, MUICBS_RADIO
+    .IF eax == MUICBS_RADIO
         Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUIRadioEmpty
         Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUIRadioEmpty
         Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUIRadioTick
@@ -741,8 +741,8 @@ _MUI_CheckboxCleanup ENDP
 _MUI_CheckboxSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
 
     Invoke GetWindowLong, hWin, GWL_STYLE
-    and eax, MUICS_THEME
-    .IF eax == MUICS_THEME
+    and eax, MUICBS_THEME
+    .IF eax == MUICBS_THEME
         ; Set color property values based on system colors
         Invoke GetSysColor, COLOR_BTNTEXT
         Invoke MUISetExtProperty, hWin, @CheckboxTextColor, eax
@@ -1207,8 +1207,8 @@ _MUI_CheckboxPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bF
     .ENDIF
 
     Invoke GetWindowLong, hWin, GWL_STYLE
-    and eax, MUICS_NOFOCUSRECT
-    .IF eax == MUICS_NOFOCUSRECT
+    and eax, MUICBS_NOFOCUSRECT
+    .IF eax == MUICBS_NOFOCUSRECT
         ret
     .ENDIF
 

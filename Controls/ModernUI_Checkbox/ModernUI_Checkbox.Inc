@@ -79,11 +79,11 @@ MUICM_GETSTATE                  EQU WM_USER + 1779 ; wParam = NULL, lParam = NUL
 MUICM_SETSTATE                  EQU WM_USER + 1778 ; wParam = TRUE/FALSE, lParam = NULL
 
 ; ModernUI_Checkbox Styles
-MUICS_CHECK                     EQU 00h     ;
-MUICS_RADIO                     EQU 01h     ;
-MUICS_HAND                      EQU 20h     ; Show a hand instead of an arrow when mouse moves over checkbox.
-MUICS_NOFOCUSRECT               EQU 100h    ; Dont show focus rect, just use change border to @CheckboxTextColorAlt when setfocus.
-MUICS_THEME                     EQU 8000h   ; Use default windows theme colors and react to WM_THEMECHANGED
+MUICBS_CHECK                     EQU 00h     ;
+MUICBS_RADIO                     EQU 01h     ;
+MUICBS_HAND                      EQU 20h     ; Show a hand instead of an arrow when mouse moves over checkbox.
+MUICBS_NOFOCUSRECT               EQU 100h    ; Dont show focus rect, just use change border to @CheckboxTextColorAlt when setfocus.
+MUICBS_THEME                     EQU 8000h   ; Use default windows theme colors and react to WM_THEMECHANGED
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; ModernUI_Checkbox Properties: Use with MUICheckboxSetProperty / MUICheckboxGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
