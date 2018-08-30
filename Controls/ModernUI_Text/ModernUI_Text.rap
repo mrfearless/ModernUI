@@ -5,9 +5,10 @@ Description=ModernUI_Text
 Backup=$P\Bak\
 Group=1
 GroupExpand=1
+Debug=0
 [Files]
-1=ModernUI_Text.Asm
-2=ModernUI_Text.Inc
+1=ModernUI_Text.asm
+2=ModernUI_Text.inc
 3=
 4=Notes.txt
 5=Distribution\Readme.txt
@@ -63,9 +64,9 @@ AutoLoad=2,1,4
 1=
 [Size]
 3=0,0,0,0,0
-1=0,0,0,0,3341
-2=0,0,0,0,6230
-4=0,0,0,0,305
+1=0,0,0,0,40502
+2=0,0,0,0,5221
+4=0,0,0,0,600
 [VersionControl]
 Settings=1278
 Milestones=129
@@ -76,7 +77,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=10
+MilestoneOnDateDate=30
 MilestoneOnDateTimeYear=2017
 MilestoneOnDateTimeMonth=2
 MilestoneOnDateTimeDate=22
@@ -100,9 +101,9 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=60026270
+PTimer=84217328
 [Collapse]
-1=34603008,536907808,46
+1=68159520,8536064,164
 2=
 3=
 4=
@@ -122,7 +123,12 @@ GroupExpand=1,1,1,0,0,0
 [BreakPoint]
 0=
 [Find]
-1="szLorumIpsumText"
-2="MUITextFont"
-3="mov eax, hBitmap"
-4="@TextFont"
+1=";-------------------------------------------------------------------------------------"
+2=";--------------------------------------------------------------------------------------------------------------------------------------"
+3="MUI_UNICODE"
+4="MUI_TEXT_MAX_CHARS"
+5="xor"
+6="szLorumIpsumText"
+7="MUITextFont"
+8="mov eax, hBitmap"
+9="@TextFont"
