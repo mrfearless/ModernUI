@@ -47,13 +47,17 @@ WinMain proc hInst:HINSTANCE,hPrevInst:HINSTANCE,CmdLine:LPSTR,CmdShow:DWORD
     mov     wc.hCursor,eax
     Invoke RegisterClassEx, addr wc
     Invoke CreateDialogParam, hInstance, IDD_DIALOG, NULL, addr WndProc, NULL
+    mov hWnd, eax
     Invoke ShowWindow, hWnd, SW_SHOWNORMAL
     Invoke UpdateWindow, hWnd
     .WHILE TRUE
-        invoke GetMessage, addr msg, NULL, 0, 0
-      .BREAK .if !eax
-        Invoke TranslateMessage, addr msg
-        Invoke DispatchMessage, addr msg
+        invoke GetMessage, Addr msg, NULL, 0, 0
+        .BREAK .if !eax
+        Invoke IsDialogMessage, hWnd, Addr msg
+        .IF eax == 0
+            Invoke TranslateMessage, Addr msg
+            Invoke DispatchMessage, Addr msg
+        .ENDIF
     .ENDW
     mov eax, msg.wParam
     ret
@@ -87,14 +91,14 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ; ModernUI_Button Example: Start Button - Used to start the progress bar in this example
         ;-----------------------------------------------------------------------------------------------------
         ; Create our ModernUI_Button control
-        Invoke MUIButtonCreate, hWin, Addr szStartButtonText, 20, 140, 140, 38, IDC_STARTBUTTON, WS_CHILD or WS_VISIBLE or MUIBS_HAND or MUIBS_PUSHBUTTON or MUIBS_CENTER
+        Invoke MUIButtonCreate, hWin, Addr szStartButtonText, 20, 140, 140, 38, IDC_STARTBUTTON, WS_CHILD or WS_VISIBLE or MUIBS_HAND or MUIBS_PUSHBUTTON or MUIBS_CENTER or WS_TABSTOP or MUIBS_THEME or MUIBS_NOFOCUSRECT
         mov hStartBtn, eax
         
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Button Example: Exit Button - used to exit this example
         ;-----------------------------------------------------------------------------------------------------
         ; Create a second ModernUI_Button control
-        Invoke MUIButtonCreate, hWin, Addr szExitButtonText, 180, 140, 140, 38, IDC_EXITBUTTON, WS_CHILD or WS_VISIBLE or MUIBS_HAND or MUIBS_PUSHBUTTON or MUIBS_CENTER
+        Invoke MUIButtonCreate, hWin, Addr szExitButtonText, 180, 140, 140, 38, IDC_EXITBUTTON, WS_CHILD or WS_VISIBLE or MUIBS_HAND or MUIBS_PUSHBUTTON or MUIBS_CENTER or WS_TABSTOP or MUIBS_THEME or MUIBS_NOFOCUSRECT
         mov hExitBtn, eax
 
         ;-----------------------------------------------------------------------------------------------------
@@ -105,7 +109,9 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         
         ; set a particular color for our progress bar border color, something subtle
         Invoke MUIProgressBarSetProperty, hPB, @ProgressBarBorderColor, MUI_RGBCOLOR(163,163,163)
-
+        
+        ;Invoke SetFocus, hStartBtn
+        
     ;---------------------------------------------------------------------------------------------------------------
     ; Handle painting of our dialog with our specified background and border color to mimic new Modern style UI feel
     ;---------------------------------------------------------------------------------------------------------------

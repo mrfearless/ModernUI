@@ -103,7 +103,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Text
         ;-----------------------------------------------------------------------------------------------------        
-        Invoke MUITextCreate, hWin, Addr szInstalling, 33, 129, 379, 80, IDC_TEXT1, MUITS_SUBTITLE or MUITS_FONT_SEGOE
+        Invoke MUITextCreate, hWin, Addr szInstalling, 33, 129, 379, 80, IDC_TEXT1, MUITS_10PT or MUITS_FONT_SEGOE
         mov hText1, eax
         Invoke MUITextSetProperty, hText1, @TextColor, MUI_RGBCOLOR(179,179,179)
         Invoke MUITextSetProperty, hText1, @TextColorAlt, MUI_RGBCOLOR(179,179,179)

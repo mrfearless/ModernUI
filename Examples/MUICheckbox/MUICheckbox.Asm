@@ -109,32 +109,32 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Checkbox Examples:
         ;-----------------------------------------------------------------------------------------------------
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox1Text, 20, 50, 300, 24, IDC_CHECKBOX1, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox1Text, 20, 50, 300, 24, IDC_CHECKBOX1, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICBS_NOFOCUSRECT
         mov hChk1, eax
         Invoke MUICheckboxSetState, hChk1, FALSE
 
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox2Text, 20, 75, 300, 24, IDC_CHECKBOX2, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox2Text, 20, 75, 300, 24, IDC_CHECKBOX2, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICBS_NOFOCUSRECT
         mov hChk2, eax
         Invoke MUICheckboxSetState, hChk2, TRUE
         
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox3Text, 20, 100, 300, 24, IDC_CHECKBOX3, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox3Text, 20, 100, 300, 24, IDC_CHECKBOX3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICBS_NOFOCUSRECT
         mov hChk3, eax
 
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox4Text, 20, 125, 300, 24, IDC_CHECKBOX3, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox4Text, 20, 125, 300, 24, IDC_CHECKBOX3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICBS_NOFOCUSRECT
         mov hChk4, eax
 
-        Invoke MUICheckboxCreate, hWin, Addr szRadio1Text, 20, 150, 300, 24, IDC_RADIO1, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICS_RADIO or MUICS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szRadio1Text, 20, 150, 300, 24, IDC_RADIO1, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICBS_RADIO or MUICBS_NOFOCUSRECT
         mov hRadio1, eax
         Invoke MUICheckboxSetState, hRadio1, FALSE
 
-        Invoke MUICheckboxCreate, hWin, Addr szRadio2Text, 20, 175, 300, 24, IDC_RADIO2, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICS_RADIO or MUICS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szRadio2Text, 20, 175, 300, 24, IDC_RADIO2, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICBS_RADIO or MUICBS_NOFOCUSRECT
         mov hRadio2, eax
         Invoke MUICheckboxSetState, hRadio2, TRUE
 
-        Invoke MUICheckboxCreate, hWin, Addr szRadio3Text, 20, 200, 300, 24, IDC_RADIO3, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICS_RADIO or MUICS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szRadio3Text, 20, 200, 300, 24, IDC_RADIO3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICBS_RADIO or MUICBS_NOFOCUSRECT
         mov hRadio3, eax
 
-        Invoke MUICheckboxCreate, hWin, Addr szRadio4Text, 20, 225, 300, 24, IDC_RADIO4, MUICS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICS_RADIO or MUICS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szRadio4Text, 20, 225, 300, 24, IDC_RADIO4, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICBS_RADIO or MUICBS_NOFOCUSRECT
         mov hRadio4, eax
 
     ;---------------------------------------------------------------------------------------------------------------
