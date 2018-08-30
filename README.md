@@ -44,5 +44,5 @@ includelib ModernUI_Button.lib
 ## Additional Resources
 
 * [RadASM IDE](http://www.softpedia.com/get/Programming/File-Editors/RadASM.shtml)
-* [Masm32](http://www.masm32.com/masmdl.htm)
+* [Masm32](http://www.masm32.com/download.htm)
 * [UASM](http://www.terraspace.co.uk/uasm.html)
