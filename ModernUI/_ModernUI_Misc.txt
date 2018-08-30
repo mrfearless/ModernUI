@@ -1,0 +1,284 @@
+;=====================================================================================
+; EXPERMINENTAL FUNCTIONS - Functions might be removed later on
+;=====================================================================================
+
+
+
+
+MUI_ALIGN
+;-------------------------------------------------------------------------------------
+;
+;-------------------------------------------------------------------------------------
+MUITransparentBitmap PROC hdc:DWORD, hBitmap:DWORD, xStart:DWORD, yStart:DWORD, cTransparentColor:DWORD
+    
+;void DrawTransparentBitmap(HDC hdc, HBITMAP hBitmap, short xStart,
+;                           short yStart, COLORREF cTransparentColor)
+;{
+;   BITMAP     bm;
+;   COLORREF   cColor;
+;   HBITMAP    bmAndBack, bmAndObject, bmAndMem, bmSave;
+;   HBITMAP    bmBackOld, bmObjectOld, bmMemOld, bmSaveOld;
+;   HDC        hdcMem, hdcBack, hdcObject, hdcTemp, hdcSave;
+;   POINT      ptSize;
+;
+;   hdcTemp = CreateCompatibleDC(hdc);
+;   SelectObject(hdcTemp, hBitmap);   // Select the bitmap
+;
+;   GetObject(hBitmap, sizeof(BITMAP), (LPSTR)&bm);
+;   ptSize.x = bm.bmWidth;            // Get width of bitmap
+;   ptSize.y = bm.bmHeight;           // Get height of bitmap
+;   DPtoLP(hdcTemp, &ptSize, 1);      // Convert from device
+;                                     // to logical points
+;
+;   // Create some DCs to hold temporary data.
+;   hdcBack   = CreateCompatibleDC(hdc);
+;   hdcObject = CreateCompatibleDC(hdc);
+;   hdcMem    = CreateCompatibleDC(hdc);
+;   hdcSave   = CreateCompatibleDC(hdc);
+;
+;   // Create a bitmap for each DC. DCs are required for a number of
+;   // GDI functions.
+;
+;   // Monochrome DC
+;   bmAndBack   = CreateBitmap(ptSize.x, ptSize.y, 1, 1, NULL);
+;
+;   // Monochrome DC
+;   bmAndObject = CreateBitmap(ptSize.x, ptSize.y, 1, 1, NULL);
+;
+;   bmAndMem    = CreateCompatibleBitmap(hdc, ptSize.x, ptSize.y);
+;   bmSave      = CreateCompatibleBitmap(hdc, ptSize.x, ptSize.y);
+;
+;   // Each DC must select a bitmap object to store pixel data.
+;   bmBackOld   = SelectObject(hdcBack, bmAndBack);
+;   bmObjectOld = SelectObject(hdcObject, bmAndObject);
+;   bmMemOld    = SelectObject(hdcMem, bmAndMem);
+;   bmSaveOld   = SelectObject(hdcSave, bmSave);
+;
+;   // Set proper mapping mode.
+;   SetMapMode(hdcTemp, GetMapMode(hdc));
+;
+;   // Save the bitmap sent here, because it will be overwritten.
+;   BitBlt(hdcSave, 0, 0, ptSize.x, ptSize.y, hdcTemp, 0, 0, SRCCOPY);
+;
+;   // Set the background color of the source DC to the color.
+;   // contained in the parts of the bitmap that should be transparent
+;   cColor = SetBkColor(hdcTemp, cTransparentColor);
+;
+;   // Create the object mask for the bitmap by performing a BitBlt
+;   // from the source bitmap to a monochrome bitmap.
+;   BitBlt(hdcObject, 0, 0, ptSize.x, ptSize.y, hdcTemp, 0, 0, SRCCOPY);
+;
+;   // Set the background color of the source DC back to the original
+;   // color.
+;   SetBkColor(hdcTemp, cColor);
+;
+;   // Create the inverse of the object mask.
+;   BitBlt(hdcBack, 0, 0, ptSize.x, ptSize.y, hdcObject, 0, 0, NOTSRCCOPY);
+;
+;   // Copy the background of the main DC to the destination.
+;   BitBlt(hdcMem, 0, 0, ptSize.x, ptSize.y, hdc, xStart, yStart, SRCCOPY);
+;
+;   // Mask out the places where the bitmap will be placed.
+;   BitBlt(hdcMem, 0, 0, ptSize.x, ptSize.y, hdcObject, 0, 0, SRCAND);
+;
+;   // Mask out the transparent colored pixels on the bitmap.
+;   BitBlt(hdcTemp, 0, 0, ptSize.x, ptSize.y, hdcBack, 0, 0, SRCAND);
+;
+;   // XOR the bitmap with the background on the destination DC.
+;   BitBlt(hdcMem, 0, 0, ptSize.x, ptSize.y, hdcTemp, 0, 0, SRCPAINT);
+;
+;   // Copy the destination to the screen.
+;   BitBlt(hdc, xStart, yStart, ptSize.x, ptSize.y, hdcMem, 0, 0, SRCCOPY);
+;
+;   // Place the original bitmap back into the bitmap sent here.
+;   BitBlt(hdcTemp, 0, 0, ptSize.x, ptSize.y, hdcSave, 0, 0, SRCCOPY);
+;
+;   // Delete the memory bitmaps.
+;   DeleteObject(SelectObject(hdcBack, bmBackOld));
+;   DeleteObject(SelectObject(hdcObject, bmObjectOld));
+;   DeleteObject(SelectObject(hdcMem, bmMemOld));
+;   DeleteObject(SelectObject(hdcSave, bmSaveOld));
+;
+;   // Delete the memory DCs.
+;   DeleteDC(hdcMem);
+;   DeleteDC(hdcBack);
+;   DeleteDC(hdcObject);
+;   DeleteDC(hdcSave);
+;   DeleteDC(hdcTemp);
+;}    
+    ret
+
+MUITransparentBitmap ENDP
+
+
+MUI_ALIGN
+;-------------------------------------------------------------------------------------
+;
+;-------------------------------------------------------------------------------------
+MUITransparentBlt PROC destHDC:DWORD, xDest:DWORD, yDest:DWORD, wDest:DWORD, hDest:DWORD, srcHDC:DWORD, xSrc:DWORD, ySrc:DWORD, cTransparentColor:DWORD
+    
+;void MyTransparentBlt(
+;	HDC destHDC,
+;	short xDest,
+;	short yDest,
+;	short wDest,
+;	short hDest,
+;	HDC srcHDC,
+;	short xSrc,
+;	short ySrc,
+;	COLORREF cTransparentColor
+;)
+;{
+;
+;	HDC	hdcMask	= CreateCompatibleDC(destHDC),
+;		hdcBack	= CreateCompatibleDC(destHDC),
+;		hdcFore	= CreateCompatibleDC(destHDC),
+;		hdcTemp	= CreateCompatibleDC(destHDC);
+;
+;	HBITMAP bmNewMask, bmOldMask,
+;			bmNewBack, bmOldBack,
+;			bmNewFore, bmOldFore,
+;			bmNewTemp, bmOldTemp;
+;
+;	/* Monochrome DC */
+;	bmOldMask = SelectObject(hdcMask,
+;		bmNewMask = CreateBitmap(wDest, hDest, 1, 1, NULL));
+;
+;	/* Temp. Mask */
+;	bmOldBack = SelectObject(hdcBack,
+;		bmNewBack = CreateCompatibleBitmap(destHDC, wDest, hDest));
+;	bmOldFore = SelectObject(hdcFore,
+;		bmNewFore = CreateCompatibleBitmap(destHDC, wDest, hDest));
+;	bmOldTemp = SelectObject(hdcTemp,
+;		bmNewTemp = CreateCompatibleBitmap(destHDC, wDest, hDest));
+;
+;/*	FillRect(hdcTemp, &cli, brTrans);
+;	BitBlt(hdcTemp, 0, 0, wDest, hDest, srcHDC, xSrc, ySrc, SRCINVERT);
+;*/
+;	BitBlt(hdcTemp, 0, 0, wDest, hDest, srcHDC, xSrc, ySrc, SRCCOPY);
+;
+;	/* MonoChrome Created */
+;	SetBkColor(hdcTemp, cTransparentColor);
+;	BitBlt(hdcMask, 0, 0, wDest, hDest, hdcTemp, 0, 0, SRCCOPY);
+;
+;	/* Make Foreground layer */
+;	SetTextColor(hdcFore, 0xFFFFFF);
+;	SetBkColor(hdcFore, 0);
+;
+;	BitBlt(hdcFore, 0, 0, wDest, hDest, srcHDC, xSrc, ySrc, SRCCOPY);
+;	BitBlt(hdcFore, 0, 0, wDest, hDest, hdcMask, 0, 0, SRCAND);
+;
+;
+;	/* Change MonoChrome Map */
+;	BitBlt(hdcMask, 0, 0, wDest, hDest, hdcMask, 0, 0, DSTINVERT);
+;
+;	/* Make Background layer */
+;	SetTextColor(hdcBack, 0xFFFFFF);
+;	SetBkColor(hdcBack, 0);
+;
+;	BitBlt(hdcBack, 0, 0, wDest, hDest, destHDC, xDest, yDest, SRCCOPY);
+;	BitBlt(hdcBack, 0, 0, wDest, hDest, hdcMask, 0, 0, SRCAND);
+;
+;
+;	/* merge */
+;	BitBlt(destHDC, xDest, yDest, wDest, hDest, hdcBack, 0, 0, SRCCOPY);
+;	BitBlt(destHDC, xDest, yDest, wDest, hDest, hdcFore, 0, 0, SRCPAINT);
+;
+;
+;	/* Cleanup */
+;	DeleteObject(SelectObject(hdcTemp, bmOldTemp));
+;	DeleteObject(SelectObject(hdcMask, bmOldMask));
+;	DeleteObject(SelectObject(hdcBack, bmOldBack));
+;	DeleteObject(SelectObject(hdcFore, bmOldFore));
+;
+;	DeleteDC(hdcTemp);
+;	DeleteDC(hdcMask);
+;	DeleteDC(hdcBack);
+;	DeleteDC(hdcFore);
+;}    
+    ret
+
+MUITransparentBlt ENDP
+
+
+MUI_ALIGN
+;-------------------------------------------------------------------------------------
+;
+;-------------------------------------------------------------------------------------
+MUITransBitblt PROC
+;TransBitblt proc hDC:DWORD,Xpos:DWORD,Ypos:DWORD,hBitMap:DWORD
+;
+;            LOCAL hdcOffScr    :DWORD
+;            LOCAL hbmOffScr    :DWORD
+;            LOCAL hObject      :DWORD
+;            LOCAL hdcImage     :DWORD
+;            LOCAL hdcMask      :DWORD
+;            LOCAL hbmMask      :DWORD
+;            LOCAL OldObject    :DWORD
+;            LOCAL OldbmOffScr  :DWORD
+;            LOCAL OldbmMask    :DWORD
+;           
+;            LOCAL bm           :BITMAP
+;            LOCAL rect         :RECT
+;
+;            invoke GetObject,hBitMap,sizeof bm,addr bm
+;            invoke CreateCompatibleDC,hDC
+;            mov [hdcOffScr],eax
+;            invoke CreateCompatibleBitmap,hDC,bm.bmWidth,bm.bmHeight
+;            mov [hbmOffScr],eax
+;            invoke SelectObject,hdcOffScr,hbmOffScr
+;            mov [OldbmOffScr],eax
+;            invoke BitBlt,hdcOffScr,0,0,bm.bmWidth,bm.bmHeight,hDC,Xpos,Ypos,SRCCOPY
+;            invoke CreateCompatibleDC,hDC
+;            mov [hdcMask],eax
+;            invoke CreateCompatibleDC,hDC
+;            mov [hdcImage],eax
+;            invoke CreateBitmap,bm.bmWidth,bm.bmHeight,1,1,NULL
+;            mov [hbmMask],eax
+;            invoke SelectObject,hdcMask,hbmMask
+;            mov [OldbmMask],eax
+;            invoke SelectObject,hdcImage,hBitMap
+;            mov [OldObject],eax
+;
+;            invoke GetPixel,hdcImage,0,0
+;            invoke SetBkColor,hdcImage,eax   
+;            invoke BitBlt,hdcMask,0,0,bm.bmWidth,bm.bmHeight,hdcImage,0,0,SRCCOPY
+;
+;            invoke SelectObject,hdcImage,OldObject
+;            mov [hBitMap],eax
+;            invoke SelectObject,hdcMask,OldbmMask
+;            mov [hbmMask],eax
+;
+;            invoke DeleteDC,hdcMask
+;            invoke DeleteDC,hdcImage
+;
+;            invoke CreateCompatibleDC,hDC
+;            mov [hdcImage],eax
+;            invoke SelectObject,hdcImage,hBitMap
+;            mov [OldObject],eax
+;            invoke CreateCompatibleDC,hDC
+;            mov [hdcMask],eax
+;            invoke SelectObject,hdcMask,hbmMask
+;            mov [OldbmMask],eax
+;            invoke SetBkColor,hdcOffScr,0FFFFFFh
+;            invoke BitBlt,hdcOffScr,0,0,bm.bmWidth,bm.bmHeight,hdcImage,0,0,SRCINVERT
+;            invoke BitBlt,hdcOffScr,0,0,bm.bmWidth,bm.bmHeight,hdcMask,0,0,SRCAND
+;            invoke BitBlt,hdcOffScr,0,0,bm.bmWidth,bm.bmHeight,hdcImage,0,0,SRCINVERT
+;            invoke BitBlt,hDC,Xpos,Ypos,bm.bmWidth,bm.bmHeight,hdcOffScr,0,0,SRCCOPY
+;;Clean up.(do some house cleaning)
+;           
+;            invoke SelectObject,hdcImage,OldObject
+;            mov [hBitMap],eax
+;            invoke SelectObject,hdcMask,OldbmMask
+;            mov [hbmMask],eax
+;            invoke SelectObject,hdcOffScr,OldbmOffScr
+;            mov [hbmOffScr],eax
+;            invoke DeleteObject,hbmMask
+;            invoke DeleteObject,hbmOffScr
+;            invoke DeleteDC,hdcOffScr
+;            invoke DeleteDC,hdcImage
+;            invoke DeleteDC,hdcMask
+;            ret
+;TransBitblt endp
+    ret
+MUITransBitblt ENDP
