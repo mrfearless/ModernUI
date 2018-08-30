@@ -87,13 +87,15 @@ _MUI_ICON_PROPERTIES			ENDS
 
 
 .DATA
+ALIGN 4
 szMUIIconClass					DB 'ModernUI_Icon',0 	; Class name for creating our ModernUI_Icon control
 
 
 .CODE
 
-align 4
 
+
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Set property for ModernUI_Icon control
 ;-------------------------------------------------------------------------------------
@@ -103,6 +105,7 @@ MUIIconSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue
 MUIIconSetProperty ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Get property for ModernUI_Icon control
 ;-------------------------------------------------------------------------------------
@@ -112,6 +115,7 @@ MUIIconGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
 MUIIconGetProperty ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIIconRegister - Registers the ModernUI_Icon control
 ; can be used at start of program for use with RadASM custom control
@@ -148,6 +152,7 @@ MUIIconRegister PROC PUBLIC
 MUIIconRegister ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIIconCreate - Returns handle in eax of newly created control
 ;-------------------------------------------------------------------------------------
@@ -179,6 +184,7 @@ MUIIconCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, controlwidt
 MUIIconCreate ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_IconWndProc - Main processing window for our control
 ;-------------------------------------------------------------------------------------
@@ -329,6 +335,7 @@ _MUI_IconWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
 _MUI_IconWndProc ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_IconInit - set initial default values
 ;-------------------------------------------------------------------------------------
@@ -367,6 +374,7 @@ _MUI_IconInit PROC PRIVATE hControl:DWORD
 _MUI_IconInit ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_IconPaint
 ;-------------------------------------------------------------------------------------
@@ -515,6 +523,7 @@ _MUI_IconPaint PROC PRIVATE hWin:DWORD
 _MUI_IconPaint ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_IconLoadRegionFromRes - Loads region from resource
 ;-------------------------------------------------------------------------------------
@@ -566,6 +575,7 @@ _MUI_IconLoadRegionFromRes PROC USES EBX hInstance:DWORD, idRgnRes:DWORD, lpRegi
 _MUI_IconLoadRegionFromRes ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_IconSetRegion - Sets region of control based on binary region data
 ;-------------------------------------------------------------------------------------
@@ -605,6 +615,7 @@ _MUI_IconSetRegion PROC PRIVATE hControl:DWORD, ptrRegionData:DWORD, dwRegionDat
 _MUI_IconSetRegion ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIIconSetRegion - Loads region from resource and sets region of control based on binary region data
 ;-------------------------------------------------------------------------------------
@@ -630,6 +641,7 @@ MUIIconSetRegion PROC hControl:DWORD, idRgnRes:DWORD
 MUIIconSetRegion ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIIconGetState
 ;-------------------------------------------------------------------------------------
@@ -639,6 +651,7 @@ MUIIconGetState PROC PUBLIC hControl:DWORD
 MUIIconGetState ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIIconSetState
 ;-------------------------------------------------------------------------------------
@@ -648,6 +661,7 @@ MUIIconSetState PROC PUBLIC hControl:DWORD, bState:DWORD
 MUIIconSetState ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIIconSetIcons - Sets the property handles for icons types
 ;-------------------------------------------------------------------------------------

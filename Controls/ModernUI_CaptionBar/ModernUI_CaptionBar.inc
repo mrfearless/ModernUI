@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_CaptionBar v1.0.0.2
+; ModernUI Control - ModernUI_CaptionBar
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -11,28 +11,36 @@
 ; http://github.com/mrfearless/ModernUI
 ;
 ;
-; This software is provided 'as-is', without any express or implied warranty. In no event will the author be held liable for any 
-; damages arising from the use of this software.
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
 ;
-; Permission is granted to anyone to use this software for any non-commercial program. If you use the library in an application, an 
-; acknowledgement in the application or documentation is appreciated but not required. 
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
 ;
-; You are allowed to make modifications to the source code, but you must leave the original copyright notices intact and not 
-; misrepresent the origin of the software. It is not allowed to claim you wrote the original software. Modified files must have a clear 
-; notice that the files are modified, and not in the original state. This includes the name of the person(s) who modified the code. 
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
 ;
-; If you want to distribute or redistribute any portion of this package, you will need to include the full package in it's original 
-; state, including this license and all the copyrights. 
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
 ;
-; While distributing this package (in it's original state) is allowed, it is not allowed to charge anything for this. You may not sell
-; or include the package in any commercial package without having permission of the author. Neither is it allowed to redistribute any 
-; of the package's components with commercial applications.
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
 ;
-;======================================================================================================================================
+;==============================================================================
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_CaptionBar Prototypes for users of controls
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICaptionBarRegister       PROTO                                           ; Use 'ModernUI_CaptionBar' as class in RadASM custom class control
 MUICaptionBarCreate         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszCaptionText, dwCaptionHeight, dwResourceID, dwStyle
 MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hModernUI_CaptionBar, dwProperty, dwPropertyValue
@@ -46,9 +54,9 @@ MUICaptionBarAddButtonEx    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hM
 MUICapButtonSetProperty     PROTO :DWORD, :DWORD, :DWORD                    ; hCapButton, dwProperty, dwPropertyValue
 MUICapButtonGetProperty     PROTO :DWORD, :DWORD                            ; hCapButton, dwProperty, dwPropertyValue
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_Caption Structures
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 IFNDEF MUI_CAPTIONBAR_PROPERTIES
 MUI_CAPTIONBAR_PROPERTIES       STRUCT
     dwTextColor                 DD ?    ; RGBCOLOR. Text color for captionbar text and system buttons (min/max/restore/close)
@@ -98,9 +106,9 @@ ENDIF
 
 
 .CONST
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_Caption Constants
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 
 ; CaptionBar Styles
 MUICS_LEFT                      EQU 0h   ; left align caption bar text
@@ -118,9 +126,10 @@ MUICS_NOCAPTIONTITLETEXT        EQU 400h ; Dont draw a title text value, use lps
 MUICS_NOBORDER                  EQU 800h ; No border used, so position ModernUI_CaptionBar at 0,0 instead of at 1,1
 MUICS_THEME                     EQU 8000h; Use default windows theme colors and react to WM_THEMECHANGED
 
-;--------------------------------------------------------------------------------------------------------------------------------------
-; ModernUI_Caption Properties: Use with MUICaptionBarSetProperty / MUICaptionBarGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
+; ModernUI_Caption Properties: Use with MUICaptionBarSetProperty / 
+; MUICaptionBarGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
+;------------------------------------------------------------------------------
 @CaptionBarTextColor            EQU 0   ; RGBCOLOR. Text color for captionbar text and system buttons (min/max/restore/close)
 @CaptionBarTextFont             EQU 4   ; hFont. Font for captionbar text
 @CaptionBarBackColor            EQU 8   ; RGBCOLOR. Background color of captionbar and system buttons (min/max/restore/close)
@@ -155,8 +164,12 @@ MUICBIT_BMP                     EQU 1
 MUICBIT_ICO                     EQU 2
 MUICBIT_PNG                     EQU 3
 
-; CaptionBar CapButton properties (extra custom buttons added with MUICaptionBarAddButton)
-; Note: setting ModernUI_CaptionBar properties will cascade down to set equivalent CapButton properties.
+;------------------------------------------------------------------------------
+; CaptionBar CapButton properties (extra custom buttons added with 
+; MUICaptionBarAddButton)
+; Note: setting ModernUI_CaptionBar properties will cascade down to set 
+; equivalent CapButton properties.
+;------------------------------------------------------------------------------
 @CapButtonTextColor             EQU 0   ; RGBCOLOR.
 @CapButtonTextRollColor         EQU 4   ; RGBCOLOR.
 @CapButtonBackColor             EQU 8   ; RGBCOLOR.

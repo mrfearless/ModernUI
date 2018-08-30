@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_Checkbox v1.0.0.0
+; ModernUI Control - ModernUI_Checkbox
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -10,7 +10,34 @@
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
-;======================================================================================================================================
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+
 .686
 .MMX
 .XMM
@@ -18,7 +45,7 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-;MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
+MUI_DONTUSEGDIPLUS EQU 1 ; exclude (gdiplus) support
 
 ;DEBUG32 EQU 1
 ;
@@ -35,29 +62,29 @@ include user32.inc
 include kernel32.inc
 include gdi32.inc
 
-IFDEF MUI_USEGDIPLUS
-include gdiplus.inc
-include ole32.inc
-ENDIF
-
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
 
-IFDEF MUI_USEGDIPLUS
-includelib gdiplus.lib
-includelib ole32.lib
-ENDIF
-
 include ModernUI.inc
 includelib ModernUI.lib
+
+IFDEF MUI_USEGDIPLUS
+ECHO MUI_USEGDIPLUS
+include gdiplus.inc
+include ole32.inc
+includelib gdiplus.lib
+includelib ole32.lib
+ELSE
+ECHO MUI_DONTUSEGDIPLUS
+ENDIF
 
 include ModernUI_Checkbox.inc
 include ModernUI_Checkbox_Icons.asm
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxWndProc                    PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CheckboxInit                       PROTO :DWORD
 _MUI_CheckboxCleanup                    PROTO :DWORD
@@ -83,9 +110,9 @@ _MUI_CheckboxPngReleaseIStream          PROTO :DWORD
 ENDIF
 _MUI_CheckboxSetPropertyEx              PROTO :DWORD, :DWORD, :DWORD
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; External public properties
 IFNDEF MUI_CHECKBOX_PROPERTIES
 MUI_CHECKBOX_PROPERTIES                 STRUCT
@@ -168,6 +195,7 @@ MUI_CHECKBOX_FOCUSRECT_OFFSET           EQU -2 ; change this to higher negative 
 
 
 .DATA
+ALIGN 4
 szMUICheckboxClass                      DB 'ModernUI_Checkbox',0            ; Class name for creating our ModernUI_Checkbox control
 szMUICheckboxFont                       DB 'Segoe UI',0                     ; Font used for ModernUI_Checkbox text
 hMUICheckboxFont                        DD 0                                ; Handle to ModernUI_Checkbox font (segoe ui)
@@ -187,31 +215,34 @@ hDefault_icoMUIRadioDisabledEmpty       DD 0
 
 .CODE
 
-align 4
 
-;-------------------------------------------------------------------------------------
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for ModernUI_Checkbox control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICheckboxSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUICheckboxSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for ModernUI_Checkbox control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICheckboxGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUICheckboxGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICheckboxRegister - Registers the ModernUI_Checkbox control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_Checkbox
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICheckboxRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -244,9 +275,10 @@ MUICheckboxRegister PROC PUBLIC
 MUICheckboxRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICheckboxCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICheckboxCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -278,9 +310,10 @@ MUICheckboxCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypo
 MUICheckboxCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxWndProc - Main processing window for our control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL hParent:DWORD
@@ -470,9 +503,10 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
 _MUI_CheckboxWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxInit PROC PRIVATE hWin:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
@@ -583,9 +617,10 @@ _MUI_CheckboxInit PROC PRIVATE hWin:DWORD
 _MUI_CheckboxInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxCleanup - cleanup a few things before control is destroyed
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxCleanup PROC PRIVATE hWin:DWORD
     LOCAL ImageType:DWORD
     LOCAL hIStreamImage:DWORD
@@ -735,9 +770,11 @@ _MUI_CheckboxCleanup PROC PRIVATE hWin:DWORD
 _MUI_CheckboxCleanup ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_CheckboxSetColors - Set colors on init or syscolorchange if MUIBS_THEME style used
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CheckboxSetColors - Set colors on init or syscolorchange if MUIBS_THEME 
+; style used
+;------------------------------------------------------------------------------
 _MUI_CheckboxSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
 
     Invoke GetWindowLong, hWin, GWL_STYLE
@@ -781,9 +818,10 @@ _MUI_CheckboxSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
 _MUI_CheckboxSetColors ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxButtonDown - Mouse button down or keyboard down from vk_space
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxButtonDown PROC PRIVATE hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL rect:RECT    
@@ -801,9 +839,10 @@ _MUI_CheckboxButtonDown PROC PRIVATE hWin:DWORD
 _MUI_CheckboxButtonDown ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxButtonUp - Mouse button up or keyboard up from vk_space
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxButtonUp PROC PRIVATE hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL wID:DWORD
@@ -829,9 +868,10 @@ _MUI_CheckboxButtonUp PROC PRIVATE hWin:DWORD
 _MUI_CheckboxButtonUp ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxPaint
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -913,9 +953,10 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
 _MUI_CheckboxPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxPaintBackground
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
@@ -944,9 +985,10 @@ _MUI_CheckboxPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledS
 _MUI_CheckboxPaintBackground ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxPaintText
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
@@ -1077,9 +1119,10 @@ _MUI_CheckboxPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:D
 _MUI_CheckboxPaintText ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxPaintImages
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL dwStyle:DWORD
     LOCAL ImageType:DWORD
@@ -1196,9 +1239,10 @@ _MUI_CheckboxPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDes
 _MUI_CheckboxPaintImages ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxPaintFocusRect
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFocusedState:DWORD
     LOCAL rect:RECT
 
@@ -1220,9 +1264,10 @@ _MUI_CheckboxPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bF
 _MUI_CheckboxPaintFocusRect ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxSetPropertyEx
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CheckboxSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     
     mov eax, dwProperty
@@ -1286,10 +1331,11 @@ _MUI_CheckboxSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, d
 _MUI_CheckboxSetPropertyEx ENDP
 
 
-;-------------------------------------------------------------------------------------
-; MUICheckboxLoadImages - Loads images from resource ids and stores the handles in the
-; appropriate property.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUICheckboxLoadImages - Loads images from resource ids and stores the handles
+; in the appropriate property.
+;------------------------------------------------------------------------------
 MUICheckboxLoadImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD, dwResIDImageAlt:DWORD, dwResIDImageSel:DWORD, dwResIDImageSelAlt:DWORD, dwResIDImageDisabled:DWORD, dwResIDImageDisabledSel:DWORD
 
     .IF dwImageType == 0
@@ -1382,9 +1428,10 @@ MUICheckboxLoadImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImag
 MUICheckboxLoadImages ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICheckboxSetImages - Sets the property handles for image types
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICheckboxSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, hImageAlt:DWORD, hImageSel:DWORD, hImageSelAlt:DWORD, hImageDisabled:DWORD, hImageDisabledSel:DWORD
 
     .IF dwImageType == 0
@@ -1424,27 +1471,31 @@ MUICheckboxSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD
 MUICheckboxSetImages ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICheckboxGetState
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICheckboxGetState PROC PUBLIC hControl:DWORD
     Invoke SendMessage, hControl, MUICM_GETSTATE, 0, 0
     ret
 MUICheckboxGetState ENDP
 
-;-------------------------------------------------------------------------------------
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICheckboxSetState
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICheckboxSetState PROC PUBLIC hControl:DWORD, bState:DWORD
     Invoke SendMessage, hControl, MUICM_SETSTATE, bState, 0
     ret
 MUICheckboxSetState ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_CheckboxLoadBitmap - if succesful, loads specified bitmap resource into the specified
-; external property and returns TRUE in eax, otherwise FALSE.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CheckboxLoadBitmap - if succesful, loads specified bitmap resource into 
+; the specified external property and returns TRUE in eax, otherwise FALSE.
+;------------------------------------------------------------------------------
 _MUI_CheckboxLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
     LOCAL hinstance:DWORD
 
@@ -1468,10 +1519,11 @@ _MUI_CheckboxLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:D
 _MUI_CheckboxLoadBitmap ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_CheckboxLoadIcon - if succesful, loads specified icon resource into the specified
-; external property and returns TRUE in eax, otherwise FALSE.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CheckboxLoadIcon - if succesful, loads specified icon resource into the 
+; specified external property and returns TRUE in eax, otherwise FALSE.
+;------------------------------------------------------------------------------
 _MUI_CheckboxLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     LOCAL hinstance:DWORD
 
@@ -1495,17 +1547,19 @@ _MUI_CheckboxLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
 _MUI_CheckboxLoadIcon ENDP
 
 
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Load JPG/PNG from resource using GDI+
 ;   Actually, this function can load any image format supported by GDI+
 ;
 ; by: Chris Vega
 ;
 ; Addendum KSR 2014 : Needs OLE32 include and lib for CreateStreamOnHGlobal and 
-; GetHGlobalFromStream calls. Underlying stream needs to be left open for the life of
-; the bitmap or corruption of png occurs. store png as RCDATA in resource file.
-;-------------------------------------------------------------------------------------
+; GetHGlobalFromStream calls. Underlying stream needs to be left open for the 
+; life of the bitmap or corruption of png occurs. store png as RCDATA in 
+; resource file.
+;------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
+MUI_ALIGN
 _MUI_CheckboxLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     local rcRes:HRSRC
     local hResData:HRSRC
@@ -1613,10 +1667,11 @@ _MUI_CheckboxLoadPng endp
 ENDIF
 
 
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxPngReleaseIStream - releases png stream handle
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
+MUI_ALIGN
 _MUI_CheckboxPngReleaseIStream PROC hIStream:DWORD
     
     mov eax, hIStream

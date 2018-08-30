@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_TrayMenu v1.0.0.0
+; ModernUI Control - ModernUI_TrayMenu
 ;
-; Copyright (c) 2017 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -10,7 +10,34 @@
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
-;======================================================================================================================================
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+
 .686
 .MMX
 .XMM
@@ -100,9 +127,9 @@ NOTIFYICONDATA  equ  <NOTIFYICONDATAA>
 ENDIF
 
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TrayMenuWndProc                    PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TrayMenuSetSubclass                PROTO :DWORD
 _MUI_TrayMenuWindowSubClass_Proc        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -116,9 +143,9 @@ _MUI_TM_IconText                        PROTO :DWORD, :DWORD, :DWORD
 _MUI_TM_HideNotification                PROTO :DWORD
 
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; External public properties
 IFNDEF MUI_TRAYMENU_PROPERTIES
 MUI_TRAYMENU_PROPERTIES                 STRUCT
@@ -150,6 +177,7 @@ WM_INITSUBCLASS                         EQU WM_USER + 99
 
 
 .DATA
+ALIGN 4
 szMUITrayIconDisplayDC                  DB 'DISPLAY',0
 szMUITrayMenuClass                      DB 'ModernUI_TrayMenu',0        ; Class name for creating our ModernUI_TrayMenu control
 szMUITrayMenuFont                       DB 'Tahoma',0                   ; Font used for ModernUI_TrayMenu text
@@ -159,31 +187,34 @@ szMUITrayMenuFont                       DB 'Tahoma',0                   ; Font u
 
 .CODE
 
-align 4
 
-;-------------------------------------------------------------------------------------
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for ModernUI_TrayMenu control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUITrayMenuSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for ModernUI_TrayMenu control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUITrayMenuGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUITrayMenuRegister - Registers the ModernUI_TrayMenu control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_TrayMenu
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -215,9 +246,10 @@ MUITrayMenuRegister PROC PUBLIC
 MUITrayMenuRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUITrayMenuCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuCreate PROC PUBLIC hWndParent:DWORD, hTrayMenuIcon:DWORD, lpszTooltip:DWORD, dwMenuType:DWORD, dwMenu:DWORD, dwOptions:DWORD, hWndExtra:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -290,10 +322,10 @@ MUITrayMenuCreate PROC PUBLIC hWndParent:DWORD, hTrayMenuIcon:DWORD, lpszTooltip
 MUITrayMenuCreate ENDP
 
 
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TrayMenuWndProc - Main processing window for our control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TrayMenuWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
 
     mov eax,uMsg
@@ -378,9 +410,10 @@ _MUI_TrayMenuWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
 _MUI_TrayMenuWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TrayMenuSetSubclass - Set sublcass for TrayMenu control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TrayMenuSetSubclass PROC hControl:DWORD
     LOCAL hWndSubClass:DWORD
     LOCAL hParent:DWORD
@@ -421,10 +454,10 @@ _MUI_TrayMenuSetSubclass PROC hControl:DWORD
 _MUI_TrayMenuSetSubclass ENDP
 
 
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TrayMenuWindowSubClass_Proc - sublcass main window to handle our WM_SHELLNOTIFY
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TrayMenuWindowSubClass_Proc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM, uIdSubclass:UINT, dwRefData:DWORD
     LOCAL dwStyle:DWORD
     
@@ -488,10 +521,10 @@ _MUI_TrayMenuWindowSubClass_Proc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wPa
 _MUI_TrayMenuWindowSubClass_Proc endp
 
 
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TrayMenuInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TrayMenuInit PROC PRIVATE hControl:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
@@ -511,9 +544,10 @@ _MUI_TrayMenuInit PROC PRIVATE hControl:DWORD
 _MUI_TrayMenuInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TrayMenuCleanup - Frees memory used by control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TrayMenuCleanup PROC PRIVATE hControl:DWORD
     LOCAL NID:DWORD
     
@@ -534,20 +568,21 @@ _MUI_TrayMenuCleanup ENDP
 
 
 
-;=====================================================================================
+;==============================================================================
 ; TRAY MENU Functions
-;=====================================================================================
+;==============================================================================
 
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Assigns a menu to the ModernUI_TrayMenu control, using a popup menu created with 
 ; CreatePopupMenu or by building a menu from a block of MUITRAYMENUITEM structures
 ; dwMenuType determines which dwMenu contains
 ; if dwMenuType == MUITMT_POPUPMENU, dwMenu is a handle to a popup menu
 ; if dwMenuType == MUITMT_MENUITEMS, dwMenu is pointer to array of structures
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuAssignMenu PROC PUBLIC USES EBX hControl:DWORD, dwMenuType:DWORD, dwMenu:DWORD
     LOCAL mi:MENUITEMINFO
     LOCAL hTrayMenu:DWORD
@@ -679,11 +714,11 @@ MUITrayMenuAssignMenu PROC PUBLIC USES EBX hControl:DWORD, dwMenuType:DWORD, dwM
 MUITrayMenuAssignMenu ENDP
 
 
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Changes a menu item's state
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuChangeMenuItemState PROC PUBLIC hControl:DWORD, MenuItemID:DWORD, MenuItemState:DWORD
     LOCAL mi:MENUITEMINFO
     LOCAL hTrayMenu:DWORD
@@ -715,12 +750,11 @@ MUITrayMenuChangeMenuItemState PROC PUBLIC hControl:DWORD, MenuItemID:DWORD, Men
 MUITrayMenuChangeMenuItemState endp
 
 
-
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Enables a menu item on the tray menu
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuEnableMenuItem PROC PUBLIC hControl:DWORD, MenuItemID:DWORD
     LOCAL mi:MENUITEMINFO
     LOCAL hTrayMenu:DWORD
@@ -750,10 +784,11 @@ MUITrayMenuEnableMenuItem PROC PUBLIC hControl:DWORD, MenuItemID:DWORD
 MUITrayMenuEnableMenuItem ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Disables (greys out) a menu item on the tray menu. 
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuDisableMenuItem PROC PUBLIC hControl:DWORD, MenuItemID:DWORD
     LOCAL mi:MENUITEMINFO
     LOCAL hTrayMenu:DWORD
@@ -782,10 +817,11 @@ MUITrayMenuDisableMenuItem PROC PUBLIC hControl:DWORD, MenuItemID:DWORD
 MUITrayMenuDisableMenuItem ENDP
 
 
-;------------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Sets the icon of the tray menu
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuSetTrayIcon PROC PUBLIC USES EBX hControl:DWORD, hTrayIcon:DWORD
     LOCAL NID:DWORD
     LOCAL lpszTooltip:DWORD
@@ -857,10 +893,11 @@ MUITrayMenuSetTrayIcon PROC PUBLIC USES EBX hControl:DWORD, hTrayIcon:DWORD
 MUITrayMenuSetTrayIcon endp
 
 
-;------------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set tooltip of the tray menu
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuSetTooltipText PROC PUBLIC USES EBX hControl:DWORD, lpszTooltip:DWORD
     LOCAL NID:DWORD
     LOCAL hTrayIcon:DWORD
@@ -920,12 +957,13 @@ MUITrayMenuSetTooltipText PROC PUBLIC USES EBX hControl:DWORD, lpszTooltip:DWORD
 MUITrayMenuSetTooltipText ENDP
 
 
-;------------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Returns in eax icon created and set as the tray menu icon. Use DeleteObject once finished
 ; using this icon, and before calling this function again (if icon was previously created
 ; with this function)
 ; Returns in eax hIcon or NULL
-;------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWORD
     LOCAL hTrayIcon:DWORD
 
@@ -949,11 +987,11 @@ MUITrayMenuSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, lpszFont:
 MUITrayMenuSetTrayIconText ENDP
 
 
-
-;------------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ;
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuHideTrayIcon PROC PUBLIC hControl:DWORD
     LOCAL NID:DWORD
 
@@ -980,10 +1018,11 @@ MUITrayMenuHideTrayIcon PROC PUBLIC hControl:DWORD
 MUITrayMenuHideTrayIcon ENDP
 
 
-;------------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ;
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuShowTrayIcon PROC PUBLIC hControl:DWORD
     LOCAL hParent:DWORD
     LOCAL hTrayIcon:DWORD
@@ -1023,8 +1062,8 @@ MUITrayMenuShowTrayIcon PROC PUBLIC hControl:DWORD
 MUITrayMenuShowTrayIcon ENDP
 
 
-
-;------------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Show a balloon style tooltip over tray menu with custom information
 ;
 ; MUITMNI_NONE           EQU 0 ; No icon.
@@ -1035,7 +1074,7 @@ MUITrayMenuShowTrayIcon ENDP
 ;
 ;
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayMenuShowNotification PROC PUBLIC USES EBX hControl:DWORD, lpszNotificationMessage:DWORD, lpszNotificationTitle:DWORD, dwTimeout:DWORD, dwStyle:DWORD
     LOCAL hTrayIcon:DWORD
     LOCAL NID:DWORD
@@ -1122,15 +1161,16 @@ MUITrayMenuShowNotification PROC PUBLIC USES EBX hControl:DWORD, lpszNotificatio
 MUITrayMenuShowNotification ENDP
 
 
-;=====================================================================================
+;==============================================================================
 ; TRAY ICON Functions
-;=====================================================================================
+;==============================================================================
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Creates a tray icon and tooltip text. Standalone without any menu
 ; Returns in eax hTI (handle of TrayIcon = NID)
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayIconCreate PROC PUBLIC USES EBX hWndParent:DWORD, dwTrayIconResID:DWORD, hTrayIcon:DWORD, lpszTooltip:DWORD
     LOCAL NID:DWORD
 
@@ -1202,11 +1242,10 @@ MUITrayIconCreate PROC PUBLIC USES EBX hWndParent:DWORD, dwTrayIconResID:DWORD, 
 MUITrayIconCreate ENDP
 
 
-
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; TrayIconDestroy
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayIconDestroy PROC hTI:DWORD
     LOCAL NID:DWORD
     
@@ -1227,10 +1266,10 @@ MUITrayIconDestroy PROC hTI:DWORD
 MUITrayIconDestroy ENDP
 
 
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; TrayIconSetTrayIcon
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayIconSetTrayIcon PROC USES EBX hTI:DWORD, hTrayIcon:DWORD
     LOCAL NID:DWORD
     LOCAL hWndParent:DWORD
@@ -1273,11 +1312,10 @@ MUITrayIconSetTrayIcon PROC USES EBX hTI:DWORD, hTrayIcon:DWORD
 MUITrayIconSetTrayIcon ENDP
 
 
-
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; TrayIconSetTooltipText
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayIconSetTooltipText PROC USES EBX hTI:DWORD, lpszTooltip:DWORD
     LOCAL NID:DWORD
     LOCAL hWndParent:DWORD
@@ -1334,8 +1372,8 @@ MUITrayIconSetTooltipText PROC USES EBX hTI:DWORD, lpszTooltip:DWORD
 MUITrayIconSetTooltipText ENDP
 
 
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Show a balloon style tooltip over tray icon with custom information
 ;
 ; MUITMNI_NONE           EQU 0 ; No icon.
@@ -1346,7 +1384,7 @@ MUITrayIconSetTooltipText ENDP
 ;
 ;
 ; Returns in eax TRUE of succesful or FALSE otherwise.
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITrayIconShowNotification PROC USES EBX hTI:DWORD, lpszNotificationMessage:DWORD, lpszNotificationTitle:DWORD, dwTimeout:DWORD, dwStyle:DWORD
     LOCAL NID:DWORD
     LOCAL hWndParent:DWORD
@@ -1434,14 +1472,15 @@ MUITrayIconShowNotification PROC USES EBX hTI:DWORD, lpszNotificationMessage:DWO
 MUITrayIconShowNotification ENDP
 
 
-;=====================================================================================
+;==============================================================================
 ; Internal Functions
-;=====================================================================================
+;==============================================================================
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Adds tray menu icon and tooltip text. Called from TrayMenuCreate
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TM_AddIconAndTooltip PROC PRIVATE USES EBX hControl:DWORD, hWndParent:DWORD, hTrayMenuIcon:DWORD, lpszTooltip:DWORD
     LOCAL NID:DWORD
 
@@ -1517,9 +1556,10 @@ _MUI_TM_AddIconAndTooltip PROC PRIVATE USES EBX hControl:DWORD, hWndParent:DWORD
 _MUI_TM_AddIconAndTooltip ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Shows the main window if minimized when right clicking on tray menu icon
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TM_ShowTrayMenu PROC PRIVATE hWin:DWORD, hControl:DWORD
     LOCAL TrayMenuPoint:POINT
     LOCAL hTrayMenu:DWORD
@@ -1546,9 +1586,10 @@ _MUI_TM_ShowTrayMenu PROC PRIVATE hWin:DWORD, hControl:DWORD
 _MUI_TM_ShowTrayMenu ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Restore the application from the tray when left clicking on tray menu icon
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TM_RestoreFromTray PROC PRIVATE hWin:DWORD, hControl:DWORD
     LOCAL hParent:DWORD
     LOCAL hWndExtra:DWORD
@@ -1618,9 +1659,10 @@ _MUI_TM_RestoreFromTray PROC PRIVATE hWin:DWORD, hControl:DWORD
 _MUI_TM_RestoreFromTray ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Minimize to Tray - Called from WM_SIZE (wParam==SIZE_MINIMIZED) in sublclass
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TM_MinimizeToTray PROC PUBLIC hWin:DWORD, dwHideWindow:DWORD
     Invoke ShowWindow, hWin, SW_MINIMIZE
     
@@ -1631,9 +1673,10 @@ _MUI_TM_MinimizeToTray PROC PUBLIC hWin:DWORD, dwHideWindow:DWORD
 _MUI_TM_MinimizeToTray  ENDP
 
 
-;------------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Hides Notification After Timeout value has passed
-;------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TM_HideNotification PROC PRIVATE USES EBX hControl:DWORD
     LOCAL NID:DWORD
     
@@ -1664,15 +1707,14 @@ _MUI_TM_HideNotification PROC PRIVATE USES EBX hControl:DWORD
 _MUI_TM_HideNotification ENDP
 
 
-
-
-;------------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Create Transparent Text Icon For Traybar
 ; Original sourcecode: http://www.techpowerup.com/forums/showthread.php?t=141783
 ;
-; Returns handle to an icon (cursor) in eax, use DeleteObject to free this when you have
-; finished with it
-;------------------------------------------------------------------------------------------
+; Returns handle to an icon (cursor) in eax, use DeleteObject to free this when 
+; you have finished with it
+;------------------------------------------------------------------------------
 _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWORD
     ;// Creates a DC for use in multithreaded programs (works in single threaded as well)
     LOCAL hdc:HDC

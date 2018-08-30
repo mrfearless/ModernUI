@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_Region v1.0.0.0
+; ModernUI Control - ModernUI_Region
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -11,28 +11,36 @@
 ; http://github.com/mrfearless/ModernUI
 ;
 ;
-; This software is provided 'as-is', without any express or implied warranty. In no event will the author be held liable for any 
-; damages arising from the use of this software.
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
 ;
-; Permission is granted to anyone to use this software for any non-commercial program. If you use the library in an application, an 
-; acknowledgement in the application or documentation is appreciated but not required. 
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
 ;
-; You are allowed to make modifications to the source code, but you must leave the original copyright notices intact and not 
-; misrepresent the origin of the software. It is not allowed to claim you wrote the original software. Modified files must have a clear 
-; notice that the files are modified, and not in the original state. This includes the name of the person(s) who modified the code. 
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
 ;
-; If you want to distribute or redistribute any portion of this package, you will need to include the full package in it's original 
-; state, including this license and all the copyrights. 
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
 ;
-; While distributing this package (in it's original state) is allowed, it is not allowed to charge anything for this. You may not sell
-; or include the package in any commercial package without having permission of the author. Neither is it allowed to redistribute any 
-; of the package's components with commercial applications.
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
 ;
-;======================================================================================================================================
+;==============================================================================
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_Region Prototypes
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRegionButtonRegister     PROTO                                                                   ; Use 'ModernUI_RegionButton' as class in RadASM custom class control
 MUIRegionButtonCreate       PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                    ; hWndParent, lpszText, xpos, ypos, dwResourceID, dwStyle
 MUIRegionButtonSetProperty  PROTO :DWORD, :DWORD, :DWORD                                            ; hRegionButton, dwProperty, dwPropertyValue
@@ -43,9 +51,9 @@ MUIRegionButtonGetState     PROTO :DWORD                                        
 MUIRegionButtonSetState     PROTO :DWORD, :DWORD                                                    ; hRegionButton, bState
 
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_RegionButton Structures
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 IFNDEF MUI_REGIONBUTTON_PROPERTIES
 MUI_REGIONBUTTON_PROPERTIES             STRUCT
     dwBackColor                         DD ? 
@@ -72,9 +80,9 @@ ENDIF
 
 
 .CONST
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_RegionButton Constants
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRB_GETSTATE                  EQU WM_USER + 1798 ; wParam = NULL, lParam = NULL. EAX = dwState.
 MUIRB_SETSTATE                  EQU WM_USER + 1797 ; wParam = TRUE/FALSE, lParam = NULL.
 MUIRB_SETREGION                 EQU WM_USER + 1796 ; wParam = ptrRegionData, lParam = dwRegionDataSize
@@ -96,9 +104,9 @@ MUIRBN_ENABLED                  EQU 6
 MUIRBN_DISABLED                 EQU 7
 
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_RegionButton Properties: Use with MUIRegionSetProperty / MUIRegionGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 @RegionButtonBackColor          EQU 0      ; Colorref. Back color.
 @RegionButtonBackColorAlt       EQU 4      ; Colorref. Back color when mouse hovers over control.
 @RegionButtonBackColorSel       EQU 8      ; Colorref. Back color when selected state = TRUE.

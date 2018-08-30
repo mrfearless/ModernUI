@@ -118,13 +118,15 @@ DF_POPSTEP_OUT                          EQU 16
 
 
 .DATA
+ALIGN 4
 szMUIDesktopFaceClass					DB 'ModernUI_DesktopFace',0 	; Class name for creating our ModernUI_DesktopFace control
 DFNM                                    MUIDF_NOTIFY <>
 
 .CODE
 
-align 4
 
+
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Set property for ModernUI_DesktopFace control
 ;-------------------------------------------------------------------------------------
@@ -134,6 +136,7 @@ MUIDesktopFaceSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwProper
 MUIDesktopFaceSetProperty ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Get property for ModernUI_DesktopFace control
 ;-------------------------------------------------------------------------------------
@@ -143,6 +146,7 @@ MUIDesktopFaceGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
 MUIDesktopFaceGetProperty ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIDesktopFaceRegister - Registers the ModernUI_DesktopFace control
 ; can be used at start of program for use with RadASM custom control
@@ -179,6 +183,7 @@ MUIDesktopFaceRegister PROC PUBLIC
 MUIDesktopFaceRegister ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIDesktopFaceCreate - Returns handle in eax of newly created control
 ;-------------------------------------------------------------------------------------
@@ -208,7 +213,7 @@ MUIDesktopFaceCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, dwSt
 MUIDesktopFaceCreate ENDP
 
 
-
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_DesktopFaceWndProc - Main processing window for our control
 ;-------------------------------------------------------------------------------------
@@ -401,6 +406,7 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
 _MUI_DesktopFaceWndProc ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_DesktopFaceInit - set initial default values
 ;-------------------------------------------------------------------------------------
@@ -459,6 +465,7 @@ _MUI_DesktopFaceInit PROC PRIVATE hControl:DWORD, hWndParent:DWORD
 _MUI_DesktopFaceInit ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_DesktopFacePaint
 ;-------------------------------------------------------------------------------------
@@ -515,6 +522,7 @@ _MUI_DesktopFacePaint PROC PRIVATE hWin:DWORD
 _MUI_DesktopFacePaint ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_DesktopFacePaintBackground
 ;-------------------------------------------------------------------------------------
@@ -540,6 +548,7 @@ _MUI_DesktopFacePaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD
 _MUI_DesktopFacePaintBackground ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; _MUI_DesktopFacePaintImage - Paint image
 ;-------------------------------------------------------------------------------------
@@ -609,6 +618,7 @@ _MUI_DesktopFacePaintImage PROC hWin:DWORD, hdc:DWORD, hdcMem:DWORD, lpRect:DWOR
 _MUI_DesktopFacePaintImage ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; set initial position of control if x y are set to 0 and flag indicates position
 ;------------------------------------------------------------------------------
@@ -733,6 +743,7 @@ _MUI_DesktopFaceSetInitialPosition PROC USES EBX hWin:DWORD
 _MUI_DesktopFaceSetInitialPosition ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Set size of control based on image size used
 ;------------------------------------------------------------------------------
@@ -764,6 +775,7 @@ _MUI_DesktopFaceSetSize PROC USES EBX hWin:DWORD
 _MUI_DesktopFaceSetSize ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_DesktopFaceFadeWindow - fade in/out window
 ;------------------------------------------------------------------------------
@@ -820,6 +832,7 @@ _MUI_DesktopFaceFadeWindow PROC hWin:DWORD, bFadeIn:DWORD
 _MUI_DesktopFaceFadeWindow ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_DesktopFaceFadeWindow - fade in/out window
 ;------------------------------------------------------------------------------
@@ -913,6 +926,7 @@ _MUI_DesktopFacePopWindow PROC USES EBX hWin:DWORD, bPopIn:DWORD
 _MUI_DesktopFacePopWindow ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_DesktopFaceApplyPopRegion
 ;------------------------------------------------------------------------------
@@ -959,6 +973,7 @@ _MUI_DesktopFaceApplyPopRegion PROC USES EBX hControl:DWORD, dwWidth:DWORD, dwHe
 _MUI_DesktopFaceApplyPopRegion ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Notify Parent
 ;------------------------------------------------------------------------------
@@ -995,6 +1010,7 @@ _MUI_DesktopFaceNotifyParent PROC hControl:DWORD, dwNotifyMsg:DWORD, lParam:DWOR
 _MUI_DesktopFaceNotifyParent ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Set Region
 ;------------------------------------------------------------------------------
@@ -1004,6 +1020,7 @@ MUIDesktopFaceSetRegion PROC hControl:DWORD, dwRgnResID:DWORD
 MUIDesktopFaceSetRegion ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Set Opacity
 ;------------------------------------------------------------------------------
@@ -1014,6 +1031,7 @@ MUIDesktopFaceSetOpacity PROC hControl:DWORD, dwOpacity:DWORD
 MUIDesktopFaceSetOpacity ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Set Image
 ;------------------------------------------------------------------------------
@@ -1024,6 +1042,7 @@ MUIDesktopFaceSetImage PROC hControl:DWORD, dwImageType:DWORD, dwImageHandle:DWO
 MUIDesktopFaceSetImage ENDP
 
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Show/hide
 ;------------------------------------------------------------------------------

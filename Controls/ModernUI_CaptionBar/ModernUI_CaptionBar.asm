@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_CaptionBar v1.0.0.2
+; ModernUI Control - ModernUI_CaptionBar
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -10,7 +10,34 @@
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
-;======================================================================================================================================
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+
 .686
 .MMX
 .XMM
@@ -18,17 +45,17 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-;MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
+MUI_DONTUSEGDIPLUS EQU 1 ; exclude (gdiplus) support
 
-DEBUG32 EQU 1
+;DEBUG32 EQU 1
 
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include kernel32.inc
@@ -37,11 +64,6 @@ include gdi32.inc
 include comctl32.inc
 include masm32.inc
 
-IFDEF MUI_USEGDIPLUS
-include gdiplus.inc
-include ole32.inc
-ENDIF
-
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
@@ -49,8 +71,13 @@ includelib comctl32.lib
 includelib masm32.lib
 
 IFDEF MUI_USEGDIPLUS
+ECHO MUI_USEGDIPLUS
+include gdiplus.inc
+include ole32.inc
 includelib gdiplus.lib
 includelib ole32.lib
+ELSE
+ECHO MUI_DONTUSEGDIPLUS
 ENDIF
 
 include ModernUI.inc
@@ -65,9 +92,9 @@ include ModernUI_CaptionBar.inc
 ;ENDIF
 
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 
 
 _MUI_CaptionBarWndProc                      PROTO :DWORD, :DWORD, :DWORD, :DWORD
@@ -102,9 +129,9 @@ _MUI_CapButtonPaint                         PROTO :DWORD
 _MUI_CapButtonsReposition                   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CapButtonSetPropertyEx                 PROTO :DWORD, :DWORD, :DWORD
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; CaptionBar External Properties
 IFNDEF MUI_CAPTIONBAR_PROPERTIES
 MUI_CAPTIONBAR_PROPERTIES                   STRUCT
@@ -179,18 +206,18 @@ _MUI_SYSBUTTON_PROPERTIES                   ENDS
 
 
 IFNDEF MUI_CAPBUTTON_PROPERTIES
-MUI_CAPBUTTON_PROPERTIES        STRUCT  
-    dwTextColor                 DD ?    ; RGBCOLOR
-    dwTextRollColor             DD ?    ; RGBCOLOR
-    dwBackColor                 DD ?    ; RGBCOLOR. Color of back of button.
-    dwBackRollColor             DD ?    ; RGBCOLOR. Color of back of button when mouse moves over.
-    dwBorderColor               DD ?    ; RGBCOLOR. Color of border of button. 0 = use same as dwBackColor
-    dwBorderRollColor           DD ?    ; RGBCOLOR. Color of border of button when mouse moves over. 0 = use same as dwBackRollColor
-    dwIco                       DD ?    ; hIcon. Handle of icon to use for button
-    dwIcoAlt                    DD ?    ; hIcon. Handle of icon to use for button when mouse moves over it
-    dwParam                     DD ?    ; DWORD. Custom user data. Passed as wNotifyCode (HIWORD of wParam) in WM_COMMAND
-    dwResourceID                DD ?    ; DWORD. Resource ID for button    
-MUI_CAPBUTTON_PROPERTIES        ENDS
+MUI_CAPBUTTON_PROPERTIES                    STRUCT  
+    dwTextColor                             DD ?    ; RGBCOLOR
+    dwTextRollColor                         DD ?    ; RGBCOLOR
+    dwBackColor                             DD ?    ; RGBCOLOR. Color of back of button.
+    dwBackRollColor                         DD ?    ; RGBCOLOR. Color of back of button when mouse moves over.
+    dwBorderColor                           DD ?    ; RGBCOLOR. Color of border of button. 0 = use same as dwBackColor
+    dwBorderRollColor                       DD ?    ; RGBCOLOR. Color of border of button when mouse moves over. 0 = use same as dwBackRollColor
+    dwIco                                   DD ?    ; hIcon. Handle of icon to use for button
+    dwIcoAlt                                DD ?    ; hIcon. Handle of icon to use for button when mouse moves over it
+    dwParam                                 DD ?    ; DWORD. Custom user data. Passed as wNotifyCode (HIWORD of wParam) in WM_COMMAND
+    dwResourceID                            DD ?    ; DWORD. Resource ID for button    
+MUI_CAPBUTTON_PROPERTIES                    ENDS
 ENDIF
 
 
@@ -268,6 +295,7 @@ MUI_CAPBUTTON_TEXT_MAX                      EQU 32  ; Default max length of capt
 
 
 .DATA
+ALIGN 4
 szMUICaptionBarClass                        DB 'ModernUI_CaptionBar',0  ; Class name for our CaptionBar control
 szMUISysButtonClass                         DB 'ModernUI_SysButton',0   ; Class name for our system buttons (min/max/restore or close buttons)
 szMUICapButtonClass                         DB 'ModernUI_CapButton',0   ; Class name for our custom captionbar buttons (shown before system buttons)
@@ -286,31 +314,33 @@ szMUISysResizeGrip                          DB 'o',0                    ; Resize
 
 .CODE
 
-align 4
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for CaptionBar control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICaptionBarSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUICaptionBarSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for CaptionBar control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICaptionBarGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUICaptionBarGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICaptionBarRegister - Registers the ModernUI_CaptionBar control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_CaptionBar
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICaptionBarRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -342,9 +372,10 @@ MUICaptionBarRegister PROC PUBLIC
 MUICaptionBarRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICaptionBarCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICaptionBarCreate PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD, dwCaptionHeight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL hinstance:DWORD
     LOCAL hControl:DWORD
@@ -377,9 +408,10 @@ MUICaptionBarCreate PROC PUBLIC USES EBX hWndParent:DWORD, lpszCaptionText:DWORD
 MUICaptionBarCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CaptionBarWndProc - Main processing window for our CaptionBar control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL wp:WINDOWPLACEMENT
@@ -568,10 +600,11 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
 _MUI_CaptionBarWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CaptionBarParentSubClassProc - Subclass for caption bar parent window 
 ; dwRefData is the handle to our CaptionBar control in this subclass proc
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM, uIdSubclass:UINT, dwRefData:DWORD
     LOCAL wp:WINDOWPLACEMENT
     LOCAL dwStyle:DWORD
@@ -657,9 +690,10 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
 _MUI_CaptionBarParentSubClassProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CaptionBarInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CaptionBarInit PROC PRIVATE USES EBX hWin:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
@@ -764,9 +798,10 @@ _MUI_CaptionBarInit PROC PRIVATE USES EBX hWin:DWORD
 _MUI_CaptionBarInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CaptionBarCleanup - cleanup a few things before control is destroyed
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CaptionBarCleanup PROC PRIVATE hWin:DWORD
     LOCAL ImageType:DWORD
     LOCAL hImage:DWORD
@@ -807,9 +842,10 @@ _MUI_CaptionBarCleanup PROC PRIVATE hWin:DWORD
 _MUI_CaptionBarCleanup ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CaptionBarPaint - main CaptionBar painting
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -975,9 +1011,10 @@ _MUI_CaptionBarPaint PROC PRIVATE hWin:DWORD
 _MUI_CaptionBarPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CaptionBarPaintBackground
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CaptionBarPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
@@ -1004,9 +1041,10 @@ _MUI_CaptionBarPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
 _MUI_CaptionBarPaintBackground ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CaptionBarPaintImage. Returns in eax ImageWidth if image painted, or 0
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CaptionBarPaintImage PROC PRIVATE hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD
     LOCAL ImageType:DWORD
     LOCAL hImage:DWORD
@@ -1119,9 +1157,10 @@ _MUI_CaptionBarPaintImage PROC PRIVATE hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD,
 _MUI_CaptionBarPaintImage ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CreateCaptionBarSysButtons - create all specified system buttons
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CreateCaptionBarSysButtons PROC PRIVATE hWin:DWORD, hCaptionBarParent:DWORD
     LOCAL wp:WINDOWPLACEMENT
     LOCAL dwClientWidth:DWORD
@@ -1264,10 +1303,11 @@ _MUI_CreateCaptionBarSysButtons PROC PRIVATE hWin:DWORD, hCaptionBarParent:DWORD
 _MUI_CreateCaptionBarSysButtons ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_CaptionBarReposition - Reposition window and child system buttons after main
-; window resizes - called via SendMessage, hControl, WM_SIZE, 0, 0
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CaptionBarReposition - Reposition window and child system buttons after 
+; main window resizes - called via SendMessage, hControl, WM_SIZE, 0, 0
+;------------------------------------------------------------------------------
 _MUI_CaptionBarReposition PROC PRIVATE hWin:DWORD
     LOCAL wp:WINDOWPLACEMENT
     LOCAL hDefer:DWORD
@@ -1476,10 +1516,11 @@ _MUI_CaptionBarReposition PROC PRIVATE hWin:DWORD
 _MUI_CaptionBarReposition ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_SysButtonSetPropertyEx - Sets the system button properties from the message
-; MUIM_SETPROPERTY set to the parent CaptionBar control 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_SysButtonSetPropertyEx - Sets the system button properties from the 
+; message MUIM_SETPROPERTY set to the parent CaptionBar control 
+;------------------------------------------------------------------------------
 _MUI_SysButtonSetPropertyEx PROC PRIVATE hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     LOCAL hSysButtonClose:DWORD
     LOCAL hSysButtonMax:DWORD
@@ -1639,9 +1680,10 @@ _MUI_SysButtonSetPropertyEx PROC PRIVATE hWin:DWORD, dwProperty:DWORD, dwPropert
 _MUI_SysButtonSetPropertyEx ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_CreateSysButton - create a system button (min, max, restore or close button)
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CreateSysButton - create system button (min, max, restore or close)
+;------------------------------------------------------------------------------
 _MUI_CreateSysButton PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -1680,9 +1722,10 @@ _MUI_CreateSysButton PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, 
 _MUI_CreateSysButton ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_SysButtonWndProc - Main processing window for system buttons: min/max/res/close 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_SysButtonWndProc - Main processing for system buttons: min/max/res/close 
+;------------------------------------------------------------------------------
 _MUI_SysButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL wp:WINDOWPLACEMENT
@@ -1747,9 +1790,10 @@ _MUI_SysButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM,
 _MUI_SysButtonWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_SysButtonInit - default intial values for properties for SysButton
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_SysButtonInit PROC PRIVATE hSysButton:DWORD
     LOCAL hParent:DWORD
 
@@ -1789,9 +1833,10 @@ _MUI_SysButtonInit PROC PRIVATE hSysButton:DWORD
 _MUI_SysButtonInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_SysButtonCleanup - cleanup some stuff on control being destroyed
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_SysButtonCleanup PROC PRIVATE hSysButton:DWORD
     
     Invoke GetParent, hSysButton
@@ -1817,9 +1862,10 @@ _MUI_SysButtonCleanup PROC PRIVATE hSysButton:DWORD
 _MUI_SysButtonCleanup ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_SysButtonPaint - System button painting
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_SysButtonPaint PROC PRIVATE USES EBX hSysButton:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -1999,12 +2045,13 @@ _MUI_SysButtonPaint PROC PRIVATE USES EBX hSysButton:DWORD
 _MUI_SysButtonPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
-; Applies the ModernUI style to a dialog to make it a captionless, borderless form. 
-; User can manually change a form in a resource editor to have the following style
-; flags: WS_POPUP or WS_VISIBLE and optionally with DS_CENTER /DS_CENTERMOUSE / 
-; WS_CLIPCHILDREN / WS_CLIPSIBLINGS / WS_MINIMIZE / WS_MAXIMIZE
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; Applies the ModernUI style to a dialog to make it a captionless, borderless 
+; form. User can manually change a form in a resource editor to have the 
+; following style flags: WS_POPUP or WS_VISIBLE and optionally with DS_CENTER, 
+; DS_CENTERMOUSE, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_MINIMIZE, WS_MAXIMIZE
+;------------------------------------------------------------------------------
 _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
     LOCAL dwStyle:DWORD
     LOCAL dwNewStyle:DWORD
@@ -2089,9 +2136,10 @@ _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
 _MUI_ApplyMUIStyleToDialog ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICaptionBarLoadIcons
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICaptionBarLoadIcons PROC PUBLIC hControl:DWORD, idResMin:DWORD, idResMinAlt:DWORD, idResMax:DWORD, idResMaxAlt:DWORD, idResRes:DWORD, idResResAlt:DWORD, idResClose:DWORD, idResCloseAlt:DWORD 
     LOCAL hinstance:DWORD
     LOCAL hSysButtonClose:DWORD
@@ -2165,9 +2213,11 @@ MUICaptionBarLoadIcons PROC PUBLIC hControl:DWORD, idResMin:DWORD, idResMinAlt:D
 MUICaptionBarLoadIcons ENDP
 
 
-;-------------------------------------------------------------------------------------
-; MUICaptionBarLoadIcons - version for loading from DLL's that have the icon resources
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUICaptionBarLoadIcons - version for loading from DLL's that have the icon 
+; resources.
+;------------------------------------------------------------------------------
 MUICaptionBarLoadIconsDll PROC PUBLIC hControl:DWORD, hInst:DWORD, idResMin:DWORD, idResMinAlt:DWORD, idResMax:DWORD, idResMaxAlt:DWORD, idResRes:DWORD, idResResAlt:DWORD, idResClose:DWORD, idResCloseAlt:DWORD 
     LOCAL hSysButtonClose:DWORD
     LOCAL hSysButtonMax:DWORD
@@ -2234,10 +2284,11 @@ MUICaptionBarLoadIconsDll PROC PUBLIC hControl:DWORD, hInst:DWORD, idResMin:DWOR
 MUICaptionBarLoadIconsDll ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_CaptionBarBackLoadBitmap - if succesful, loads specified bitmap resource into the specified
-; external property and returns TRUE in eax, otherwise FALSE.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CaptionBarBackLoadBitmap - if succesful, loads specified bitmap resource
+; into the specified external property and returns TRUE in eax, otherwise FALSE
+;------------------------------------------------------------------------------
 _MUI_CaptionBarBackLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
     LOCAL hinstance:DWORD
 
@@ -2265,10 +2316,11 @@ _MUI_CaptionBarBackLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBi
 _MUI_CaptionBarBackLoadBitmap ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_CaptionBarBackLoadIcon - if succesful, loads specified icon resource into the specified
-; external property and returns TRUE in eax, otherwise FALSE.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CaptionBarBackLoadIcon - if succesful, loads specified icon resource 
+; into the specified external property and returns TRUE in eax, otherwise FALSE
+;------------------------------------------------------------------------------
 _MUI_CaptionBarBackLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     LOCAL hinstance:DWORD
 
@@ -2296,10 +2348,11 @@ _MUI_CaptionBarBackLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon
 _MUI_CaptionBarBackLoadIcon ENDP
 
 
-;-------------------------------------------------------------------------------------
-; MUICaptionBarLoadBackImage - Loads images from resource ids and stores the handles in the
-; appropriate property.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUICaptionBarLoadBackImage - Loads images from resource ids and stores the 
+; handles in the appropriate property.
+;------------------------------------------------------------------------------
 MUICaptionBarLoadBackImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD
 
     .IF dwImageType == 0
@@ -2327,9 +2380,10 @@ MUICaptionBarLoadBackImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResI
 MUICaptionBarLoadBackImage ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CreateCapButton - create a custom capbutton
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CreateCapButton PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -2370,9 +2424,10 @@ _MUI_CreateCapButton PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, 
 _MUI_CreateCapButton ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CapButtonWndProc - Main processing window for custom capbuttons 
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CapButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL wp:WINDOWPLACEMENT
@@ -2437,9 +2492,10 @@ _MUI_CapButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM,
 _MUI_CapButtonWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CapButtonInit - default intial values for properties for CapButton
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CapButtonInit PROC PRIVATE hCapButton:DWORD
     LOCAL hParent:DWORD
     
@@ -2472,9 +2528,10 @@ _MUI_CapButtonInit PROC PRIVATE hCapButton:DWORD
 _MUI_CapButtonInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CapButtonCleanup - cleanup some stuff on control being destroyed
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CapButtonCleanup PROC PRIVATE hCapButton:DWORD
     
     Invoke GetParent, hCapButton
@@ -2498,9 +2555,10 @@ _MUI_CapButtonCleanup PROC PRIVATE hCapButton:DWORD
 _MUI_CapButtonCleanup ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CapButtonPaint - Custom captionbutton painting
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CapButtonPaint PROC PRIVATE USES EBX hCapButton:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -2708,9 +2766,10 @@ _MUI_CapButtonPaint PROC PRIVATE USES EBX hCapButton:DWORD
 _MUI_CapButtonPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Reposition the capbuttons if there is any
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CapButtonsReposition PROC USES EBX hWin:DWORD, hDefer:DWORD, dwTopOffset:DWORD, dwLeftOffset:DWORD, dwClientWidth:DWORD
     LOCAL TotalButtons:DWORD
     LOCAL nCurrentButton:DWORD
@@ -2784,9 +2843,10 @@ _MUI_CapButtonsReposition PROC USES EBX hWin:DWORD, hDefer:DWORD, dwTopOffset:DW
 _MUI_CapButtonsReposition ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CapButtonSetPropertyEx - set capbtn props when captionbar props set
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_CapButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     LOCAL TotalButtons:DWORD
     LOCAL nCurrentButton:DWORD
@@ -2846,9 +2906,10 @@ _MUI_CapButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, 
 _MUI_CapButtonSetPropertyEx ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUICaptionBarAddButton - add custom button to caption bar
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUICaptionBarAddButton PROC PUBLIC USES EBX hControl:DWORD, lpszButtonText:DWORD, dwResourceID:DWORD, dwResIDImage:DWORD, dwResIDImageAlt:DWORD
     LOCAL hinstance:DWORD
     LOCAL hCustomButton:DWORD

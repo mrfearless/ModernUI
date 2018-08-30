@@ -1,3 +1,43 @@
+;==============================================================================
+;
+; ModernUI Control - ModernUI_Tooltip
+;
+; Copyright (c) 2018 by fearless
+;
+; All Rights Reserved
+;
+; http://www.LetTheLight.in
+;
+; http://github.com/mrfearless/ModernUI
+;
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+
 .686
 .MMX
 .XMM
@@ -32,9 +72,9 @@ includelib ModernUI.lib
 
 include ModernUI_Tooltip.inc
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipWndProc                 PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TooltipInit                    PROTO :DWORD, :DWORD, :DWORD
 _MUI_TooltipPaint                   PROTO :DWORD
@@ -48,9 +88,9 @@ _MUI_TooltipCheckWidthMultiline     PROTO :DWORD
 _MUI_TooltipCheckTextMultiline      PROTO :DWORD, :DWORD
 _MUI_TooltipParentSubclass          PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; External public properties
 MUI_TOOLTIP_PROPERTIES          STRUCT
     dwTooltipFont               DD ?
@@ -96,6 +136,7 @@ MUI_TOOLTIP_SHOW_DELAY          EQU 1000 ; default time to show tooltip (in ms)
 @TooltipTitleText               EQU 36  ; pointer to memory allocated for tooltip text title string
 
 .DATA
+ALIGN 4
 szMUITooltipClass               DB 'ModernUI_Tooltip',0     ; Class name for creating our ModernUI_Tooltip control
 szMUITooltipFont                DB 'Segoe UI',0             ; Font used for ModernUI_Tooltip
 hMUITooltipFont                 DD 0                        ; handle of font for tooltip text (global)
@@ -106,31 +147,34 @@ dwFadeInAlphaLevel              DD 0                        ; alpha level (globa
 
 .CODE
 
-align 4
 
-;-------------------------------------------------------------------------------------
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for ModernUI_Tooltip control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITooltipSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUITooltipSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for ModernUI_Tooltip control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITooltipGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUITooltipGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUITooltipRegister - Registers the ModernUI_Tooltip control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_Tooltip
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITooltipRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -163,9 +207,10 @@ MUITooltipRegister PROC PUBLIC
 MUITooltipRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUITooltipCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUITooltipCreate PROC PRIVATE hWndBuddyControl:DWORD, lpszText:DWORD, dwWidth:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -198,9 +243,10 @@ MUITooltipCreate PROC PRIVATE hWndBuddyControl:DWORD, lpszText:DWORD, dwWidth:DW
 MUITooltipCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipWndProc - Main processing window for our control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL rect:RECT
@@ -401,9 +447,10 @@ _MUI_TooltipWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, l
 _MUI_TooltipWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipInit PROC USES EBX hWin:DWORD, hWndParent:DWORD, lpszText:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
@@ -476,9 +523,10 @@ _MUI_TooltipInit PROC USES EBX hWin:DWORD, hWndParent:DWORD, lpszText:DWORD
 _MUI_TooltipInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipPaint
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -554,9 +602,10 @@ _MUI_TooltipPaint PROC PRIVATE hWin:DWORD
 _MUI_TooltipPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipPaintBackground
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
@@ -585,9 +634,10 @@ _MUI_TooltipPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
 _MUI_TooltipPaintBackground ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipPaintText
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipPaintText PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
@@ -662,9 +712,10 @@ _MUI_TooltipPaintText PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
 _MUI_TooltipPaintText ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipPaintTextAndTitle
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipPaintTextAndTitle PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
@@ -798,9 +849,10 @@ _MUI_TooltipPaintTextAndTitle PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRec
 _MUI_TooltipPaintTextAndTitle ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipPaintBorder
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
     LOCAL BorderColor:DWORD
     LOCAL BorderStyle:DWORD
@@ -831,9 +883,10 @@ _MUI_TooltipPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
 _MUI_TooltipPaintBorder ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipSize - sets the size of our tooltip control based on text and title
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipSize PROC PRIVATE USES EBX hWin:DWORD, bMultiline:DWORD, lpszText:DWORD
     LOCAL hdc:HDC
     LOCAL sizetext:POINT
@@ -1079,9 +1132,10 @@ _MUI_TooltipSize PROC PRIVATE USES EBX hWin:DWORD, bMultiline:DWORD, lpszText:DW
 _MUI_TooltipSize ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Sets position of the tooltip relative to buddy control or mouse position
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipSetPosition PROC USES EBX hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
@@ -1285,9 +1339,10 @@ _MUI_TooltipSetPosition PROC USES EBX hWin:DWORD
 _MUI_TooltipSetPosition ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Returns TRUE if width > 0 (assumes multiline usage)
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipCheckWidthMultiline PROC USES EBX hWin:DWORD
     LOCAL rect:RECT
     LOCAL bMultiline:DWORD
@@ -1304,9 +1359,10 @@ _MUI_TooltipCheckWidthMultiline PROC USES EBX hWin:DWORD
 _MUI_TooltipCheckWidthMultiline ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Returns TRUE if CR LF found in string, otherwise returns FALSE
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipCheckTextMultiline PROC USES EBX hWin:DWORD, lpszText:DWORD
     LOCAL lenText:DWORD
     LOCAL Cnt:DWORD
@@ -1341,9 +1397,10 @@ _MUI_TooltipCheckTextMultiline PROC USES EBX hWin:DWORD, lpszText:DWORD
 _MUI_TooltipCheckTextMultiline ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_TooltipParentSubclass - sublcass buddy/parent of the tooltip
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_TooltipParentSubclass PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM, uIdSubclass:UINT, dwRefData:DWORD
     LOCAL TE:TRACKMOUSEEVENT
 

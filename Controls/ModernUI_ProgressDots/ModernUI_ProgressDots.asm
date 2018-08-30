@@ -1,6 +1,6 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_ProgressDots v1.0.0.0
+; ModernUI Control - ModernUI_ProgressDots
 ;
 ; Copyright (c) 2018 by fearless
 ;
@@ -10,7 +10,34 @@
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
-;======================================================================================================================================
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+
 .686
 .MMX
 .XMM
@@ -43,9 +70,9 @@ includelib ModernUI.lib
 
 include ModernUI_ProgressDots.inc
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsWndProc            PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ProgressDotsParentSubClassProc PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ProgressDotsInit               PROTO :DWORD
@@ -58,9 +85,9 @@ _MUI_ProgressDotsCalcPositions      PROTO :DWORD
 _MUI_ProgressDotsInitDots           PROTO :DWORD
 _MUI_ProgressBarTimerProc           PROTO :DWORD, :DWORD
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; External public properties
 MUI_PROGRESSDOTS_PROPERTIES             STRUCT
     dwBackColor                         DD ?
@@ -119,36 +146,40 @@ ENDIF
 
 
 .DATA
+ALIGN 4
 szMUIProgressDotsClass                  DB 'ModernUI_ProgressDots',0    ; Class name for creating our ProgressDots control
 
 
 .CODE
 
-align 4
 
-;-------------------------------------------------------------------------------------
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for ProgressDots control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressDotsSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUIProgressDotsSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for ProgressDots control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressDotsGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUIProgressDotsGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressDotsRegister - Registers the ProgressDots control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ProgressDots
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressDotsRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -180,10 +211,11 @@ MUIProgressDotsRegister PROC PUBLIC
 MUIProgressDotsRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressDotsCreate - Returns handle in eax of newly created control
 ; Note: dwStyle should be 0 as nothing extra added to control so far.
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressDotsCreate PROC PUBLIC hWndParent:DWORD, ypos:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL hinstance:DWORD
     LOCAL hControl:DWORD
@@ -221,9 +253,10 @@ MUIProgressDotsCreate PROC PUBLIC hWndParent:DWORD, ypos:DWORD, controlheight:DW
 MUIProgressDotsCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsWndProc - Main processing window for our control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
 
     mov eax,uMsg
@@ -290,10 +323,11 @@ _MUI_ProgressDotsWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
 _MUI_ProgressDotsWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsParentSubClassProc - Subclass for progressdots parent window 
 ; dwRefData is the handle to our progressdots control in this subclass proc
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM, uIdSubclass:UINT, dwRefData:DWORD
 
     mov eax, uMsg
@@ -312,9 +346,10 @@ _MUI_ProgressDotsParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WP
 _MUI_ProgressDotsParentSubClassProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsInit PROC PRIVATE USES EBX EDX hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
@@ -396,9 +431,10 @@ _MUI_ProgressDotsInit PROC PRIVATE USES EBX EDX hWin:DWORD
 _MUI_ProgressDotsInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsResize
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsResize PROC PRIVATE USES EBX EDX hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL rect:RECT
@@ -485,9 +521,10 @@ _MUI_ProgressDotsResize PROC PRIVATE USES EBX EDX hWin:DWORD
 _MUI_ProgressDotsResize ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsPaint
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -561,9 +598,10 @@ _MUI_ProgressDotsPaint PROC PRIVATE hWin:DWORD
 _MUI_ProgressDotsPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsPaintBackground
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
@@ -591,9 +629,10 @@ _MUI_ProgressDotsPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWOR
 _MUI_ProgressDotsPaintBackground ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsCalcPositions - calculate x, y positions of images, text etc
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsCalcPositions PROC PRIVATE USES EBX hWin:DWORD
     LOCAL rect:RECT
     LOCAL dwWidth:DWORD
@@ -696,9 +735,10 @@ _MUI_ProgressDotsCalcPositions PROC PRIVATE USES EBX hWin:DWORD
 _MUI_ProgressDotsCalcPositions ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsPaintDots
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsPaintDots PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD
     LOCAL pDotsArray:DWORD
     LOCAL pCurrentDot:DWORD
@@ -767,9 +807,10 @@ _MUI_ProgressDotsPaintDots PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcD
 _MUI_ProgressDotsPaintDots ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressDotsInitDots
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressDotsInitDots PROC PRIVATE USES EBX hWin:DWORD
     LOCAL pDotsArray:DWORD
     LOCAL pCurrentDot:DWORD
@@ -822,9 +863,10 @@ _MUI_ProgressDotsInitDots PROC PRIVATE USES EBX hWin:DWORD
 _MUI_ProgressDotsInitDots ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressDotsAnimateStart
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressDotsAnimateStart PROC PUBLIC hControl:DWORD
     LOCAL dwTimeInterval:DWORD
     IFDEF DOTS_USE_TIMERQUEUE
@@ -897,9 +939,10 @@ MUIProgressDotsAnimateStart PROC PUBLIC hControl:DWORD
 MUIProgressDotsAnimateStart ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressDotsAnimateStop
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressDotsAnimateStop PROC PUBLIC hControl:DWORD
     IFDEF DOTS_USE_TIMERQUEUE
     LOCAL hQueue:DWORD
@@ -944,10 +987,11 @@ MUIProgressDotsAnimateStop PROC PUBLIC hControl:DWORD
 MUIProgressDotsAnimateStop ENDP
 
 
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; _MUI_ProgressBarTimerProc for TimerQueue
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 IFDEF DOTS_USE_TIMERQUEUE
+MUI_ALIGN
 _MUI_ProgressBarTimerProc PROC USES EBX lpParam:DWORD, TimerOrWaitFired:DWORD
     ; lpParam is hControl
     Invoke _MUI_ProgressDotsCalcPositions, lpParam

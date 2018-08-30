@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_Button v0.0.0.4
+; ModernUI Control - ModernUI_Button
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -10,7 +10,34 @@
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
-;======================================================================================================================================
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+
 .686
 .MMX
 .XMM
@@ -18,8 +45,7 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-MUI_USEGDIPLUS EQU 1 ; comment out of you dont require png (gdiplus) support
-
+;MUI_DONTUSEGDIPLUS EQU 1 ; exclude (gdiplus) support
 
 ;DEBUG32 EQU 1
 ;
@@ -36,28 +62,28 @@ include kernel32.inc
 include user32.inc
 include gdi32.inc
 
-IFDEF MUI_USEGDIPLUS
-include gdiplus.inc
-include ole32.inc
-ENDIF
-
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
 
-IFDEF MUI_USEGDIPLUS
-includelib gdiplus.lib
-includelib ole32.lib
-ENDIF
-
 include ModernUI.inc
 includelib ModernUI.lib
 
+IFDEF MUI_USEGDIPLUS
+ECHO MUI_USEGDIPLUS
+include gdiplus.inc
+include ole32.inc
+includelib gdiplus.lib
+includelib ole32.lib
+ELSE
+ECHO MUI_DONTUSEGDIPLUS
+ENDIF
+
 include ModernUI_Button.inc
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonWndProc                          PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonInit                             PROTO :DWORD
 _MUI_ButtonCleanup                          PROTO :DWORD
@@ -88,9 +114,9 @@ _MUI_ButtonPngReleaseIStream                PROTO :DWORD
 ENDIF
 _MUI_ButtonSetPropertyEx                    PROTO :DWORD, :DWORD, :DWORD
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; External public properties
 IFNDEF MUI_BUTTON_PROPERTIES
 MUI_BUTTON_PROPERTIES                       STRUCT
@@ -245,6 +271,7 @@ MUI_BUTTON_FOCUSRECT_OFFSET                 EQU -2 ; change this to higher negat
 
 
 .DATA
+ALIGN 4
 szMUIButtonClass                            DB 'ModernUI_Button',0          ; Class name for creating our ModernUI_Button control
 szMUIButtonFont                             DB 'Segoe UI',0                 ; Font used for ModernUI_Button text
 hMUIButtonFont                              DD 0                            ; Handle to ModernUI_Button font (segoe ui)
@@ -259,31 +286,34 @@ ENDIF
 
 .CODE
 
-align 4
 
-;-------------------------------------------------------------------------------------
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for ModernUI_Button control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUIButtonSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for ModernUI_Button control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUIButtonGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonRegister - Registers the ModernUI_Button control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_Button
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -315,9 +345,10 @@ MUIButtonRegister PROC PUBLIC
 MUIButtonRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -347,9 +378,10 @@ MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:
 MUIButtonCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonWndProc - Main processing window for our control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL hParent:DWORD
@@ -641,9 +673,10 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
 _MUI_ButtonWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonInit PROC PRIVATE hWin:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
@@ -721,9 +754,10 @@ _MUI_ButtonInit PROC PRIVATE hWin:DWORD
 _MUI_ButtonInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonCleanup - cleanup a few things before control is destroyed
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonCleanup PROC PRIVATE hWin:DWORD
     LOCAL ImageType:DWORD
     LOCAL hIStreamImage:DWORD
@@ -888,9 +922,11 @@ _MUI_ButtonCleanup PROC PRIVATE hWin:DWORD
 _MUI_ButtonCleanup ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_ButtonSetColors - Set colors on init or syscolorchange if MUIBS_THEME style used
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_ButtonSetColors - Set colors on init or syscolorchange if MUIBS_THEME 
+; style used.
+;------------------------------------------------------------------------------
 _MUI_ButtonSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
 
     Invoke GetWindowLong, hWin, GWL_STYLE
@@ -985,9 +1021,10 @@ _MUI_ButtonSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
 _MUI_ButtonSetColors ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonButtonDown - Mouse button down or keyboard down from vk_space
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonButtonDown PROC PRIVATE hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL rect:RECT    
@@ -1028,9 +1065,10 @@ _MUI_ButtonButtonDown PROC PRIVATE hWin:DWORD
 _MUI_ButtonButtonDown ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonButtonUp - Mouse button up or keyboard up from vk_space
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonButtonUp PROC PRIVATE hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL wID:DWORD
@@ -1080,9 +1118,10 @@ _MUI_ButtonButtonUp PROC PRIVATE hWin:DWORD
 _MUI_ButtonButtonUp ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonPaint
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -1268,9 +1307,10 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
 _MUI_ButtonPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintBackground
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
@@ -1318,9 +1358,10 @@ _MUI_ButtonPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEn
 _MUI_ButtonPaintBackground ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintAccent
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL AccentColor:DWORD
     LOCAL AccentStyle:DWORD
@@ -1546,9 +1587,10 @@ _MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD
 _MUI_ButtonPaintAccent ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonCalcPositions - calculate x, y positions of images, text etc
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonCalcPositions PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL dwStyle:DWORD
     LOCAL hImage:DWORD
@@ -1778,9 +1820,10 @@ _MUI_ButtonCalcPositions PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDes
 _MUI_ButtonCalcPositions ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintText
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
@@ -2121,9 +2164,10 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
 _MUI_ButtonPaintText ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintImages
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL dwStyle:DWORD
     LOCAL ImageType:DWORD
@@ -2358,9 +2402,10 @@ _MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:
 _MUI_ButtonPaintImages ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintBorder
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BorderColor:DWORD
     LOCAL BorderStyle:DWORD
@@ -2465,9 +2510,10 @@ _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnable
 _MUI_ButtonPaintBorder ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintFocusRect
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFocusedState:DWORD
     ;LOCAL hPen:DWORD
     ;LOCAL hOldPen:DWORD
@@ -2525,9 +2571,10 @@ _MUI_ButtonPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFoc
 _MUI_ButtonPaintFocusRect ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonSetPropertyEx
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     
     mov eax, dwProperty
@@ -2763,33 +2810,36 @@ _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwP
 _MUI_ButtonSetPropertyEx ENDP
 
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------------------------------------------------------
 ; Other PUBLIC function wrappers - most equate to same as custom messages
-;--------------------------------------------------------------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------------------------------------------------------
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonGetState
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonGetState PROC PUBLIC hControl:DWORD
     Invoke SendMessage, hControl, MUIBM_GETSTATE, 0, 0
     ret
 MUIButtonGetState ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonSetState
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonSetState PROC PUBLIC hControl:DWORD, bState:DWORD
     Invoke SendMessage, hControl, MUIBM_SETSTATE, bState, 0
     ret
 MUIButtonSetState ENDP
 
 
-;-------------------------------------------------------------------------------------
-; MUIButtonLoadImages - Loads images from resource ids and stores the handles in the
-; appropriate property.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIButtonLoadImages - Loads images from resource ids and stores the handles 
+; in the appropriate property.
+;------------------------------------------------------------------------------
 MUIButtonLoadImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD, dwResIDImageAlt:DWORD, dwResIDImageSel:DWORD, dwResIDImageSelAlt:DWORD, dwResIDImageDisabled:DWORD
 
     .IF dwImageType == 0
@@ -2869,9 +2919,10 @@ MUIButtonLoadImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:
 MUIButtonLoadImages ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonSetImages - Sets the property handles for image types
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, hImageAlt:DWORD, hImageSel:DWORD, hImageSelAlt:DWORD, hImageDisabled:DWORD
 
     .IF dwImageType == 0
@@ -2907,73 +2958,81 @@ MUIButtonSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, 
 MUIButtonSetImages ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonNotifySetText
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonNotifySetText PROC PUBLIC hControl:DWORD, lpszNotifyText:DWORD, bRedraw:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFYSETTEXT, lpszNotifyText, bRedraw
     ret
 MUIButtonNotifySetText ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonNotifyLoadImage
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonNotifyLoadImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDNotifyImage:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFYLOADIMAGE, dwImageType, dwResIDNotifyImage
     ret
 MUIButtonNotifyLoadImage ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonNotifySetImage
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonNotifySetImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hNotifyImage:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFYSETIMAGE, dwImageType, hNotifyImage
     ret
 MUIButtonNotifySetImage ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonNotifySetFont
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonNotifySetFont PROC PUBLIC hControl:DWORD, hFont:DWORD, bRedraw:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFYSETFONT, hFont, bRedraw
     ret
 MUIButtonNotifySetFont ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonNotify
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonNotify PROC PUBLIC hControl:DWORD, bNotify:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFY, bNotify, 0 
     ret
 MUIButtonNotify ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonNoteSetText
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonNoteSetText PROC PUBLIC hControl:DWORD, lpszNoteText:DWORD, bRedraw:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTESETTEXT, lpszNoteText, bRedraw
     ret
 MUIButtonNoteSetText ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonNoteSetFont
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonNoteSetFont PROC PUBLIC hControl:DWORD, hFont:DWORD, bRedraw:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTESETFONT, hFont, bRedraw
     ret
 MUIButtonNoteSetFont ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIButtonSetAllProperties - Set all properties at once from long poiner to a 
 ; MUI_BUTTON_PROPERTIES structure.
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonSetAllProperties PROC PUBLIC USES EBX ECX hControl:DWORD, lpMUIBUTTONPROPERTIES:DWORD, dwSizeMUIBP:DWORD
     LOCAL lpdwExternalProperties:DWORD
     
@@ -3236,10 +3295,11 @@ MUIButtonSetAllProperties PROC PUBLIC USES EBX ECX hControl:DWORD, lpMUIBUTTONPR
 MUIButtonSetAllProperties ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_ButtonLoadIcon - if succesful, loads specified bitmap resource into the specified
-; external property and returns TRUE in eax, otherwise FALSE.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_ButtonLoadIcon - if succesful, loads specified bitmap resource into the 
+; specified external property and returns TRUE in eax, otherwise FALSE.
+;------------------------------------------------------------------------------
 _MUI_ButtonLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
     LOCAL hinstance:DWORD
     LOCAL dwStyle:DWORD
@@ -3281,10 +3341,11 @@ _MUI_ButtonLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWO
 _MUI_ButtonLoadBitmap ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_ButtonLoadIcon - if succesful, loads specified icon resource into the specified
-; external property and returns TRUE in eax, otherwise FALSE.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_ButtonLoadIcon - if succesful, loads specified icon resource into the 
+; specified external property and returns TRUE in eax, otherwise FALSE.
+;------------------------------------------------------------------------------
 _MUI_ButtonLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     LOCAL hinstance:DWORD
     LOCAL dwStyle:DWORD
@@ -3331,17 +3392,19 @@ _MUI_ButtonLoadIcon ENDP
 
 
 
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Load JPG/PNG from resource using GDI+
 ;   Actually, this function can load any image format supported by GDI+
 ;
 ; by: Chris Vega
 ;
 ; Addendum KSR 2014 : Needs OLE32 include and lib for CreateStreamOnHGlobal and 
-; GetHGlobalFromStream calls. Underlying stream needs to be left open for the life of
-; the bitmap or corruption of png occurs. store png as RCDATA in resource file.
-;-------------------------------------------------------------------------------------
+; GetHGlobalFromStream calls. Underlying stream needs to be left open for the 
+; life of the bitmap or corruption of png occurs. store png as RCDATA in 
+; resource file.
+;------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
+MUI_ALIGN
 _MUI_ButtonLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     local rcRes:HRSRC
     local hResData:HRSRC
@@ -3467,10 +3530,11 @@ _MUI_ButtonLoadPng endp
 ENDIF
 
 
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; _MUI_ButtonPngReleaseIStream - releases png stream handle
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
+MUI_ALIGN
 _MUI_ButtonPngReleaseIStream PROC hIStream:DWORD
     
     mov eax, hIStream

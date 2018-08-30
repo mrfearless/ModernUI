@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_ProgressBar v1.0.0.0
+; ModernUI Control - ModernUI_ProgressBar
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -10,7 +10,35 @@
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
-;======================================================================================================================================
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+
+
 .686
 .MMX
 .XMM
@@ -20,13 +48,13 @@ include \masm32\macros\macros.asm
 
 ;DEBUG32 EQU 1
 
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include user32.inc
@@ -41,18 +69,18 @@ includelib ModernUI.lib
 
 include ModernUI_ProgressBar.inc
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressBarWndProc                 PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ProgressBarInit                    PROTO :DWORD
 _MUI_ProgressBarPaint                   PROTO :DWORD
 _MUI_ProgressBarCalcWidth               PROTO :DWORD, :DWORD
 
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; External public properties
 MUI_PROGRESSBAR_PROPERTIES              STRUCT
     dwTextColor                         DD ?
@@ -83,6 +111,7 @@ _MUI_PROGRESSBAR_PROPERTIES             ENDS
 
 
 .DATA
+ALIGN 4
 szMUIProgressBarClass                   DB 'ModernUI_ProgressBar',0     ; Class name for creating our ModernUI_ProgressBar control
 szMUIProgressBarFont                    DB 'Segoe UI',0                 ; Font used for ModernUI_ProgressBar text
 hMUIProgressBarFont                     DD 0                            ; Handle to ModernUI_ProgressBar font (segoe ui)
@@ -90,31 +119,34 @@ hMUIProgressBarFont                     DD 0                            ; Handle
 
 .CODE
 
-align 4
 
-;-------------------------------------------------------------------------------------
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for ModernUI_ProgressBar control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressBarSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUIProgressBarSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for ModernUI_ProgressBar control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressBarGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUIProgressBarGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressBarRegister - Registers the ModernUI_ProgressBar control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_ProgressBar
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressBarRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -146,9 +178,10 @@ MUIProgressBarRegister PROC PUBLIC
 MUIProgressBarRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressBarCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressBarCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -169,9 +202,10 @@ MUIProgressBarCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, cont
 MUIProgressBarCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressBarWndProc - Main processing window for our control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     
     mov eax,uMsg
@@ -233,9 +267,10 @@ _MUI_ProgressBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
 _MUI_ProgressBarWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressBarInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressBarInit PROC PRIVATE hControl:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
@@ -288,9 +323,10 @@ _MUI_ProgressBarInit PROC PRIVATE hControl:DWORD
 _MUI_ProgressBarInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressBarPaint
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rectprogress:RECT
@@ -413,9 +449,10 @@ _MUI_ProgressBarPaint PROC PRIVATE hWin:DWORD
 _MUI_ProgressBarPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ProgressBarCalcWidth ;ECX EDX
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ProgressBarCalcWidth PROC USES EBX hControl:DWORD, dwPercent:DWORD
     LOCAL rect:RECT
     LOCAL dwProgressWidth:DWORD
@@ -449,9 +486,10 @@ _MUI_ProgressBarCalcWidth PROC USES EBX hControl:DWORD, dwPercent:DWORD
 _MUI_ProgressBarCalcWidth ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressBarSetMinMax
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressBarSetMinMax PROC hControl:DWORD, dwMin:DWORD, dwMax:DWORD
     Invoke MUISetExtProperty, hControl, @ProgressBarMin, dwMin
     Invoke MUISetExtProperty, hControl, @ProgressBarMax, dwMax
@@ -459,9 +497,10 @@ MUIProgressBarSetMinMax PROC hControl:DWORD, dwMin:DWORD, dwMax:DWORD
 MUIProgressBarSetMinMax ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressBarSetPercent
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressBarSetPercent PROC hControl:DWORD, dwPercent:DWORD
     LOCAL dwOldPercent:DWORD
     LOCAL dwNewPercent:DWORD
@@ -526,18 +565,20 @@ MUIProgressBarSetPercent PROC hControl:DWORD, dwPercent:DWORD
 MUIProgressBarSetPercent ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressBarGetPercent
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressBarGetPercent PROC hControl:DWORD
     Invoke MUIGetExtProperty, hControl, @ProgressBarPercent
     ret
 MUIProgressBarGetPercent ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIProgressBarStep
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIProgressBarStep PROC hControl:DWORD
     LOCAL dwOldPercent:DWORD
     LOCAL dwNewPercent:DWORD

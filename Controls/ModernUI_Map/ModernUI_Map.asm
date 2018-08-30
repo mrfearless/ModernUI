@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_Map v1.0.0.0
+; ModernUI Control - ModernUI_Map
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -10,18 +10,52 @@
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+;
+; Intersection lines doesnt work, had to disable for the moment. Maybe someone 
+; else can figure out how to draw intersection lines over the map without the 
+; lines clipping everything black.
+;
+;==============================================================================
 
-;
-; Intersection lines doesnt work, had to disable for the moment. Maybe someone else can figure out how to draw intersection lines over the
-; map without the lines clipping everything black.
-;
-;======================================================================================================================================
+
+
+
+
 .686
 .MMX
 .XMM
 .model flat,stdcall
 option casemap:none
 include \masm32\macros\macros.asm
+
+MUI_DONTUSEGDIPLUS EQU 1 ; exclude (gdiplus) support
 
 ;DEBUG32 EQU 1
 ;
@@ -44,15 +78,25 @@ includelib gdi32.lib
 include ModernUI.inc
 includelib ModernUI.lib
 
+IFDEF MUI_USEGDIPLUS
+ECHO MUI_USEGDIPLUS
+include gdiplus.inc
+include ole32.inc
+includelib gdiplus.lib
+includelib ole32.lib
+ELSE
+ECHO MUI_DONTUSEGDIPLUS
+ENDIF
+
 include ModernUI_Region.inc
 includelib ModernUI_Region.lib
 
 include ModernUI_Map.inc
 include ModernUI_MapRegionData.inc
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapWndProc                    PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_MapInit                       PROTO :DWORD
 _MUI_MapCleanup                    PROTO :DWORD
@@ -80,9 +124,9 @@ _MUI_MapOverlayWndProc             PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_MapOverlayPaint               PROTO :DWORD
 _MUI_MapOverlayCoordLines          PROTO :DWORD, :DWORD, :DWORD, :DWORD
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; External public properties
 IFNDEF MUI_MAP_PROPERTIES
 MUI_MAP_PROPERTIES                 STRUCT
@@ -180,6 +224,7 @@ ENDIF
 
 
 .DATA
+ALIGN 4
 szMUIMapOverlayClass               DB 'ModernUI_MapOverlay',0   ; Class name for creating our ModernUI_MapOverlay control
 szMUIMapClass                      DB 'ModernUI_Map',0          ; Class name for creating our ModernUI_Map control
 szMUIMapFont                       DB 'Segoe UI',0              ; Font used for ModernUI_Map text
@@ -187,29 +232,35 @@ hMUIMapFont                        DD 0                         ; Handle to Mode
 MNM                                MUIM_NOTIFY <>
 
 .CODE
-;-------------------------------------------------------------------------------------
+
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for ModernUI_Map control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIMapSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUIMapSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for ModernUI_Map control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIMapGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUIMapGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIMapRegister - Registers the ModernUI_Map control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_Map
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIMapRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -241,9 +292,10 @@ MUIMapRegister PROC PUBLIC
 MUIMapRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIMapCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIMapCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -272,9 +324,10 @@ MUIMapCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWO
 MUIMapCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapWndProc - Main processing window for our control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapWndProc PROC PRIVATE USES EBX ECX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL hParent:DWORD
@@ -435,9 +488,10 @@ _MUI_MapWndProc PROC PRIVATE USES EBX ECX hWin:HWND, uMsg:UINT, wParam:WPARAM, l
 _MUI_MapWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapInit PROC PRIVATE hControl:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
@@ -493,9 +547,10 @@ _MUI_MapInit PROC PRIVATE hControl:DWORD
 _MUI_MapInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapCleanup - cleanup stuff
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapCleanup PROC PRIVATE hControl:DWORD
     LOCAL ImageType:DWORD
     LOCAL hIStreamImage:DWORD
@@ -583,9 +638,10 @@ _MUI_MapCleanup PROC PRIVATE hControl:DWORD
 _MUI_MapCleanup ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapDrawIntersectionLines
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapDrawIntersectionLines PROC hControl:DWORD, dwXpos:DWORD, dwYpos:DWORD
     LOCAL hdc:DWORD
     LOCAL rectx:RECT
@@ -660,9 +716,10 @@ _MUI_MapDrawIntersectionLines PROC hControl:DWORD, dwXpos:DWORD, dwYpos:DWORD
 _MUI_MapDrawIntersectionLines ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapPaint
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapPaint PROC PRIVATE hControl:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -730,9 +787,10 @@ _MUI_MapPaint PROC PRIVATE hControl:DWORD
 _MUI_MapPaint ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapPaintBackground - Paints the background of the Map control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapPaintBackground PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
@@ -766,9 +824,10 @@ _MUI_MapPaintBackground PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:DWORD, bE
 _MUI_MapPaintBackground ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapPaintImage
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapPaintImage PROC PRIVATE USES EBX hControl:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD
     LOCAL ImageType:DWORD
     LOCAL hImage:DWORD
@@ -855,9 +914,10 @@ _MUI_MapPaintImage PROC PRIVATE USES EBX hControl:DWORD, hdcMain:DWORD, hdcDest:
 _MUI_MapPaintImage ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapPaintBorder - Paints the border surrounding the Map control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapPaintBorder PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD
     LOCAL BorderColor:DWORD
     LOCAL BorderSize:DWORD
@@ -892,9 +952,10 @@ _MUI_MapPaintBorder PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:DWORD, bEnabl
 _MUI_MapPaintBorder ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapCreateMapButtons - Creates map buttons
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapCreateMapButtons PROC PRIVATE USES EBX hControl:DWORD, dwStyle:DWORD
     LOCAL hMapButton:DWORD
     LOCAL pMapButtonArray:DWORD
@@ -1020,9 +1081,10 @@ _MUI_MapCreateMapButtons PROC PRIVATE USES EBX hControl:DWORD, dwStyle:DWORD
 _MUI_MapCreateMapButtons ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapButtonCreate - Creates a map button
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapButtonCreate PROC hControl:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL hMapButton:DWORD
     
@@ -1041,9 +1103,10 @@ _MUI_MapButtonCreate PROC hControl:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD
 _MUI_MapButtonCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapButtonsAllSetProperty - sets property for all map buttons
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapButtonsAllSetProperty PROC
 
     ret
@@ -1051,9 +1114,10 @@ _MUI_MapButtonsAllSetProperty PROC
 _MUI_MapButtonsAllSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIMapButtonSetProperty - Sets property for specific map button
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIMapButtonSetProperty PROC hControl:DWORD, dwMapButtonID:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     LOCAL hMapButton:DWORD
     Invoke MUIMapButtonGetHandle, hControl, dwMapButtonID
@@ -1066,9 +1130,10 @@ MUIMapButtonSetProperty PROC hControl:DWORD, dwMapButtonID:DWORD, dwProperty:DWO
 MUIMapButtonSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIMapButtonGetProperty - Gets property for specific map button
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIMapButtonGetProperty PROC hControl:DWORD, dwMapButtonID:DWORD, dwProperty:DWORD
     LOCAL hMapButton:DWORD
     Invoke MUIMapButtonGetHandle, hControl, dwMapButtonID
@@ -1081,9 +1146,10 @@ MUIMapButtonGetProperty PROC hControl:DWORD, dwMapButtonID:DWORD, dwProperty:DWO
 MUIMapButtonGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIMapButtonGetHandle - Gets handle for specific map button
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIMapButtonGetHandle PROC USES EBX hControl:DWORD, dwMapButtonID:DWORD
     LOCAL pMapButtonArray:DWORD
 
@@ -1102,9 +1168,10 @@ MUIMapButtonGetHandle PROC USES EBX hControl:DWORD, dwMapButtonID:DWORD
 MUIMapButtonGetHandle ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapNotifyParent - Notify Parent when mouse over / leave of map button
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapNotifyParent PROC hControl:DWORD, hMapButton:DWORD, dwNotifyMsg:DWORD, lParam:DWORD
     LOCAL hParent:DWORD
     LOCAL idControl:DWORD
@@ -1145,11 +1212,11 @@ _MUI_MapNotifyParent PROC hControl:DWORD, hMapButton:DWORD, dwNotifyMsg:DWORD, l
 _MUI_MapNotifyParent ENDP
 
 
-
-;-------------------------------------------------------------------------------------
-; MUIMapLoadImages - Loads images from resource ids and stores the handles in the
-; appropriate property.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIMapLoadImages - Loads images from resource ids and stores the handles in 
+; the appropriate property.
+;------------------------------------------------------------------------------
 MUIMapLoadImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD, dwResIDImageDisabled:DWORD
 
     .IF dwImageType == 0
@@ -1190,9 +1257,10 @@ MUIMapLoadImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWO
 MUIMapLoadImages ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIMapSetImages - Sets the property handles for image types
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIMapSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, hImageDisabled:DWORD
 
     .IF dwImageType == 0
@@ -1216,10 +1284,11 @@ MUIMapSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, hIm
 MUIMapSetImages ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_MapLoadBitmap - if succesful, loads specified bitmap resource into the specified
-; external property and returns TRUE in eax, otherwise FALSE.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_MapLoadBitmap - if succesful, loads specified bitmap resource into the 
+; specified external property and returns TRUE in eax, otherwise FALSE.
+;------------------------------------------------------------------------------
 _MUI_MapLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
     LOCAL hinstance:DWORD
 
@@ -1243,10 +1312,11 @@ _MUI_MapLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
 _MUI_MapLoadBitmap ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_MapLoadIcon - if succesful, loads specified icon resource into the specified
-; external property and returns TRUE in eax, otherwise FALSE.
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_MapLoadIcon - if succesful, loads specified icon resource into the 
+; specified external property and returns TRUE in eax, otherwise FALSE.
+;------------------------------------------------------------------------------
 _MUI_MapLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     LOCAL hinstance:DWORD
 
@@ -1270,17 +1340,19 @@ _MUI_MapLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
 _MUI_MapLoadIcon ENDP
 
 
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Load JPG/PNG from resource using GDI+
 ;   Actually, this function can load any image format supported by GDI+
 ;
 ; by: Chris Vega
 ;
 ; Addendum KSR 2014 : Needs OLE32 include and lib for CreateStreamOnHGlobal and 
-; GetHGlobalFromStream calls. Underlying stream needs to be left open for the life of
-; the bitmap or corruption of png occurs. store png as RCDATA in resource file.
-;-------------------------------------------------------------------------------------
+; GetHGlobalFromStream calls. Underlying stream needs to be left open for the 
+; life of the bitmap or corruption of png occurs. store png as RCDATA in 
+; resource file.
+;------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
+MUI_ALIGN
 _MUI_MapLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     local rcRes:HRSRC
     local hResData:HRSRC
@@ -1366,10 +1438,10 @@ _MUI_MapLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     ;PrintDec pBitmapFromStream
     
     mov eax, dwProperty
-    .IF eax == @ButtonImage
+    .IF eax == @MapBackImage
         Invoke MUISetIntProperty, hWin, @MapBackImageStream, hIStream
-    .ELSEIF eax == @ButtonImageDisabled
-        Invoke MUISetIntProperty, hWin, @MapBackDisabledStream, hIStream
+    .ELSEIF eax == @MapBackImageDisabled
+        Invoke MUISetIntProperty, hWin, @MapBackImageDisabledStream, hIStream
     .ENDIF
 
     mov eax, TRUE
@@ -1379,10 +1451,11 @@ _MUI_MapLoadPng@Close:
 _MUI_MapLoadPng endp
 ENDIF
 
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; _MUI_MapPngReleaseIStream - releases png stream handle
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
+MUI_ALIGN
 _MUI_MapPngReleaseIStream PROC hIStream:DWORD
     
     mov eax, hIStream
@@ -1398,9 +1471,10 @@ ENDIF
 
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapOverlayRegister - Registers the ModernUI_MapOverlay control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapOverlayRegister PROC PRIVATE
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -1432,9 +1506,10 @@ _MUI_MapOverlayRegister PROC PRIVATE
 _MUI_MapOverlayRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapOverlayCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapOverlayCreate PROC PRIVATE hWndParent:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -1460,9 +1535,10 @@ _MUI_MapOverlayCreate PROC PRIVATE hWndParent:DWORD
 _MUI_MapOverlayCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapOverlayWndProc - Main processing window for our overlay control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapOverlayWndProc PROC PRIVATE USES EBX ECX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL hParent:DWORD
     LOCAL xPos:DWORD
@@ -1502,9 +1578,10 @@ _MUI_MapOverlayWndProc PROC PRIVATE USES EBX ECX hWin:HWND, uMsg:UINT, wParam:WP
 _MUI_MapOverlayWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_MapOverlayPaint - paint overlay control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_MapOverlayPaint PROC PRIVATE hControl:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -1577,6 +1654,7 @@ _MUI_MapOverlayPaint PROC PRIVATE hControl:DWORD
 _MUI_MapOverlayPaint ENDP
 
 
+MUI_ALIGN
 _MUI_MapOverlayCoordLines PROC PRIVATE hControl:DWORD, hdcMain:DWORD, dwXpos:DWORD, dwYpos:DWORD
     LOCAL rectx:RECT
     LOCAL recty:RECT

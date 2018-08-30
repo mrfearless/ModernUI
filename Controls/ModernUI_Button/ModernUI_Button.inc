@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_Button v0.0.0.4
+; ModernUI Control - ModernUI_Button
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -11,28 +11,36 @@
 ; http://github.com/mrfearless/ModernUI
 ;
 ;
-; This software is provided 'as-is', without any express or implied warranty. In no event will the author be held liable for any 
-; damages arising from the use of this software.
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
 ;
-; Permission is granted to anyone to use this software for any non-commercial program. If you use the library in an application, an 
-; acknowledgement in the application or documentation is appreciated but not required. 
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
 ;
-; You are allowed to make modifications to the source code, but you must leave the original copyright notices intact and not 
-; misrepresent the origin of the software. It is not allowed to claim you wrote the original software. Modified files must have a clear 
-; notice that the files are modified, and not in the original state. This includes the name of the person(s) who modified the code. 
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
 ;
-; If you want to distribute or redistribute any portion of this package, you will need to include the full package in it's original 
-; state, including this license and all the copyrights. 
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
 ;
-; While distributing this package (in it's original state) is allowed, it is not allowed to charge anything for this. You may not sell
-; or include the package in any commercial package without having permission of the author. Neither is it allowed to redistribute any 
-; of the package's components with commercial applications.
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
 ;
-;======================================================================================================================================
+;==============================================================================
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_Button Prototypes
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIButtonRegister               PROTO                                                                   ; Use 'ModernUI_Button' as class in RadASM custom class control
 MUIButtonCreate                 PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
 MUIButtonSetProperty            PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, dwProperty, dwPropertyValue
@@ -54,9 +62,9 @@ MUIButtonNoteSetFont            PROTO :DWORD, :DWORD, :DWORD                    
 
 MUIButtonSetAllProperties       PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, lpMUI_BUTTON_PROPERTIES structure, SIZEOF MUI_BUTTON_PROPERTIES
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_Button Structures
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 IFNDEF MUI_BUTTON_PROPERTIES
 MUI_BUTTON_PROPERTIES           STRUCT
     dwTextFont                  DD ?       ; hFont
@@ -115,9 +123,9 @@ ENDIF
 
 
 .CONST
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; ModernUI_Button Constants
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 
 ; ModernUI_Button Messages
 MUIBM_GETSTATE                  EQU WM_USER + 1779 ; wParam = NULL, lParam = NULL. EAX contains state (TRUE/FALSE)
@@ -147,11 +155,10 @@ MUIBS_DROPDOWN                  EQU 80h     ; Show dropdown arrow right side of 
 MUIBS_NOFOCUSRECT               EQU 100h    ; Dont show focus rect, just use change border to @ButtonBorderColorAlt when setfocus.
 MUIBS_THEME                     EQU 8000h   ; Use default windows theme colors and react to WM_THEMECHANGED
 
-;--------------------------------------------------------------------------------------------------------------------------------------
-; ModernUI_Button Properties: Use with MUIButtonSetProperty / MUIButtonGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
-;--------------------------------------------------------------------------------------------------------------------------------------
-
-
+;------------------------------------------------------------------------------
+; ModernUI_Button Properties: Use with MUIButtonSetProperty / 
+; MUIButtonGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
+;------------------------------------------------------------------------------
 @ButtonTextFont                 EQU 0       ; hFont
 @ButtonTextColor                EQU 4       ; Colorref
 @ButtonTextColorAlt             EQU 8       ; Colorref

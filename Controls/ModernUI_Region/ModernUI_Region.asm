@@ -1,8 +1,8 @@
-;======================================================================================================================================
+;==============================================================================
 ;
-; ModernUI Control - ModernUI_Region v1.0.0.0
+; ModernUI Control - ModernUI_Region
 ;
-; Copyright (c) 2016 by fearless
+; Copyright (c) 2018 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -10,7 +10,34 @@
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
-;======================================================================================================================================
+;
+; This software is provided 'as-is', without any express or implied warranty. 
+; In no event will the author be held liable for any damages arising from the 
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial 
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required. 
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software. 
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified 
+; the code. 
+;
+; If you want to distribute or redistribute any portion of this package, you 
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.  
+;
+; While distributing this package (in it's original state) is allowed, it is 
+; not allowed to charge anything for this. You may not sell or include the 
+; package in any commercial package without having permission of the author. 
+; Neither is it allowed to redistribute any of the package's components with 
+; commercial applications.
+;
+;==============================================================================
+
 .686
 .MMX
 .XMM
@@ -35,17 +62,17 @@ include gdi32.inc
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
-include uxtheme.inc
-includelib uxtheme.lib
+;include uxtheme.inc
+;includelib uxtheme.lib
 
 include ModernUI.inc
 includelib ModernUI.lib
 
 include ModernUI_Region.inc
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Prototypes for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_ButtonButtonWndProc                PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_RegionButtonInit                   PROTO :DWORD
 _MUI_RegionButtonPaint                  PROTO :DWORD
@@ -53,9 +80,9 @@ _MUI_RegionButtonPaintBackground        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :D
 _MUI_RegionButtonPaintBorder            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_RegionButtonNotify                 PROTO :DWORD, :DWORD
 
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Structures for internal use
-;--------------------------------------------------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; External public properties
 IFNDEF MUI_REGIONBUTTON_PROPERTIES
 MUI_REGIONBUTTON_PROPERTIES             STRUCT
@@ -106,37 +133,41 @@ ENDIF
 
 
 .DATA
+ALIGN 4
 szMUIRegionButtonClass                  DB 'ModernUI_RegionButton',0    ; Class name for creating our ModernUI_RegionButton control
 RBNM                                    MUIRB_NOTIFY <>
 
 
 .CODE
 
-align 4
 
-;-------------------------------------------------------------------------------------
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Set property for RegionButton control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRegionButtonSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUIRegionButtonSetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; Get property for RegionButton control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRegionButtonGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUIRegionButtonGetProperty ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIRegionButtonRegister - Registers the RegionButton control
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as RegionButton
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRegionButtonRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -168,9 +199,10 @@ MUIRegionButtonRegister PROC PUBLIC
 MUIRegionButtonRegister ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIRegionButtonCreate - Returns handle in eax of newly created control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRegionButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
@@ -199,9 +231,10 @@ MUIRegionButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD,
 MUIRegionButtonCreate ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_RegionButtonWndProc - Main processing window for our control
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_RegionButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL rect:RECT
@@ -512,9 +545,10 @@ _MUI_RegionButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
 _MUI_RegionButtonWndProc ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_RegionButtonInit - set initial default values
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_RegionButtonInit PROC PRIVATE hControl:DWORD
     LOCAL dwStyle:DWORD
 
@@ -580,9 +614,10 @@ _MUI_RegionButtonInit PROC PRIVATE hControl:DWORD
 _MUI_RegionButtonInit ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIRegionButtonSetRegion - Sets region of control based on binary region data
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRegionButtonSetRegion PROC PUBLIC hControl:DWORD, ptrRegionData:DWORD, dwRegionDataSize:DWORD
     LOCAL hRgn:DWORD
     LOCAL hRegionHandle:DWORD
@@ -619,9 +654,10 @@ MUIRegionButtonSetRegion PROC PUBLIC hControl:DWORD, ptrRegionData:DWORD, dwRegi
 MUIRegionButtonSetRegion ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIRegionButtonSetBitmap - Sets region of control based on bitmap passed to it
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRegionButtonSetBitmap PROC PUBLIC USES EBX ECX EDX hControl:DWORD, hBitmap:DWORD
     LOCAL hdc:HDC
     LOCAL hMemDC:HDC
@@ -710,10 +746,10 @@ MUIRegionButtonSetBitmap PROC PUBLIC USES EBX ECX EDX hControl:DWORD, hBitmap:DW
 MUIRegionButtonSetBitmap ENDP
 
 
-
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_RegionButtonPaint
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_RegionButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
@@ -782,10 +818,10 @@ _MUI_RegionButtonPaint PROC PRIVATE hWin:DWORD
 _MUI_RegionButtonPaint ENDP
 
 
-
-;-------------------------------------------------------------------------------------
-; _MUI_RegionButtonPaintBackground - Paints the background of the RegionButton control
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_RegionButtonPaintBackground - Paints the background of the control
+;------------------------------------------------------------------------------
 _MUI_RegionButtonPaintBackground PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
@@ -831,9 +867,10 @@ _MUI_RegionButtonPaintBackground PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:
 _MUI_RegionButtonPaintBackground ENDP
 
 
-;-------------------------------------------------------------------------------------
-; _MUI_RegionButtonPaintBorder - Paints the border surrounding the RegionButton control
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_RegionButtonPaintBorder - Paints the border surrounding the control
+;------------------------------------------------------------------------------
 _MUI_RegionButtonPaintBorder PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BorderColor:DWORD
     LOCAL BorderSize:DWORD
@@ -891,28 +928,31 @@ _MUI_RegionButtonPaintBorder PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:DWOR
 _MUI_RegionButtonPaintBorder ENDP
 
 
-
-;-------------------------------------------------------------------------------------
-; MUIRegionButtonGetState - Returns in eax TRUE of FALSE if control is selected or not
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIRegionButtonGetState - Returns in eax TRUE of FALSE if control is selected 
+; or not
+;------------------------------------------------------------------------------
 MUIRegionButtonGetState PROC PUBLIC hControl:DWORD
     Invoke SendMessage, hControl, MUIRB_GETSTATE, 0, 0
     ret
 MUIRegionButtonGetState ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; MUIRegionButtonSetState - Set control to selected state (TRUE) or not (FALSE)
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 MUIRegionButtonSetState PROC PUBLIC hControl:DWORD, bState:DWORD
     Invoke SendMessage, hControl, MUIRB_SETSTATE, bState, 0
     ret
 MUIRegionButtonSetState ENDP
 
 
-;-------------------------------------------------------------------------------------
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_RegionButtonNotify - Notifies parent with WM_NOTIFY message
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 _MUI_RegionButtonNotify PROC hControl:DWORD, dwNotifyMsg:DWORD
     LOCAL hParent:DWORD
     LOCAL idControl:DWORD

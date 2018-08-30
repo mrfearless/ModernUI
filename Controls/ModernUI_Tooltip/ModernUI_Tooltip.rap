@@ -71,7 +71,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=4
+MilestoneOnDateDate=30
 MilestoneOnDateTimeYear=2018
 MilestoneOnDateTimeMonth=1
 MilestoneOnDateTimeDate=21
@@ -95,16 +95,16 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=24726799
+PTimer=24874984
 [Collapse]
-1=2145387512,2147483647,2013265915,1
+1=2147483647,2147483647,1744830463,1
 5=
 2=
 3=
 [Size]
-1=0,0,0,0,16134
+1=0,0,0,0,30399
 5=0,0,0,0,7306
-2=0,0,0,0,4846
+2=0,0,0,0,2354
 3=0,0,0,0,386
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
@@ -122,4 +122,6 @@ GroupExpand=1,1,1,0,0,0
 [BreakPoint]
 0=
 [Find]
-1="_MUI_TooltipSetPositon"
+1=";-------------------------------------------------------------------------------------"
+2=";--------------------------------------------------------------------------------------------------------------------------------------"
+3="_MUI_TooltipSetPositon"
