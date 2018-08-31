@@ -884,6 +884,7 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     LOCAL MouseOver:DWORD
     LOCAL SelectedState:DWORD
     LOCAL FocusedState:DWORD
+    LOCAL SavedDChdcMem:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
@@ -910,7 +911,10 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     mov SelectedState, eax
     Invoke MUIGetIntProperty, hWin, @CheckboxFocusedState
     mov FocusedState, eax    
-
+    
+    Invoke SaveDC, hdcMem ; save hdcmem for focus rect
+    mov SavedDChdcMem, eax ; otherwise color of focus is off 
+    
     ;----------------------------------------------------------
     ; Background
     ;----------------------------------------------------------
@@ -919,7 +923,7 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     ;----------------------------------------------------------
     ; Images
     ;----------------------------------------------------------
-    Invoke _MUI_CheckboxPaintImages, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+    Invoke _MUI_CheckboxPaintImages, hWin, hdcMem, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
 
     ;----------------------------------------------------------
     ; Text
@@ -929,6 +933,7 @@ _MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
     ;----------------------------------------------------------
     ; Focused state
     ;----------------------------------------------------------
+    Invoke RestoreDC, hdcMem, SavedDChdcMem
     Invoke _MUI_CheckboxPaintFocusRect, hWin, hdcMem, Addr rect, FocusedState
 
     ;----------------------------------------------------------
