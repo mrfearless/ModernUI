@@ -7,7 +7,7 @@ ModernUI is a framework library and a collection of custom controls for win32 as
 
 For the x64 version of this project, visit [here](https://github.com/mrfearless/ModernUI64).
 
-If you like this project and would like to support me, consider buying me a coffee: [buymeacoffee.com/mrfearless](https://www.buymeacoffee.com/mrfearless)  or making a donation with [bitcoin](bitcoin:1LXcHrwMxij53UETjgmQwFPSM8EVjCoUgw?message=ModernUI%20Donation)
+If you like this project and would like to support me, consider buying me a coffee: [buymeacoffee.com/mrfearless](https://www.buymeacoffee.com/mrfearless)  or making a donation with bitcoin: `1LXcHrwMxij53UETjgmQwFPSM8EVjCoUgw`
 
 ## Setup ModernUI Library
 
