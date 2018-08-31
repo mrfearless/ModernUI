@@ -29,6 +29,9 @@ includelib gdi32.lib
 include ModernUI.inc
 
 
+EXTERNDEF MUILoadRegionFromResource :PROTO :DWORD,:DWORD,:DWORD,:DWORD
+
+
 .CODE
 
 

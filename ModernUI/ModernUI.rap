@@ -48,7 +48,7 @@ Debug=0
 [MakeDef]
 Menu=0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 1=4,O,$B\RC.EXE /v,1
-2=3,O,$B\ML.EXE /c /coff /Cp /nologo /I"M:\MASM32\Include" *.asm
+2=3,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I" *.asm
 3=9,O,$B\LIB *.obj /out:ModernUI.lib
 4=0,0,,5
 5=rsrc.obj,O,$B\CVTRES.EXE,rsrc.res
@@ -88,26 +88,26 @@ Group=Modules,Assembly
 19=1
 20=1
 [AutoLoad]
-AutoLoad=2,5
+AutoLoad=2,6
 [Size]
-5=0,0,0,0,507
-4=0,0,0,0,554
-3=0,0,0,0,146
-2=0,0,0,0,586
+5=0,0,0,0,528
+4=0,0,0,0,548
+3=0,0,0,0,723
+2=0,0,0,0,4177
 1=0,0,0,0,5134
-6=0,0,0,0,556
+6=0,0,0,0,997
 13=0,0,0,0,10132
 11=0,0,0,0,1539
 9=0,0,0,0,828
 12=0,0,0,0,1011
 10=0,0,0,0,841
-7=0,0,0,0,482
+7=0,0,0,0,421
 8=0,0,0,0,486
 14=0,0,0,0,3161
 18=0,0,0,0,6341
 17=0,0,0,0,554
-19=0,0,0,0,554
-20=0,0,0,0,554
+19=0,0,0,0,547
+20=0,0,0,0,548
 16=0,0,0,0,787
 15=0,0,0,0,956
 [RADebugBP]
@@ -140,7 +140,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=30
+MilestoneOnDateDate=31
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=16
@@ -164,7 +164,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=116107840
+PTimer=118917200
 [Collapse]
 2=15
 1=64

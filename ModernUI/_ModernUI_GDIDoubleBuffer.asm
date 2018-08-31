@@ -28,11 +28,6 @@ includelib gdi32.lib
 
 include ModernUI.inc
 
-IFDEF MUI_USEGDIPLUS
-include gdiplus.inc
-includelib gdiplus.lib
-ENDIF
-
 
 .CODE
 
