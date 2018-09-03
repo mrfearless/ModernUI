@@ -100,6 +100,11 @@ _MUI_TextSetFontFamilySize      PROTO :DWORD, :DWORD
 _MUI_TextGetFontTableHandle     PROTO :DWORD, :DWORD
 _MUI_TextSetFontTableHandle     PROTO :DWORD, :DWORD, :DWORD
 
+_MUI_TextUTF8Encode             PROTO :DWORD
+_MUI_TextUTF8Decode             PROTO :DWORD
+_MUI_TextUTF8Free               PROTO :DWORD
+
+
 ;------------------------------------------------------------------------------
 ; Structures for internal use
 ;------------------------------------------------------------------------------
@@ -414,6 +419,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
+    LOCAL lpUTF8String:DWORD
 
     mov eax,uMsg
     .IF eax == WM_NCCREATE
@@ -507,7 +513,20 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
 
     .ELSEIF eax == WM_SETTEXT
         Invoke _MUI_TextCheckMultiline, hWin, lParam
-        Invoke DefWindowProc, hWin, uMsg, wParam, lParam
+        IFDEF MUI_UNICODE
+            Invoke GetWindowLong, hWin, GWL_STYLE
+            and eax, MUITS_UTF8
+            .IF eax == MUITS_UTF8
+                Invoke _MUI_TextUTF8Decode, lParam
+                mov lpUTF8String, eax
+                Invoke DefWindowProc, hWin, uMsg, wParam, eax
+                Invoke _MUI_TextUTF8Free, lpUTF8String
+            .ELSE
+                Invoke DefWindowProc, hWin, uMsg, wParam, lParam
+            .ENDIF
+        ELSE
+            Invoke DefWindowProc, hWin, uMsg, wParam, lParam
+        ENDIF
         ;Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
         ;Invoke ShowWindow, hWin, SW_SHOW
@@ -611,7 +630,7 @@ _MUI_TextInit PROC PRIVATE hWin:DWORD
     mov eax, dwStyle
     and eax, MUITS_LORUMIPSUM
     .IF eax == MUITS_LORUMIPSUM
-        Invoke SetWindowText, hWin, Addr szLorumIpsumText
+         Invoke SetWindowText, hWin, Addr szLorumIpsumText
     .ENDIF
 
     ret
@@ -775,14 +794,24 @@ _MUI_TextPaintText PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledSta
     LOCAL LenText:DWORD    
     LOCAL dwTextStyle:DWORD
     LOCAL dwStyle:DWORD
+    LOCAL bUTF8:DWORD
     LOCAL rect:RECT
     LOCAL lpMUITextBuffer:DWORD
+    LOCAL lpMUITextUTF8Buffer:DWORD
 
     ;PrintText '_MUI_TextPaintText'
     Invoke CopyRect, Addr rect, lpRect
 
     Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
+    
+    mov eax, dwStyle
+    and eax, MUITS_UTF8
+    .IF eax == MUITS_UTF8
+        mov bUTF8, TRUE
+    .ELSE
+        mov bUTF8, FALSE
+    .ENDIF    
     
     Invoke MUIGetIntProperty,hWin, @TextBuffer
     mov lpMUITextBuffer, eax
@@ -881,41 +910,43 @@ _MUI_TextCheckMultiline PROC USES EBX hWin:DWORD, lpszText:DWORD
     Invoke lstrlen, lpszText
     mov lenText, eax
     
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
+
     mov bMultiline, FALSE
     mov ebx, lpszText
     mov Cnt, 0
     mov eax, 0
     .WHILE eax < lenText
         IFDEF MUI_UNICODE
-        movzx eax, word ptr [ebx]
-        .IF ax == 0
-            mov bMultiline, FALSE
-            .BREAK
-        .ELSEIF ax == 10 || ax == 13
-            mov bMultiline, TRUE
-            .BREAK 
-        .ENDIF
-        inc ebx
-        inc ebx
-        inc Cnt
-        inc Cnt
+            movzx eax, word ptr [ebx]
+            .IF ax == 0
+                mov bMultiline, FALSE
+                .BREAK
+            .ELSEIF ax == 10 || ax == 13
+                mov bMultiline, TRUE
+                .BREAK 
+            .ENDIF
+            inc ebx
+            inc ebx
+            inc Cnt
+            inc Cnt
         ELSE
-        movzx eax, byte ptr [ebx]
-        .IF al == 0
-            mov bMultiline, FALSE
-            .BREAK
-        .ELSEIF al == 10 || al == 13
-            mov bMultiline, TRUE
-            .BREAK 
-        .ENDIF
-        inc ebx
-        inc Cnt
+            movzx eax, byte ptr [ebx]
+            .IF al == 0
+                mov bMultiline, FALSE
+                .BREAK
+            .ELSEIF al == 10 || al == 13
+                mov bMultiline, TRUE
+                .BREAK 
+            .ENDIF
+            inc ebx
+            inc Cnt
         ENDIF
         mov eax, Cnt
     .ENDW
 
-    Invoke GetWindowLong, hWin, GWL_STYLE
-    mov dwStyle, eax  
+
     mov eax, dwStyle
     .IF bMultiline == FALSE
         or eax, MUITS_SINGLELINE
@@ -1288,6 +1319,83 @@ _MUI_TextSetFontTableHandle PROC USES EBX hWin:DWORD, dwStyle:DWORD, hFont:DWORD
 _MUI_TextSetFontTableHandle ENDP
 
 
+;-------------------------------------------------------------------------------------
+; Convert wide Unicode String to an UTF8 string
+;-------------------------------------------------------------------------------------
+_MUI_TextUTF8Encode PROC lpString:DWORD
+    LOCAL dwUTF8StringSize:DWORD
+    LOCAL lpUTF8String:DWORD
+
+    .IF lpString == NULL
+        mov eax, NULL
+        ret
+    .ENDIF
+    Invoke WideCharToMultiByte, CP_UTF8, 0, lpString, -1, NULL, 0, NULL, NULL
+    .IF eax == 0
+        ret
+    .ENDIF
+    mov dwUTF8StringSize, eax
+    ;shl eax, 1 ; x2 to get non wide char count
+    add eax, 4 ; add 4 for good luck and nulls
+    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+    .IF eax == NULL
+        ret
+    .ENDIF
+    mov lpUTF8String, eax    
+    Invoke WideCharToMultiByte, CP_UTF8, 0, lpString, -1, lpUTF8String, dwUTF8StringSize, NULL, NULL
+    .IF eax == 0
+        ret
+    .ENDIF
+    mov eax, lpUTF8String
+    ret
+_MUI_TextUTF8Encode ENDP
+
+
+;-------------------------------------------------------------------------------------
+; Convert an UTF8 string to a wide Unicode String
+;-------------------------------------------------------------------------------------
+_MUI_TextUTF8Decode PROC lpString:DWORD
+    LOCAL dwWideStringSize:DWORD
+    LOCAL lpWideString:DWORD
+    
+    .IF lpString == NULL
+        mov eax, NULL
+        ret
+    .ENDIF
+    Invoke MultiByteToWideChar, CP_UTF8, 0, lpString, -1, NULL, 0
+    .IF eax == 0
+        ret
+    .ENDIF
+    mov dwWideStringSize, eax
+    shl eax, 1 ; x2 to get non wide char count
+    add eax, 4 ; add 4 for good luck and nulls
+    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+    .IF eax == NULL
+        ret
+    .ENDIF
+    mov lpWideString, eax
+    Invoke MultiByteToWideChar, CP_UTF8, 0, lpString, -1, lpWideString, dwWideStringSize
+    .IF eax == 0
+        ret
+    .ENDIF
+    mov eax, lpWideString
+    ret
+_MUI_TextUTF8Decode ENDP
+
+
+;-------------------------------------------------------------------------------------
+; Frees a converted string which was created by UTF8_Decode or UTF8_Encode
+;-------------------------------------------------------------------------------------
+_MUI_TextUTF8Free PROC lpString:DWORD
+    mov eax, lpString
+    .IF eax == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+    Invoke GlobalFree, eax
+    mov eax, TRUE
+    ret
+_MUI_TextUTF8Free ENDP
 
 
 

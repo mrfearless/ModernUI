@@ -102,6 +102,11 @@ MUITS_SINGLELINE        EQU 1 shl 13 ; 0010 0000 0000 0000
 MUITS_HAND              EQU 1 shl 14 ; 0100 0000 0000 0000 - Show a hand instead of an arrow when mouse moves over text
 MUITS_LORUMIPSUM        EQU 1 shl 15 ; 1000 0000 0000 0000 - Show lorum ipsum in text box - for demo purposes etc.
 
+MUITS_UTF8              EQU 1 shl 7
+MUITS_HTMLCODE          EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FONT_NORMAL)
+MUITS_BBCODE            EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FONT_BOLD)
+
+
 ;------------------------------------------------------------------------------
 ; ModernUI_Text Properties: Use with MUITextSetProperty / MUITextGetProperty or
 ; MUI_SETPROPERTY / MUI_GETPROPERTY msgs
