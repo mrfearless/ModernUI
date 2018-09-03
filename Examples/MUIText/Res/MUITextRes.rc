@@ -1,0 +1,3 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUIText.xml"
+100						ICON      DISCARDABLE "MUIText.ico"

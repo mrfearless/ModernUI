@@ -1,0 +1,4 @@
+#include "Res/MUITextMnu.rc"
+#include "Res/MUITextVer.rc"
+#include "Res/MUITextDlg.rc"
+#include "Res/MUITextRes.rc"
