@@ -55,8 +55,8 @@ MUIFreeMemProperties            PROTO :DWORD,:DWORD                             
 MUIAllocStructureMemory         PROTO :DWORD,:DWORD,:DWORD                      ; dwPtrStructMem, TotalItems, ItemSize
 
 ; ModernUI GDI DoubleBuffer Functions:
-MUIGDIDoubleBufferStart         PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hWin, hdcSource, lpHDCBuffer, lpClientRect, lpBufferBitmap, lpPreBufferBitamp
-MUIGDIDoubleBufferFinish        PROTO :DWORD,:DWORD,:DWORD                      ; hdcBuffer, hBufferBitmap, hPreBufferBitamp
+MUIGDIDoubleBufferStart         PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD        ; hWin, hdcSource, lpHDCBuffer, lpClientRect, lphBufferBitmap
+MUIGDIDoubleBufferFinish        PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hdcBuffer, hBufferBitmap, hBitmapUsed, hFontUsed, hBrushUsed, hPenUsed
 
 ; ModernUI GDIPlus Functions:
 MUIGDIPlusStart                 PROTO                                           ; Wrapper for GDIPlus startup
