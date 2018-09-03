@@ -64,8 +64,8 @@ AutoLoad=2,1,4
 1=
 [Size]
 3=0,0,0,0,0
-1=0,0,0,0,40502
-2=0,0,0,0,5221
+1=0,0,0,0,32690
+2=0,0,0,0,3867
 4=0,0,0,0,600
 [VersionControl]
 Settings=1278
@@ -77,7 +77,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=30
+MilestoneOnDateDate=3
 MilestoneOnDateTimeYear=2017
 MilestoneOnDateTimeMonth=2
 MilestoneOnDateTimeDate=22
@@ -101,9 +101,9 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=84217328
+PTimer=1071153003
 [Collapse]
-1=68159520,8536064,164
+1=1050656,,656
 2=
 3=
 4=
@@ -123,9 +123,9 @@ GroupExpand=1,1,1,0,0,0
 [BreakPoint]
 0=
 [Find]
-1=";-------------------------------------------------------------------------------------"
-2=";--------------------------------------------------------------------------------------------------------------------------------------"
-3="MUI_UNICODE"
+1="MUI_UNICODE"
+2=";-------------------------------------------------------------------------------------"
+3=";--------------------------------------------------------------------------------------------------------------------------------------"
 4="MUI_TEXT_MAX_CHARS"
 5="xor"
 6="szLorumIpsumText"

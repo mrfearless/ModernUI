@@ -49,7 +49,7 @@ include \masm32\macros\macros.asm
 ;------------------------------------------
 ; Remove comment to include unicode support
 ;------------------------------------------
-MUI_UNICODE TEXTEQU <__UNICODE__>
+;MUI_UNICODE TEXTEQU <__UNICODE__>
 IFDEF MUI_UNICODE
 __UNICODE__ EQU 1
 ECHO MUI_UNICODE BUILD
@@ -638,6 +638,20 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
 
+    Invoke IsWindowVisible, hWin
+    .IF eax == FALSE
+        ;PrintText 'IsWindowVisible Not Visible'
+        Invoke EndPaint, hWin, Addr ps
+        ret
+    .ENDIF
+    
+    Invoke GetWindowLong, hWin, 0
+    .IF eax == 0
+        ;PrintText 'Property Mem Not Allocated Yet'
+        Invoke EndPaint, hWin, Addr ps
+        ret
+    .ENDIF
+
     ;----------------------------------------------------------
     ; Get some property values
     ;----------------------------------------------------------
@@ -648,7 +662,7 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
     mov MouseOver, eax
     Invoke MUIGetExtProperty, hWin, @TextBackColor
     mov BackColor, eax
-
+    
     .IF BackColor != -1 ; Not Transparent, background color is specified
 
         ;----------------------------------------------------------
@@ -688,7 +702,7 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
         Invoke DeleteDC, hdcMem
 
     .ELSE ; Text on Transparent Background
-    
+        ;PrintText 'Text on Transparent Background'
         ;----------------------------------------------------------
         ; Text
         ;----------------------------------------------------------    
