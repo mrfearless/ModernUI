@@ -8,17 +8,27 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-;DEBUG32 EQU 1
 
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+USE_DARK_THEME EQU 1 ; comment out this line to use light background and dark icons
+
+
+;DEBUG32 EQU 1
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include MUICheckbox.inc
+
+
+IFNDEF USE_DARK_THEME
+    THEMEDARK EQU 0
+ELSE
+    THEMEDARK EQU MUICBS_THEMEDARK
+ENDIF
 
 .code
 
@@ -50,7 +60,7 @@ WinMain proc hInst:HINSTANCE,hPrevInst:HINSTANCE,CmdLine:LPSTR,CmdShow:DWORD
     mov     wc.cbWndExtra, DLGWINDOWEXTRA
     push    hInst
     pop     wc.hInstance
-    mov     wc.hbrBackground, COLOR_WINDOW+1;COLOR_BTNFACE+1 ; COLOR_WINDOW+1
+    mov     wc.hbrBackground, 0;COLOR_WINDOW+1;COLOR_BTNFACE+1 ; COLOR_WINDOW+1
     mov     wc.lpszMenuName, IDM_MENU
     mov     wc.lpszClassName, offset ClassName
     Invoke LoadIcon, NULL, IDI_APPLICATION
@@ -98,7 +108,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         Invoke MUIApplyToDialog, hWin, TRUE, TRUE
         
         ; Create CaptionBar control and save handle
-        Invoke MUICaptionBarCreate, hWin, Addr AppName, 32, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
+        Invoke MUICaptionBarCreate, hWin, Addr AppName, 28, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
         mov hCaptionBar, eax
         
         ; Set some properties for our CaptionBar control 
@@ -109,32 +119,32 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ;-----------------------------------------------------------------------------------------------------
         ; ModernUI_Checkbox Examples:
         ;-----------------------------------------------------------------------------------------------------
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox1Text, 20, 50, 300, 24, IDC_CHECKBOX1, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED; or MUICBS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox1Text, 20, 50, 300, 24, IDC_CHECKBOX1, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or THEMEDARK; or MUICBS_NOFOCUSRECT
         mov hChk1, eax
         Invoke MUICheckboxSetState, hChk1, FALSE
 
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox2Text, 20, 75, 300, 24, IDC_CHECKBOX2, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED; or MUICBS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox2Text, 20, 75, 300, 24, IDC_CHECKBOX2, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or THEMEDARK; or MUICBS_NOFOCUSRECT
         mov hChk2, eax
         Invoke MUICheckboxSetState, hChk2, TRUE
         
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox3Text, 20, 100, 300, 24, IDC_CHECKBOX3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP; or MUICBS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox3Text, 20, 100, 300, 24, IDC_CHECKBOX3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or THEMEDARK; or MUICBS_NOFOCUSRECT
         mov hChk3, eax
 
-        Invoke MUICheckboxCreate, hWin, Addr szCheckbox4Text, 20, 125, 300, 24, IDC_CHECKBOX3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP; or MUICBS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szCheckbox4Text, 20, 125, 300, 24, IDC_CHECKBOX3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or THEMEDARK; or MUICBS_NOFOCUSRECT
         mov hChk4, eax
 
-        Invoke MUICheckboxCreate, hWin, Addr szRadio1Text, 20, 150, 300, 24, IDC_RADIO1, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICBS_RADIO; or MUICBS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szRadio1Text, 20, 150, 300, 24, IDC_RADIO1, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICBS_RADIO or THEMEDARK; or MUICBS_NOFOCUSRECT
         mov hRadio1, eax
         Invoke MUICheckboxSetState, hRadio1, FALSE
 
-        Invoke MUICheckboxCreate, hWin, Addr szRadio2Text, 20, 175, 300, 24, IDC_RADIO2, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICBS_RADIO; or MUICBS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szRadio2Text, 20, 175, 300, 24, IDC_RADIO2, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or WS_DISABLED or MUICBS_RADIO or THEMEDARK; or MUICBS_NOFOCUSRECT
         mov hRadio2, eax
         Invoke MUICheckboxSetState, hRadio2, TRUE
 
-        Invoke MUICheckboxCreate, hWin, Addr szRadio3Text, 20, 200, 300, 24, IDC_RADIO3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICBS_RADIO; or MUICBS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szRadio3Text, 20, 200, 300, 24, IDC_RADIO3, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICBS_RADIO or THEMEDARK; or MUICBS_NOFOCUSRECT
         mov hRadio3, eax
 
-        Invoke MUICheckboxCreate, hWin, Addr szRadio4Text, 20, 225, 300, 24, IDC_RADIO4, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICBS_RADIO; or MUICBS_NOFOCUSRECT
+        Invoke MUICheckboxCreate, hWin, Addr szRadio4Text, 20, 225, 300, 24, IDC_RADIO4, MUICBS_HAND or WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or MUICBS_RADIO or THEMEDARK; or MUICBS_NOFOCUSRECT
         mov hRadio4, eax
 
     ;---------------------------------------------------------------------------------------------------------------
@@ -145,7 +155,11 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ret
 
     .ELSEIF eax == WM_PAINT
+        IFDEF USE_DARK_THEME 
+        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), MUI_RGBCOLOR(27,161,226)
+        ELSE ; comment out the line at the start of this program to use light background and dark icons
         invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(255,255,255), MUI_RGBCOLOR(27,161,226)
+        ENDIF
         mov eax, 0
         ret
     ;---------------------------------------------------------------------------------------------------------------
