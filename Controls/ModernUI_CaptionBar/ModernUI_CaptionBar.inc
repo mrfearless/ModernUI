@@ -124,6 +124,7 @@ MUICS_USEICONSFORBUTTONS        EQU 100h ; Use icons instead of text (Marlett fo
 MUICS_KEEPICONS                 EQU 200h ; Dont delete icons handles when control is destoyed. Essential if icon handles are used in multiple controls or where set directly with properties 
 MUICS_NOCAPTIONTITLETEXT        EQU 400h ; Dont draw a title text value, use lpszCaptionText for taskbar name of app only.
 MUICS_NOBORDER                  EQU 800h ; No border used, so position ModernUI_CaptionBar at 0,0 instead of at 1,1
+MUICS_WINSIZE                   EQU 1000h; Dialog/Window is resizable.
 MUICS_THEME                     EQU 8000h; Use default windows theme colors and react to WM_THEMECHANGED
 
 ;------------------------------------------------------------------------------
@@ -181,3 +182,6 @@ MUICBIT_PNG                     EQU 3
 @CapButtonParam                 EQU 32  ; DWORD. Custom user data
 @CapButtonResourceID            EQU 36  ; n/a might be removed in future
 
+; Note setting dialog with WS_CLIPCHILDREN beforehand and using MUI Style (NOT MUICS_WINNOMUISTYLE) will call ApplyStyleToDialog, but other controls will have
+; a black background for a millisecond before being painting normally. Unset WS_CLIPCHILDREN in dialog, and let ApplyStyleToDialog change it to prevent this
+; black background for a millisecond thing happening.

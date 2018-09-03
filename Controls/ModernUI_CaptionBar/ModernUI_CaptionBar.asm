@@ -48,7 +48,6 @@ include \masm32\macros\macros.asm
 MUI_DONTUSEGDIPLUS EQU 1 ; exclude (gdiplus) support
 
 ;DEBUG32 EQU 1
-
 ;IFDEF DEBUG32
 ;    PRESERVEXMMREGS equ 1
 ;    includelib M:\Masm32\lib\Debug32.lib
@@ -128,6 +127,10 @@ _MUI_CapButtonCleanup                       PROTO :DWORD
 _MUI_CapButtonPaint                         PROTO :DWORD
 _MUI_CapButtonsReposition                   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CapButtonSetPropertyEx                 PROTO :DWORD, :DWORD, :DWORD
+
+
+_CBP_MouseOverBorders                       PROTO :DWORD, :DWORD
+
 
 ;------------------------------------------------------------------------------
 ; Structures for internal use
@@ -237,7 +240,7 @@ MUI_SYSBUTTON_MAX_ID                        EQU (MUI_SYSBUTTON_CLS_ID -1)
 MUI_SYSBUTTON_RES_ID                        EQU (MUI_SYSBUTTON_CLS_ID -2)
 MUI_SYSBUTTON_MIN_ID                        EQU (MUI_SYSBUTTON_CLS_ID -3)
 
-
+MUI_BORDER_SIZE                             EQU 8d
 MUI_CAPTIONBAR_IMAGETEXT_PADDING            EQU 10d ; Padding space between end of image and start of text
 MUI_CAPTIONBAR_TEXTLEFT_PADDING             EQU 6d  ; Padding space from left of ModernUI_CaptionBar to start of text if no image present
 MUI_DEFAULT_CAPTION_HEIGHT                  EQU 32d ; Default height of caption bar control
@@ -520,7 +523,7 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
    .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @CaptionBarEnabledState
         .IF eax == TRUE   
-            Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , TRUE
+            Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver, TRUE
             .IF eax != TRUE
                 Invoke InvalidateRect, hWin, NULL, TRUE
                 mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
@@ -533,11 +536,11 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         .ENDIF
         
     .ELSEIF eax == WM_MOUSELEAVE
-        Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , FALSE
+        Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver, FALSE
         Invoke InvalidateRect, hWin, NULL, TRUE
 
     .ELSEIF eax == WM_KILLFOCUS
-        Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver , FALSE
+        Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver, FALSE
         Invoke InvalidateRect, hWin, NULL, TRUE
     
     .ELSEIF eax == WM_SIZE
@@ -620,6 +623,7 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
     .ELSEIF eax == WM_NCCALCSIZE
         Invoke InvalidateRect, hWin, NULL, TRUE
         Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
+        ret
     
     .ELSEIF eax == WM_THEMECHANGED || eax == WM_DWMCOMPOSITIONCHANGED
         ;PrintText 'WM_THEMECHANGED || WM_DWMCOMPOSITIONCHANGED'
@@ -647,6 +651,7 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
             Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
             ret
         .ELSE
+            ;PrintText 'Parent WM_ERASEBKGND'
             mov eax, 1
             ret
         .ENDIF
@@ -657,10 +662,64 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
             Invoke DefSubclassProc, hWin, uMsg, wParam, lParam         
             ret
         .ELSE
+            ;PrintText 'Parent WM_PAINT'
             mov BackColor, eax
             Invoke MUIGetExtProperty, dwRefData, @CaptionBarWindowBorderColor
             Invoke MUIPaintBackground, hWin, BackColor, eax
             ret
+        .ENDIF
+    
+;    .ELSEIF eax == WM_NCHITTEST
+;        mov eax, HTTRANSPARENT
+;        ret
+
+    .ELSEIF eax == WM_LBUTTONDOWN
+        Invoke GetWindowLong, dwRefData, GWL_STYLE
+        and eax, MUICS_WINSIZE
+        .IF eax == MUICS_WINSIZE    
+            Invoke _CBP_MouseOverBorders, hWin, TRUE
+            .IF eax != 0
+                .IF eax == 1 ; left
+                    Invoke SendMessage, hWin, WM_NCLBUTTONDOWN, HTLEFT, 0
+                .ELSEIF eax == 2 ; top
+                    Invoke SendMessage, hWin, WM_NCLBUTTONDOWN, HTTOP, 0
+                .ELSEIF eax == 3 ; right
+                    Invoke SendMessage, hWin, WM_NCLBUTTONDOWN, HTRIGHT, 0
+                .ELSEIF eax == 4 ; bottom
+                    Invoke SendMessage, hWin, WM_NCLBUTTONDOWN, HTBOTTOM, 0
+                .ELSEIF eax == 5 ; NW
+                    Invoke SendMessage, hWin, WM_NCLBUTTONDOWN, HTTOPLEFT, 0
+                .ELSEIF eax == 6 ; NE
+                    Invoke SendMessage, hWin, WM_NCLBUTTONDOWN, HTTOPRIGHT, 0
+                .ELSEIF eax == 7 ; SW
+                    Invoke SendMessage, hWin, WM_NCLBUTTONDOWN, HTBOTTOMLEFT, 0
+                .ELSEIF eax == 8 ; SE
+                    Invoke SendMessage, hWin, WM_NCLBUTTONDOWN, HTBOTTOMRIGHT, 0
+                .ENDIF
+                ; todo investigate weird artifacts on resizing, its like parts of the dropshadow are showing, or maybe its the border?
+                ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED ;or SWP_NOSENDCHANGING
+                ;Invoke InvalidateRect, hWin, NULL, TRUE
+                ;Invoke UpdateWindow, hWin
+            .ENDIF
+        .ENDIF
+        Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
+        ret        
+
+;    .ELSEIF eax == WM_LBUTTONUP ; click on window, move over min, then close, then back to window, and release click - grey colored squares?
+;        Invoke GetWindowLong, dwRefData, GWL_STYLE
+;        mov dwStyle, eax
+;        and eax, MUICS_WINSIZE
+;        .IF eax == MUICS_WINSIZE
+;            Invoke InvalidateRect, hWin, NULL, TRUE
+;        .ENDIF
+;        Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
+;        ret
+
+    .ELSEIF eax == WM_MOUSEMOVE
+        Invoke GetWindowLong, dwRefData, GWL_STYLE
+        and eax, MUICS_WINSIZE
+        .IF eax == MUICS_WINSIZE 
+            Invoke _CBP_MouseOverBorders, hWin, TRUE
         .ENDIF
 
 ;    .ELSEIF eax == WM_SETICON
@@ -688,6 +747,171 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
 
     ret        
 _MUI_CaptionBarParentSubClassProc ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _CBP_MouseOverBorders - set initial default values
+;------------------------------------------------------------------------------
+; precalc rects? store somewhere for checking later on, recalc on resize
+_CBP_MouseOverBorders PROC hWin:DWORD, bShowCursor:DWORD
+    LOCAL dwPos:DWORD
+    LOCAL winrect:RECT
+    LOCAL borderleft:RECT
+    LOCAL bordertop:RECT
+    LOCAL borderright:RECT
+    LOCAL borderbottom:RECT
+    LOCAL cornernw:RECT
+    LOCAL cornerne:RECT
+    LOCAL cornersw:RECT
+    LOCAL cornerse:RECT
+    LOCAL pt:POINT
+    
+    Invoke GetWindowRect, hWin, Addr winrect
+    Invoke GetCursorPos, Addr pt
+    Invoke CopyRect, Addr borderleft, Addr winrect
+    Invoke CopyRect, Addr bordertop, Addr winrect
+    Invoke CopyRect, Addr borderright, Addr winrect
+    Invoke CopyRect, Addr borderbottom, Addr winrect
+    Invoke CopyRect, Addr cornernw, Addr winrect
+    Invoke CopyRect, Addr cornerne, Addr winrect
+    Invoke CopyRect, Addr cornersw, Addr winrect
+    Invoke CopyRect, Addr cornerse, Addr winrect
+    
+    
+    mov eax, borderleft.left
+    add eax, MUI_BORDER_SIZE
+    mov borderleft.right, eax
+    add borderleft.top, MUI_BORDER_SIZE
+    sub borderleft.bottom, MUI_BORDER_SIZE
+    
+    mov eax, bordertop.top
+    add eax, MUI_BORDER_SIZE
+    mov bordertop.bottom, eax
+    add bordertop.left, MUI_BORDER_SIZE
+    sub bordertop.right, MUI_BORDER_SIZE
+   
+    mov eax, borderright.right
+    sub eax, MUI_BORDER_SIZE
+    mov borderright.left, eax
+    add borderright.top, MUI_BORDER_SIZE
+    sub borderright.bottom, MUI_BORDER_SIZE
+    
+    mov eax, borderbottom.bottom
+    sub eax, MUI_BORDER_SIZE
+    mov borderbottom.top, eax
+    add borderbottom.left, MUI_BORDER_SIZE
+    sub borderbottom.right, MUI_BORDER_SIZE
+    
+    ; Corner NW
+    mov eax, cornernw.left
+    add eax, MUI_BORDER_SIZE
+    mov cornernw.right, eax
+    mov eax, cornernw.top
+    add eax, MUI_BORDER_SIZE
+    mov cornernw.bottom, eax
+    
+    ; Corner NE
+    mov eax, cornerne.right
+    sub eax, MUI_BORDER_SIZE
+    mov cornerne.left, eax
+    mov eax, cornerne.top
+    add eax, MUI_BORDER_SIZE
+    mov cornerne.bottom, eax
+    
+    ; Corner SW
+    mov eax, cornersw.left
+    add eax, MUI_BORDER_SIZE
+    mov cornersw.right, eax
+    mov eax, cornersw.bottom
+    sub eax, MUI_BORDER_SIZE
+    mov cornersw.top, eax
+    
+    ; Corner SE
+    mov eax, cornerse.right
+    sub eax, MUI_BORDER_SIZE
+    mov cornerse.left, eax
+    mov eax, cornerse.bottom
+    sub eax, MUI_BORDER_SIZE
+    mov cornerse.top, eax
+    
+    mov dwPos, 0
+    Invoke PtInRect, Addr borderleft, pt.x, pt.y
+    .IF eax == TRUE
+        ;PrintText 'leftborder'
+        mov dwPos, 1
+    .ENDIF
+    
+    Invoke PtInRect, Addr bordertop, pt.x, pt.y
+    .IF eax == TRUE
+        ;PrintText 'topborder'
+        mov dwPos, 2
+    .ENDIF
+    
+    Invoke PtInRect, Addr borderright, pt.x, pt.y
+    .IF eax == TRUE
+        ;PrintText 'rightborder'
+        mov dwPos, 3
+    .ENDIF
+    
+    Invoke PtInRect, Addr borderbottom, pt.x, pt.y
+    .IF eax == TRUE
+        ;PrintText 'bottomborder'
+        mov dwPos, 4
+    .ENDIF
+    
+    Invoke PtInRect, Addr cornernw, pt.x, pt.y
+    .IF eax == TRUE
+        ;PrintText 'NW'
+        mov dwPos, 5
+    .ENDIF
+    
+    Invoke PtInRect, Addr cornerne, pt.x, pt.y
+    .IF eax == TRUE
+        ;PrintText 'NE'
+        mov dwPos, 6
+    .ENDIF
+    
+    Invoke PtInRect, Addr cornersw, pt.x, pt.y
+    .IF eax == TRUE
+        ;PrintText 'SW'
+        mov dwPos, 7
+    .ENDIF
+    
+    Invoke PtInRect, Addr cornerse, pt.x, pt.y
+    .IF eax == TRUE
+        ;PrintText 'SE'
+        mov dwPos, 8
+    .ENDIF
+    
+    .IF bShowCursor == TRUE
+        mov eax, dwPos
+        .IF eax == 1
+            Invoke LoadCursor, NULL, IDC_SIZEWE
+        .ELSEIF eax == 2 
+            Invoke LoadCursor, NULL, IDC_SIZENS
+        .ELSEIF eax == 3
+            Invoke LoadCursor, NULL, IDC_SIZEWE
+        .ELSEIF eax == 4
+            Invoke LoadCursor, NULL, IDC_SIZENS
+        .ELSEIF eax == 5 ; NW
+            Invoke LoadCursor, NULL, IDC_SIZENWSE
+        .ELSEIF eax == 6 ; NE
+            Invoke LoadCursor, NULL, IDC_SIZENESW
+        .ELSEIF eax == 7 ; SW
+            Invoke LoadCursor, NULL, IDC_SIZENESW
+        .ELSEIF eax == 8 ; SE
+            Invoke LoadCursor, NULL, IDC_SIZENWSE
+        .ELSE
+            Invoke LoadCursor, NULL, IDC_ARROW
+        .ENDIF
+        Invoke SetCursor, eax
+    .ENDIF
+    
+    mov eax, dwPos
+    ret
+
+_CBP_MouseOverBorders ENDP
 
 
 MUI_ALIGN
@@ -1016,27 +1240,44 @@ MUI_ALIGN
 ; _MUI_CaptionBarPaintBackground
 ;------------------------------------------------------------------------------
 _MUI_CaptionBarPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD
+    LOCAL hdcMem:DWORD
+    LOCAL hBufferBitmap:DWORD
+    LOCAL rect:RECT
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
-    LOCAL hOldBrush:DWORD
-    
+
+    ;----------------------------------------------------------
+    ; Get Properties & Other Stuff
+    ;----------------------------------------------------------
     Invoke MUIGetExtProperty, hWin, @CaptionBarBackColor
     mov BackColor, eax
-    
+    Invoke GetClientRect, hWin, Addr rect
+    Invoke CopyRect, Addr rect, lpRect
+
+    ;----------------------------------------------------------
+    ; Setup Double Buffering
+    ;----------------------------------------------------------
+    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap 
+
+    ;----------------------------------------------------------
+    ; Fill Background
+    ;----------------------------------------------------------   
     Invoke GetStockObject, DC_BRUSH
     mov hBrush, eax
-    Invoke SelectObject, hdc, eax
-    mov hOldBrush, eax
-    Invoke SetDCBrushColor, hdc, BackColor
-    Invoke FillRect, hdc, lpRect, hBrush
-    
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdc, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF      
+    Invoke SelectObject, hdcMem, eax
+    Invoke SetDCBrushColor, hdcMem, BackColor
+    Invoke FillRect, hdcMem, Addr rect, hBrush
+
+    ;----------------------------------------------------------
+    ; BitBlt from hdcMem back to hdc
+    ;----------------------------------------------------------
+    Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+
+    ;----------------------------------------------------------
+    ; Finish Double Buffering & Cleanup
+    ;----------------------------------------------------------    
+    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, hBrush, 0
+
     ret
 _MUI_CaptionBarPaintBackground ENDP
 
@@ -2055,13 +2296,17 @@ MUI_ALIGN
 _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
     LOCAL dwStyle:DWORD
     LOCAL dwNewStyle:DWORD
+    LOCAL dwBasicOldStyle:DWORD
     LOCAL dwClassStyle:DWORD
 
+    ;PrintText '_MUI_ApplyMUIStyleToDialog'
     mov dwNewStyle, WS_POPUP
-    
     Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
+    ;and eax, 0FFFF0000h ; remove any custom styles we set for captionbar
+    mov dwBasicOldStyle, eax
     
+    mov eax, dwStyle
     and eax, DS_CENTER
     .IF eax == DS_CENTER
         or dwNewStyle, DS_CENTER
@@ -2072,6 +2317,18 @@ _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
     .IF eax == DS_CENTERMOUSE
         or dwNewStyle, DS_CENTERMOUSE
     .ENDIF
+    
+;    mov eax, dwStyle
+;    and eax, DS_SETFONT
+;    .IF eax == DS_SETFONT
+;        or dwNewStyle, DS_SETFONT
+;    .ENDIF    
+;    
+;    mov eax, dwStyle
+;    and eax, DS_3DLOOK
+;    .IF eax == DS_3DLOOK
+;        or dwNewStyle, DS_3DLOOK
+;    .ENDIF      
     
     mov eax, dwStyle
     and eax, WS_VISIBLE
@@ -2097,12 +2354,26 @@ _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
         or dwNewStyle, WS_CLIPSIBLINGS
     .ENDIF        
     
-    or dwNewStyle, WS_CLIPCHILDREN
-
-    Invoke SetWindowLong, hWin, GWL_STYLE, dwNewStyle
+    mov eax, dwStyle
+    and eax, WS_CLIPCHILDREN
+    .IF eax == WS_CLIPCHILDREN
+        or dwNewStyle, WS_CLIPCHILDREN
+    .ENDIF
+    
+    ; If user has already set dialog/window to the right style, then no need to set it again
+    mov eax, dwNewStyle
+    ;and eax, 0FFFF0000h ; remove any custom styles we set for captionbar
+    ;PrintDec dwNewStyle
+    ;PrintDec dwBasicOldStyle
+    .IF eax == dwBasicOldStyle ; no major changes, so dont set new style
+    .ELSE
+        ;PrintText 'Setting New Style'
+        Invoke SetWindowLong, hWin, GWL_STYLE, dwNewStyle
+        ; Set WS_EX_COMPOSITED as well?
+        Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED or SWP_NOSENDCHANGING
+    .ENDIF
     
     ; Set dropshadow on or off on our dialog
-    
     Invoke GetClassLong, hWin, GCL_STYLE
     mov dwClassStyle, eax
     
@@ -2112,6 +2383,7 @@ _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
         .IF eax != CS_DROPSHADOW
             or dwClassStyle, CS_DROPSHADOW
             Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
+            ;PrintText 'Setting DropShadow Class Style'
         .ENDIF
     .ELSE    
         mov eax, dwClassStyle
@@ -2119,20 +2391,17 @@ _MUI_ApplyMUIStyleToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD
         .IF eax == CS_DROPSHADOW
             and dwClassStyle,(-1 xor CS_DROPSHADOW)
             Invoke SetClassLong, hWin, GCL_STYLE, dwClassStyle
+            ;PrintText 'Removing DropShadow Class Style'
         .ENDIF
     .ENDIF
 
     ; remove any menu that might have been assigned via class registration - for modern ui look
     Invoke GetMenu, hWin
     .IF eax != NULL
+        ;PrintText 'Removing Menu'
         Invoke SetMenu, hWin, NULL
     .ENDIF
-    
-    Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED
- 
-    
     ret
-
 _MUI_ApplyMUIStyleToDialog ENDP
 
 
