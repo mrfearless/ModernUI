@@ -81,6 +81,7 @@ ENDIF
 
 include ModernUI_Checkbox.inc
 include ModernUI_Checkbox_Icons.asm
+include ModernUI_Radio_Icons.asm
 
 ;------------------------------------------------------------------------------
 ; Prototypes for internal use
@@ -200,18 +201,36 @@ szMUICheckboxClass                      DB 'ModernUI_Checkbox',0            ; Cl
 szMUICheckboxFont                       DB 'Segoe UI',0                     ; Font used for ModernUI_Checkbox text
 hMUICheckboxFont                        DD 0                                ; Handle to ModernUI_Checkbox font (segoe ui)
 
-  ; File M:\GitProjects\ModernUI\icons\Dark\16px\mui_checkbox_tick_16x16.ico opened at 1150 bytes
 
+; (D) dark color icons for light backgrounds (default):
+hDefault_icoMUICheckboxTickD            DD 0 ; selected - icoMUICheckboxTick
+hDefault_icoMUICheckboxEmptyD           DD 0 ; default - icoMUICheckboxEmpty
+hDefault_icoMUICheckboxDisabledTickD    DD 0
+hDefault_icoMUICheckboxDisabledEmptyD   DD 0
+hDefault_icoMUICheckboxAltTickD         DD 0 ; selected alt - icoMUICheckboxAltTick
+hDefault_icoMUICheckboxAltEmptyD        DD 0 ; default alt - icoMUICheckboxAltEmpty
 
-hDefault_icoMUICheckboxTick             DD 0
-hDefault_icoMUICheckboxEmpty            DD 0
-hDefault_icoMUICheckboxDisabledTick     DD 0
-hDefault_icoMUICheckboxDisabledEmpty    DD 0
-hDefault_icoMUIRadioTick                DD 0
-hDefault_icoMUIRadioEmpty               DD 0
-hDefault_icoMUIRadioDisabledTick        DD 0
-hDefault_icoMUIRadioDisabledEmpty       DD 0
+hDefault_icoMUIRadioTickD               DD 0 ; selected
+hDefault_icoMUIRadioEmptyD              DD 0 ; default
+hDefault_icoMUIRadioDisabledTickD       DD 0
+hDefault_icoMUIRadioDisabledEmptyD      DD 0
+hDefault_icoMUIRadioAltTickD            DD 0 ; selected alt - icoMUIRadioAltTick
+hDefault_icoMUIRadioAltEmptyD           DD 0 ; default alt - icoMUIRadioAltEmpty
 
+; (L) light color icons for dark backgrounds:
+hDefault_icoMUICheckboxTickL            DD 0 ; selected - icoMUICheckboxTickL
+hDefault_icoMUICheckboxEmptyL           DD 0 ; default - icoMUICheckboxEmptyL
+hDefault_icoMUICheckboxDisabledTickL    DD 0
+hDefault_icoMUICheckboxDisabledEmptyL   DD 0
+hDefault_icoMUICheckboxAltTickL         DD 0 ; selected alt - icoMUICheckboxAltTickL
+hDefault_icoMUICheckboxAltEmptyL        DD 0 ; default alt - icoMUICheckboxAltEmptyL
+
+hDefault_icoMUIRadioTickL               DD 0 ; selected
+hDefault_icoMUIRadioEmptyL              DD 0 ; default
+hDefault_icoMUIRadioDisabledTickL       DD 0
+hDefault_icoMUIRadioDisabledEmptyL      DD 0
+hDefault_icoMUIRadioAltTickL            DD 0 ; selected alt - icoMUIRadioAltTickL
+hDefault_icoMUIRadioAltEmptyL           DD 0 ; default alt - icoMUIRadioAltEmptyL
 
 .CODE
 
@@ -559,58 +578,144 @@ _MUI_CheckboxInit PROC PRIVATE hWin:DWORD
 
 
     ; create default icons for use if user hasnt specified any images
-    .IF hDefault_icoMUICheckboxTick == 0
-        Invoke MUICreateIconFromMemory, Addr icoMUICheckboxTick, 0
-        mov hDefault_icoMUICheckboxTick, eax
-    .ENDIF
-    .IF hDefault_icoMUICheckboxEmpty == 0
-        Invoke MUICreateIconFromMemory, Addr icoMUICheckboxEmpty, 0
-        mov hDefault_icoMUICheckboxEmpty, eax
-    .ENDIF
-    .IF hDefault_icoMUIRadioTick == 0
-        Invoke MUICreateIconFromMemory, Addr icoMUIRadioTick, 0
-        mov hDefault_icoMUIRadioTick, eax
-    .ENDIF
-    .IF hDefault_icoMUIRadioEmpty == 0
-        Invoke MUICreateIconFromMemory, Addr icoMUIRadioEmpty, 0
-        mov hDefault_icoMUIRadioEmpty, eax
-    .ENDIF
-    .IF hDefault_icoMUIRadioDisabledEmpty == 0
-        Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledEmpty, 0
-        mov hDefault_icoMUIRadioDisabledEmpty, eax
-    .ENDIF
-    .IF hDefault_icoMUIRadioDisabledTick == 0
-        Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledTick, 0
-        mov hDefault_icoMUIRadioDisabledTick, eax
-    .ENDIF
-    .IF hDefault_icoMUICheckboxDisabledEmpty == 0
-        Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledEmpty, 0
-        mov hDefault_icoMUICheckboxDisabledEmpty, eax
-    .ENDIF
-    .IF hDefault_icoMUICheckboxDisabledTick == 0
-        Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledTick, 0
-        mov hDefault_icoMUICheckboxDisabledTick, eax
-    .ENDIF    
-    
     Invoke MUISetExtProperty, hWin, @CheckboxImageType, MUICIT_ICO
-
 
     mov eax, dwStyle
     and eax, MUICBS_RADIO
     .IF eax == MUICBS_RADIO
-        Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUIRadioEmpty
-        Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUIRadioEmpty
-        Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUIRadioTick
-        Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUIRadioTick
-        Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUIRadioDisabledEmpty
-        Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUIRadioDisabledTick
+        ; Default radio icons
+        mov eax, dwStyle
+        and eax, MUICBS_THEMEDARK
+        .IF eax == MUICBS_THEMEDARK ; light color icons for dark background
+            .IF hDefault_icoMUIRadioEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioEmptyL, 0
+                mov hDefault_icoMUIRadioEmptyL, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioAltEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioAltEmptyL, 0
+                mov hDefault_icoMUIRadioAltEmptyL, eax
+            .ENDIF               
+            .IF hDefault_icoMUIRadioTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioTickL, 0
+                mov hDefault_icoMUIRadioTickL, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioAltTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioAltTickL, 0
+                mov hDefault_icoMUIRadioAltTickL, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioDisabledEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledEmptyL, 0
+                mov hDefault_icoMUIRadioDisabledEmptyL, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioDisabledTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledTickL, 0
+                mov hDefault_icoMUIRadioDisabledTickL, eax
+            .ENDIF    
+            Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUIRadioEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUIRadioAltEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUIRadioTickL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUIRadioAltTickL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUIRadioDisabledEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUIRadioDisabledTickL
+        .ELSE ; dark color icons for light background
+            .IF hDefault_icoMUIRadioEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioEmptyD, 0
+                mov hDefault_icoMUIRadioEmptyD, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioAltEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioAltEmptyD, 0
+                mov hDefault_icoMUIRadioAltEmptyD, eax
+            .ENDIF               
+            .IF hDefault_icoMUIRadioTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioTickD, 0
+                mov hDefault_icoMUIRadioTickD, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioAltTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioAltTickD, 0
+                mov hDefault_icoMUIRadioAltTickD, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioDisabledEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledEmptyD, 0
+                mov hDefault_icoMUIRadioDisabledEmptyD, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioDisabledTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledTickD, 0
+                mov hDefault_icoMUIRadioDisabledTickD, eax
+            .ENDIF    
+            Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUIRadioEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUIRadioAltEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUIRadioTickD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUIRadioAltTickD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUIRadioDisabledEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUIRadioDisabledTickD
+        .ENDIF
     .ELSE
-        Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUICheckboxEmpty
-        Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUICheckboxEmpty
-        Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUICheckboxTick
-        Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUICheckboxTick
-        Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUICheckboxDisabledEmpty
-        Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUICheckboxDisabledTick
+        ; Default check icons
+        mov eax, dwStyle
+        and eax, MUICBS_THEMEDARK
+        .IF eax == MUICBS_THEMEDARK ; light color icons for dark background
+            .IF hDefault_icoMUICheckboxEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxEmptyL, 0
+                mov hDefault_icoMUICheckboxEmptyL, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxAltEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxAltEmptyL, 0
+                mov hDefault_icoMUICheckboxAltEmptyL, eax
+            .ENDIF             
+            .IF hDefault_icoMUICheckboxTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxTickL, 0
+                mov hDefault_icoMUICheckboxTickL, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxAltTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxAltTickL, 0
+                mov hDefault_icoMUICheckboxAltTickL, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxDisabledEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledEmptyL, 0
+                mov hDefault_icoMUICheckboxDisabledEmptyL, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxDisabledTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledTickL, 0
+                mov hDefault_icoMUICheckboxDisabledTickL, eax
+            .ENDIF
+            Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUICheckboxEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUICheckboxAltEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUICheckboxTickL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUICheckboxAltTickL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUICheckboxDisabledEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUICheckboxDisabledTickL
+        .ELSE ; dark color icons for light background
+            .IF hDefault_icoMUICheckboxEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxEmptyD, 0
+                mov hDefault_icoMUICheckboxEmptyD, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxAltEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxAltEmptyD, 0
+                mov hDefault_icoMUICheckboxAltEmptyD, eax
+            .ENDIF             
+            .IF hDefault_icoMUICheckboxTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxTickD, 0
+                mov hDefault_icoMUICheckboxTickD, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxAltTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxAltTickD, 0
+                mov hDefault_icoMUICheckboxAltTickD, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxDisabledEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledEmptyD, 0
+                mov hDefault_icoMUICheckboxDisabledEmptyD, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxDisabledTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledTickD, 0
+                mov hDefault_icoMUICheckboxDisabledTickD, eax
+            .ENDIF
+            Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUICheckboxEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUICheckboxAltEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUICheckboxTickD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUICheckboxAltTickD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUICheckboxDisabledEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUICheckboxDisabledTickD
+        .ENDIF
     .ENDIF
     ret
 
@@ -776,8 +881,10 @@ MUI_ALIGN
 ; style used
 ;------------------------------------------------------------------------------
 _MUI_CheckboxSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
-
+    LOCAL dwStyle:DWORD
+    
     Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
     and eax, MUICBS_THEME
     .IF eax == MUICBS_THEME
         ; Set color property values based on system colors
@@ -799,19 +906,31 @@ _MUI_CheckboxSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
     .ELSE
 
         .IF bInit == TRUE
-            ; Set color property values based on custom values
-            Invoke MUISetExtProperty, hWin, @CheckboxTextColor, MUI_RGBCOLOR(51,51,51)
-            Invoke MUISetExtProperty, hWin, @CheckboxTextColorAlt, MUI_RGBCOLOR(41,122,185)
-            Invoke MUISetExtProperty, hWin, @CheckboxTextColorSel, MUI_RGBCOLOR(51,51,51)
-            Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, MUI_RGBCOLOR(41,122,185)
-            Invoke MUISetExtProperty, hWin, @CheckboxTextColorDisabled, MUI_RGBCOLOR(204,204,204)
         
-            Invoke MUIGetParentBackgroundColor, hWin
-            .IF eax == -1 ; if background was NULL then try a color as default
-                Invoke GetSysColor, COLOR_WINDOW
+            mov eax, dwStyle
+            and eax, MUICBS_THEMEDARK
+            .IF eax == MUICBS_THEMEDARK
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColor, MUI_RGBCOLOR(240,240,240)
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorAlt, MUI_RGBCOLOR(43,178,243)
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorSel, MUI_RGBCOLOR(240,240,240)
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, MUI_RGBCOLOR(43,178,243)
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorDisabled, MUI_RGBCOLOR(160,160,160)
+                Invoke MUISetExtProperty, hWin, @CheckboxBackColor, MUI_RGBCOLOR(45,45,48)
+            .ELSE
+                ; Set color property values based on custom values
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColor, MUI_RGBCOLOR(51,51,51)
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorAlt, MUI_RGBCOLOR(41,122,185)
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorSel, MUI_RGBCOLOR(51,51,51)
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorSelAlt, MUI_RGBCOLOR(41,122,185)
+                Invoke MUISetExtProperty, hWin, @CheckboxTextColorDisabled, MUI_RGBCOLOR(204,204,204)
+            
+                Invoke MUIGetParentBackgroundColor, hWin
+                .IF eax == -1 ; if background was NULL then try a color as default
+                    Invoke GetSysColor, COLOR_WINDOW
+                .ENDIF
+                Invoke MUISetExtProperty, hWin, @CheckboxBackColor, eax
+                ;Invoke MUISetExtProperty, hWin, @CheckboxBackColor, MUI_RGBCOLOR(240,240,240) ;MUI_RGBCOLOR(21,133,181)
             .ENDIF
-            Invoke MUISetExtProperty, hWin, @CheckboxBackColor, eax
-            ;Invoke MUISetExtProperty, hWin, @CheckboxBackColor, MUI_RGBCOLOR(240,240,240) ;MUI_RGBCOLOR(21,133,181)
         .ENDIF
     .ENDIF
     ret

@@ -91,6 +91,8 @@ MUICBS_CHECK                     EQU 00h     ;
 MUICBS_RADIO                     EQU 01h     ;
 MUICBS_HAND                      EQU 20h     ; Show a hand instead of an arrow when mouse moves over checkbox.
 MUICBS_NOFOCUSRECT               EQU 100h    ; Dont show focus rect, just use change border to @CheckboxTextColorAlt when setfocus.
+
+MUICBS_THEMEDARK                 EQU 200h    ; For default icons, if not set default dark icons for light backgrounds, if set light icons for dark backgrounds
 MUICBS_THEME                     EQU 8000h   ; Use default windows theme colors and react to WM_THEMECHANGED
 
 ;------------------------------------------------------------------------------
