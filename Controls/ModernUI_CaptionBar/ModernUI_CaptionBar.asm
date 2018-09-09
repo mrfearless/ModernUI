@@ -172,6 +172,7 @@ ENDIF
 _MUI_CAPTIONBAR_PROPERTIES                  STRUCT
     dwEnabledState                          DD ?
     dwMouseOver                             DD ?
+    dwMouseDown                             DD ? 
     hSysButtonClose                         DD ?
     hSysButtonMax                           DD ?
     hSysButtonRes                           DD ?
@@ -257,15 +258,16 @@ MUI_CAPBUTTON_TEXT_MAX                      EQU 32  ; Default max length of capt
 ; CaptionBar Internal Properties
 @CaptionBarEnabledState                     EQU 0
 @CaptionBarMouseOver                        EQU 4
-@CaptionBar_hSysButtonClose                 EQU 8
-@CaptionBar_hSysButtonMax                   EQU 12
-@CaptionBar_hSysButtonRes                   EQU 16
-@CaptionBar_hSysButtonMin                   EQU 20
-@CaptionBarNoMoveWindow                     EQU 24
-@CaptionBarUseIcons                         EQU 28
-@CaptionBarButtonsLeftOffset                EQU 32
-@CaptionBarTotalButtons                     EQU 36
-@CaptionBarButtonArray                      EQU 40
+@CaptionBarMouseDown                        EQU 8
+@CaptionBar_hSysButtonClose                 EQU 12
+@CaptionBar_hSysButtonMax                   EQU 16
+@CaptionBar_hSysButtonRes                   EQU 20
+@CaptionBar_hSysButtonMin                   EQU 24
+@CaptionBarNoMoveWindow                     EQU 28
+@CaptionBarUseIcons                         EQU 32
+@CaptionBarButtonsLeftOffset                EQU 36
+@CaptionBarTotalButtons                     EQU 40
+@CaptionBarButtonArray                      EQU 44
 
 ; SysButton Internal Properties
 @SysButtonFont                              EQU 0
@@ -513,11 +515,27 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
             mov eax, 0
         .ENDIF
 
+    .ELSEIF eax == WM_LBUTTONDOWN
+        Invoke MUISetIntProperty, hWin, @CaptionBarMouseDown, TRUE
+        
+    .ELSEIF eax == WM_LBUTTONUP
+        Invoke MUISetIntProperty, hWin, @CaptionBarMouseDown, FALSE
+        
     .ELSEIF eax == WM_NCHITTEST
-        Invoke MUIGetIntProperty, hWin, @CaptionBarNoMoveWindow
-        .IF eax == FALSE
-            Invoke GetParent, hWin
-            Invoke SendMessage, eax, WM_NCLBUTTONDOWN, HTCAPTION, 0
+        ; https://github.com/mrfearless/ModernUI/issues/7
+        ; add additonal logic to prevent wine sticky (until ESC pressed) of the mouse cursor on the caption
+
+        Invoke MUIGetIntProperty, hWin, @CaptionBarMouseDown
+        .IF eax == TRUE ; mouse is actually down
+            Invoke MUIGetIntProperty, hWin, @CaptionBarNoMoveWindow
+            .IF eax == FALSE
+                Invoke GetParent, hWin
+                Invoke SendMessage, eax, WM_NCLBUTTONDOWN, HTCAPTION, 0
+            .ENDIF
+        .ELSE ; otherwise we didnt detect mouse down ourselves, so no sticky move of caption hopefully
+            ; do we need to force it to nowhere?
+            ;Invoke GetParent, hWin
+            ;Invoke SendMessage, eax, WM_NCLBUTTONDOWN, HTNOWHERE, 0
         .ENDIF
 
    .ELSEIF eax == WM_MOUSEMOVE
@@ -537,10 +555,12 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
         
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver, FALSE
+        Invoke MUISetIntProperty, hWin, @CaptionBarMouseDown, FALSE
         Invoke InvalidateRect, hWin, NULL, TRUE
 
     .ELSEIF eax == WM_KILLFOCUS
         Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver, FALSE
+        Invoke MUISetIntProperty, hWin, @CaptionBarMouseDown, FALSE
         Invoke InvalidateRect, hWin, NULL, TRUE
     
     .ELSEIF eax == WM_SIZE
