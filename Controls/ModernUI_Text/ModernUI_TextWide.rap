@@ -1,7 +1,7 @@
 [Project]
 Assembler=masm
 Type=LIB Project
-Description=ModernUI_Text
+Description=ModernUI_TextWide
 Backup=$P\Bak\
 Group=1
 GroupExpand=1
@@ -35,15 +35,15 @@ Debug=0
 [MakeDef]
 Menu=0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 1=4,O,$B\RC.EXE /v,1
-2=3,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I",2
-3=9,O,$B\LIB /OUT:"$9",3
+2=3,O,$B\ML.EXE /c /coff /Cp /DMUI_UNICODE /nologo /I"$I",2
+3=9,O,$B\LIB /OUT:"ModernUI_TextWide.lib",3
 4=0,0,,5
 5=rsrc.obj,O,$B\CVTRES.EXE,rsrc.res
 6=*.obj,O,$B\ML.EXE /c /coff /Cp /nologo /I"$I",2
 7=0,0,"$E\x32dbg.exe",5
 11=4,O,$B\RC.EXE /v,1
-12=3,O,$B\ML.EXE /c /coff /Cp /Zi /Zd /nologo /I"$I",2
-13=9,O,$B\LIB.EXE /OUT:"$9",3
+12=3,O,$B\ML.EXE /c /coff /Cp /Zi /Zd /DMUI_UNICODE /nologo /I"$I",2
+13=9,O,$B\LIB.EXE /OUT:"$9" "ModernUI_TextWide.lib"
 14=0,0,,5
 15=rsrc.obj,O,$B\CVTRES.EXE,rsrc.res
 16=*.obj,O,$B\ML.EXE /c /coff /Cp /Zi /Zd /nologo /I"$I",*.asm
@@ -70,10 +70,10 @@ AutoLoad=2,1,4,7
 3=
 [Size]
 3=0,0,0,0,19721
-1=0,0,0,0,1814
-2=0,0,0,0,6405
+1=0,0,0,0,61816
+2=0,0,0,0,6291
 4=0,0,0,0,600
-7=0,0,0,0,40036
+7=0,0,0,0,93194
 6=0,0,0,0,962
 [VersionControl]
 Settings=1278
@@ -109,13 +109,13 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=1085916174
+PTimer=1082102512
 [Collapse]
-1=136348712,2080,1375731744,
+1=136347688,16779296,75497505,
 2=
 3=2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,214712320,
 4=
-7=,,,,,,,,,,,
+7=2147483647,4456447,2114969600,2147483647,2145555455,132317183,1074523391,200938493,1627389951,2067791631,205049456,7
 6=
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0

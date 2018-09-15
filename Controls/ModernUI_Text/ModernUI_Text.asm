@@ -84,6 +84,7 @@ includelib ModernUI.lib
 
 include ModernUI_Text.inc
 
+
 PUBLIC MUITextFontTable
 
 ;------------------------------------------------------------------------------
@@ -117,6 +118,15 @@ MUI_TEXT_PROPERTIES             STRUCT
     dwTextBackColor             DD ?
     dwTextBackColorAlt          DD ?
     dwTextBackColorDisabled     DD ?
+    dwTextCodeTextColor         DD ?
+    dwTextCodeBackColor         DD ? 
+    dwTextQuoteTextColor        DD ?  
+    dwTextQuoteBackColor        DD ?  
+    dwTextLinkTextColor         DD ?  
+    dwTextLinkUnderline         DD ?   
+    dwTextHelpTextColor         DD ?    
+    dwTextHelpUnderline         DD ?   
+    dwTextHorzRuleColor         DD ?   
 MUI_TEXT_PROPERTIES             ENDS
 
 ; Internal properties
@@ -124,6 +134,12 @@ _MUI_TEXT_PROPERTIES            STRUCT
     dwEnabledState              DD ?
     dwMouseOver                 DD ?
     dwTextBuffer                DD ?
+    dwPtrColorStack             DD ? ; Stack of text colors for DTE
+    dwColorStackIndex           DD ? ; Current index of color stack
+    dwPtrListStack              DD ? ; Stack of list items for DTE
+    dwListStackIndex            DD ? ; Current index of list stack
+    dwPtrFontSpecial            DD ? ; Array of fonts for DTE
+    dwHyperLinkControl          DD ? ; handle of DTE HyperLink control
 _MUI_TEXT_PROPERTIES            ENDS
 
 
@@ -165,6 +181,12 @@ MUI_TEXT_ALIGN_MASK             EQU 00000300h
 @TextMouseOver                  EQU 4
 @TextBuffer                     EQU 8
 
+@TextPtrColorStack              EQU 12 ; Stack of text colors for DTE
+@TextColorStackIndex            EQU 16 ; Current index of color stack
+@TextPtrListStack               EQU 20 ; Stack of list items for DTE
+@TextListStackIndex             EQU 24 ; Current index of list stack
+@TextPtrFontSpecial             EQU 28 ; Array of fonts for DTE
+@TextHyperLinkControl           EQU 32 ; handle of DTE HyperLink control
 
 .DATA
 ;ALIGN 2
@@ -373,7 +395,8 @@ MUITextRegister PROC PUBLIC
         mov wc.hbrBackground, NULL
         mov wc.style, NULL
         mov wc.cbClsExtra, 0
-        mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        mov wc.cbWndExtra, 12 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        ; extra dword for buffer size if not 0
         Invoke RegisterClassEx, addr wc
     .ENDIF  
     ret
@@ -578,7 +601,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_TextInit - set initial default values
 ;------------------------------------------------------------------------------
-_MUI_TextInit PROC PRIVATE hWin:DWORD
+_MUI_TextInit PROC USES EBX hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
     LOCAL BackColor:DWORD
@@ -622,7 +645,17 @@ _MUI_TextInit PROC PRIVATE hWin:DWORD
     Invoke _MUI_TextSetFontFamilySize, hWin, dwStyle
     
     ; Alloc Text Buffer
-    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, MUI_TEXT_MAX_CHARS
+    Invoke GetWindowLong, hWin, 8 ; buffer size
+    .IF eax == 0
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, MUI_TEXT_MAX_CHARS
+    .ELSE
+        IFDEF MUI_UNICODE
+        shl eax, 1 ; x2
+        ENDIF
+        and eax, 0FFFFFFF0h ; mask 
+        add eax, 16d ; round up to 16bytes        
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+    .ENDIF
     .IF eax != NULL
         Invoke MUISetIntProperty, hWin, @TextBuffer, eax
     .ENDIF
@@ -631,6 +664,51 @@ _MUI_TextInit PROC PRIVATE hWin:DWORD
     and eax, MUITS_LORUMIPSUM
     .IF eax == MUITS_LORUMIPSUM
          Invoke SetWindowText, hWin, Addr szLorumIpsumText
+    .ENDIF
+
+    ; Allocate memory for stacks if using htmlcode or bbcode tags
+    mov eax, dwStyle
+    and eax, MUITS_HTMLCODE
+    .IF eax == MUITS_HTMLCODE
+        mov eax, LISTSTACK_SIZE
+        mov ebx, SIZEOF LISTINFO
+        mul ebx
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+        Invoke MUISetIntProperty, hWin, @TextPtrListStack, eax
+        
+        mov eax, COLORSTACK_SIZE
+        mov ebx, SIZEOF COLORREF
+        mul ebx
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+        Invoke MUISetIntProperty, hWin, @TextPtrColorStack, eax
+        
+        mov eax, FV_NUMBER
+        mov ebx, SIZEOF DWORD
+        mul ebx
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+        Invoke MUISetIntProperty, hWin, @TextPtrFontSpecial, eax            
+    .ENDIF
+
+    mov eax, dwStyle
+    and eax, MUITS_BBCODE
+    .IF eax == MUITS_BBCODE
+        mov eax, LISTSTACK_SIZE
+        mov ebx, SIZEOF LISTINFO
+        mul ebx
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+        Invoke MUISetIntProperty, hWin, @TextPtrListStack, eax
+        
+        mov eax, COLORSTACK_SIZE
+        mov ebx, SIZEOF COLORREF
+        mul ebx
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+        Invoke MUISetIntProperty, hWin, @TextPtrColorStack, eax
+        
+        mov eax, FV_NUMBER
+        mov ebx, SIZEOF DWORD
+        mul ebx
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+        Invoke MUISetIntProperty, hWin, @TextPtrFontSpecial, eax        
     .ENDIF
 
     ret
@@ -1397,6 +1475,39 @@ _MUI_TextUTF8Free PROC lpString:DWORD
     ret
 _MUI_TextUTF8Free ENDP
 
+
+;-------------------------------------------------------------------------------------
+; Sets internal buffer size for text - useful if you know ahead of time what size
+; buffer should be - as in you know the text length expected.
+;-------------------------------------------------------------------------------------
+MUITextSetBufferSize PROC hWin:DWORD, dwSize:DWORD
+    .IF hWin == 0 || dwSize == 0
+        mov eax, FALSE
+        ret
+    .ENDIF
+    Invoke MUIGetIntProperty, hWin, @TextBuffer
+    .IF eax != 0 ; free existing buffer
+        Invoke GlobalFree, eax
+    .ENDIF
+    mov eax, dwSize
+    IFDEF MUI_UNICODE
+    shl eax, 1 ; x2
+    ENDIF
+    and eax, 0FFFFFFF0h ; mask 
+    add eax, 16d ; round up to 16bytes
+    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+    .IF eax != NULL
+        Invoke MUISetIntProperty, hWin, @TextBuffer, eax
+        mov eax, TRUE
+    .ELSE
+        Invoke MUISetIntProperty, hWin, @TextBuffer, 0
+        mov eax, FALSE
+    .ENDIF
+    ret
+MUITextSetBufferSize ENDP
+
+
+include ModernUI_DrawTextEXT.asm
 
 
 END

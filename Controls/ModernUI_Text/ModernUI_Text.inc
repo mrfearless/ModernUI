@@ -45,6 +45,7 @@ MUITextRegister         PROTO                                                   
 MUITextCreate           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
 MUITextSetProperty      PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Text, dwProperty, dwPropertyValue
 MUITextGetProperty      PROTO :DWORD, :DWORD                                                    ; hModernUI_Text, dwProperty
+MUITextSetBufferSize    PROTO :DWORD, :DWORD
 
 ;------------------------------------------------------------------------------
 ; ModernUI_Text Structures
@@ -103,8 +104,8 @@ MUITS_HAND              EQU 1 shl 14 ; 0100 0000 0000 0000 - Show a hand instead
 MUITS_LORUMIPSUM        EQU 1 shl 15 ; 1000 0000 0000 0000 - Show lorum ipsum in text box - for demo purposes etc.
 
 MUITS_UTF8              EQU 1 shl 7
-MUITS_HTMLCODE          EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FONT_NORMAL)
-MUITS_BBCODE            EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FONT_BOLD)
+MUITS_HTMLCODE          EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FONT_NORMAL)  ; only use one or other
+MUITS_BBCODE            EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FONT_BOLD)    ; dont use both options
 
 
 ;------------------------------------------------------------------------------
@@ -119,9 +120,68 @@ MUITS_BBCODE            EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FO
 @TextBackColorAlt       EQU 20      ; COLORREF
 @TextBackColorDisabled  EQU 24      ; COLORREF
 
+@TextCodeTextColor      EQU 28      ; COLORREF
+@TextCodeBackColor      EQU 32      ; COLORREF
+@TextQuoteTextColor     EQU 36      ; COLORREF
+@TextQuoteBackColor     EQU 40      ; COLORREF
+@TextLinkTextColor      EQU 44      ; COLORREF
+@TextLinkUnderline      EQU 48      ; DWORD. Text Link Style
+@TextHelpTextColor      EQU 52      ; COLORREF
+@TextHelpUnderline      EQU 56      ; DWORD. Text Help Style
+@TextHorzRuleColor      EQU 60      ; COLORREF
+
+
+; Text Link Style:
+MUITLS_ALL              EQU 0       ; Underline links
+MUITLS_HOVER            EQU 1       ; Underline only when mouse hovers over
+MUITLS_NONE             EQU 2       ; Dont underline links ever
+
+; Text Help Style:
+MUITHS_ALL              EQU 0       ; Underline help
+MUITHS_HOVER            EQU 1       ; Underline only when mouse hovers over
+MUITHS_NONE             EQU 2       ; Dont underline help ever
 
 
 
+
+;------------------------------------------------------------------------------
+; DrawTextEXTLink Notification
+;
+; Send to the parent window via WM_NOTIFY with lParam a pointer to a NM_DTEL 
+; structure. NM_DTEL.NMHDR.hdr.code will contain the notification code as
+; defined below for: mouse over, mouse leave or mouse click.;
+;
+; Note: DrawTextEXTLink is a custom window that is created if a user passes a
+; pointer to a DWORD variable in the lpHyperLink parameter of either 
+; DrawHTMLCODE or DrawBBCODE. The variable will store the handle of the
+; DrawTextEXTLink control for all future calls. If any url tags are used,
+; DrawTextEXTLink creates an overlay made up of regions representing the 
+; position of the url text, and draws the url text in these regions, along
+; with the background, font etc. It handles cursor change, mouse over, and 
+; click events for the hyperlink, along with notifications sent to the parent.
+;
+;------------------------------------------------------------------------------
+LINKURL_MAXLENGTH       EQU 256 ; length of url text
+
+IFNDEF LINKURL
+LINKURL                 STRUCT
+    rcLinkUrl           RECT <0,0,0,0>                  ; rect/rgn for linkurl
+    szLinkUrl           DB LINKURL_MAXLENGTH DUP (0)    ; Url: 'www.site.com'
+    szLinkTitle         DB LINKURL_MAXLENGTH DUP (0)    ; Title: 'MySite'
+LINKURL                 ENDS
+ENDIF
+
+IFNDEF NM_DTEL
+NM_DTEL                 STRUCT
+    hdr                 NMHDR <>    ; Notify Header
+    item                LINKURL <>  ; Link url information
+NM_DTEL                 ENDS
+ENDIF
+
+; NM_DTEL.NMHDR.code values:
+DTELN_MOUSEOVER         EQU 1   ; Mouse has moved over DrawTextEXTLink
+DTELN_MOUSELEAVE        EQU 2   ; Mouse has left DrawTextEXTLink
+DTELN_MOUSECLICK        EQU 3   ; User has clicked DrawTextEXTLink
 
 
 
