@@ -1,0 +1,9 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "TrumpBot.xml"
+100						ICON      DISCARDABLE "TrumpBot.ico"
+200						ICON      DISCARDABLE "Images/trump.ico"
+201						RCDATA    DISCARDABLE "Images/trump_rgn.rgn"
+300						WAVE      DISCARDABLE "Sounds/Punch.wav"
+301						WAVE      DISCARDABLE "Sounds/maga.wav"
+302						WAVE      DISCARDABLE "Sounds/america.wav"
+310						ANICURSOR DISCARDABLE "Images/BoxingGlove.ani"
