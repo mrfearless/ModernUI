@@ -70,6 +70,21 @@ includelib ModernUI.lib
 
 include ModernUI_ProgressDots.inc
 
+DOTS_USE_TIMERQUEUE                 EQU 1 ; comment out to use WM_SETIMER instead of TimerQueue
+DOTS_USE_MMTIMER                    EQU 1 ; comment out to use WM_SETIMER or TimerQueue - otherwise overrides WM_SETIMER and TimerQueue
+
+IFDEF DOTS_USE_MMTIMER
+include winmm.inc
+includelib winmm.lib
+ECHO *** ModernUI_ProgressDots - Using Multimedia Timer ***
+ELSE
+IFDEF DOTS_USE_TIMERQUEUE
+ECHO *** ModernUI_ProgressDots - Using TimerQueue ***
+ELSE
+ECHO *** ModernUI_ProgressDots - Using WM_TIMER ***
+ENDIF
+ENDIF
+
 ;------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;------------------------------------------------------------------------------
@@ -83,7 +98,14 @@ _MUI_ProgressDotsPaintBackground    PROTO :DWORD, :DWORD, :DWORD
 _MUI_ProgressDotsPaintDots          PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ProgressDotsCalcPositions      PROTO :DWORD
 _MUI_ProgressDotsInitDots           PROTO :DWORD
+
+IFDEF DOTS_USE_MMTIMER
+_MUI_ProgressBarMMTimerProc         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+ELSE
+IFDEF DOTS_USE_TIMERQUEUE
 _MUI_ProgressBarTimerProc           PROTO :DWORD, :DWORD
+ENDIF
+ENDIF
 
 ;------------------------------------------------------------------------------
 ; Structures for internal use
@@ -97,19 +119,21 @@ MUI_PROGRESSDOTS_PROPERTIES             STRUCT
     dwDotsSpeed                         DD ?
 MUI_PROGRESSDOTS_PROPERTIES             ENDS
 
-DOTS_USE_TIMERQUEUE                     EQU 1 ; comment out to use WM_SETIMER instead of TimerQueue
-
 ; Internal properties
 _MUI_PROGRESSDOTS_PROPERTIES            STRUCT
     dwAnimateState                      DD ?
     dwMarkerStart                       DD ?
     dwMarkerFinish                      DD ?
     pDotsArray                          DD ?
+    IFDEF DOTS_USE_MMTIMER
+    hTimer                              DD ?
+    ELSE
     IFDEF DOTS_USE_TIMERQUEUE
     bUseTimerQueue                      DD ?
     hQueue                              DD ?
     hTimer                              DD ?
-    ENDIF    
+    ENDIF
+    ENDIF
 _MUI_PROGRESSDOTS_PROPERTIES            ENDS
 
 
@@ -138,11 +162,16 @@ DOTS_MAX_SIZE                           EQU 10 ; max size
 @ProgressDotsMarkerStart                EQU 4
 @ProgressDotsMarkerFinish               EQU 8
 @ProgressDotsDotsArray                  EQU 12
+IFDEF DOTS_USE_MMTIMER
+@ProgressDotsTimer                      EQU 16
+ELSE
 IFDEF DOTS_USE_TIMERQUEUE
 @ProgressDotsUseTimerQueue              EQU 16
 @ProgressDotsQueue                      EQU 20
 @ProgressDotsTimer                      EQU 24
 ENDIF
+ENDIF
+
 ; External public properties
 
 
@@ -379,10 +408,15 @@ _MUI_ProgressDotsInit PROC PRIVATE USES EBX EDX hWin:DWORD
 
     ; Set default initial internal property values
     Invoke MUISetIntProperty, hWin, @ProgressDotsAnimateState, FALSE
+
+    IFDEF DOTS_USE_MMTIMER
+    Invoke MUISetIntProperty, hWin, @ProgressDotsTimer, 0
+    ELSE
     IFDEF DOTS_USE_TIMERQUEUE
-        Invoke MUISetIntProperty, hWin, @ProgressDotsUseTimerQueue, TRUE
-        Invoke MUISetIntProperty, hWin, @ProgressDotsQueue, 0
-        Invoke MUISetIntProperty, hWin, @ProgressDotsTimer, 0
+    Invoke MUISetIntProperty, hWin, @ProgressDotsUseTimerQueue, TRUE
+    Invoke MUISetIntProperty, hWin, @ProgressDotsQueue, 0
+    Invoke MUISetIntProperty, hWin, @ProgressDotsTimer, 0
+    ENDIF
     ENDIF
 
     ; Set default initial external property values
@@ -876,9 +910,13 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 MUIProgressDotsAnimateStart PROC PUBLIC hControl:DWORD
     LOCAL dwTimeInterval:DWORD
+    IFDEF DOTS_USE_MMTIMER
+    LOCAL hTimer:DWORD
+    ELSE
     IFDEF DOTS_USE_TIMERQUEUE
     LOCAL hQueue:DWORD
     LOCAL hTimer:DWORD
+    ENDIF
     ENDIF
     
     Invoke ShowWindow, hControl, SW_SHOWNA
@@ -893,54 +931,73 @@ MUIProgressDotsAnimateStart PROC PUBLIC hControl:DWORD
 
     Invoke InvalidateRect, hControl, NULL, TRUE
     
-    IFDEF DOTS_USE_TIMERQUEUE
+    IFDEF DOTS_USE_MMTIMER
     
-        Invoke MUIGetIntProperty, hControl, @ProgressDotsUseTimerQueue
-        .IF eax == TRUE
-            Invoke MUIGetIntProperty, hControl, @ProgressDotsQueue
-            mov hQueue, eax
-            Invoke MUIGetIntProperty, hControl, @ProgressDotsTimer
-            mov hTimer, eax
-            .IF hQueue != NULL ; re-use existing hQueue
-                Invoke ChangeTimerQueueTimer, hQueue, hTimer, dwTimeInterval, dwTimeInterval
-                .IF eax == 0 ; failed 
-                    Invoke DeleteTimerQueueEx, hQueue, FALSE
-                    Invoke MUISetIntProperty, hControl, @ProgressDotsQueue, 0
-                    Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, 0
-                    Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, FALSE
-                    Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
-                .ENDIF
-            .ELSE ; Try to create TimerQueue 
-                Invoke CreateTimerQueue
-                .IF eax != NULL
-                    mov hQueue, eax
-                    Invoke CreateTimerQueueTimer, Addr hTimer, hQueue, Addr _MUI_ProgressBarTimerProc, hControl, dwTimeInterval, dwTimeInterval, 0
-                    .IF eax == 0 ; failed, so fall back to WM_TIMER usage
+        Invoke MUIGetIntProperty, hControl, @ProgressDotsTimer
+        mov hTimer, eax
+        .IF hTimer != 0
+            Invoke timeKillEvent, hTimer
+        .ENDIF
+    
+        Invoke timeSetEvent, dwTimeInterval, 0, Addr _MUI_ProgressBarMMTimerProc, hControl, TIME_PERIODIC
+        mov hTimer, eax
+        .IF eax != 0 ; success
+            Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, hTimer
+        .ELSE ; fallback to WM_TIMER style
+            Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, 0
+            Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+        .ENDIF
+
+    ELSE
+        IFDEF DOTS_USE_TIMERQUEUE
+        
+            Invoke MUIGetIntProperty, hControl, @ProgressDotsUseTimerQueue
+            .IF eax == TRUE
+                Invoke MUIGetIntProperty, hControl, @ProgressDotsQueue
+                mov hQueue, eax
+                Invoke MUIGetIntProperty, hControl, @ProgressDotsTimer
+                mov hTimer, eax
+                .IF hQueue != NULL ; re-use existing hQueue
+                    Invoke ChangeTimerQueueTimer, hQueue, hTimer, dwTimeInterval, dwTimeInterval
+                    .IF eax == 0 ; failed 
                         Invoke DeleteTimerQueueEx, hQueue, FALSE
                         Invoke MUISetIntProperty, hControl, @ProgressDotsQueue, 0
                         Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, 0
                         Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, FALSE
                         Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
-                    .ELSE ; Success! - so save TimerQueue handles for re-use
-                        IFDEF DEBUG32
-                        PrintText 'Using QueueTimer'
-                        ENDIF
-                        Invoke MUISetIntProperty, hControl, @ProgressDotsQueue, hQueue
-                        Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, hTimer
                     .ENDIF
-                .ELSE ; failed, so fall back to WM_TIMER usage
-                    Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, FALSE
-                    Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+                .ELSE ; Try to create TimerQueue 
+                    Invoke CreateTimerQueue
+                    .IF eax != NULL
+                        mov hQueue, eax
+                        Invoke CreateTimerQueueTimer, Addr hTimer, hQueue, Addr _MUI_ProgressBarTimerProc, hControl, dwTimeInterval, dwTimeInterval, 0
+                        .IF eax == 0 ; failed, so fall back to WM_TIMER usage
+                            Invoke DeleteTimerQueueEx, hQueue, FALSE
+                            Invoke MUISetIntProperty, hControl, @ProgressDotsQueue, 0
+                            Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, 0
+                            Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, FALSE
+                            Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+                        .ELSE ; Success! - so save TimerQueue handles for re-use
+                            IFDEF DEBUG32
+                            PrintText 'Using QueueTimer'
+                            ENDIF
+                            Invoke MUISetIntProperty, hControl, @ProgressDotsQueue, hQueue
+                            Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, hTimer
+                        .ENDIF
+                    .ELSE ; failed, so fall back to WM_TIMER usage
+                        Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, FALSE
+                        Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+                    .ENDIF
                 .ENDIF
+            .ELSE  ; Not using TimerQueue, previous failure?, so fall back to WM_TIMER usage
+                Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
             .ENDIF
-        .ELSE  ; Not using TimerQueue, previous failure?, so fall back to WM_TIMER usage
-            Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
-        .ENDIF
-    
-    ELSE ; compiled define says to use WM_TIMER instead
-    
-        Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
         
+        ELSE ; compiled define says to use WM_TIMER instead
+        
+            Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+            
+        ENDIF
     ENDIF
     ret
 MUIProgressDotsAnimateStart ENDP
@@ -951,41 +1008,59 @@ MUI_ALIGN
 ; MUIProgressDotsAnimateStop
 ;------------------------------------------------------------------------------
 MUIProgressDotsAnimateStop PROC PUBLIC hControl:DWORD
+    IFDEF DOTS_USE_MMTIMER
+    LOCAL hTimer:DWORD
+    ELSE
     IFDEF DOTS_USE_TIMERQUEUE
     LOCAL hQueue:DWORD
     LOCAL hTimer:DWORD
     ENDIF
+    ENDIF
     
     Invoke ShowWindow, hControl, SW_HIDE
-    IFDEF DOTS_USE_TIMERQUEUE
     
-        Invoke MUIGetIntProperty, hControl, @ProgressDotsUseTimerQueue
-        .IF eax == TRUE
-            Invoke MUIGetIntProperty, hControl, @ProgressDotsQueue
-            mov hQueue, eax
-            Invoke MUIGetIntProperty, hControl, @ProgressDotsTimer
-            mov hTimer, eax
-            .IF hQueue != NULL
-                Invoke ChangeTimerQueueTimer, hQueue, hTimer, INFINITE, 0
-                .IF eax == 0 ; failed, fall back to use KillTimer for WM_TIMER usage
-                    Invoke DeleteTimerQueueEx, hQueue, FALSE
-                    Invoke MUISetIntProperty, hControl, @ProgressDotsQueue, 0
-                    Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, 0
+    IFDEF DOTS_USE_MMTIMER
+    
+        Invoke MUIGetIntProperty, hControl, @ProgressDotsTimer
+        mov hTimer, eax
+        .IF hTimer != 0
+            Invoke timeKillEvent, hTimer
+            .IF eax == MMSYSERR_INVALPARAM
+                Invoke KillTimer, hControl, hControl
+            .ENDIF
+        .ENDIF
+
+    ELSE
+        IFDEF DOTS_USE_TIMERQUEUE
+        
+            Invoke MUIGetIntProperty, hControl, @ProgressDotsUseTimerQueue
+            .IF eax == TRUE
+                Invoke MUIGetIntProperty, hControl, @ProgressDotsQueue
+                mov hQueue, eax
+                Invoke MUIGetIntProperty, hControl, @ProgressDotsTimer
+                mov hTimer, eax
+                .IF hQueue != NULL
+                    Invoke ChangeTimerQueueTimer, hQueue, hTimer, INFINITE, 0
+                    .IF eax == 0 ; failed, fall back to use KillTimer for WM_TIMER usage
+                        Invoke DeleteTimerQueueEx, hQueue, FALSE
+                        Invoke MUISetIntProperty, hControl, @ProgressDotsQueue, 0
+                        Invoke MUISetIntProperty, hControl, @ProgressDotsTimer, 0
+                        Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, FALSE
+                        Invoke KillTimer, hControl, hControl
+                    .ENDIF
+                .ELSE ; fall back to use KillTimer for WM_TIMER usage
                     Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, FALSE
                     Invoke KillTimer, hControl, hControl
                 .ENDIF
-            .ELSE ; fall back to use KillTimer for WM_TIMER usage
-                Invoke MUISetIntProperty, hControl, @ProgressDotsUseTimerQueue, FALSE
+            .ELSE ; Not using TimerQueue, previous failure? back to use KillTimer for WM_TIMER usage
                 Invoke KillTimer, hControl, hControl
             .ENDIF
-        .ELSE ; Not using TimerQueue, previous failure? back to use KillTimer for WM_TIMER usage
+            
+        ELSE ; compiled define says to use WM_TIMER instead
+        
             Invoke KillTimer, hControl, hControl
-        .ENDIF
-        
-    ELSE ; compiled define says to use WM_TIMER instead
-    
-        Invoke KillTimer, hControl, hControl
-        
+            
+        ENDIF
     ENDIF
     
     Invoke MUISetIntProperty, hControl, @ProgressDotsAnimateState, FALSE
@@ -1008,5 +1083,19 @@ _MUI_ProgressBarTimerProc PROC USES EBX lpParam:DWORD, TimerOrWaitFired:DWORD
 _MUI_ProgressBarTimerProc ENDP
 ENDIF
 
+
+;------------------------------------------------------------------------------
+; _MUI_ProgressBarMMTimerProc for Multimedia Timer
+;------------------------------------------------------------------------------
+IFDEF DOTS_USE_MMTIMER
+MUI_ALIGN
+_MUI_ProgressBarMMTimerProc PROC uTimerID:DWORD, uMsg:DWORD, dwUser:DWORD, dw1:DWORD, dw2:DWORD
+    ; dwUser is hControl
+    Invoke _MUI_ProgressDotsCalcPositions, dwUser
+    Invoke InvalidateRect, dwUser, NULL, TRUE
+    Invoke UpdateWindow, dwUser
+    ret
+_MUI_ProgressBarMMTimerProc ENDP
+ENDIF
 
 END
