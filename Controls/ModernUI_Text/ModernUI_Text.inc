@@ -120,23 +120,27 @@ MUITS_BBCODE            EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FO
 @TextBackColorAlt       EQU 20      ; COLORREF
 @TextBackColorDisabled  EQU 24      ; COLORREF
 
-@TextCodeTextColor      EQU 28      ; COLORREF
-@TextCodeBackColor      EQU 32      ; COLORREF
-@TextQuoteTextColor     EQU 36      ; COLORREF
-@TextQuoteBackColor     EQU 40      ; COLORREF
-@TextLinkTextColor      EQU 44      ; COLORREF
-@TextLinkUnderline      EQU 48      ; DWORD. Text Link Style
-@TextHelpTextColor      EQU 52      ; COLORREF
-@TextHelpUnderline      EQU 56      ; DWORD. Text Help Style
-@TextHorzRuleColor      EQU 60      ; COLORREF
+;------------------------------------------------------------------------------
+; ModernUI_DrawTextEXT Properties: Use MUITextSetPropertyEx / MUITextGetPropertyEx
+;------------------------------------------------------------------------------
+@TextExtFont            EQU 0       ; hFont
+@TextExtCodeTextColor   EQU 28      ; COLORREF
+@TextExtCodeBackColor   EQU 32      ; COLORREF
+@TextExtQuoteTextColor  EQU 36      ; COLORREF
+@TextExtQuoteBackColor  EQU 40      ; COLORREF
+@TextExtLinkTextColor   EQU 44      ; COLORREF
+@TextExtLinkUnderline   EQU 48      ; DWORD. Text Link Style
+@TextExtHelpTextColor   EQU 52      ; COLORREF
+@TextExtHelpUnderline   EQU 56      ; DWORD. Text Help Style
+@TextExtHorzRuleColor   EQU 60      ; COLORREF
 
 
-; Text Link Style:
+; TextExt Link Style:
 MUITLS_ALL              EQU 0       ; Underline links
 MUITLS_HOVER            EQU 1       ; Underline only when mouse hovers over
 MUITLS_NONE             EQU 2       ; Dont underline links ever
 
-; Text Help Style:
+; TextExt Help Style:
 MUITHS_ALL              EQU 0       ; Underline help
 MUITHS_HOVER            EQU 1       ; Underline only when mouse hovers over
 MUITHS_NONE             EQU 2       ; Dont underline help ever

@@ -1724,9 +1724,9 @@ _HTMLCODE_PRE PROC USES EBX hWin:DWORD, hdc:DWORD, hFont:DWORD, lplpszStart:DWOR
         mov rect.right, eax ; reset right to max width as its changed after DT_CALCRECT
         
         ; Background fill and draw text
-        Invoke MUIGetExtProperty, hWin, @TextCodeTextColor
+        Invoke MUIGetExtProperty, hWin, @TextExtCodeTextColor
         mov dwRGBCodeTextColor, eax
-        Invoke MUIGetExtProperty, hWin, @TextCodeBackColor
+        Invoke MUIGetExtProperty, hWin, @TextExtCodeBackColor
         mov dwRGBCodeBackColor, eax
         Invoke SetTextColor, hdc, dwRGBCodeTextColor
         Invoke SetBkColor, hdc, dwRGBCodeBackColor
@@ -1880,9 +1880,9 @@ _HTMLCODE_QUOTE PROC USES EBX hWin:DWORD, hdc:DWORD, hFont:DWORD, lplpszStart:DW
         mov rect.right, eax ; reset right to max width as its changed after DT_CALCRECT
         
         ; Background fill and draw text
-        Invoke MUIGetExtProperty, hWin, @TextQuoteTextColor
+        Invoke MUIGetExtProperty, hWin, @TextExtQuoteTextColor
         mov dwRGBQuoteTextColor, eax
-        Invoke MUIGetExtProperty, hWin, @TextQuoteBackColor
+        Invoke MUIGetExtProperty, hWin, @TextExtQuoteBackColor
         mov dwRGBQuoteBackColor, eax
         Invoke SetTextColor, hdc, dwRGBQuoteTextColor
         Invoke SetBkColor, hdc, dwRGBQuoteBackColor
@@ -2178,7 +2178,7 @@ _HTMLCODE_HR PROC USES EBX hWin:DWORD, hdc:DWORD, dwLeft:DWORD, dwTop:DWORD, dwH
     mov hPen, eax
     Invoke SelectObject, hdc, hPen
     mov hOldPen, eax
-    Invoke MUIGetExtProperty, hWin, @TextHorzRuleColor
+    Invoke MUIGetExtProperty, hWin, @TextExtHorzRuleColor
     mov dwRGBHorzRuleColor, eax
     Invoke SetDCPenColor, hdc, dwRGBHorzRuleColor
     
@@ -3616,9 +3616,9 @@ _BBCODE_CODE PROC USES EBX hWin:DWORD, hdc:DWORD, hFont:DWORD, lplpszStart:DWORD
         mov rect.right, eax ; reset right to max width as its changed after DT_CALCRECT
         
         ; Background fill and draw text
-        Invoke MUIGetExtProperty, hWin, @TextCodeTextColor
+        Invoke MUIGetExtProperty, hWin, @TextExtCodeTextColor
         mov dwRGBCodeTextColor, eax
-        Invoke MUIGetExtProperty, hWin, @TextCodeBackColor
+        Invoke MUIGetExtProperty, hWin, @TextExtCodeBackColor
         mov dwRGBCodeBackColor, eax
         Invoke SetTextColor, hdc, dwRGBCodeTextColor
         Invoke SetBkColor, hdc, dwRGBCodeBackColor
@@ -3770,9 +3770,9 @@ _BBCODE_QUOTE PROC USES EBX hWin:DWORD, hdc:DWORD, hFont:DWORD, lplpszStart:DWOR
         mov rect.right, eax ; reset right to max width as its changed after DT_CALCRECT
         
         ; Background fill and draw text
-        Invoke MUIGetExtProperty, hWin, @TextQuoteTextColor
+        Invoke MUIGetExtProperty, hWin, @TextExtQuoteTextColor
         mov dwRGBQuoteTextColor, eax
-        Invoke MUIGetExtProperty, hWin, @TextQuoteBackColor
+        Invoke MUIGetExtProperty, hWin, @TextExtQuoteBackColor
         mov dwRGBQuoteBackColor, eax
         Invoke SetTextColor, hdc, dwRGBQuoteTextColor
         Invoke SetBkColor, hdc, dwRGBQuoteBackColor        

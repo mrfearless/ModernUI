@@ -101,6 +101,8 @@ _MUI_TextSetFontFamilySize      PROTO :DWORD, :DWORD
 _MUI_TextGetFontTableHandle     PROTO :DWORD, :DWORD
 _MUI_TextSetFontTableHandle     PROTO :DWORD, :DWORD, :DWORD
 
+_MUI_TextCheckSetFont           PROTO :DWORD, :DWORD
+
 _MUI_TextUTF8Encode             PROTO :DWORD
 _MUI_TextUTF8Decode             PROTO :DWORD
 _MUI_TextUTF8Free               PROTO :DWORD
@@ -119,15 +121,30 @@ MUI_TEXT_PROPERTIES             STRUCT
     dwTextBackColorAlt          DD ?
     dwTextBackColorDisabled     DD ?
     dwTextCodeTextColor         DD ?
-    dwTextCodeBackColor         DD ? 
-    dwTextQuoteTextColor        DD ?  
-    dwTextQuoteBackColor        DD ?  
-    dwTextLinkTextColor         DD ?  
-    dwTextLinkUnderline         DD ?   
-    dwTextHelpTextColor         DD ?    
-    dwTextHelpUnderline         DD ?   
-    dwTextHorzRuleColor         DD ?   
+    dwTextCodeBackColor         DD ?
+    dwTextQuoteTextColor        DD ?
+    dwTextQuoteBackColor        DD ?
+    dwTextLinkTextColor         DD ?
+    dwTextLinkUnderline         DD ?
+    dwTextHelpTextColor         DD ?
+    dwTextHelpUnderline         DD ?
+    dwTextHorzRuleColor         DD ?
 MUI_TEXT_PROPERTIES             ENDS
+
+; Extended External public properties
+MUI_TEXTEXT_PROPERTIES          STRUCT
+    dwTextFont                  DD ?
+    dwTextCodeTextColor         DD ?
+    dwTextCodeBackColor         DD ?
+    dwTextQuoteTextColor        DD ?
+    dwTextQuoteBackColor        DD ?
+    dwTextLinkTextColor         DD ?
+    dwTextLinkUnderline         DD ?
+    dwTextHelpTextColor         DD ?
+    dwTextHelpUnderline         DD ?
+    dwTextHorzRuleColor         DD ?
+MUI_TEXTEXT_PROPERTIES          ENDS
+
 
 ; Internal properties
 _MUI_TEXT_PROPERTIES            STRUCT
@@ -141,6 +158,16 @@ _MUI_TEXT_PROPERTIES            STRUCT
     dwPtrFontSpecial            DD ? ; Array of fonts for DTE
     dwHyperLinkControl          DD ? ; handle of DTE HyperLink control
 _MUI_TEXT_PROPERTIES            ENDS
+
+; Extended Internal properties
+_MUI_TEXTEXT_PROPERTIES         STRUCT
+    dwPtrColorStack             DD ? ; Stack of text colors for DTE
+    dwColorStackIndex           DD ? ; Current index of color stack
+    dwPtrListStack              DD ? ; Stack of list items for DTE
+    dwListStackIndex            DD ? ; Current index of list stack
+    dwPtrFontSpecial            DD ? ; Array of fonts for DTE
+    dwHyperLinkControl          DD ? ; handle of DTE HyperLink control
+_MUI_TEXTEXT_PROPERTIES         ENDS
 
 
 MUI_TEXT_FONT_ENTRY             STRUCT
@@ -395,7 +422,8 @@ MUITextRegister PROC PUBLIC
         mov wc.hbrBackground, NULL
         mov wc.style, NULL
         mov wc.cbClsExtra, 0
-        mov wc.cbWndExtra, 12 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        mov wc.cbWndExtra, 24   ; cbWndExtra +0 = dword ptr to internal properties, cbWndExtra +4 = dword ptr to external properties
+                                ; cbWndExtra +8 = dword ptr to EXTENDED internal properties, cbWndExtra +12 = dword ptr to EXTENDED external properties
         ; extra dword for buffer size if not 0
         Invoke RegisterClassEx, addr wc
     .ENDIF  
@@ -452,8 +480,13 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         ret
 
     .ELSEIF eax == WM_CREATE
-        Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_TEXT_PROPERTIES ; internal properties
-        Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_TEXT_PROPERTIES ; external properties
+        Invoke MUIAllocMemProperties, hWin, MUI_INTERNAL_PROPERTIES, SIZEOF _MUI_TEXT_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, MUI_EXTERNAL_PROPERTIES, SIZEOF MUI_TEXT_PROPERTIES ; external properties
+        
+        Invoke MUIAllocMemProperties, hWin, MUI_INTERNAL_PROPERTIES_EXTRA, SIZEOF _MUI_TEXTEXT_PROPERTIES ; Extended internal properties
+        Invoke MUIAllocMemProperties, hWin, MUI_EXTERNAL_PROPERTIES_EXTRA, SIZEOF MUI_TEXTEXT_PROPERTIES ; Extended external properties
+        
+        
         Invoke _MUI_TextInit, hWin
         mov eax, 0
         ret    
@@ -512,6 +545,8 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
                 Invoke TrackMouseEvent, Addr TE
             .ENDIF
         .ENDIF
+        Invoke GetParent, hWin
+        Invoke PostMessage, eax, WM_MOUSEMOVE, wParam, lParam ; pass mousemove to parent             
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @TextMouseOver, FALSE
@@ -561,10 +596,13 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         and eax, MUI_TEXT_FONTTYPE_MASK
         .IF eax == MUITS_FONT_DIALOG
             ;PrintDec wParam
-            Invoke MUISetExtProperty, hWin, @TextFont, wParam
-            .IF lParam == TRUE
-                Invoke InvalidateRect, hWin, NULL, TRUE
-            .ENDIF            
+            Invoke _MUI_TextCheckSetFont, hWin, wParam
+            .IF eax == TRUE ; actually a font being passed in wParam
+                Invoke MUISetExtProperty, hWin, @TextFont, wParam
+                .IF lParam == TRUE
+                    Invoke InvalidateRect, hWin, NULL, TRUE
+                .ENDIF
+            .ENDIF
         .ELSE
             ret
         .ENDIF
@@ -1053,6 +1091,8 @@ _MUI_TextSetFontFamilySize PROC USES EBX hWin:DWORD, dwStyle:DWORD
     LOCAL bFontBold:DWORD
     LOCAL bFontItalic:DWORD
     LOCAL bFontUnderline:DWORD
+    LOCAL ncm:NONCLIENTMETRICS
+    LOCAL lfnt:LOGFONT    
 
     Invoke MUIGetExtProperty, hWin, @TextFont
     mov hFont, eax
@@ -1170,6 +1210,27 @@ _MUI_TextSetFontFamilySize PROC USES EBX hWin:DWORD, dwStyle:DWORD
             ;PrintText 'New Font'
             Invoke CreateFont, dwFontHeight, 0,0,0, dwFontWeight, bFontItalic, bFontUnderline,0,0,0,0, PROOF_QUALITY, FF_DONTCARE, MUITextFont
             mov hFont, eax
+            
+            ; Add error checking in case font doesnt exist
+            ; https://github.com/mrfearless/ModernUI/issues/8
+            ; If it doesnt exist we can try to use existing lfMessageFont and adjust that
+            .IF hFont == NULL
+                Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
+                ; copy to lfMessageFont to lfnt and set values 
+                lea ebx, ncm.lfMessageFont
+                Invoke RtlMoveMemory, Addr lfnt, ebx, SIZEOF LOGFONT
+                mov eax, dwFontHeight
+                mov lfnt.lfHeight, eax
+                mov eax, dwFontWeight
+                mov lfnt.lfWeight, eax
+                mov eax, bFontItalic
+                mov lfnt.lfItalic, al
+                mov eax, bFontUnderline
+                mov lfnt.lfUnderline, al
+                Invoke CreateFontIndirect, Addr lfnt
+                mov hFont, eax
+            .ENDIF
+
             ; save handle to fonttable
             Invoke _MUI_TextSetFontTableHandle, hWin, dwStyle, hFont
         .ELSE ; use handle from fonttable instead
@@ -1505,6 +1566,29 @@ MUITextSetBufferSize PROC hWin:DWORD, dwSize:DWORD
     .ENDIF
     ret
 MUITextSetBufferSize ENDP
+
+
+;-------------------------------------------------------------------------------------
+; Check if font set via MUITextSetProperty is acutally a font, if it isnt return FALSE
+;-------------------------------------------------------------------------------------
+_MUI_TextCheckSetFont PROC hWin:DWORD, hFont:DWORD
+    LOCAL lfnt:LOGFONT 
+    
+    .IF hWin == 0 || hFont == 0
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
+    .IF eax == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    mov eax, TRUE
+    ret
+
+_MUI_TextCheckSetFont ENDP
 
 
 include ModernUI_DrawTextEXT.asm
