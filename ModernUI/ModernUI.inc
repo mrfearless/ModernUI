@@ -49,6 +49,17 @@ MUISetExtProperty               PROTO :DWORD,:DWORD,:DWORD                      
 MUIGetIntProperty               PROTO :DWORD,:DWORD                             ; hControl, dwProperty
 MUISetIntProperty               PROTO :DWORD,:DWORD,:DWORD                      ; hControl, dwProperty, dwPropertyValue
 
+MUIGetExtPropertyEx             PROTO :DWORD,:DWORD,:DWORD                      ; hControl, dwParentProperty, dwChildProperty
+MUISetExtPropertyEx             PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hControl, dwParentProperty, dwChildProperty, dwPropertyValue
+MUIGetIntPropertyEx             PROTO :DWORD,:DWORD,:DWORD                      ; hControl, dwParentProperty, dwChildProperty
+MUISetIntPropertyEx             PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hControl, dwParentProperty, dwChildProperty, dwPropertyValue
+
+MUIGetExtPropertyExtra          PROTO :DWORD,:DWORD                             ; hControl, dwProperty
+MUISetExtPropertyExtra          PROTO :DWORD,:DWORD,:DWORD                      ; hControl, dwProperty, dwPropertyValue
+MUIGetIntPropertyExtra          PROTO :DWORD,:DWORD                             ; hControl, dwProperty
+MUISetIntPropertyExtra          PROTO :DWORD,:DWORD,:DWORD                      ; hControl, dwProperty, dwPropertyValue
+
+
 ; ModernUI Memory Functions:
 MUIAllocMemProperties           PROTO :DWORD,:DWORD,:DWORD                      ; hControl, cbWndExtraOffset, dwSizeToAllocate
 MUIFreeMemProperties            PROTO :DWORD,:DWORD                             ; hControl, cbWndExtraOffset
@@ -85,6 +96,15 @@ MUICreateIconFromMemory         PROTO :DWORD,:DWORD                             
 MUICreateCursorFromMemory       PROTO :DWORD                                    ; pCursorData
 MUICreateBitmapFromMemory       PROTO :DWORD                                    ; pBitmapData
 
+; ModernUI DPI & Scaling Functions:
+MUIDPI                          PROTO :DWORD,:DWORD                             ; lpdwDPIX, lpdwDPIY
+MUIDPIScaleX                    PROTO :DWORD                                    ; dwValueX
+MUIDPIScaleY                    PROTO :DWORD                                    ; dwValueY
+MUIDPIScaleRect                 PROTO :DWORD                                    ; lpRect
+MUIDPIScaleControl              PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; lpdwLeft, lpdwTop, lpdwWidth, lpdwHeight
+MUIDPIScaleFontSize             TEXTEQU <MUIPointSizeToLogicalUnit>             ; hControl, dwPointSize
+MUIDPIScaledScreen              PROTO :DWORD,:DWORD                             ; lpdwScreenWidth, lpdwScreenHeight
+
 
 .CONST
 
@@ -96,15 +116,20 @@ MUICreateBitmapFromMemory       PROTO :DWORD                                    
 ; wish to exclude gdiplus support
 ;------------------------------------------
 IFNDEF MUI_DONTUSEGDIPLUS
-MUI_USEGDIPLUS                  EQU 1
+MUI_USEGDIPLUS                  EQU 1               ; Use GDI+ or not
 ENDIF
 
 ;------------------------------------------
 ; Global constants used by all ModernUI
 ; controls. 
 ;------------------------------------------
-MUI_INTERNAL_PROPERTIES         EQU 0
-MUI_EXTERNAL_PROPERTIES         EQU 4
+MUI_INTERNAL_PROPERTIES         EQU 0               ; cbWndExtra offset for internal properties pointer
+MUI_EXTERNAL_PROPERTIES         EQU 4               ; cbWndExtra offset for external properties pointer
+MUI_INTERNAL_PROPERTIES_EXTRA   EQU 8               ; cbWndExtra offset for extra internal properties pointer
+MUI_EXTERNAL_PROPERTIES_EXTRA   EQU 12              ; cbWndExtra offset for extra external properties pointer
+MUI_PROPERTY_ADDRESS            EQU 80000000h       ; OR with dwProperty in MUIGetIntProperty/MUIGetExtProperty to return address of property 
+
+
 MUI_ALIGN                       TEXTEQU <ALIGN 16>
 
 ;------------------------------------------
