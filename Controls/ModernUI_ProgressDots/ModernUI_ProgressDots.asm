@@ -130,6 +130,7 @@ DOTS_TIME_INTERVAL                      EQU 10 ; Milliseconds for timer firing, 
 DOTS_SPEED                              EQU 2  ; Speed of the fastest dots before and after middle section
 DOTS_DEFAULT_SIZE                       EQU 4  ; Default height and width of control and also dots
 DOTS_MIN_SIZE                           EQU 3  ; min size
+DOTS_MAX_SIZE                           EQU 10 ; max size
 
 
 ; Internal properties
@@ -240,6 +241,9 @@ MUIProgressDotsCreate PROC PUBLIC hWndParent:DWORD, ypos:DWORD, controlheight:DW
         mov eax, DOTS_DEFAULT_SIZE 
     .ELSEIF sdword ptr eax < DOTS_MIN_SIZE 
         mov eax, DOTS_MIN_SIZE
+    .ENDIF
+    .IF eax > DOTS_MAX_SIZE
+        mov eax, DOTS_MAX_SIZE
     .ENDIF
     mov dwHeight, eax
 
@@ -465,6 +469,9 @@ _MUI_ProgressDotsResize PROC PRIVATE USES EBX EDX hWin:DWORD
     .ELSE
         inc eax
     .ENDIF
+    .IF eax > DOTS_MAX_SIZE
+        mov eax, DOTS_MAX_SIZE
+    .ENDIF    
     mov dwHeight, eax
     
     ;PrintDec dwHeight
