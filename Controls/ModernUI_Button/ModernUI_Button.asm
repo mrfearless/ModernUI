@@ -1943,11 +1943,20 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
         mov eax, dwStyle
         and eax, MUIBS_BOTTOM 
         .IF eax == MUIBS_BOTTOM
+            ;mov eax, rect.bottom
+            ;sub eax, 4d
+            ;mov ebx, ImageHeight
+            ;sub eax, ebx
+            ;mov rect.top, eax
+            Invoke CopyRect, Addr rect, lpRect
             mov eax, rect.bottom
-            sub eax, 4d
-            mov ebx, ImageHeight
-            sub eax, ebx
+            shr eax, 1
+            ;mov ebx, ImageHeight
+            ;shr ebx, 1
+            ;add eax, ebx
             mov rect.top, eax
+
+            
         .ELSE
         
 ;            Invoke GetTextExtentPoint32, hdc, Addr szText, LenText, Addr sz
@@ -2026,7 +2035,7 @@ _MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, 
     mov eax, dwStyle
     and eax, MUIBS_BOTTOM 
     .IF eax == MUIBS_BOTTOM
-        or dwTextStyle, DT_BOTTOM
+        or dwTextStyle, DT_CENTER or DT_VCENTER;DT_BOTTOM
     .ELSE ; center
         or dwTextStyle, DT_VCENTER
     .ENDIF
@@ -2235,11 +2244,31 @@ _MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:
         mov eax, dwStyle
         and eax, MUIBS_BOTTOM 
         .IF eax == MUIBS_BOTTOM
+            ;mov eax, rect.bottom
+            ;sub eax, 4d
+            ;mov ebx, ImageHeight
+            ;sub eax, ebx
+            
+            ; take a 1/4 from bottom
             mov eax, rect.bottom
-            sub eax, 4d
+            shr eax, 2
+            sub rect.bottom, eax
+            
+            ; center based on image height and new height (bottom)
+            mov eax, rect.bottom
+            shr eax, 1
             mov ebx, ImageHeight
+            shr ebx, 1
             sub eax, ebx
             mov pt.y, eax
+            
+            mov eax, rect.right
+            shr eax, 1
+            mov ebx, ImageWidth
+            shr ebx, 1
+            sub eax, ebx
+            mov pt.x, eax
+            
         .ELSE
             mov eax, rect.bottom
             shr eax, 1
