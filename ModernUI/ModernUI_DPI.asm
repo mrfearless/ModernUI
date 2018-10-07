@@ -30,7 +30,37 @@ includelib Kernel32.Lib
 include ModernUI.inc
 
 
-;todo no need to calc if dpi is already 96
+.CONST
+
+; PROCESS_DPI_AWARENESS
+PROCESS_DPI_UNAWARE = 0
+PROCESS_SYSTEM_DPI_AWARE = 1
+PROCESS_PER_MONITOR_DPI_AWARE = 2
+
+; DPI_AWARENESS
+DPI_AWARENESS_INVALID = -1
+DPI_AWARENESS_UNAWARE = 0
+DPI_AWARENESS_SYSTEM_AWARE = 1
+DPI_AWARENESS_PER_MONITOR_AWARE = 2
+
+
+DPI_AWARENESS_CONTEXT_UNAWARE              EQU ((DPI_AWARENESS_CONTEXT)-1)
+DPI_AWARENESS_CONTEXT_SYSTEM_AWARE         EQU ((DPI_AWARENESS_CONTEXT)-2)
+DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE    EQU ((DPI_AWARENESS_CONTEXT)-3)
+DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 EQU ((DPI_AWARENESS_CONTEXT)-4)
+
+
+.DATA
+szMUIDPIUser32DLL       DB 'user32.dll',0
+szMUIDPISPDA            DB 'SetProcessDPIAware',0
+szMUIDPISPDAS           DB 'SetProcessDPIAwareness',0
+szMUIDPISPDAC           DB 'SetProcessDpiAwarenessContext',0
+szMUIDPIGTDAC           DB 'GetThreadDpiAwarenessContext',0
+szMUIDPIGAFDAC          DB 'GetAwarenessFromDpiAwarenessContext',0
+
+
+DPI_AWARENESS_CONTEXT   DD 0
+
 
 .CODE
 
@@ -78,7 +108,11 @@ MUIDPIScaleX PROC dwValueToScale:DWORD
     Invoke GetDC, NULL
     mov hdc, eax
     Invoke GetDeviceCaps, hdc, LOGPIXELSX
-    Invoke MulDiv, dwValueToScale, eax, 96d
+    .IF eax == 96d ; already at 96dpi
+        mov eax, dwValueToScale
+    .ELSE
+        Invoke MulDiv, dwValueToScale, eax, 96d
+    .ENDIF
     mov dwScaledValue, eax
     Invoke ReleaseDC, NULL, hdc
     mov eax, dwScaledValue
@@ -102,7 +136,11 @@ MUIDPIScaleY PROC dwValueToScale:DWORD
     Invoke GetDC, NULL
     mov hdc, eax
     Invoke GetDeviceCaps, hdc, LOGPIXELSY
-    Invoke MulDiv, dwValueToScale, eax, 96d
+    .IF eax == 96d ; already at 96dpi
+        mov eax, dwValueToScale
+    .ELSE    
+        Invoke MulDiv, dwValueToScale, eax, 96d
+    .ENDIF
     mov dwScaledValue, eax
     Invoke ReleaseDC, NULL, hdc
     mov eax, dwScaledValue
@@ -124,24 +162,37 @@ MUIDPIScaleRect PROC lpRect:DWORD
         ret
     .ENDIF
     
-    Invoke CopyRect, Addr rect, lpRect
     Invoke MUIDPI, Addr dwDPIX, Addr dwDPIY
+    .IF dwDPIX == 96d && dwDPIY == 96d ; already at 96dpi
+        mov eax, TRUE
+        ret
+    .ENDIF
+    
+    Invoke CopyRect, Addr rect, lpRect
     
     .IF rect.left != 0
-        Invoke MulDiv, rect.left, dwDPIX, 96d
-        mov rect.left, eax
+        .IF dwDPIX != 96d
+            Invoke MulDiv, rect.left, dwDPIX, 96d
+            mov rect.left, eax
+        .ENDIF
     .ENDIF
     .IF rect.top != 0
-        Invoke MulDiv, rect.top, dwDPIY, 96d
-        mov rect.top, eax
+        .IF dwDPIY != 96d
+            Invoke MulDiv, rect.top, dwDPIY, 96d
+            mov rect.top, eax
+        .ENDIF
     .ENDIF
     .IF rect.right != 0
-        Invoke MulDiv, rect.right, dwDPIX, 96d
-        mov rect.right, eax
+        .IF dwDPIX != 96d
+            Invoke MulDiv, rect.right, dwDPIX, 96d
+            mov rect.right, eax
+        .ENDIF
     .ENDIF
     .IF rect.bottom != 0
-        Invoke MulDiv, rect.bottom, dwDPIY, 96d
-        mov rect.bottom, eax
+        .IF dwDPIY != 96d
+            Invoke MulDiv, rect.bottom, dwDPIY, 96d
+            mov rect.bottom, eax
+        .ENDIF
     .ENDIF
     Invoke CopyRect, lpRect, Addr rect
     mov eax, TRUE
@@ -165,12 +216,20 @@ MUIDPIScaledScreen PROC USES EBX lpdwScreenWidth:DWORD, lpdwScreenHeight:DWORD
     mov cyScreen, eax
     
     Invoke MUIDPI, Addr dwDPIX, Addr dwDPIY
-    Invoke MulDiv, cxScreen, dwDPIX, 96d
+    .IF dwDPIX != 96d
+        Invoke MulDiv, cxScreen, dwDPIX, 96d
+    .ELSE
+        mov eax, cxScreen
+    .ENDIF
     .IF lpdwScreenWidth != NULL
         mov ebx, lpdwScreenWidth
         mov [ebx], eax
     .ENDIF
-    Invoke MulDiv, cyScreen, dwDPIY, 96d
+    .IF dwDPIY != 96d
+        Invoke MulDiv, cyScreen, dwDPIY, 96d
+    .ELSE
+        mov eax, cyScreen
+    .ENDIF
     .IF lpdwScreenHeight != NULL
         mov ebx, lpdwScreenHeight
         mov [ebx], eax
@@ -238,6 +297,104 @@ MUIDPIScaleControl PROC USES EBX lpdwLeft:DWORD, lpdwTop:DWORD, lpdwWidth:DWORD,
     xor eax, eax
     ret
 MUIDPIScaleControl ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; Set DPI aware try for per monitor v2 and depending on OS try each possible
+; option from SetProcessDpiAwarenessContext down to basic SetProcessDpiAware
+;------------------------------------------------------------------------------
+MUIDPISetDPIAware PROC
+    LOCAL hUser32:DWORD
+    LOCAL setDPIAware:DWORD
+    LOCAL setDPIAwareness:DWORD
+    LOCAL setDPIAwarenessContext:DWORD
+    LOCAL getThreadDpiAwarenessContext:DWORD
+    LOCAL getAwarenessFromDpiAwarenessContext:DWORD
+    LOCAL dwResult:DWORD
+    
+    Invoke LoadLibrary, Addr szMUIDPIUser32DLL
+    
+    .IF eax == 0
+        mov eax, FALSE
+        ret
+    .ENDIF
+    mov hUser32, eax
+    
+    Invoke GetProcAddress, hUser32, Addr szMUIDPISPDA
+    mov setDPIAware, eax
+    
+    Invoke GetProcAddress, hUser32, Addr szMUIDPISPDAS
+    mov setDPIAwareness, eax
+    
+    Invoke GetProcAddress, hUser32, Addr szMUIDPISPDAC
+    mov setDPIAwarenessContext, eax    
+
+    Invoke GetProcAddress, hUser32, Addr szMUIDPIGTDAC
+    mov getThreadDpiAwarenessContext, eax   
+
+    Invoke GetProcAddress, hUser32, Addr szMUIDPIGAFDAC
+    mov getAwarenessFromDpiAwarenessContext, eax   
+
+    .IF getThreadDpiAwarenessContext != 0
+        call getThreadDpiAwarenessContext
+        mov DPI_AWARENESS_CONTEXT, eax
+        .IF getAwarenessFromDpiAwarenessContext != 0
+            push DPI_AWARENESS_CONTEXT
+            call getAwarenessFromDpiAwarenessContext
+            .IF eax > 0 ; already set
+                mov eax, TRUE
+                ret
+            .ENDIF
+        .ENDIF
+    .ENDIF
+
+    .IF setDPIAwarenessContext != 0
+        push DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+        call setDPIAwarenessContext
+        .IF eax == FALSE
+            push DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE
+            call setDPIAwarenessContext
+            .IF eax == FALSE
+                .IF setDPIAwareness != 0
+                    push PROCESS_PER_MONITOR_DPI_AWARE
+                    call setDPIAwareness
+                    .IF eax == FALSE
+                        .IF setDPIAware != 0
+                            call setDPIAware
+                        .ENDIF
+                    .ENDIF
+                .ENDIF
+            .ENDIF
+        .ENDIF
+        mov dwResult, eax
+        
+    .ELSEIF setDPIAwareness != 0
+        push PROCESS_PER_MONITOR_DPI_AWARE
+        call setDPIAwareness
+        .IF eax == FALSE
+            .IF setDPIAware != 0
+                call setDPIAware
+            .ENDIF
+        .ENDIF
+        mov dwResult, eax
+        
+    .ELSEIF setDPIAware != 0
+        call setDPIAware
+        mov dwResult, eax
+        
+    .ELSE
+        mov dwResult, FALSE
+        
+    .ENDIF
+    
+    Invoke FreeLibrary, hUser32
+    mov eax, dwResult
+    ret
+MUIDPISetDPIAware ENDP
+
+
+
 
 
 END
@@ -316,3 +473,50 @@ END
 ;int _dpiX;
 ;int _dpiY;
 ;};
+
+
+
+;https://stackoverflow.com/questions/33507031/detect-if-non-dpi-aware-application-has-been-scaled-virtualized
+;
+;
+;
+;// Get the monitor that the window is currently displayed on
+;// (where hWnd is a handle to the window of interest).
+;HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+;
+;// Get the logical width and height of the monitor.
+;MONITORINFOEX miex;
+;miex.cbSize = sizeof(miex);
+;GetMonitorInfo(hMonitor, &miex);
+;int cxLogical = (miex.rcMonitor.right  - miex.rcMonitor.left);
+;int cyLogical = (miex.rcMonitor.bottom - miex.rcMonitor.top);
+;
+;// Get the physical width and height of the monitor.
+;DEVMODE dm;
+;dm.dmSize        = sizeof(dm);
+;dm.dmDriverExtra = 0;
+;EnumDisplaySettings(miex.szDevice, ENUM_CURRENT_SETTINGS, &dm);
+;int cxPhysical = dm.dmPelsWidth;
+;int cyPhysical = dm.dmPelsHeight;
+;
+;// Calculate the scaling factor.
+;double horzScale = ((double)cxPhysical / (double)cxLogical);
+;double vertScale = ((double)cyPhysical / (double)cyLogical);
+;ASSERT(horzScale == vertScale);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

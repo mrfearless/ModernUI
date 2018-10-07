@@ -82,6 +82,7 @@ MUIGetParentBackgroundBitmap    PROTO :DWORD                                    
 ; ModernUI Window/Dialog Functions:
 MUIApplyToDialog                PROTO :DWORD,:DWORD,:DWORD                      ; hDialogWindow, dwDropShadow (true to set drop shadow), dwClipping (true to set clipping on)
 MUICenterWindow                 PROTO :DWORD,:DWORD                             ; hWndChild, hWndParent
+MUIGetParentRelativeWindowRect  PROTO :DWORD,:DWORD                             ; hControl, lpRectControl
 
 ; ModernUI Region Functions:
 MUILoadRegionFromResource       PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hInstance, idRgnRes, lpRegion, lpdwSizeRegion
@@ -104,7 +105,7 @@ MUIDPIScaleRect                 PROTO :DWORD                                    
 MUIDPIScaleControl              PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; lpdwLeft, lpdwTop, lpdwWidth, lpdwHeight
 MUIDPIScaleFontSize             TEXTEQU <MUIPointSizeToLogicalUnit>             ; hControl, dwPointSize
 MUIDPIScaledScreen              PROTO :DWORD,:DWORD                             ; lpdwScreenWidth, lpdwScreenHeight
-
+MUIDPISetDPIAware               PROTO
 
 .CONST
 

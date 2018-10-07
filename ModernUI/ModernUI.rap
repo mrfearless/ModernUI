@@ -28,6 +28,7 @@ Debug=0
 19=MUIGetParentBackgroundColor.asm
 20=MUIGetParentBackgroundBitmap.asm
 21=ModernUI_DPI.asm
+22=MUIGetParentRelativeWindowRect.asm
 [MakeFiles]
 0=ModernUI.rap
 1=ModernUI.rc
@@ -89,13 +90,14 @@ Group=Modules,Assembly
 19=1
 20=1
 21=1
+22=1
 [AutoLoad]
-AutoLoad=2,6,4,3,21
+AutoLoad=2,6,4,3,21,16,22
 [Size]
 5=0,0,0,0,528
 4=0,0,0,0,567
 3=0,0,0,0,0
-2=0,0,0,0,6291
+2=0,0,0,0,5217
 1=0,0,0,0,5134
 6=0,0,0,0,997
 13=0,0,0,0,10132
@@ -110,9 +112,10 @@ AutoLoad=2,6,4,3,21
 17=0,0,0,0,554
 19=0,0,0,0,547
 20=0,0,0,0,548
-16=0,0,0,0,787
+16=0,0,0,0,473
 15=0,0,0,0,956
-21=0,0,0,0,3636
+21=0,0,0,0,7581
+22=0,0,0,0,740
 [RADebugBP]
 1=
 2=
@@ -134,6 +137,7 @@ AutoLoad=2,6,4,3,21
 17=
 18=
 21=
+22=
 [VersionControl]
 Settings=1278
 Milestones=129
@@ -168,7 +172,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=131919182
+PTimer=142222830
 [Collapse]
 2=15
 1=64
@@ -190,7 +194,8 @@ PTimer=131919182
 20=2
 16=256
 15=2048
-21=16910592
+21=69206016,37440
+22=
 [GroupExpand]
 GroupExpand=1,1,0
 [BookMark]
