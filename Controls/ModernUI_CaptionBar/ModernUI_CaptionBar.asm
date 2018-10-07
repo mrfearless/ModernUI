@@ -552,6 +552,8 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
                 Invoke TrackMouseEvent, Addr TE
             .ENDIF
         .ENDIF
+        Invoke GetParent, hWin
+        Invoke PostMessage, eax, WM_MOUSEMOVE, wParam, lParam ; pass mousemove to parent        
         
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @CaptionBarMouseOver, FALSE
@@ -741,6 +743,7 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
         .IF eax == MUICS_WINSIZE 
             Invoke _CBP_MouseOverBorders, hWin, TRUE
         .ENDIF
+        Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
 
 ;    .ELSEIF eax == WM_SETICON
 ;        Invoke MUISetExtProperty, dwRefData, @CaptionBarBackImageType, MUICBIT_ICO
