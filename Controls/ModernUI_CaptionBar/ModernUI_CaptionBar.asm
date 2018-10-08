@@ -61,13 +61,13 @@ include kernel32.inc
 include user32.inc
 include gdi32.inc
 include comctl32.inc
-include masm32.inc
+;include masm32.inc
 
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
 includelib comctl32.lib
-includelib masm32.lib
+;includelib masm32.lib
 
 IFDEF MUI_USEGDIPLUS
 ECHO MUI_USEGDIPLUS
@@ -615,6 +615,9 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
             .ENDIF
             Invoke SetWindowLong, hWin, GWL_STYLE, eax
             Invoke _MUI_CaptionBarReposition, hWin
+        .ELSEIF eax == @CaptionBarWindowBackColor
+            Invoke GetParent, hWin
+            Invoke InvalidateRect, eax, NULL, TRUE
         .ENDIF
         ret
 
@@ -1843,6 +1846,7 @@ _MUI_SysButtonSetPropertyEx PROC PRIVATE hWin:DWORD, dwProperty:DWORD, dwPropert
         ;.ELSEIF eax == @CaptionBarBtnBorderRollColor
         ;    Invoke MUISetExtProperty, hSysButtonClose, @SysButtonBorderRollColor, dwPropertyValue
         .ENDIF
+        Invoke InvalidateRect, hSysButtonClose, NULL, TRUE
     .ENDIF
 
     Invoke MUIGetIntProperty, hWin, @CaptionBar_hSysButtonMax
@@ -1874,6 +1878,7 @@ _MUI_SysButtonSetPropertyEx PROC PRIVATE hWin:DWORD, dwProperty:DWORD, dwPropert
         .ELSEIF eax == @CaptionBarBtnBorderRollColor
             Invoke MUISetExtProperty, hSysButtonMax, @SysButtonBorderRollColor, dwPropertyValue        
         .ENDIF
+        Invoke InvalidateRect, hSysButtonMax, NULL, TRUE
     .ENDIF
 
     Invoke MUIGetIntProperty, hWin, @CaptionBar_hSysButtonRes
@@ -1905,6 +1910,7 @@ _MUI_SysButtonSetPropertyEx PROC PRIVATE hWin:DWORD, dwProperty:DWORD, dwPropert
         .ELSEIF eax == @CaptionBarBtnBorderRollColor
             Invoke MUISetExtProperty, hSysButtonRes, @SysButtonBorderRollColor, dwPropertyValue            
         .ENDIF
+        Invoke InvalidateRect, hSysButtonRes, NULL, TRUE
     .ENDIF
 
     Invoke MUIGetIntProperty, hWin, @CaptionBar_hSysButtonMin
@@ -1936,6 +1942,7 @@ _MUI_SysButtonSetPropertyEx PROC PRIVATE hWin:DWORD, dwProperty:DWORD, dwPropert
         .ELSEIF eax == @CaptionBarBtnBorderRollColor
             Invoke MUISetExtProperty, hSysButtonMin, @SysButtonBorderRollColor, dwPropertyValue           
         .ENDIF
+        Invoke InvalidateRect, hSysButtonMin, NULL, TRUE
     .ENDIF
     
     ;todo set custom button props
@@ -3287,7 +3294,8 @@ MUICaptionBarAddButton PROC PUBLIC USES EBX hControl:DWORD, lpszButtonText:DWORD
             mov hMUICapButtonFont, eax
         .ENDIF    
     
-        Invoke szLen, lpszButtonText
+        ;Invoke szLen, lpszButtonText
+        Invoke lstrlen, lpszButtonText
         mov nLenButtonText, eax
         Invoke GetDC, hControl
         mov hdc, eax
