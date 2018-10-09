@@ -202,6 +202,7 @@ MUI_TEXT_FONTSIZE_MASK          EQU 0000000Fh
 MUI_TEXT_FONTTYPE_MASK          EQU 00000070h
 MUI_TEXT_ALIGN_MASK             EQU 00000300h
 
+@@TextBufferSize                EQU 20d ; cbWndOffset+20
 
 ; Internal properties
 @TextEnabledState               EQU 0
@@ -424,6 +425,7 @@ MUITextRegister PROC PUBLIC
         mov wc.cbClsExtra, 0
         mov wc.cbWndExtra, 24   ; cbWndExtra +0 = dword ptr to internal properties, cbWndExtra +4 = dword ptr to external properties
                                 ; cbWndExtra +8 = dword ptr to EXTENDED internal properties, cbWndExtra +12 = dword ptr to EXTENDED external properties
+                                ; offset + 20 = buffersize
         ; extra dword for buffer size if not 0
         Invoke RegisterClassEx, addr wc
     .ENDIF  
@@ -492,7 +494,7 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         ret    
 
     .ELSEIF eax == WM_NCDESTROY
-        Invoke MUIGetIntProperty,hWin, @TextBuffer ; release buffer used for text
+        Invoke MUIGetIntProperty, hWin, @TextBuffer ; release buffer used for text
         .IF eax != 0
             Invoke GlobalFree, eax
         .ENDIF    
@@ -683,17 +685,17 @@ _MUI_TextInit PROC USES EBX hWin:DWORD
     Invoke _MUI_TextSetFontFamilySize, hWin, dwStyle
     
     ; Alloc Text Buffer
-    Invoke GetWindowLong, hWin, 8 ; buffer size
-    .IF eax == 0
+    ;Invoke GetWindowLong, hWin, @@TextBufferSize ; buffer size
+    ;.IF eax == 0
         Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, MUI_TEXT_MAX_CHARS
-    .ELSE
-        IFDEF MUI_UNICODE
-        shl eax, 1 ; x2
-        ENDIF
-        and eax, 0FFFFFFF0h ; mask 
-        add eax, 16d ; round up to 16bytes        
-        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
-    .ENDIF
+    ;.ELSE
+    ;    IFDEF MUI_UNICODE
+    ;    shl eax, 1 ; x2
+    ;    ENDIF
+    ;    and eax, 0FFFFFFF0h ; mask 
+    ;    add eax, 16d ; round up to 16bytes        
+    ;    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+    ;.ENDIF
     .IF eax != NULL
         Invoke MUISetIntProperty, hWin, @TextBuffer, eax
     .ENDIF
@@ -929,7 +931,10 @@ _MUI_TextPaintText PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledSta
         mov bUTF8, FALSE
     .ENDIF    
     
-    Invoke MUIGetIntProperty,hWin, @TextBuffer
+    Invoke MUIGetIntProperty, hWin, @TextBuffer
+    .IF eax == FALSE
+        ret
+    .ENDIF
     mov lpMUITextBuffer, eax
     
     Invoke MUIGetExtProperty, hWin, @TextFont        
@@ -1458,6 +1463,7 @@ _MUI_TextSetFontTableHandle PROC USES EBX hWin:DWORD, dwStyle:DWORD, hFont:DWORD
 _MUI_TextSetFontTableHandle ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Convert wide Unicode String to an UTF8 string
 ;-------------------------------------------------------------------------------------
@@ -1490,6 +1496,7 @@ _MUI_TextUTF8Encode PROC lpString:DWORD
 _MUI_TextUTF8Encode ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Convert an UTF8 string to a wide Unicode String
 ;-------------------------------------------------------------------------------------
@@ -1522,6 +1529,7 @@ _MUI_TextUTF8Decode PROC lpString:DWORD
 _MUI_TextUTF8Decode ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Frees a converted string which was created by UTF8_Decode or UTF8_Encode
 ;-------------------------------------------------------------------------------------
@@ -1537,6 +1545,7 @@ _MUI_TextUTF8Free PROC lpString:DWORD
 _MUI_TextUTF8Free ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Sets internal buffer size for text - useful if you know ahead of time what size
 ; buffer should be - as in you know the text length expected.
@@ -1568,6 +1577,7 @@ MUITextSetBufferSize PROC hWin:DWORD, dwSize:DWORD
 MUITextSetBufferSize ENDP
 
 
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Check if font set via MUITextSetProperty is acutally a font, if it isnt return FALSE
 ;-------------------------------------------------------------------------------------
