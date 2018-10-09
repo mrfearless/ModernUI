@@ -71,9 +71,9 @@ MUIPBM_SETPERCENT           EQU WM_USER + 1749
 ; ModernUI_ProgressBar Properties: Use with MUIProgressBarSetProperty / 
 ; MUIProgressBarGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;------------------------------------------------------------------------------
-@ProgressBarTextColor        EQU 0   ; Text color for caption text and system buttons (min/max/restore/close)
-@ProgressBarTextFont         EQU 4   ; Font for caption text
-@ProgressBarBackColor        EQU 8   ; Background color of caption and system buttons
+@ProgressBarTextColor        EQU 0   ; Text color
+@ProgressBarTextFont         EQU 4   ; Font
+@ProgressBarBackColor        EQU 8   ; Background color
 @ProgressBarProgressColor    EQU 12  ;
 @ProgressBarBorderColor      EQU 16  ;
 @ProgressBarPercent          EQU 20  ; 
