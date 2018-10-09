@@ -302,7 +302,7 @@ _MUI_TooltipWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, l
         mov eax, 0
         ret
 
-   .ELSEIF eax == WM_MOUSEMOVE
+    .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUISetIntProperty, hWin, @TooltipMouseOver, FALSE
         Invoke ShowWindow, hWin, FALSE
 
