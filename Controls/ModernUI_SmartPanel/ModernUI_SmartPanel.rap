@@ -10,6 +10,7 @@ GroupExpand=1
 2=ModernUI_SmartPanel.inc
 3=Notes.txt
 4=Distribution\Readme.txt
+5=ModernUI_SmartPanel.h
 [MakeFiles]
 0=ModernUI_SmartPanel.rap
 1=ModernUI_SmartPanel.rc
@@ -49,14 +50,14 @@ Menu=0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 [Accel]
 [VerInf]
 [Group]
-Group=Distribuition,Modules,Assembly,Resources,Misc
-1=3
-2=3
-3=5
+Group=Distribuition,Assembly,Misc
+1=2
+2=2
+3=3
 4=1
-5=2
+5=3
 [AutoLoad]
-AutoLoad=2,1,3
+AutoLoad=2,1,3,5
 [RADebugBP]
 1=
 2=
@@ -70,7 +71,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=30
+MilestoneOnDateDate=9
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=18
@@ -94,17 +95,19 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=53093195
+PTimer=54511447
 [Collapse]
 2=
 1=2147483647,2147352575,134219912,12
 3=
+5=
 [Size]
-2=0,0,0,0,6710
-1=0,0,0,0,17613
+2=0,0,0,0,5568
+1=0,0,0,0,0
 3=0,0,0,0,333
+5=0,0,0,0,2123
 [GroupExpand]
-GroupExpand=1,1,1,0,0,0
+GroupExpand=1,1,1,0
 [BookMark]
 0=
 1=
@@ -119,12 +122,13 @@ GroupExpand=1,1,1,0,0,0
 [BreakPoint]
 0=
 [Find]
-1=";-------------------------------------------------------------------------------------------------------------"
-2=";-------------------------------------------------------------------------------------"
-3=";--------------------------------------------------------------------------------------------------------------------------------------"
-4="SetWindowLong"
-5="Invoke MUISetIntProperty, hControl, @SmartPanelCurrentPanel"
-6="MUISetExtProperty"
-7="MUIGetExtProperty"
-8="@SmartPanelPanelsArray"
-9="hinstance"
+1="EQU "
+2=";-------------------------------------------------------------------------------------------------------------"
+3=";-------------------------------------------------------------------------------------"
+4=";--------------------------------------------------------------------------------------------------------------------------------------"
+5="SetWindowLong"
+6="Invoke MUISetIntProperty, hControl, @SmartPanelCurrentPanel"
+7="MUISetExtProperty"
+8="MUIGetExtProperty"
+9="@SmartPanelPanelsArray"
+10="hinstance"
