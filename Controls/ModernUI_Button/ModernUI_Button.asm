@@ -1134,10 +1134,15 @@ _MUI_ButtonButtonUp PROC PRIVATE hWin:DWORD
         mov hParent, eax
         Invoke PostMessage, hParent, WM_COMMAND, wID, hWin ; simulates click on our control    
 
-        Invoke GetClientRect, hWin, addr rect
-        Invoke MapWindowPoints, hWin, hParent, addr rect, 2   
-        sub rect.top, 1
-        Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, MUIBS_PUSHBUTTON
+        .IF eax == MUIBS_PUSHBUTTON
+            Invoke GetClientRect, hWin, addr rect
+            Invoke MapWindowPoints, hWin, hParent, addr rect, 2   
+            sub rect.top, 1
+            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
+        .ENDIF
+        
         Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
 
         Invoke GetWindowLong, hWin, GWL_STYLE
