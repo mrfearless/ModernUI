@@ -103,7 +103,8 @@ MUIDPIScaleX                    PROTO :DWORD                                    
 MUIDPIScaleY                    PROTO :DWORD                                    ; dwValueY
 MUIDPIScaleRect                 PROTO :DWORD                                    ; lpRect
 MUIDPIScaleControl              PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; lpdwLeft, lpdwTop, lpdwWidth, lpdwHeight
-MUIDPIScaleFontSize             TEXTEQU <MUIPointSizeToLogicalUnit>             ; hControl, dwPointSize
+MUIDPIScaleFontSize             PROTO :DWORD                                    ; dwPointSize
+MUIDPIScaleFont                 PROTO :DWORD                                    ; hFont
 MUIDPIScaledScreen              PROTO :DWORD,:DWORD                             ; lpdwScreenWidth, lpdwScreenHeight
 MUIDPISetDPIAware               PROTO
 

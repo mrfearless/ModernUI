@@ -151,6 +151,8 @@ MUIDPIScaleY ENDP
 MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Scale rect based on DPIX and DPIY
+;
+; Return TRUE if scaling was done, FALSE if not or not required
 ;------------------------------------------------------------------------------
 MUIDPIScaleRect PROC lpRect:DWORD
     LOCAL rect:RECT
@@ -164,7 +166,7 @@ MUIDPIScaleRect PROC lpRect:DWORD
     
     Invoke MUIDPI, Addr dwDPIX, Addr dwDPIY
     .IF dwDPIX == 96d && dwDPIY == 96d ; already at 96dpi
-        mov eax, TRUE
+        mov eax, FALSE
         ret
     .ENDIF
     
@@ -241,6 +243,8 @@ MUIDPIScaledScreen ENDP
 MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Scale control based on DPIX and DPIY
+;
+; Return TRUE if scaling was done, FALSE if not or not required
 ;------------------------------------------------------------------------------
 MUIDPIScaleControl PROC USES EBX lpdwLeft:DWORD, lpdwTop:DWORD, lpdwWidth:DWORD, lpdwHeight:DWORD
     LOCAL rect:RECT
@@ -274,27 +278,29 @@ MUIDPIScaleControl PROC USES EBX lpdwLeft:DWORD, lpdwTop:DWORD, lpdwWidth:DWORD,
     .ENDIF
     mov rect.bottom, eax    
     Invoke MUIDPIScaleRect, Addr rect
-    .IF lpdwLeft != 0
-        mov ebx, lpdwLeft
-        mov eax, rect.left
-        mov [ebx], eax
+    .IF eax == TRUE
+        .IF lpdwLeft != 0
+            mov ebx, lpdwLeft
+            mov eax, rect.left
+            mov [ebx], eax
+        .ENDIF
+        .IF lpdwTop != 0
+            mov ebx, lpdwTop
+            mov eax, rect.top
+            mov [ebx], eax
+        .ENDIF
+        .IF lpdwWidth != 0
+            mov ebx, lpdwWidth
+            mov eax, rect.right
+            mov [ebx], eax
+        .ENDIF
+        .IF lpdwHeight != 0
+            mov ebx, lpdwHeight
+            mov eax, rect.bottom
+            mov [ebx], eax
+        .ENDIF
+        mov eax, TRUE
     .ENDIF
-    .IF lpdwTop != 0
-        mov ebx, lpdwTop
-        mov eax, rect.top
-        mov [ebx], eax
-    .ENDIF
-    .IF lpdwWidth != 0
-        mov ebx, lpdwWidth
-        mov eax, rect.right
-        mov [ebx], eax
-    .ENDIF
-    .IF lpdwHeight != 0
-        mov ebx, lpdwHeight
-        mov eax, rect.bottom
-        mov [ebx], eax
-    .ENDIF
-    xor eax, eax
     ret
 MUIDPIScaleControl ENDP
 
@@ -392,6 +398,63 @@ MUIDPISetDPIAware PROC
     mov eax, dwResult
     ret
 MUIDPISetDPIAware ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; Scale font point size eg '12' to logical unit size for use with CreateFont
+; or CreateFontIndirect, based on DPIY
+;------------------------------------------------------------------------------
+MUIDPIScaleFontSize PROC dwPointSize:DWORD
+    LOCAL hdc:HDC
+    LOCAL dwScaledValue:DWORD
+    LOCAL dwLogicalUnit:DWORD
+    
+    .IF dwPointSize == 0
+        mov eax, 0
+        ret
+    .ENDIF    
+    
+    Invoke GetDC, NULL
+    mov hdc, eax
+    
+    Invoke GetDeviceCaps, hdc, LOGPIXELSY
+    Invoke MulDiv, dwPointSize, eax, 72d
+    neg eax
+    mov dwLogicalUnit, eax    
+    
+    
+    Invoke GetDeviceCaps, hdc, LOGPIXELSY
+    .IF eax == 96d ; already at 96dpi
+        mov eax, dwLogicalUnit
+    .ELSE    
+        Invoke MulDiv, dwLogicalUnit, eax, 96d
+    .ENDIF
+    mov dwScaledValue, eax
+    Invoke ReleaseDC, NULL, hdc
+    mov eax, dwScaledValue
+    ret
+MUIDPIScaleFontSize ENDP
+
+
+MUI_ALIGN
+MUIDPIScaleFont PROC hFont:DWORD
+    LOCAL lf:LOGFONT
+
+    .IF hFont == 0
+        mov eax, 0
+        ret
+    .ENDIF
+
+    Invoke GetObject, hFont, SIZEOF LOGFONT, Addr lf
+    mov eax, lf.lfHeight
+    Invoke MUIDPIScaleFontSize, eax
+    mov lf.lfHeight, eax
+    Invoke CreateFontIndirect, Addr lf
+    ret
+MUIDPIScaleFont ENDP
+
+
 
 
 
