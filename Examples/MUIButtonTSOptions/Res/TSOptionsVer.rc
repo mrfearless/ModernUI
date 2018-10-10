@@ -1,7 +1,7 @@
 #define VERINF1 1
 VERINF1 VERSIONINFO
-FILEVERSION 1,0,0,4
-PRODUCTVERSION 1,0,0,4
+FILEVERSION 1,0,6,5
+PRODUCTVERSION 1,0,6,5
 FILEOS 0x00000004
 FILETYPE 0x00000001
 BEGIN
@@ -10,14 +10,14 @@ BEGIN
     BLOCK "040904B0"
     BEGIN
       VALUE "CompanyName", "fearless\0"
-      VALUE "FileVersion", "1.0.0.4\0"
+      VALUE "FileVersion", "1.0.6.5\0"
       VALUE "FileDescription", "TSOptions\0"
       VALUE "InternalName", "TSOptions\0"
       VALUE "LegalCopyright", "fearless\0"
       VALUE "LegalTrademarks", "fearless\0"
       VALUE "OriginalFilename", "TSOptions\0"
       VALUE "ProductName", "TSOptions\0"
-      VALUE "ProductVersion", "1.0.0.4\0"
+      VALUE "ProductVersion", "1.0.6.5\0"
     END
   END
   BLOCK "VarFileInfo"

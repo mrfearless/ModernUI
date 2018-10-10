@@ -106,41 +106,48 @@ WndProc endp
 ;-------------------------------------------------------------------------------------
 InitGUI PROC hWin:DWORD
     
+    Invoke GetDlgItem, hWin, IDC_GREYFRAME
+    Invoke SetWindowPos, eax, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE
+
+    Invoke GetDlgItem, hWin, IDC_WHITESQUARE
+    Invoke SetWindowPos, eax, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE
+
+    
     ; --------------------------------------------------------------------------------------------
     ; Create the ModernUI buttons for each teamspeak option
     ; --------------------------------------------------------------------------------------------
-    Invoke MUIButtonCreate, hWin, Addr szOptApplication, 10, 10, 160, 34, OPT_APPLICATION, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptApplication, 10, 10, 160, 34, OPT_APPLICATION, MUIBS_LEFT or MUIBS_HAND 
     mov hOptApplication, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptmyTeamSpeak, 10, 44, 160, 34, OPT_MYTEAMSPEAK, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptmyTeamSpeak, 10, 46, 160, 34, OPT_MYTEAMSPEAK, MUIBS_LEFT or MUIBS_HAND
     mov hOptmyTeamSpeak, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptPlayback, 10, 78, 160, 34, OPT_PLAYBACK, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptPlayback, 10, 82, 160, 34, OPT_PLAYBACK, MUIBS_LEFT or MUIBS_HAND
     mov hOptPlayback, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptCapture, 10, 112, 160, 34, OPT_CAPTURE, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptCapture, 10, 118, 160, 34, OPT_CAPTURE, MUIBS_LEFT or MUIBS_HAND
     mov hOptCapture, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptDesign, 10, 146, 160, 34, OPT_DESIGN, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptDesign, 10, 154, 160, 34, OPT_DESIGN, MUIBS_LEFT or MUIBS_HAND
     mov hOptDesign, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptAddons, 10, 180, 160, 34, OPT_ADDONS, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptAddons, 10, 190, 160, 34, OPT_ADDONS, MUIBS_LEFT or MUIBS_HAND
     mov hOptAddons, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptHotkeys, 10, 214, 160, 34, OPT_HOKEYS, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptHotkeys, 10, 226, 160, 34, OPT_HOKEYS, MUIBS_LEFT or MUIBS_HAND
     mov hOptHotkeys, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptWhisper, 10, 248, 160, 34, OPT_WHISPER, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptWhisper, 10, 262, 160, 34, OPT_WHISPER, MUIBS_LEFT or MUIBS_HAND
     mov hOptWhisper, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptDownloads, 10, 282, 160, 34, OPT_DOWNLOADS, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptDownloads, 10, 298, 160, 34, OPT_DOWNLOADS, MUIBS_LEFT or MUIBS_HAND
     mov hOptDownloads, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptChat, 10, 316, 160, 34, OPT_CHAT, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptChat, 10, 334, 160, 34, OPT_CHAT, MUIBS_LEFT or MUIBS_HAND
     mov hOptChat, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptSecurity, 10, 350, 160, 34, OPT_SECURITY, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptSecurity, 10, 370, 160, 34, OPT_SECURITY, MUIBS_LEFT or MUIBS_HAND
     mov hOptSecurity, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptMessages, 10, 384, 160, 34, OPT_MESSAGES, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptMessages, 10, 406, 160, 34, OPT_MESSAGES, MUIBS_LEFT or MUIBS_HAND
     mov hOptMessages, eax
-    Invoke MUIButtonCreate, hWin, Addr szOptNotifications, 10, 418, 160, 34, OPT_NOTIFICATIONS, MUIBS_LEFT or MUIBS_HAND
+    Invoke MUIButtonCreate, hWin, Addr szOptNotifications, 10, 442, 160, 34, OPT_NOTIFICATIONS, MUIBS_LEFT or MUIBS_HAND
     mov hOptNotifications, eax
     
     ; --------------------------------------------------------------------------------------------
     ; create a special blank button at bottom (for future button additions possibly)
     ; --------------------------------------------------------------------------------------------
-    Invoke MUIButtonCreate, hWin, Addr szOptBlank, 10, 452, 160, 68, OPT_NOTIFICATIONS, MUIBS_LEFT ;or MUIBS_HAND
-    mov hOptBlank, eax
+    ;Invoke MUIButtonCreate, hWin, Addr szOptBlank, 10, 478, 160, 34, OPT_NOTIFICATIONS, MUIBS_LEFT or MUIBS_NOFOCUSRECT ;or MUIBS_HAND
+    ;mov hOptBlank, eax
     
     
     ; --------------------------------------------------------------------------------------------
@@ -315,11 +322,11 @@ InitGUI PROC hWin:DWORD
 ;    Invoke MUIButtonSetProperty, hOptNotifications, @ButtonBorderColorSel, MUI_RGBCOLOR(132,172,221)
 ;    Invoke MUIButtonSetProperty, hOptNotifications, @ButtonBorderColorSelAlt, MUI_RGBCOLOR(125,162,206)
 
-    Invoke MUIButtonSetProperty, hOptBlank, @ButtonBackColor, MUI_RGBCOLOR(255,255,255)
-    Invoke MUIButtonSetProperty, hOptBlank, @ButtonBackColorAlt, MUI_RGBCOLOR(255,255,255)
-    Invoke MUIButtonSetProperty, hOptBlank, @ButtonBackColorSel, MUI_RGBCOLOR(255,255,255)
-    Invoke MUIButtonSetProperty, hOptBlank, @ButtonBackColorSelAlt, MUI_RGBCOLOR(255,255,255)
-    Invoke MUIButtonSetProperty, hOptBlank, @ButtonBorderStyle, MUIBBS_NONE
+    ;Invoke MUIButtonSetProperty, hOptBlank, @ButtonBackColor, MUI_RGBCOLOR(255,255,255)
+    ;Invoke MUIButtonSetProperty, hOptBlank, @ButtonBackColorAlt, MUI_RGBCOLOR(255,255,255)
+    ;Invoke MUIButtonSetProperty, hOptBlank, @ButtonBackColorSel, MUI_RGBCOLOR(255,255,255)
+    ;Invoke MUIButtonSetProperty, hOptBlank, @ButtonBackColorSelAlt, MUI_RGBCOLOR(255,255,255)
+    ;Invoke MUIButtonSetProperty, hOptBlank, @ButtonBorderStyle, MUIBBS_NONE
 
     ; --------------------------------------------------------------------------------------------
     ; Set initial selected button to the first one - Application

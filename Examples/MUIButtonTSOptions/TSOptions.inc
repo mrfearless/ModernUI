@@ -56,8 +56,9 @@ ICO_Notifications       EQU 213
 
 
 ; Main Dialog
-IDD_DIALOG				EQU 1000
-IDC_BLACKFRAME          EQU 1001
+IDD_DIALOG				equ 1000
+IDC_WHITESQUARE			equ 1001
+IDC_GREYFRAME			equ 1002
 
 ; ModernUI button resource ids:
 OPT_APPLICATION         EQU 1101
