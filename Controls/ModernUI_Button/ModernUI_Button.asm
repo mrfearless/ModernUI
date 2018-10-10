@@ -206,6 +206,7 @@ _MUI_BUTTON_PROPERTIES                      STRUCT
     dwNoteXposition                         DD ?
     dwNoteYposition                         DD ?
     dwButtonRecalcPositions                 DD ? ; set to TRUE in init and when properties change and/or wm_size, wm_settext, wm_setfont ? not sure if to implement or just calc on each wm_paint call
+    dwDPI                                   DD ?
 _MUI_BUTTON_PROPERTIES                      ENDS
 
 IFDEF MUI_USEGDIPLUS
@@ -232,6 +233,7 @@ IStream ENDS
 ENDIF
 
 .CONST
+WM_DPICHANGED EQU 02E0h
 MUI_BUTTON_ACCENTWIDTH_DEFAULT              EQU 6d ; default width of accent (accent is the small extra area that gives button an extra highlight)
 MUI_BUTTON_FOCUSRECT_OFFSET                 EQU -2 ; change this to higher negative value to shrink focus rect within button
 
@@ -266,6 +268,7 @@ MUI_BUTTON_FOCUSRECT_OFFSET                 EQU -2 ; change this to higher negat
 @ButtonNoteXposition                        EQU 108
 @ButtonNoteYposition                        EQU 112
 @ButtonRecalcPositions                      EQU 116
+@ButtonDPI                                  EQU 120
 
 ; External public properties
 
@@ -354,7 +357,9 @@ MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:
     LOCAL hinstance:DWORD
     LOCAL hControl:DWORD
     LOCAL dwNewStyle:DWORD
-    
+    LOCAL DPIRect:RECT
+    LOCAL bScaled:DWORD
+
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
@@ -368,10 +373,33 @@ MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:
         or dwNewStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN ;or WS_TABSTOP
     .ENDIF
     
-    Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
+    ; DPI Scale position and size
+    mov eax, xpos
+    mov DPIRect.left, eax
+    mov eax, ypos
+    mov DPIRect.top, eax
+    mov eax, controlwidth
+    mov DPIRect.right, eax
+    mov eax, controlheight
+    mov DPIRect.bottom, eax
+    Invoke MUIDPIScaleRect, Addr DPIRect ; eax returns TRUE if scaling was done/required
+    mov bScaled, eax
+    ;PrintDec bScaled
+    
+    Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, DPIRect.left, DPIRect.top, DPIRect.right, DPIRect.bottom, hWndParent, dwResourceID, hinstance, NULL
+    ;Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
     mov hControl, eax
     .IF eax != NULL
         ;PrintDec hControl
+        .IF bScaled == TRUE
+            ;PrintText 'scalefont'
+            Invoke SendMessage, hControl, WM_GETFONT, 0, 0
+            Invoke MUIDPIScaleFont, eax
+            .IF eax != 0
+                Invoke SendMessage, hControl, WM_SETFONT, eax, TRUE
+            .ENDIF
+            Invoke MUISetIntProperty, hControl, @ButtonDPI, TRUE
+        .ENDIF
     .ENDIF
     mov eax, hControl
     ret
@@ -545,6 +573,25 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         mov eax, 0
         ret
     
+    
+    .ELSEIF eax == WM_DPICHANGED ; 0x02E0
+        Invoke MUIGetIntProperty,  hWin, @ButtonDPI
+        .IF eax == TRUE
+            Invoke CopyRect, Addr rect, lParam
+            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOZORDER
+            
+            Invoke SendMessage, hWin, WM_GETFONT, 0, 0
+            Invoke MUIDPIScaleFont, eax
+            .IF eax != 0
+                Invoke SendMessage, hWin, WM_SETFONT, eax, TRUE
+            .ENDIF
+            
+            ; todo, adjust and store scaled value for accent width, text indent for x, y and image ident for x, y and padding between text and image
+            
+        .ENDIF
+        mov eax, 0
+        ret
+    
     ; todo - weird issue, focus on one button, click and hold, tab to next button - tab order reverses like as if shift-tab was pressed.
     
     .ELSEIF eax == WM_ENABLE
@@ -663,6 +710,7 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
     .ELSEIF eax == MUIBM_SETSTATE ; wParam = TRUE/FALSE, lParam = NULL
         Invoke MUISetIntProperty, hWin, @ButtonSelectedState, wParam
         Invoke InvalidateRect, hWin, NULL, TRUE
+        ;Invoke UpdateWindow, hWin
         ret
 
     .ENDIF
@@ -1051,15 +1099,15 @@ _MUI_ButtonButtonDown PROC PRIVATE hWin:DWORD
             add rect.top, 1
             Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
             Invoke MUISetIntProperty, hWin, @ButtonMouseDown, TRUE
-            ;Invoke ShowWindow, hWin, SW_HIDE
             Invoke InvalidateRect, hWin, NULL, TRUE
-            ;Invoke ShowWindow, hWin, SW_SHOW
         .ENDIF
     .ELSE
+        Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
+        .IF eax == FALSE
+            Invoke MUISetIntProperty, hWin, @ButtonMouseDown, TRUE
+        .ENDIF
         Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
-        ;Invoke ShowWindow, hWin, SW_HIDE
         Invoke InvalidateRect, hWin, NULL, TRUE
-        ;Invoke ShowWindow, hWin, SW_SHOW              
     .ENDIF
     ret
 _MUI_ButtonButtonDown ENDP
@@ -1080,38 +1128,32 @@ _MUI_ButtonButtonUp PROC PRIVATE hWin:DWORD
 
     Invoke MUIGetIntProperty, hWin, @ButtonMouseDown
     .IF eax == TRUE
-    
         Invoke GetDlgCtrlID, hWin
         mov wID,eax
         Invoke GetParent, hWin
         mov hParent, eax
         Invoke PostMessage, hParent, WM_COMMAND, wID, hWin ; simulates click on our control    
-    
+
         Invoke GetClientRect, hWin, addr rect
         Invoke MapWindowPoints, hWin, hParent, addr rect, 2   
         sub rect.top, 1
         Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
         Invoke MUISetIntProperty, hWin, @ButtonMouseDown, FALSE
-        ;Invoke ShowWindow, hWin, SW_HIDE
+
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, MUIBS_AUTOSTATE
+        .IF eax == MUIBS_AUTOSTATE
+            Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
+            .IF eax == FALSE
+                Invoke MUISetIntProperty, hWin, @ButtonSelectedState, TRUE
+            .ELSE
+                Invoke MUISetIntProperty, hWin, @ButtonSelectedState, FALSE
+            .ENDIF
+        .ENDIF        
         Invoke InvalidateRect, hWin, NULL, TRUE
-        ;Invoke ShowWindow, hWin, SW_SHOW                
     .ELSE
         Invoke InvalidateRect, hWin, NULL, TRUE
         Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
-        ;Invoke ShowWindow, hWin, SW_HIDE
-        Invoke InvalidateRect, hWin, NULL, TRUE
-        ;Invoke ShowWindow, hWin, SW_SHOW                
-    .ENDIF
-    
-    Invoke GetWindowLong, hWin, GWL_STYLE
-    and eax, MUIBS_AUTOSTATE
-    .IF eax == MUIBS_AUTOSTATE
-        Invoke MUIGetIntProperty, hWin, @ButtonSelectedState
-        .IF eax == FALSE
-            Invoke MUISetIntProperty, hWin, @ButtonSelectedState, TRUE
-        .ELSE
-            Invoke MUISetIntProperty, hWin, @ButtonSelectedState, FALSE
-        .ENDIF
         Invoke InvalidateRect, hWin, NULL, TRUE
     .ENDIF
     ret
@@ -2561,6 +2603,12 @@ _MUI_ButtonPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFoc
     .IF eax == MUIBS_NOFOCUSRECT
         ret
     .ENDIF
+    
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    and eax, WS_TABSTOP
+    .IF eax != WS_TABSTOP
+        ret
+    .ENDIF    
 
     Invoke CopyRect, Addr rect, lpRect
     Invoke InflateRect, Addr rect, MUI_BUTTON_FOCUSRECT_OFFSET, MUI_BUTTON_FOCUSRECT_OFFSET

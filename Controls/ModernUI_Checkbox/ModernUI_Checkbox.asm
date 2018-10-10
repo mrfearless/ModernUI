@@ -436,7 +436,7 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
    .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @CheckboxEnabledState
         .IF eax == TRUE   
-            Invoke MUISetIntProperty, hWin, @CheckboxMouseOver , TRUE
+            Invoke MUISetIntProperty, hWin, @CheckboxMouseOver, TRUE
             .IF eax != TRUE
                 Invoke InvalidateRect, hWin, NULL, TRUE
                 mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
@@ -951,8 +951,11 @@ _MUI_CheckboxButtonDown PROC PRIVATE hWin:DWORD
         Invoke MUISetIntProperty, hWin, @CheckboxFocusedState, FALSE
     .ENDIF
 
-    Invoke MUISetIntProperty, hWin, @CheckboxMouseDown, TRUE
-    Invoke InvalidateRect, hWin, NULL, TRUE
+    Invoke MUIGetIntProperty, hWin, @CheckboxMouseDown
+    .IF eax == FALSE
+        Invoke MUISetIntProperty, hWin, @CheckboxMouseDown, TRUE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+    .ENDIF
 
     ret
 _MUI_CheckboxButtonDown ENDP
@@ -973,16 +976,18 @@ _MUI_CheckboxButtonUp PROC PRIVATE hWin:DWORD
         mov wID,eax
         Invoke GetParent, hWin
         mov hParent, eax
-        Invoke PostMessage, hParent, WM_COMMAND, wID, hWin ; simulates click on our control    
+        Invoke PostMessage, hParent, WM_COMMAND, wID, hWin ; simulates click on our control
+        
+        Invoke MUISetIntProperty, hWin, @CheckboxMouseDown, FALSE
+        
+        Invoke MUIGetIntProperty, hWin, @CheckboxSelectedState
+        .IF eax == FALSE
+            Invoke MUISetIntProperty, hWin, @CheckboxSelectedState, TRUE
+        .ELSE
+            Invoke MUISetIntProperty, hWin, @CheckboxSelectedState, FALSE
+        .ENDIF
+        Invoke InvalidateRect, hWin, NULL, TRUE
     .ENDIF
-
-    Invoke MUIGetIntProperty, hWin, @CheckboxSelectedState
-    .IF eax == FALSE
-        Invoke MUISetIntProperty, hWin, @CheckboxSelectedState, TRUE
-    .ELSE
-        Invoke MUISetIntProperty, hWin, @CheckboxSelectedState, FALSE
-    .ENDIF
-    Invoke InvalidateRect, hWin, NULL, TRUE
     ret
 _MUI_CheckboxButtonUp ENDP
 
