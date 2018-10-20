@@ -608,7 +608,8 @@ DrawHTMLCODE PROC USES EBX ECX EDX hWin:DWORD, hdc:DWORD, lpString:DWORD, nCount
     .ENDIF
     
     .IF SDWORD ptr nCount < 0
-        Invoke szLen, lpString
+        Invoke lstrlen, lpString
+        ;Invoke szLen, lpString
     .ELSE
         mov eax, nCount
     .ENDIF
@@ -1497,7 +1498,8 @@ _HTMLCODE_GetToken PROC USES EBX ECX lpszString:DWORD, lpdwSize:DWORD, lpdwToken
             mov ebx, pTag
             lea eax, [ebx].TAG.mnemonic
             mov lpszTag, eax
-            Invoke szLen, lpszTag
+            Invoke lstrlen, lpszTag
+            ;Invoke szLen, lpszTag
             mov LengthTag, eax
             
             mov eax, lpszStart

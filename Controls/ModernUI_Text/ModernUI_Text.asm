@@ -47,6 +47,13 @@ include \masm32\macros\macros.asm
 
 
 ;------------------------------------------
+; Remove comment to include DrawTextEXT
+;------------------------------------------
+;MUI_DRAWTEXTEXT EQU 1
+;------------------------------------------
+
+
+;------------------------------------------
 ; Remove comment to include unicode support
 ;------------------------------------------
 ;MUI_UNICODE TEXTEQU <__UNICODE__>
@@ -706,6 +713,7 @@ _MUI_TextInit PROC USES EBX hWin:DWORD
          Invoke SetWindowText, hWin, Addr szLorumIpsumText
     .ENDIF
 
+    IFDEF MUI_DRAWTEXTEXT
     ; Allocate memory for stacks if using htmlcode or bbcode tags
     mov eax, dwStyle
     and eax, MUITS_HTMLCODE
@@ -750,6 +758,7 @@ _MUI_TextInit PROC USES EBX hWin:DWORD
         Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
         Invoke MUISetIntProperty, hWin, @TextPtrFontSpecial, eax        
     .ENDIF
+    ENDIF
 
     ret
 
@@ -1600,8 +1609,8 @@ _MUI_TextCheckSetFont PROC hWin:DWORD, hFont:DWORD
 
 _MUI_TextCheckSetFont ENDP
 
-
+IFDEF MUI_DRAWTEXTEXT
 include ModernUI_DrawTextEXT.asm
-
+ENDIF
 
 END
