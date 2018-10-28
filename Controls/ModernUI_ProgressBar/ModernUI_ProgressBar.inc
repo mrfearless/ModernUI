@@ -45,10 +45,10 @@ MUIProgressBarRegister      PROTO                                               
 MUIProgressBarCreate        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD            ; hWndParent, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
 MUIProgressBarSetProperty   PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_ProgressBar, dwProperty, dwPropertyValue
 MUIProgressBarGetProperty   PROTO :DWORD, :DWORD                                                    ; hModernUI_ProgressBar, dwProperty
-MUIProgressBarSetMinMax     PROTO :DWORD, :DWORD, :DWORD
-MUIProgressBarSetPercent    PROTO :DWORD, :DWORD
-MUIProgressBarGetPercent    PROTO :DWORD
-MUIProgressBarStep          PROTO :DWORD
+MUIProgressBarSetMinMax     PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_ProgressBar, dwMin, dwMax
+MUIProgressBarSetPercent    PROTO :DWORD, :DWORD                                                    ; hModernUI_ProgressBar, dwPercent
+MUIProgressBarGetPercent    PROTO :DWORD                                                            ; hModernUI_ProgressBar
+MUIProgressBarStep          PROTO :DWORD                                                            ; hModernUI_ProgressBar
 
 ;------------------------------------------------------------------------------
 ; ModernUI_ProgressBar Structures
