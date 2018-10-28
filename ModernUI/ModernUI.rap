@@ -30,6 +30,8 @@ Debug=0
 21=ModernUI_DPI.asm
 22=MUIGetParentRelativeWindowRect.asm
 23=ModernUI.h
+24=MUIGDIBlend.asm
+25=MUIGDIBlendBitmaps.asm
 [MakeFiles]
 0=ModernUI.rap
 1=ModernUI.rc
@@ -93,13 +95,15 @@ Group=Modules,Assembly
 21=1
 22=1
 23=2
+24=1
+25=1
 [AutoLoad]
-AutoLoad=2,21,22,9,20,14,8,3,4,5,1,15,16,10,12,11,19,7,17,18,6
+AutoLoad=2,4,13,24,25
 [Size]
 5=0,0,0,0,1969
-4=0,0,0,0,567
+4=0,0,0,0,4492
 3=0,0,0,0,0
-2=0,0,0,0,10564
+2=0,0,0,0,4271
 1=0,0,0,0,5134
 6=0,0,0,0,997
 13=0,0,0,0,10132
@@ -119,6 +123,8 @@ AutoLoad=2,21,22,9,20,14,8,3,4,5,1,15,16,10,12,11,19,7,17,18,6
 21=0,0,0,0,8125
 22=0,0,0,0,987
 23=0,0,0,0,5173
+24=0,0,0,0,358
+25=0,0,0,0,929
 [RADebugBP]
 1=
 2=
@@ -141,6 +147,8 @@ AutoLoad=2,21,22,9,20,14,8,3,4,5,1,15,16,10,12,11,19,7,17,18,6
 18=
 21=
 22=
+24=
+25=
 [VersionControl]
 Settings=1278
 Milestones=129
@@ -151,7 +159,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=20
+MilestoneOnDateDate=28
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=16
@@ -175,7 +183,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=162379484
+PTimer=163687397
 [Collapse]
 2=13
 1=64
@@ -200,6 +208,8 @@ PTimer=162379484
 21=134217744,2396162
 22=
 23=
+24=
+25=2
 [GroupExpand]
 GroupExpand=1,1,0
 [BookMark]
@@ -216,13 +226,13 @@ GroupExpand=1,1,0
 [BreakPoint]
 0=
 [Find]
-1="masm32"
-2="MUI_USEGDIPLUS"
-3="MUI_ALIGN"
-4="MUIALIGN"
-5="cbWndExtraOffset"
-6="_MUISetProperty"
-7="dwClipping"
-8="MUICreateIconFromMemory"
-9="mov eax, hBitmap"
-10="ptrRegionData"
+1="WM_DWMCOMPOSITIONCHANGED"
+2="masm32"
+3="MUI_USEGDIPLUS"
+4="MUI_ALIGN"
+5="MUIALIGN"
+6="cbWndExtraOffset"
+7="_MUISetProperty"
+8="dwClipping"
+9="MUICreateIconFromMemory"
+10="mov eax, hBitmap"
