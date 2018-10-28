@@ -68,7 +68,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=9
+MilestoneOnDateDate=26
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=17
@@ -92,7 +92,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=184248676
+PTimer=196318614
 [GroupExpand]
 GroupExpand=1,1,1,0
 [BookMark]
@@ -112,25 +112,25 @@ GroupExpand=1,1,1,0
 1=
 2=
 [Collapse]
-1=8192,,536903684,1107298304,146,33570816,539033624,512,100
+1=,537133056,,1107296256,524434,33554432,2162712,512,116
 2=
 3=
 4=
 5=
 [Size]
-1=0,0,0,0,27078
-2=0,0,0,0,12660
+1=0,0,0,0,4597
+2=0,0,0,0,14708
 3=0,0,0,0,265
 4=0,0,0,0,2242
 5=0,0,0,0,2005
 [Find]
-1="EQU "
-2="WM_NCHITTEST"
-3="MUICS_WINRESIZE"
-4=";-------------------------------------------------------------------------------------"
-5="MUI_USEGDIPLUS"
-6="@CaptionBarButtonsLeftOffset"
-7="@SysButtonType"
-8="@SysButtonBackColor"
-9="@CaptionBarNoMoveWindow"
-10="MUICS_NOMOVEWINDOW"
+1="@CaptionBarNoMoveWindow"
+2="WM_DWMCOMPOSITIONCHANGED"
+3="CS_DBLCLKS"
+4="EQU "
+5="WM_NCHITTEST"
+6="MUICS_WINRESIZE"
+7=";-------------------------------------------------------------------------------------"
+8="MUI_USEGDIPLUS"
+9="@CaptionBarButtonsLeftOffset"
+10="@SysButtonType"
