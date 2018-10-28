@@ -107,8 +107,8 @@ MUISPS_SPS_SKIPBETWEEN          EQU 20h ; skips any in between panels, just move
 MUISPS_DESIGN_INFO              EQU 1000h ; only used at design time to show text, which can be toggled off by user
 
 ;------------------------------------------------------------------------------
-; ModernUI_SmartPanel Properties: Use with MUIModernUI_SmartPanelSetProperty / 
-; MUIModernUI_SmartPanelGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
+; ModernUI_SmartPanel Properties: Use with MUISmartPanelSetProperty / 
+; MUISmartPanelGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;------------------------------------------------------------------------------
 @SmartPanelPanelsColor          EQU 0   ; RGBCOLOR for panel's background. -1 = ignore, use system default. Default value is -1
 @SmartPanelBorderColor          EQU 4   ; RGBCOLOR for border color of MUISmartPanel. -1 = none. Default value is -1
