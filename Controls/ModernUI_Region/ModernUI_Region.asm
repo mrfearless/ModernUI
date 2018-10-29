@@ -59,11 +59,11 @@ include windows.inc
 include user32.inc
 include kernel32.inc
 include gdi32.inc
+include masm32.inc
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
-;include uxtheme.inc
-;includelib uxtheme.lib
+includelib masm32.lib
 
 include ModernUI.inc
 includelib ModernUI.lib
@@ -81,6 +81,7 @@ _MUI_RegionButtonPaintBorder    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :D
 _MUI_RegionButtonNotify         PROTO :DWORD, :DWORD
 _MUI_AdjustPolyPoints           PROTO :DWORD, :DWORD, :DWORD, :DWORD
 
+_MUI_ConvertTextToPoints        PROTO :DWORD, :DWORD
 
 ;------------------------------------------------------------------------------
 ; Structures for internal use
@@ -266,7 +267,7 @@ _MUI_RegionButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
     .IF eax == WM_NCCREATE
         mov ebx, lParam
         ; sets text of our control, delete if not required.
-        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName   
+        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName
         mov eax, TRUE
         ret
 
@@ -579,7 +580,9 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 _MUI_RegionButtonInit PROC PRIVATE hControl:DWORD
     LOCAL dwStyle:DWORD
-
+    LOCAL dwPoints:DWORD
+    LOCAL ptrPoints:DWORD
+    
     ; get style and check it is our default at least
     Invoke GetWindowLong, hControl, GWL_STYLE
     mov dwStyle, eax
@@ -603,7 +606,7 @@ _MUI_RegionButtonInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @RegionButtonBackColorSelAlt, MUI_RGBCOLOR(93,193,222)
     Invoke MUISetExtProperty, hControl, @RegionButtonBackColorDisabled, MUI_RGBCOLOR(255,255,255)
 
-    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColor, MUI_RGBCOLOR(150,163,167) ; MUI_RGBCOLOR(138,153,157) ;MUI_RGBCOLOR(1,1,1)
+    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColor, MUI_RGBCOLOR(44,100,40) ; MUI_RGBCOLOR(150,163,167) ; MUI_RGBCOLOR(138,153,157) ;MUI_RGBCOLOR(1,1,1)
     Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorAlt, MUI_RGBCOLOR(39,39,39) ;MUI_RGBCOLOR(39,168,205)
     Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorSel, MUI_RGBCOLOR(128,128,128)
     Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorSelAlt, MUI_RGBCOLOR(140,140,140)
@@ -611,15 +614,21 @@ _MUI_RegionButtonInit PROC PRIVATE hControl:DWORD
     
     Invoke MUISetExtProperty, hControl, @RegionButtonBorderSize, 1
     Invoke MUISetExtProperty, hControl, @RegionButtonBorderSizeAlt, 1
-    Invoke MUISetExtProperty, hControl, @RegionButtonBorderSizeSel, 0
-    Invoke MUISetExtProperty, hControl, @RegionButtonBorderSizeSelAlt, 0
-    Invoke MUISetExtProperty, hControl, @RegionButtonBorderSizeDisabled, 0
+    Invoke MUISetExtProperty, hControl, @RegionButtonBorderSizeSel, 1
+    Invoke MUISetExtProperty, hControl, @RegionButtonBorderSizeSelAlt, 1
+    Invoke MUISetExtProperty, hControl, @RegionButtonBorderSizeDisabled, 1
     Invoke MUISetIntProperty, hControl, @RegionButtonRegionHandle, 0
     Invoke MUISetIntProperty, hControl, @RegionButtonBitmap, 0
     Invoke MUISetIntProperty, hControl, @RegionButtonBitmapBrush, 0
     Invoke MUISetIntProperty, hControl, @RegionButtonBitmapBrushOrgX, 0
     Invoke MUISetIntProperty, hControl, @RegionButtonBitmapBrushOrgY, 0
     Invoke MUISetIntProperty, hControl, @RegionButtonBitmapBrushBlend, 0
+
+    Invoke _MUI_ConvertTextToPoints, hControl, Addr dwPoints
+    .IF eax != NULL
+        mov ptrPoints, eax
+        Invoke MUIRegionButtonSetRegionPoly, hControl, ptrPoints, dwPoints, 0, 0, 0, 0
+    .ENDIF
 
     ret
 _MUI_RegionButtonInit ENDP
@@ -723,7 +732,7 @@ MUIRegionButtonSetRegionPoly PROC PUBLIC USES EBX hControl:DWORD, ptrPolyData:DW
     ;-----------------------------------------------------
 
 
-    .IF dwPolyType == MUIRBP_SINGLE ; Single polygon to create
+    .IF dwPolyType == 0 || dwPolyType == 1 ; Single polygon to create
 
         ;-----------------------------------------------------
         ; Create initial polygon to get rgnbox of polygon
@@ -1370,10 +1379,189 @@ _MUI_RegionButtonNotify PROC hControl:DWORD, dwNotifyMsg:DWORD
 _MUI_RegionButtonNotify ENDP
 
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_ConvertTextToPoints - convert caption text to points to create a polygon
+; Returns in eax pointer to points array and lpdwPoints will contain count of
+; the points in the points array, or NULL and lpdwPoints will be 0
+; if mismatch in coord points, then lpdwPoints will be -1
+;
+; Text can be in the following formats:
+; 360.34 205.77 353.41 211.73 347.72 211.69
+; 680 125, 671 127, 668 115
+; <347,139>, <347,128>, <348,123>
+;------------------------------------------------------------------------------
+_MUI_ConvertTextToPoints PROC USES EBX EDI ESI hControl:DWORD, lpdwPoints:DWORD
+    LOCAL dwLenText:DWORD
+    LOCAL ptrText:DWORD
+    LOCAL dwPoints:DWORD
+    LOCAL ptrPoints:DWORD
+    LOCAL dwCurrentPoint:DWORD
+    LOCAL ptrCurrentPoint:DWORD
+    LOCAL pos:DWORD
+    LOCAL bNumbersFound:DWORD
+    LOCAL bXorY:DWORD
+    LOCAL szCoord[8]:BYTE
+    LOCAL dwCoord:DWORD
+    
+    Invoke GetWindowTextLength, hControl
+    .IF eax == 0
+        mov ebx, lpdwPoints
+        mov [ebx], eax
+        ret
+    .ENDIF
+    add eax, 4
+    mov dwLenText, eax
+    
+    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, dwLenText
+    .IF eax == NULL
+        mov ebx, lpdwPoints
+        mov [ebx], eax
+        ret
+    .ENDIF 
+    mov ptrText, eax
+    
+    mov eax, dwLenText
+    shl eax, 1 ; div by 2 - estimate of no of points required
+    mov ebx, SIZEOF POINT
+    mul ebx
+    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+    .IF eax == NULL
+        mov ebx, lpdwPoints
+        mov [ebx], eax
+        ret
+    .ENDIF
+    mov ptrPoints, eax
+    mov ptrCurrentPoint, eax
 
+    Invoke GetWindowText, hControl, ptrText, dwLenText
+    .IF eax == 0
+        mov ebx, lpdwPoints
+        mov [ebx], eax
+        ret
+    .ENDIF
+    mov dwLenText, eax
+    
+    ; loop through text, get count of points
+    mov bXorY, FALSE ; start with x = FALSE, y = TRUE, toggle each numbers found
+    mov dwPoints, 0
+    mov bNumbersFound, FALSE
+    mov esi, ptrText
+    lea edi, szCoord
+    mov eax, 0
+    mov pos, 0
+    .WHILE eax <= dwLenText
+        
+        mov esi, ptrText
+        add esi, pos
+        
+        movzx eax, byte ptr [esi]
+        .IF al == 0
+            .IF bNumbersFound == TRUE
+                mov bNumbersFound, FALSE
+                mov byte ptr [edi], 0
+                Invoke atol, Addr szCoord
+                mov dwCoord, eax
+                .IF bXorY == FALSE ; x
+                    mov ebx, ptrCurrentPoint
+                    mov eax, dwCoord
+                    mov [ebx].POINT.x, eax
+                    mov bXorY, TRUE
+                .ELSE ; y
+                    mov ebx, ptrCurrentPoint
+                    mov eax, dwCoord
+                    mov [ebx].POINT.y, eax
+                    mov bXorY, FALSE
+                    inc dwPoints
+                    add ptrCurrentPoint, SIZEOF POINT
+                .ENDIF
+            .ENDIF        
+            .BREAK
+            
+        .ELSEIF al >= "0" && al <= "9"
+            .IF bNumbersFound == FALSE
+                mov bNumbersFound, TRUE
+                lea edi, szCoord
+            .ENDIF
+            mov byte ptr [edi], al
+            inc edi
+            inc pos
+            
+        .ELSEIF al == '.' ; skip decimals
+            inc esi
+            inc pos
+            movzx eax, byte ptr [esi]
+            .WHILE al >= "0" && al <= "9" && al != 0
+                inc esi
+                inc pos
+                movzx eax, byte ptr [esi]
+            .ENDW
+            .IF bNumbersFound == TRUE
+                mov bNumbersFound, FALSE
+                mov byte ptr [edi], 0
+                Invoke atol, Addr szCoord
+                mov dwCoord, eax
+                .IF bXorY == FALSE ; x
+                    mov ebx, ptrCurrentPoint
+                    mov eax, dwCoord
+                    mov [ebx].POINT.x, eax
+                    mov bXorY, TRUE
+                .ELSE ; y
+                    mov ebx, ptrCurrentPoint
+                    mov eax, dwCoord
+                    mov [ebx].POINT.y, eax
+                    mov bXorY, FALSE
+                    inc dwPoints
+                    add ptrCurrentPoint, SIZEOF POINT
+                .ENDIF
+            .ENDIF
+        
+        .ELSE ; skip all chars except no's
+        
+            .IF bNumbersFound == TRUE
+                mov bNumbersFound, FALSE
+                mov byte ptr [edi], 0
+                Invoke atol, Addr szCoord
+                mov dwCoord, eax
+                .IF bXorY == FALSE ; x
+                    mov ebx, ptrCurrentPoint
+                    mov eax, dwCoord
+                    mov [ebx].POINT.x, eax
+                    mov bXorY, TRUE
+                .ELSE ; y
+                    mov ebx, ptrCurrentPoint
+                    mov eax, dwCoord
+                    mov [ebx].POINT.y, eax
+                    mov bXorY, FALSE
+                    inc dwPoints
+                    add ptrCurrentPoint, SIZEOF POINT
+                .ENDIF
+            .ENDIF
+            inc pos
+            
+        .ENDIF
+        mov eax, pos
+    .ENDW
 
-
-
+    Invoke GlobalFree, ptrText
+    
+    mov eax, dwPoints
+    and eax, 1
+    .IF eax == 1 ; odd no, so missing a y coord somewhere
+        Invoke GlobalFree, ptrPoints
+        mov ebx, lpdwPoints
+        mov eax, -1
+        mov [ebx], eax
+        mov eax, 0
+        ret
+    .ENDIF
+    
+    mov ebx, lpdwPoints
+    mov eax, dwPoints
+    mov [ebx], eax    
+    mov eax, ptrPoints
+    ret
+_MUI_ConvertTextToPoints ENDP
 
 
 END
