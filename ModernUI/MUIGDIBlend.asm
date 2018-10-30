@@ -36,8 +36,8 @@ include ModernUI.inc
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; MUIGDIDoubleBufferStart - Starts double buffering. Used in a WM_PAINT event. 
-; Place after BeginPaint call
+; MUIGDIBlend - Blends an existing dc (which can have a bitmap in it) with a 
+; block of color. dwTransparency determines level of blending
 ;------------------------------------------------------------------------------
 MUIGDIBlend PROC USES EBX hWin:DWORD, hdc:DWORD, dwColor:DWORD, dwTransparency:DWORD
     LOCAL hdcMem:HDC

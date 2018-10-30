@@ -39,8 +39,8 @@ szMUIBlendBitmapsDisplayDC DB 'DISPLAY',0
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; MUIGDIDoubleBufferStart - Starts double buffering. Used in a WM_PAINT event. 
-; Place after BeginPaint call
+; MUIGDIBlendBitmaps - Blends two bitmaps together, or alternatively one bitmap
+; and a block of color. dwTransparency determines level of blending
 ;------------------------------------------------------------------------------
 MUIGDIBlendBitmaps PROC hBitmap1:DWORD, hBitmap2:DWORD, dwColorBitmap2:DWORD, dwTransparency:DWORD
     LOCAL nBmpWidth:DWORD
