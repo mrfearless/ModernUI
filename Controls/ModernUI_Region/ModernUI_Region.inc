@@ -51,7 +51,7 @@ MUIRegionButtonSetRegionBitmap  PROTO :DWORD, :DWORD                        ; hR
 MUIRegionButtonGetState         PROTO :DWORD                                ; hRegionButton
 MUIRegionButtonSetState         PROTO :DWORD, :DWORD                        ; hRegionButton, bState
 MUIRegionButtonSetBrush         PROTO :DWORD, :DWORD, :DWORD, :DWORD        ; hRegionButton, hBitmapBrush, lpBoundsRect, dwBlendLevel
-MUIRegionButtonLoadBitmap       PROTO :DWORD, :DWORD                        ; hRegionButton, BitmapResID
+MUIRegionButtonSetBitmap        PROTO :DWORD, :DWORD                        ; hRegionButton, BitmapResID
 
 
 ;------------------------------------------------------------------------------
@@ -121,6 +121,8 @@ MUIRB_HAND                      EQU 2h  ; Show a hand instead of an arrow when m
 MUIRB_MOVE                      EQU 4h  ; Allow movement of control with CTRL+Arrow keys
 MUIRB_PUSHBUTTON                EQU 8h  ; Simulate button press when clicking down and up
 MUIRB_MOUSEMOVEPARENT           EQU 10h ; Notify parent of mousemove
+MUIRB_AUTOSTATE                 EQU 20h ; Auto toggle state when clicked
+MUIRB_AUTOCUSTOMSTATE           EQU 40h ; Auto toggle state based on custom states
 
 ; ModernUI_RegionButton Notify Codes:
 MUIRBN_CLICKED                  EQU 1
@@ -160,8 +162,8 @@ MUIRBSF_TOGGLE_NEXT             EQU -1  ; Auto toggle to next state while < @Reg
 @RegionButtonBorderSizeAlt      EQU 44  ; DWORD. Border size when mouse hovers over, 0 = disabled/no border (default)
 @RegionButtonBorderSizeSel      EQU 48  ; DWORD. Border size when selected state = TRUE, 0 = disabled/no border (default)
 @RegionButtonBorderSizeSelAlt   EQU 52  ; DWORD. Border size when selected state = TRUE and mouse hovers over, 0 = disabled/no border (default)
-@RegionButtonBorderSizeDisabled EQU 54  ; DWORD. Border size when control is disabled, 0 = disabled/no border (default)
-@RegionButtonStatesTotal        EQU 58  ; DWORD. Total no of custom states
+@RegionButtonBorderSizeDisabled EQU 56  ; DWORD. Border size when control is disabled, 0 = disabled/no border (default)
+@RegionButtonStatesTotal        EQU 60  ; DWORD. Total no of custom states
 @RegionButtonStatesColors       EQU 64  ; DWORD. Pointer to array of @RegionButtonStatesTotal x states colors
 @RegionButtonState              EQU 68  ; DWORD. Get/Set custom state
 @RegionButtonUserData           EQU 72  ; DWORD. User defined dword data

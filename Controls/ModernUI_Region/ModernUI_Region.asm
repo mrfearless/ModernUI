@@ -80,8 +80,10 @@ _MUI_RegionButtonPaintBackground PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :
 _MUI_RegionButtonPaintBorder    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_RegionButtonNotify         PROTO :DWORD, :DWORD
 _MUI_AdjustPolyPoints           PROTO :DWORD, :DWORD, :DWORD, :DWORD
-
 _MUI_ConvertTextToPoints        PROTO :DWORD, :DWORD
+
+_MUI_RegionButtonDown           PROTO :DWORD ; WM_LBUTTONDOWN, WM_KEYDOWN + VK_SPACE
+_MUI_RegionButtonUp             PROTO :DWORD ; WM_LBUTTONUP, WM_KEYUP + VK_SPACE
 
 ;------------------------------------------------------------------------------
 ; Structures for internal use
@@ -326,24 +328,39 @@ _MUI_RegionButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
         
 
     .ELSEIF eax == WM_GETDLGCODE
-        mov eax, DLGC_WANTARROWS ;DLGC_WANTALLKEYS ;DLGC_WANTMESSAGE or 
-        ret
-
-    .ELSEIF eax == WM_KEYDOWN
         Invoke GetWindowLong, hWin, GWL_STYLE
         and eax, MUIRB_MOVE ; check if the MUIRB_MOVE style flag was specified
-        .IF eax == MUIRB_MOVE
-            Invoke GetParent, hWin
-            mov hParent, eax
-            Invoke GetWindowRect, hWin, Addr rect
-            Invoke MapWindowPoints, HWND_DESKTOP, hParent, Addr rect, 2
-            mov eax, rect.left
-            mov xPos, eax
-            mov eax, rect.top
-            mov yPos, eax
+        .IF eax == MUIRB_MOVE    
+            mov eax, DLGC_WANTARROWS ;DLGC_WANTALLKEYS ;DLGC_WANTMESSAGE or 
+            ret
+        .ELSE
+            mov eax, 0
+        .ENDIF
 
-            mov eax, wParam
-            .IF eax == VK_UP || eax == VK_DOWN || eax == VK_LEFT || eax == VK_RIGHT
+    .ELSEIF eax == WM_KEYUP
+        mov eax, wParam
+        .IF eax == VK_SPACE
+            Invoke _MUI_RegionButtonUp, hWin
+        .ENDIF
+
+    .ELSEIF eax == WM_KEYDOWN
+        mov eax, wParam
+        .IF eax == VK_SPACE
+            Invoke _MUI_RegionButtonDown, hWin
+        .ELSEIF eax == VK_UP || eax == VK_DOWN || eax == VK_LEFT || eax == VK_RIGHT
+            Invoke GetWindowLong, hWin, GWL_STYLE
+            and eax, MUIRB_MOVE ; check if the MUIRB_MOVE style flag was specified
+            .IF eax == MUIRB_MOVE
+                Invoke GetParent, hWin
+                mov hParent, eax
+                Invoke GetWindowRect, hWin, Addr rect
+                Invoke MapWindowPoints, HWND_DESKTOP, hParent, Addr rect, 2
+                mov eax, rect.left
+                mov xPos, eax
+                mov eax, rect.top
+                mov yPos, eax
+    
+                mov eax, wParam
                 .IF eax == VK_UP
                     dec yPos
                 .ELSEIF eax == VK_DOWN
@@ -355,69 +372,14 @@ _MUI_RegionButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
                 .ENDIF
                 Invoke SetWindowPos, hWin, NULL, xPos, yPos, 0, 0, SWP_NOSIZE or SWP_NOZORDER or SWP_NOSENDCHANGING
             .ENDIF
-            
         .ENDIF
-
-
-;    .ELSEIF eax == WM_MOVE
-;        Invoke GetParent, hWin
-;        mov hParent, eax
-;        Invoke GetWindowRect, hWin, Addr rect
-;        Invoke MapWindowPoints, HWND_DESKTOP, hParent, Addr rect, 2
-;        mov eax, rect.left
-;        mov xPos, eax
-;        mov eax, rect.top
-;        mov yPos, eax
-;        mov eax, 0
-;       ;PrintDec xPos
-;       ;PrintDec yPos
-        
 
     .ELSEIF eax == WM_LBUTTONUP
-        ; simulates click on our control, delete if not required.
-        Invoke GetDlgCtrlID, hWin
-        mov ebx,eax
-        Invoke GetParent, hWin
-        Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
-        Invoke _MUI_RegionButtonNotify, hWin, MUIRBN_CLICKED
-        Invoke GetWindowLong, hWin, GWL_STYLE
-        and eax, MUIRB_PUSHBUTTON
-        .IF eax == MUIRB_PUSHBUTTON
-            Invoke MUIGetIntProperty, hWin, @RegionButtonMouseDown
-            .IF eax == TRUE
-                invoke GetClientRect, hWin, addr rect
-                Invoke GetParent, hWin
-                mov hParent, eax            
-                invoke MapWindowPoints, hWin, hParent, addr rect, 2   
-                sub rect.top, 1
-                Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
-                Invoke MUISetIntProperty, hWin, @RegionButtonMouseDown, FALSE
-            .ELSE
-                Invoke InvalidateRect, hWin, NULL, TRUE
-                Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
-            .ENDIF
-        .ELSE
-            Invoke MUISetIntProperty, hWin, @RegionButtonMouseDown, FALSE
-            Invoke InvalidateRect, hWin, NULL, TRUE
-            Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
-        .ENDIF
-        
+        Invoke _MUI_RegionButtonUp, hWin
+
     .ELSEIF eax == WM_LBUTTONDOWN
-        Invoke MUISetIntProperty, hWin, @RegionButtonMouseDown, TRUE
-        Invoke GetWindowLong, hWin, GWL_STYLE
-        and eax, MUIRB_PUSHBUTTON
-        .IF eax == MUIRB_PUSHBUTTON
-            invoke GetClientRect, hWin, addr rect
-            Invoke GetParent, hWin
-            mov hParent, eax
-            invoke MapWindowPoints, hWin, hParent, addr rect, 2        
-            add rect.top, 1
-            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
-            Invoke MUISetIntProperty, hWin, @RegionButtonMouseDown, TRUE
-        .ELSE
-            Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
-        .ENDIF
-        
+        Invoke _MUI_RegionButtonDown, hWin
+
 
    .ELSEIF eax == WM_MOUSEMOVE
         Invoke GetWindowLong, hWin, GWL_STYLE
@@ -444,8 +406,8 @@ _MUI_RegionButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
         .IF eax == TRUE
             Invoke MUISetIntProperty, hWin, @RegionButtonMouseOver, TRUE
             .IF eax != TRUE
-                Invoke _MUI_RegionButtonNotify, hWin, MUIRBN_MOUSEOVER
                 Invoke InvalidateRect, hWin, NULL, TRUE
+                Invoke _MUI_RegionButtonNotify, hWin, MUIRBN_MOUSEOVER
                 mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
                 mov TE.dwFlags, TME_LEAVE
                 mov eax, hWin
@@ -472,7 +434,7 @@ _MUI_RegionButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
                 Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
                 Invoke MUISetIntProperty, hWin, @RegionButtonMouseDown, FALSE
             .ELSE
-                Invoke InvalidateRect, hWin, NULL, FALSE
+                Invoke InvalidateRect, hWin, NULL, TRUE
                 ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
             .ENDIF
         .ELSE
@@ -606,10 +568,10 @@ _MUI_RegionButtonInit PROC PRIVATE hControl:DWORD
     Invoke MUISetExtProperty, hControl, @RegionButtonBackColorSelAlt, MUI_RGBCOLOR(93,193,222)
     Invoke MUISetExtProperty, hControl, @RegionButtonBackColorDisabled, MUI_RGBCOLOR(255,255,255)
 
-    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColor, MUI_RGBCOLOR(44,100,40) ; MUI_RGBCOLOR(150,163,167) ; MUI_RGBCOLOR(138,153,157) ;MUI_RGBCOLOR(1,1,1)
-    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorAlt, MUI_RGBCOLOR(39,39,39) ;MUI_RGBCOLOR(39,168,205)
-    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorSel, MUI_RGBCOLOR(128,128,128)
-    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorSelAlt, MUI_RGBCOLOR(140,140,140)
+    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColor, MUI_RGBCOLOR(190,190,190) ;MUI_RGBCOLOR(92,92,92) ; MUI_RGBCOLOR(150,163,167) ; MUI_RGBCOLOR(138,153,157) ;MUI_RGBCOLOR(1,1,1)
+    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorAlt, MUI_RGBCOLOR(39,168,205);MUI_RGBCOLOR(39,39,39) ;MUI_RGBCOLOR(39,168,205)
+    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorSel, MUI_RGBCOLOR(39,168,205)
+    Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorSelAlt, MUI_RGBCOLOR(39,168,205)
     Invoke MUISetExtProperty, hControl, @RegionButtonBorderColorDisabled, MUI_RGBCOLOR(204,204,204)
     
     Invoke MUISetExtProperty, hControl, @RegionButtonBorderSize, 1
@@ -632,6 +594,106 @@ _MUI_RegionButtonInit PROC PRIVATE hControl:DWORD
 
     ret
 _MUI_RegionButtonInit ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_RegionButtonDown - Mouse button down or keyboard down from vk_space
+;------------------------------------------------------------------------------
+_MUI_RegionButtonDown PROC PRIVATE hWin:DWORD
+    LOCAL hParent:DWORD
+    LOCAL rect:RECT    
+
+    IFDEF DEBUG32
+        PrintText '_MUI_RegionButtonDown'
+    ENDIF
+
+;    Invoke GetFocus
+;    .IF eax != hWin
+;        Invoke SetFocus, hWin
+;        Invoke MUISetIntProperty, hWin, @RegionButtonFocusedState, FALSE
+;    .ENDIF
+
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    and eax, MUIRB_PUSHBUTTON
+    .IF eax == MUIRB_PUSHBUTTON
+        Invoke MUIGetIntProperty, hWin, @RegionButtonMouseDown
+        .IF eax == FALSE
+            Invoke GetClientRect, hWin, addr rect
+            Invoke GetParent, hWin
+            mov hParent, eax
+            invoke MapWindowPoints, hWin, hParent, addr rect, 2        
+            add rect.top, 1
+            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER + SWP_FRAMECHANGED
+            Invoke MUISetIntProperty, hWin, @RegionButtonMouseDown, TRUE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+        .ENDIF
+    .ELSE
+        Invoke MUIGetIntProperty, hWin, @RegionButtonMouseDown
+        .IF eax == FALSE
+            Invoke MUISetIntProperty, hWin, @RegionButtonMouseDown, TRUE
+        .ENDIF
+        ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
+        Invoke InvalidateRect, hWin, NULL, TRUE
+    .ENDIF
+    ret
+_MUI_RegionButtonDown ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_RegionButtonUp - Mouse button up or keyboard up from vk_space
+;------------------------------------------------------------------------------
+_MUI_RegionButtonUp PROC PRIVATE hWin:DWORD
+    LOCAL hParent:DWORD
+    LOCAL wID:DWORD
+    LOCAL rect:RECT
+    
+    IFDEF DEBUG32
+        PrintText '_MUI_RegionButtonUp'
+    ENDIF
+
+    Invoke MUIGetIntProperty, hWin, @RegionButtonMouseDown
+    .IF eax == TRUE
+        Invoke GetDlgCtrlID, hWin
+        mov wID,eax
+        Invoke GetParent, hWin
+        mov hParent, eax
+        Invoke PostMessage, hParent, WM_COMMAND, wID, hWin ; simulates click on our control    
+        
+        Invoke _MUI_RegionButtonNotify, hWin, MUIRBN_CLICKED
+        
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, MUIRB_PUSHBUTTON
+        .IF eax == MUIRB_PUSHBUTTON
+            Invoke GetClientRect, hWin, addr rect
+            Invoke MapWindowPoints, hWin, hParent, addr rect, 2   
+            sub rect.top, 1
+            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOSIZE + SWP_NOZORDER  + SWP_FRAMECHANGED
+        .ENDIF
+        
+        Invoke MUISetIntProperty, hWin, @RegionButtonMouseDown, FALSE
+
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, MUIRB_AUTOSTATE
+        .IF eax == MUIRB_AUTOSTATE
+            Invoke MUIGetIntProperty, hWin, @RegionButtonSelectedState
+            .IF eax == FALSE
+                Invoke MUISetIntProperty, hWin, @RegionButtonSelectedState, TRUE
+                ;Invoke _MUI_RegionButtonNotify, hWin, MUIRBN_SELECTED
+            .ELSE
+                Invoke MUISetIntProperty, hWin, @RegionButtonSelectedState, FALSE
+                ;Invoke _MUI_RegionButtonNotify, hWin, MUIRBN_UNSELECTED
+            .ENDIF
+        .ENDIF        
+        Invoke InvalidateRect, hWin, NULL, TRUE
+    .ELSE
+        ;Invoke InvalidateRect, hWin, NULL, TRUE
+        ;Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED
+        Invoke InvalidateRect, hWin, NULL, TRUE
+    .ENDIF
+    ret
+_MUI_RegionButtonUp ENDP
 
 
 MUI_ALIGN
@@ -813,6 +875,7 @@ MUIRegionButtonSetRegionPoly PROC PUBLIC USES EBX hControl:DWORD, ptrPolyData:DW
     ;----------------------------------------------------- 
     mov eax, dwXAdjust
     .IF sdword ptr eax < 0 ; negative
+        neg eax
         sub newpos.left, eax
         sub newpos.right, eax
     .ELSE
@@ -821,6 +884,7 @@ MUIRegionButtonSetRegionPoly PROC PUBLIC USES EBX hControl:DWORD, ptrPolyData:DW
     .ENDIF
     mov eax, dwYAdjust
     .IF sdword ptr eax < 0
+        neg eax
         sub newpos.bottom, eax
         sub newpos.top, eax
     .ELSE
@@ -1159,7 +1223,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_RegionButtonPaintBackground - Paints the background of the control
 ;------------------------------------------------------------------------------
-_MUI_RegionButtonPaintBackground PROC PRIVATE hControl:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_RegionButtonPaintBackground PROC hControl:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
     LOCAL hOldBrush:DWORD
