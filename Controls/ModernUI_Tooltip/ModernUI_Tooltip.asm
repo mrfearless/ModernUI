@@ -190,8 +190,8 @@ MUITooltipRegister PROC PUBLIC
         mov eax, hinstance
         mov wc.hInstance, eax
         lea eax, _MUI_TooltipWndProc
-    	mov wc.lpfnWndProc, eax 
-    	invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.lpfnWndProc, eax 
+        invoke LoadCursor, NULL, IDC_ARROW
         mov wc.hCursor, eax
         mov wc.hIcon, 0
         mov wc.hIconSm, 0

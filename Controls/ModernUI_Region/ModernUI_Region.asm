@@ -85,6 +85,13 @@ _MUI_ConvertTextToPoints        PROTO :DWORD, :DWORD
 _MUI_RegionButtonDown           PROTO :DWORD ; WM_LBUTTONDOWN, WM_KEYDOWN + VK_SPACE
 _MUI_RegionButtonUp             PROTO :DWORD ; WM_LBUTTONUP, WM_KEYUP + VK_SPACE
 
+
+_MUI_CustomStateGetColor        PROTO :DWORD, :DWORD, :DWORD
+_MUI_CustomStateGetBorderColor  PROTO :DWORD, :DWORD, :DWORD
+_MUI_CustomStateGetBorderSize   PROTO :DWORD, :DWORD, :DWORD
+_MUI_CustomStateGetStateFlag    PROTO :DWORD, :DWORD
+
+
 ;------------------------------------------------------------------------------
 ; Structures for internal use
 ;------------------------------------------------------------------------------
@@ -106,9 +113,6 @@ MUI_REGIONBUTTON_PROPERTIES     STRUCT
     dwBorderSizeSel             DD ?    ; DWORD. Border size when selected state = TRUE, 0 = disabled/no border (default)
     dwBorderSizeSelAlt          DD ?    ; DWORD. Border size when selected state = TRUE and mouse hovers over, 0 = disabled/no border (default)
     dwBorderSizeDisabled        DD ?    ; DWORD. Border size when control is disabled, 0 = disabled/no border (default)
-    dwStatesTotal               DD ?    ; DWORD. Total no of custom states
-    dwStatesColors              DD ?    ; DWORD. Pointer to array of @RegionButtonStatesTotal x states colors
-    dwState                     DD ?    ; DWORD. Get/Set custom state    
     dwUserData                  DD ?    ; DWORD. User defined dword data
 MUI_REGIONBUTTON_PROPERTIES     ENDS
 ENDIF
@@ -125,6 +129,9 @@ _MUI_REGIONBUTTON_PROPERTIES    STRUCT
     dwBitmapBrushOrgX           DD ?
     dwBitmapBrushOrgY           DD ?
     dwBitmapBrushBlend          DD ?    ; Level of transparency
+    dwCustomStatesTotal         DD ?    ; Total no of custom states
+    dwCustomState               DD ?    ; Current custom state index
+    dwCustomStatesArray         DD ?    ; Max 32 
 _MUI_REGIONBUTTON_PROPERTIES    ENDS
 
 
@@ -135,8 +142,23 @@ MUIRB_NOTIFY                    STRUCT
 MUIRB_NOTIFY                    ENDS
 ENDIF
 
+IFNDEF MUI_REGIONBUTTON_STATE
+MUI_REGIONBUTTON_STATE          STRUCT
+    dwColor                     DD ?    ; Color of region button
+    dwColorAlt                  DD ?    ; Color of region button when mouse moves over
+    dwBorderColor               DD ?    ; Border color of region button
+    dwBorderColorAlt            DD ?    ; Border color of region button when mouse moves over
+    dwBorderSize                DD ?    ; Border width of region button
+    dwBorderSizeAlt             DD ?    ; Border width of region button when mouse moves over
+    dwStateFlag                 DD ?    ; Determines behaviour of state
+MUI_REGIONBUTTON_STATE          ENDS
+ENDIF
+
 
 .CONST
+MUIRB_MAX_CUSTOM_STATES         EQU 32
+
+
 ; Internal properties
 @RegionButtonEnabledState       EQU 0
 @RegionButtonMouseOver          EQU 4
@@ -148,6 +170,10 @@ ENDIF
 @RegionButtonBitmapBrushOrgX    EQU 28
 @RegionButtonBitmapBrushOrgY    EQU 32
 @RegionButtonBitmapBrushBlend   EQU 36
+@RegionButtonCustomStatesTotal  EQU 40
+@RegionButtonCustomState        EQU 44
+@RegionButtonCustomStatesArray  EQU 48 
+
 ; move RBNM to internal var alloced mem at start
 
 
@@ -586,6 +612,11 @@ _MUI_RegionButtonInit PROC PRIVATE hControl:DWORD
     Invoke MUISetIntProperty, hControl, @RegionButtonBitmapBrushOrgY, 0
     Invoke MUISetIntProperty, hControl, @RegionButtonBitmapBrushBlend, 0
 
+    Invoke MUISetIntProperty, hControl, @RegionButtonCustomStatesTotal, 0
+    Invoke MUISetIntProperty, hControl, @RegionButtonCustomState, -1
+    Invoke MUISetIntProperty, hControl, @RegionButtonCustomStatesArray, 0
+
+
     Invoke _MUI_ConvertTextToPoints, hControl, Addr dwPoints
     .IF eax != NULL
         mov ptrPoints, eax
@@ -1015,73 +1046,73 @@ MUIRegionButtonSetRegionBitmap PROC PUBLIC USES EBX ECX EDX hControl:DWORD, hBit
 
     Invoke GetObject, hBitmap, SIZEOF bmp, ADDR bmp
 
-	Invoke CreateCompatibleDC, hdc			
-	mov hMemDC, eax
-	Invoke SelectObject, hMemDC, hBitmap
+    Invoke CreateCompatibleDC, hdc          
+    mov hMemDC, eax
+    Invoke SelectObject, hMemDC, hBitmap
 
-	mov crTransparent, 00ffffffh
-	Invoke CreateRectRgn, 0, 0, bmp.bmWidth, bmp.bmHeight
-	mov hRegion, eax
-	mov ebx, 0 ;Y
-	mov ecx, 0 ;X
-	.WHILE (ebx < bmp.bmHeight)
-		.WHILE (ecx < bmp.bmWidth)
-			.WHILE (ecx < bmp.bmWidth)
-				push ecx
-				push ebx
-				Invoke GetPixel, hMemDC, ecx, ebx
-				pop ebx
-				pop ecx
-				mov pixel, eax
-				.IF (eax == crTransparent)
-					.BREAK
-				.ENDIF
-				inc ecx
-				mov cont, ecx
-			.ENDW
-			mov edx, ecx ;salvo il pixel più a sinistra
-			push edx
-			.WHILE (ecx < bmp.bmWidth)
-				push ecx
-				push ebx
-				Invoke GetPixel, hMemDC, ecx, ebx
-				pop ebx
-				pop ecx
-				mov pixel, eax
-				.IF (eax != crTransparent)
-					.BREAK
-				.ENDIF
-				inc ecx
-				mov cont, ecx
-			.ENDW
-			mov eax, ebx
-			inc eax
-			pop edx
-			;dec edx
-			push ecx
-			inc ecx
-			inc ecx
-			Invoke CreateRectRgn, edx, ebx, ecx, eax
-			pop ecx
-			mov hRgnTmp, eax
-			Invoke CombineRgn, hRegion, hRegion, hRgnTmp, RGN_DIFF
-			.IF (eax == ERROR)
-				;Invoke MessageBox, NULL, ADDR Error, ADDR Error, MB_OK
-			.ENDIF
-			Invoke DeleteObject, hRgnTmp
-			mov ecx, cont
-		.ENDW
-		mov ecx, 0
-		inc ebx
-	.ENDW
-	
-	Invoke GetRegionData, hRegion, 0, NULL ; Get region data size
-	mov dwRegionDataSize, eax
-	
-	
-	;applico la Region alla finestra
-	Invoke SetWindowRgn, hControl, hRegion, TRUE
-	Invoke DeleteDC, hMemDC
+    mov crTransparent, 00ffffffh
+    Invoke CreateRectRgn, 0, 0, bmp.bmWidth, bmp.bmHeight
+    mov hRegion, eax
+    mov ebx, 0 ;Y
+    mov ecx, 0 ;X
+    .WHILE (ebx < bmp.bmHeight)
+        .WHILE (ecx < bmp.bmWidth)
+            .WHILE (ecx < bmp.bmWidth)
+                push ecx
+                push ebx
+                Invoke GetPixel, hMemDC, ecx, ebx
+                pop ebx
+                pop ecx
+                mov pixel, eax
+                .IF (eax == crTransparent)
+                    .BREAK
+                .ENDIF
+                inc ecx
+                mov cont, ecx
+            .ENDW
+            mov edx, ecx ;salvo il pixel più a sinistra
+            push edx
+            .WHILE (ecx < bmp.bmWidth)
+                push ecx
+                push ebx
+                Invoke GetPixel, hMemDC, ecx, ebx
+                pop ebx
+                pop ecx
+                mov pixel, eax
+                .IF (eax != crTransparent)
+                    .BREAK
+                .ENDIF
+                inc ecx
+                mov cont, ecx
+            .ENDW
+            mov eax, ebx
+            inc eax
+            pop edx
+            ;dec edx
+            push ecx
+            inc ecx
+            inc ecx
+            Invoke CreateRectRgn, edx, ebx, ecx, eax
+            pop ecx
+            mov hRgnTmp, eax
+            Invoke CombineRgn, hRegion, hRegion, hRgnTmp, RGN_DIFF
+            .IF (eax == ERROR)
+                ;Invoke MessageBox, NULL, ADDR Error, ADDR Error, MB_OK
+            .ENDIF
+            Invoke DeleteObject, hRgnTmp
+            mov ecx, cont
+        .ENDW
+        mov ecx, 0
+        inc ebx
+    .ENDW
+    
+    Invoke GetRegionData, hRegion, 0, NULL ; Get region data size
+    mov dwRegionDataSize, eax
+    
+    
+    ;applico la Region alla finestra
+    Invoke SetWindowRgn, hControl, hRegion, TRUE
+    Invoke DeleteDC, hMemDC
 
 
     ret
@@ -1628,4 +1659,198 @@ _MUI_ConvertTextToPoints PROC USES EBX EDI ESI hControl:DWORD, lpdwPoints:DWORD
 _MUI_ConvertTextToPoints ENDP
 
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIRegionButtomCustomStates
+; Allocates the custom states array and copies data to it, and sets initial
+; state to 0
+;------------------------------------------------------------------------------
+MUIRegionButtomCustomStates PROC USES EBX hControl:DWORD, lpCustomStatesArray:DWORD, dwTotalCustomStates:DWORD
+    LOCAL ptrCustomStatesArray:DWORD
+    LOCAL dwSizeArray:DWORD
+    
+    .IF hControl == NULL || lpCustomStatesArray == NULL || dwTotalCustomStates == 0
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    .IF dwTotalCustomStates >= MUIRB_MAX_CUSTOM_STATES
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    Invoke MUIGetIntProperty, hControl, @RegionButtonCustomStatesArray
+    mov ptrCustomStatesArray, eax
+    .IF ptrCustomStatesArray != 0
+        Invoke GlobalFree, ptrCustomStatesArray
+    .ENDIF
+ 
+    mov eax, dwTotalCustomStates
+    mov ebx, SIZEOF MUI_REGIONBUTTON_STATE
+    mul ebx
+    mov dwSizeArray, eax
+    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, dwSizeArray
+    .IF eax == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+    mov ptrCustomStatesArray, eax    
+    
+    
+    Invoke RtlMoveMemory, ptrCustomStatesArray, lpCustomStatesArray, dwSizeArray
+    Invoke MUISetIntProperty, hControl, @RegionButtonCustomStatesArray, ptrCustomStatesArray
+    Invoke MUISetIntProperty, hControl, @RegionButtonCustomStatesTotal, dwTotalCustomStates
+    Invoke MUISetIntProperty, hControl, @RegionButtonCustomState, 0
+
+    ret
+MUIRegionButtomCustomStates ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIRegionButtonGetCustomState. Index or array or -1
+;------------------------------------------------------------------------------
+MUIRegionButtonGetCustomState PROC hControl:DWORD
+    .IF hControl == NULL
+        mov eax, -1
+        ret
+    .ENDIF
+    Invoke MUIGetIntProperty, hControl, @RegionButtonCustomState
+    ret
+MUIRegionButtonGetCustomState ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIRegionButtonSetCustomState. -1 or last state selected.
+;------------------------------------------------------------------------------
+MUIRegionButtonSetCustomState PROC hControl:DWORD, dwStateIndex:DWORD
+    LOCAL dwCustomStatesTotal:DWORD
+    .IF hControl == NULL
+        mov eax, -1
+        ret
+    .ENDIF
+    
+    mov eax, dwStateIndex
+    .IF eax >= MUIRB_MAX_CUSTOM_STATES
+        mov eax, -1
+        ret
+    .ENDIF
+    
+    Invoke MUIGetIntProperty, hControl, @RegionButtonCustomStatesTotal
+    mov dwCustomStatesTotal, eax
+    .IF eax > dwCustomStatesTotal 
+        mov eax, -1
+        ret
+    .ENDIF
+    Invoke MUISetIntProperty, hControl, @RegionButtonCustomState, dwStateIndex
+    ret
+MUIRegionButtonSetCustomState ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CustomStateGetColor
+;------------------------------------------------------------------------------
+_MUI_CustomStateGetColor PROC USES EBX hControl:DWORD, dwStateIndex:DWORD, bAlt:DWORD
+    LOCAL ptrCustomStatesArray:DWORD
+
+    Invoke MUIGetIntProperty, hControl, @RegionButtonCustomStatesArray
+    mov ptrCustomStatesArray, eax
+    
+    mov eax, dwStateIndex
+    mov ebx, SIZEOF MUI_REGIONBUTTON_STATE
+    mul ebx
+    add eax, ptrCustomStatesArray
+    mov ebx, eax
+
+    .IF bAlt == FALSE
+        mov eax, [ebx].MUI_REGIONBUTTON_STATE.dwColor
+    .ELSE
+        mov eax, [ebx].MUI_REGIONBUTTON_STATE.dwColorAlt
+    .ENDIF
+    ret
+_MUI_CustomStateGetColor ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CustomStateGetBorderColor
+;------------------------------------------------------------------------------
+_MUI_CustomStateGetBorderColor PROC hControl:DWORD, dwStateIndex:DWORD, bAlt:DWORD
+    LOCAL ptrCustomStatesArray:DWORD
+
+    Invoke MUIGetIntProperty, hControl, @RegionButtonCustomStatesArray
+    mov ptrCustomStatesArray, eax
+    
+    mov eax, dwStateIndex
+    mov ebx, SIZEOF MUI_REGIONBUTTON_STATE
+    mul ebx
+    add eax, ptrCustomStatesArray
+    mov ebx, eax
+
+    .IF bAlt == FALSE
+        mov eax, [ebx].MUI_REGIONBUTTON_STATE.dwBorderColor
+    .ELSE
+        mov eax, [ebx].MUI_REGIONBUTTON_STATE.dwBorderColorAlt
+    .ENDIF
+    ret
+_MUI_CustomStateGetBorderColor ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CustomStateGetBorderSize
+;------------------------------------------------------------------------------
+_MUI_CustomStateGetBorderSize PROC hControl:DWORD, dwStateIndex:DWORD, bAlt:DWORD
+    LOCAL ptrCustomStatesArray:DWORD
+
+    Invoke MUIGetIntProperty, hControl, @RegionButtonCustomStatesArray
+    mov ptrCustomStatesArray, eax
+    
+    mov eax, dwStateIndex
+    mov ebx, SIZEOF MUI_REGIONBUTTON_STATE
+    mul ebx
+    add eax, ptrCustomStatesArray
+    mov ebx, eax
+
+    .IF bAlt == FALSE
+        mov eax, [ebx].MUI_REGIONBUTTON_STATE.dwBorderSize
+    .ELSE
+        mov eax, [ebx].MUI_REGIONBUTTON_STATE.dwBorderSizeAlt
+    .ENDIF
+    ret
+_MUI_CustomStateGetBorderSize ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_CustomStateGetStateFlag
+;------------------------------------------------------------------------------
+_MUI_CustomStateGetStateFlag PROC hControl:DWORD, dwStateIndex:DWORD
+    LOCAL ptrCustomStatesArray:DWORD
+
+    Invoke MUIGetIntProperty, hControl, @RegionButtonCustomStatesArray
+    mov ptrCustomStatesArray, eax
+    
+    mov eax, dwStateIndex
+    mov ebx, SIZEOF MUI_REGIONBUTTON_STATE
+    mul ebx
+    add eax, ptrCustomStatesArray
+    mov ebx, eax
+    mov eax, [ebx].MUI_REGIONBUTTON_STATE.dwStateFlag    
+
+    ret
+_MUI_CustomStateGetStateFlag ENDP
+
 END
+
+
+
+
+
+
+
+
+
+

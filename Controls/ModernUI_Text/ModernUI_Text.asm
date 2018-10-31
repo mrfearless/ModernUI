@@ -422,7 +422,7 @@ MUITextRegister PROC PUBLIC
         mov eax, hinstance
         mov wc.hInstance, eax
         lea eax, _MUI_TextWndProc
-    	mov wc.lpfnWndProc, eax 
+        mov wc.lpfnWndProc, eax 
         mov wc.hCursor, NULL ;eax
         mov wc.hIcon, 0
         mov wc.hIconSm, 0
