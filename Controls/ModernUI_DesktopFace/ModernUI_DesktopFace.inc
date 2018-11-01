@@ -34,9 +34,9 @@
 ; ModernUI_DesktopFace Prototypes
 ;--------------------------------------------------------------------------------------------------------------------------------------
 MUIDesktopFaceRegister      PROTO                                   ; Use 'ModernUI_DesktopFace' as class in RadASM custom class control
-MUIDesktopFaceCreate		PROTO :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, xpos, ypos, dwStyle
-MUIDesktopFaceSetProperty	PROTO :DWORD, :DWORD, :DWORD            ; hModernUI_DesktopFace, dwProperty, dwPropertyValue
-MUIDesktopFaceGetProperty	PROTO :DWORD, :DWORD                    ; hModernUI_DesktopFace, dwProperty
+MUIDesktopFaceCreate        PROTO :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, xpos, ypos, dwStyle
+MUIDesktopFaceSetProperty   PROTO :DWORD, :DWORD, :DWORD            ; hModernUI_DesktopFace, dwProperty, dwPropertyValue
+MUIDesktopFaceGetProperty   PROTO :DWORD, :DWORD                    ; hModernUI_DesktopFace, dwProperty
 MUIDesktopFaceSetImage      PROTO :DWORD, :DWORD, :DWORD            ; hModernUI_DesktopFace, dwImageType, dwImageHandle
 MUIDesktopFaceSetRegion     PROTO :DWORD, :DWORD                    ; hModernUI_DesktopFace, idRgnResID
 MUIDesktopFaceSetOpacity    PROTO :DWORD, :DWORD                    ; hModernUI_DesktopFace, dwOpacity

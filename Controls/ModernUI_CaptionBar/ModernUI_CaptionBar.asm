@@ -96,40 +96,40 @@ include ModernUI_CaptionBar.inc
 ;------------------------------------------------------------------------------
 
 
-_MUI_CaptionBarWndProc                      PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_CaptionBarInit                         PROTO :DWORD
-_MUI_CaptionBarCleanup                      PROTO :DWORD
-_MUI_CaptionBarPaint                        PROTO :DWORD
-_MUI_CaptionBarPaintBackground              PROTO :DWORD, :DWORD, :DWORD
-_MUI_CaptionBarPaintImage                   PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_CaptionBarReposition                   PROTO :DWORD
-_MUI_CaptionBarParentSubClassProc           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarWndProc          PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarInit             PROTO :DWORD
+_MUI_CaptionBarCleanup          PROTO :DWORD
+_MUI_CaptionBarPaint            PROTO :DWORD
+_MUI_CaptionBarPaintBackground  PROTO :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarPaintImage       PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarReposition       PROTO :DWORD
+_MUI_CaptionBarParentSubClassProc PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 
 
-_MUI_CaptionBarBackLoadBitmap               PROTO :DWORD, :DWORD, :DWORD
-_MUI_CaptionBarBackLoadIcon                 PROTO :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarBackLoadBitmap   PROTO :DWORD, :DWORD, :DWORD
+_MUI_CaptionBarBackLoadIcon     PROTO :DWORD, :DWORD, :DWORD
 
-_MUI_CreateCaptionBarSysButtons             PROTO :DWORD, :DWORD
-_MUI_CreateSysButton                        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_SysButtonWndProc                       PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_SysButtonInit                          PROTO :DWORD
-_MUI_SysButtonCleanup                       PROTO :DWORD
-_MUI_SysButtonPaint                         PROTO :DWORD
-_MUI_SysButtonSetPropertyEx                 PROTO :DWORD, :DWORD, :DWORD
+_MUI_CreateCaptionBarSysButtons PROTO :DWORD, :DWORD
+_MUI_CreateSysButton            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_SysButtonWndProc           PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_SysButtonInit              PROTO :DWORD
+_MUI_SysButtonCleanup           PROTO :DWORD
+_MUI_SysButtonPaint             PROTO :DWORD
+_MUI_SysButtonSetPropertyEx     PROTO :DWORD, :DWORD, :DWORD
 
-_MUI_ApplyMUIStyleToDialog                  PROTO :DWORD, :DWORD
-
-
-_MUI_CreateCapButton                        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_CapButtonWndProc                       PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_CapButtonInit                          PROTO :DWORD
-_MUI_CapButtonCleanup                       PROTO :DWORD
-_MUI_CapButtonPaint                         PROTO :DWORD
-_MUI_CapButtonsReposition                   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_CapButtonSetPropertyEx                 PROTO :DWORD, :DWORD, :DWORD
+_MUI_ApplyMUIStyleToDialog      PROTO :DWORD, :DWORD
 
 
-_CBP_MouseOverBorders                       PROTO :DWORD, :DWORD
+_MUI_CreateCapButton            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CapButtonWndProc           PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CapButtonInit              PROTO :DWORD
+_MUI_CapButtonCleanup           PROTO :DWORD
+_MUI_CapButtonPaint             PROTO :DWORD
+_MUI_CapButtonsReposition       PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_CapButtonSetPropertyEx     PROTO :DWORD, :DWORD, :DWORD
+
+
+_CBP_MouseOverBorders           PROTO :DWORD, :DWORD
 
 
 ;------------------------------------------------------------------------------
@@ -137,100 +137,98 @@ _CBP_MouseOverBorders                       PROTO :DWORD, :DWORD
 ;------------------------------------------------------------------------------
 ; CaptionBar External Properties
 IFNDEF MUI_CAPTIONBAR_PROPERTIES
-MUI_CAPTIONBAR_PROPERTIES                   STRUCT
-    dwTextColor                             DD ?
-    dwTextFont                              DD ?
-    dwBackColor                             DD ?
-    dwBackImageType                         DD ?
-    dwBackImage                             DD ?
-    dwBackImageOffsetX                      DD ? ; DWORD. Offset x +/- to set position of hImage
-    dwBackImageOffsetY                      DD ? ; DWORD. Offset y +/- to set position of hImage    
-    dwSysButtonTextRollColor                DD ?
-    dwSysButtonBackRollColor                DD ?
-    dwSysButtonBorderColor                  DD ? ; 0 = use same as @CaptionBarBackColor
-    dwSysButtonBorderRollColor              DD ? ; 0 = use @CaptionBarBtnBckRollColor    
-    dwSysButtonsWidth                       DD ? ; defaults to 32
-    dwSysButtonsHeight                      DD ? ; defaults to 28
-    dwSysButtonsOffsetX                     DD ? ; DWORD. Offset y +/- to set position of system buttons (min/max/restore/close) in relation to right of captionbar
-    dwSysButtonsOffsetY                     DD ? ; DWORD. Offset y + to set position of system buttons (min/max/restore/close) in relation to top of captionbar    
-    dwBtnIcoMin                             DD ?
-    dwBtnIcoMinAlt                          DD ?
-    dwBtnIcoMax                             DD ?
-    dwBtnIcoMaxAlt                          DD ?
-    dwBtnIcoRes                             DD ?
-    dwBtnIcoResAlt                          DD ?
-    dwBtnIcoClose                           DD ?
-    dwBtnIcoCloseAlt                        DD ?
-    dwWindowBackColor                       DD ? ; RGBCOLOR. If -1 = No painting of window/dialog background, handled by user or default system.
-    dwWindowBorderColor                     DD ? ; RGBCOLOR. If -1 = No border. if WindowBackColor != -1 then color of border to paint on window.    
-    dwDllInstance                           DD ?
-    dwCaptionBarParam                       DD ?
-MUI_CAPTIONBAR_PROPERTIES                   ENDS
+MUI_CAPTIONBAR_PROPERTIES       STRUCT
+    dwTextColor                 DD ?    ; RGBCOLOR. Text color for captionbar text and system buttons (min/max/restore/close)
+    dwTextFont                  DD ?    ; hFont. Font for captionbar text
+    dwBackColor                 DD ?    ; RGBCOLOR. Background color of captionbar and system buttons (min/max/restore/close)
+    dwBackImageType             DD ?    ; DWORD. Image Type - One of the following: MUICBIT_NONE,MUICBIT_BMP, MUICBIT_ICO, MUICBIT_PNG
+    dwBackImage                 DD ?    ; hImage. Image to display in captionbar background.
+    dwBackImageOffsetX          DD ?    ; DWORD. Offset x +/- to set position of hImage
+    dwBackImageOffsetY          DD ?    ; DWORD. Offset y +/- to set position of hImage    
+    dwButtonTextRollColor       DD ?    ; RGBCOLOR. Text color for system buttons (min/max/restore/close) when mouse moves over button
+    dwButtonBackRollColor       DD ?    ; RGBCOLOR. Background color for system buttons (min/max/restore/close) when mouse moves over button
+    dwButtonBorderColor         DD ?    ; RGBCOLOR. Border color for system buttons (min/max/restore/close). 0 = use same as @CaptionBarBackColor
+    dwButtonBorderRollColor     DD ?    ; RGBCOLOR. Border color for system buttons (min/max/restore/close) when mouse moves over button. 0 = use @CaptionBarBtnBckRollColor  
+    dwButtonsWidth              DD ?    ; DWORD. System buttons width. Defaults = 32px
+    dwButtonsHeight             DD ?    ; DWORD. System buttons height. Defaults = 28px
+    dwButtonsOffsetX            DD ?    ; DWORD. Offset y +/- to set position of system buttons (min/max/restore/close) in relation to right of captionbar
+    dwButtonsOffsetY            DD ?    ; DWORD. Offset y + to set position of system buttons (min/max/restore/close) in relation to top of captionbar    
+    dwBtnIcoMin                 DD ?    ; hIcon. For minimize button
+    dwBtnIcoMinAlt              DD ?    ; hIcon. For minimize button when mouse moves over button
+    dwBtnIcoMax                 DD ?    ; hIcon. For maximize button
+    dwBtnIcoMaxAlt              DD ?    ; hIcon. For maximize button when mouse moves over button
+    dwBtnIcoRes                 DD ?    ; hIcon. For restore button
+    dwBtnIcoResAlt              DD ?    ; hIcon. For restore button when mouse moves over button
+    dwBtnIcoClose               DD ?    ; hIcon. For close button
+    dwBtnIcoCloseAlt            DD ?    ; hIcon. For close button when mouse moves over button
+    dwWindowBackColor           DD ?    ; RGBCOLOR. If -1 = No painting of window/dialog background, handled by user or default system.
+    dwWindowBorderColor         DD ?    ; RGBCOLOR. If -1 = No border. if WindowBackColor != -1 then color of border to paint on window.    
+    dwDllInstance               DD ?    ; hInstance. For loading resources (icons) - normally set to 0 (current module) but when resources are in a dll set this before calling MUICaptionBarLoadIcons
+    dwCaptionBarParam           DD ?    ; DWORD. Custom user data
+MUI_CAPTIONBAR_PROPERTIES       ENDS
 ENDIF
 
 ; CaptionBar Internal Poperties
-_MUI_CAPTIONBAR_PROPERTIES                  STRUCT
-    dwEnabledState                          DD ?
-    dwMouseOver                             DD ?
-    dwMouseDown                             DD ? 
-    hSysButtonClose                         DD ?
-    hSysButtonMax                           DD ?
-    hSysButtonRes                           DD ?
-    hSysButtonMin                           DD ?
-    dwNoMoveWindow                          DD ?
-    dwUseIcons                              DD ?
-    dwButtonsLeftOffset                     DD ? ; calced left offset of all buttons including x offsets
-    dwTotalButtons                          DD ?
-    dwButtonArray                           DD ?    
-_MUI_CAPTIONBAR_PROPERTIES                  ENDS
+_MUI_CAPTIONBAR_PROPERTIES      STRUCT
+    dwEnabledState              DD ?
+    dwMouseOver                 DD ?
+    dwMouseDown                 DD ? 
+    hSysButtonClose             DD ?
+    hSysButtonMax               DD ?
+    hSysButtonRes               DD ?
+    hSysButtonMin               DD ?
+    dwNoMoveWindow              DD ?
+    dwUseIcons                  DD ?
+    dwButtonsLeftOffset         DD ? ; calced left offset of all buttons including x offsets
+    dwTotalButtons              DD ?
+    dwButtonArray               DD ?    
+_MUI_CAPTIONBAR_PROPERTIES      ENDS
 
 ; SysButton External Properties
 IFNDEF MUI_SYSBUTTON_PROPERTIES
-MUI_SYSBUTTON_PROPERTIES                    STRUCT
-    dwTextColor                             DD ?
-    dwTextRollColor                         DD ?
-    dwBackColor                             DD ?
-    dwBackRollColor                         DD ?
-    dwBorderColor                           DD ?
-    dwBorderRollColor                       DD ?
-    dwIco                                   DD ?
-    dwIcoAlt                                DD ?
-    dwParam                                 DD ?
-    dwResourceID                            DD ?
-MUI_SYSBUTTON_PROPERTIES                    ENDS
+MUI_SYSBUTTON_PROPERTIES        STRUCT
+    dwTextColor                 DD ?
+    dwTextRollColor             DD ?
+    dwBackColor                 DD ?
+    dwBackRollColor             DD ?
+    dwBorderColor               DD ?
+    dwBorderRollColor           DD ?
+    dwIco                       DD ?
+    dwIcoAlt                    DD ?
+    dwParam                     DD ?
+    dwResourceID                DD ?
+MUI_SYSBUTTON_PROPERTIES        ENDS
 ENDIF
 
 ; SysButton Internal Properties
-_MUI_SYSBUTTON_PROPERTIES                   STRUCT
-    dwSysButtonFont                         DD ?
-    dwEnabledState                          DD ?
-    dwMouseOver                             DD ?
-    dwUseIcons                              DD ?
-_MUI_SYSBUTTON_PROPERTIES                   ENDS
-
+_MUI_SYSBUTTON_PROPERTIES       STRUCT
+    dwSysButtonFont             DD ?
+    dwEnabledState              DD ?
+    dwMouseOver                 DD ?
+    dwUseIcons                  DD ?
+_MUI_SYSBUTTON_PROPERTIES       ENDS
 
 IFNDEF MUI_CAPBUTTON_PROPERTIES
-MUI_CAPBUTTON_PROPERTIES                    STRUCT  
-    dwTextColor                             DD ?    ; RGBCOLOR
-    dwTextRollColor                         DD ?    ; RGBCOLOR
-    dwBackColor                             DD ?    ; RGBCOLOR. Color of back of button.
-    dwBackRollColor                         DD ?    ; RGBCOLOR. Color of back of button when mouse moves over.
-    dwBorderColor                           DD ?    ; RGBCOLOR. Color of border of button. 0 = use same as dwBackColor
-    dwBorderRollColor                       DD ?    ; RGBCOLOR. Color of border of button when mouse moves over. 0 = use same as dwBackRollColor
-    dwIco                                   DD ?    ; hIcon. Handle of icon to use for button
-    dwIcoAlt                                DD ?    ; hIcon. Handle of icon to use for button when mouse moves over it
-    dwParam                                 DD ?    ; DWORD. Custom user data. Passed as wNotifyCode (HIWORD of wParam) in WM_COMMAND
-    dwResourceID                            DD ?    ; DWORD. Resource ID for button    
-MUI_CAPBUTTON_PROPERTIES                    ENDS
+MUI_CAPBUTTON_PROPERTIES        STRUCT  
+    dwTextColor                 DD ?    ; RGBCOLOR
+    dwTextRollColor             DD ?    ; RGBCOLOR
+    dwBackColor                 DD ?    ; RGBCOLOR. Color of back of button.
+    dwBackRollColor             DD ?    ; RGBCOLOR. Color of back of button when mouse moves over.
+    dwBorderColor               DD ?    ; RGBCOLOR. Color of border of button. 0 = use same as dwBackColor
+    dwBorderRollColor           DD ?    ; RGBCOLOR. Color of border of button when mouse moves over. 0 = use same as dwBackRollColor
+    dwIco                       DD ?    ; hIcon. Handle of icon to use for button
+    dwIcoAlt                    DD ?    ; hIcon. Handle of icon to use for button when mouse moves over it
+    dwParam                     DD ?    ; DWORD. Custom user data. Passed as wNotifyCode (HIWORD of wParam) in WM_COMMAND
+    dwResourceID                DD ?    ; DWORD. Resource ID for button    
+MUI_CAPBUTTON_PROPERTIES        ENDS
 ENDIF
 
-
-_MUI_CAPBUTTON_PROPERTIES                   STRUCT
-    dwSysButtonFont                         DD ?
-    dwEnabledState                          DD ?
-    dwMouseOver                             DD ?
-    dwWidth                                 DD ?
-_MUI_CAPBUTTON_PROPERTIES                   ENDS
+_MUI_CAPBUTTON_PROPERTIES       STRUCT
+    dwSysButtonFont             DD ?
+    dwEnabledState              DD ?
+    dwMouseOver                 DD ?
+    dwWidth                     DD ?
+_MUI_CAPBUTTON_PROPERTIES       ENDS
 
 .CONST
 
@@ -1085,9 +1083,7 @@ _MUI_CaptionBarCleanup PROC PRIVATE hWin:DWORD
         Invoke GlobalFree, eax
     .ENDIF
 
-    IFDEF DEBUG32
-    PrintText '_MUI_CaptionBarCleanup::Notify Image Handles cleared'
-    ENDIF
+
     ret
 _MUI_CaptionBarCleanup ENDP
 
@@ -1999,8 +1995,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 _MUI_SysButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
-    LOCAL wp:WINDOWPLACEMENT
-    
+     
     mov eax,uMsg
     .IF eax == WM_CREATE
         Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_SYSBUTTON_PROPERTIES ; internal properties
@@ -2729,7 +2724,6 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 _MUI_CapButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
-    LOCAL wp:WINDOWPLACEMENT
     
     mov eax,uMsg
     .IF eax == WM_CREATE

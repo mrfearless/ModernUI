@@ -45,7 +45,7 @@ MUITextRegister         PROTO                                                   
 MUITextCreate           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
 MUITextSetProperty      PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Text, dwProperty, dwPropertyValue
 MUITextGetProperty      PROTO :DWORD, :DWORD                                                    ; hModernUI_Text, dwProperty
-MUITextSetBufferSize    PROTO :DWORD, :DWORD
+MUITextSetBufferSize    PROTO :DWORD, :DWORD                                                    ; hModernUI_Text, dwBufferSize
 
 ;------------------------------------------------------------------------------
 ; ModernUI_Text Structures

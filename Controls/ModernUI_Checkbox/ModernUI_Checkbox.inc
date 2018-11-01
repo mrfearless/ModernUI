@@ -106,7 +106,7 @@ MUICBS_THEME                     EQU 8000h   ; Use default windows theme colors 
 @CheckboxTextColorSelAlt        EQU 16      ; Colorref
 @CheckboxTextColorDisabled      EQU 20      ; Colorref
 @CheckboxBackColor              EQU 24      ; Colorref
-@CheckboxImageType              EQU 28      ; Button Image Types - One of the following: MUICIT_NONE, MUICIT_BMP, MUICIT_ICO or MUICIT_PNG
+@CheckboxImageType              EQU 28      ; Checkbox Image Types - One of the following: MUICIT_NONE, MUICIT_BMP, MUICIT_ICO or MUICIT_PNG
 @CheckboxImage                  EQU 32      ; hImage
 @CheckboxImageAlt               EQU 36      ; hImage
 @CheckboxImageSel               EQU 40      ; hImage

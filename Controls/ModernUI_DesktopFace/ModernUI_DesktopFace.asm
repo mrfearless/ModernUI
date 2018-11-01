@@ -44,9 +44,9 @@ include ModernUI_DesktopFace.inc
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-_MUI_DesktopFaceWndProc					PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_DesktopFaceInit					PROTO :DWORD, :DWORD
-_MUI_DesktopFacePaint					PROTO :DWORD
+_MUI_DesktopFaceWndProc                 PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_DesktopFaceInit                    PROTO :DWORD, :DWORD
+_MUI_DesktopFacePaint                   PROTO :DWORD
 _MUI_DesktopFacePaintBackground         PROTO :DWORD, :DWORD, :DWORD
 _MUI_DesktopFacePaintImage              PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_DesktopFaceSetInitialPosition      PROTO :DWORD
@@ -60,7 +60,7 @@ _MUI_DesktopFaceNotifyParent            PROTO :DWORD, :DWORD, :DWORD
 ; Structures for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; External public properties
-MUI_DESKTOPFACE_PROPERTIES				STRUCT
+MUI_DESKTOPFACE_PROPERTIES              STRUCT
     dwDesktopFaceImageType              DD ?
     dwDesktopFaceImage                  DD ?
     dwDesktopFaceRegion                 DD ?
@@ -69,20 +69,20 @@ MUI_DESKTOPFACE_PROPERTIES				STRUCT
     dwDesktopFaceFadeStepOut            DD ?
     dwDesktopFacePopStepIn              DD ?
     dwDesktopFacePopStepOut             DD ?
-MUI_DESKTOPFACE_PROPERTIES				ENDS
+MUI_DESKTOPFACE_PROPERTIES              ENDS
 
 ; Internal properties
-_MUI_DESKTOPFACE_PROPERTIES				STRUCT
-	dwDesktopFaceParent                 DD ?
-	dwFadeAlphaLevel                    DD ?
-	dwInitialPositionSet                DD ?
-	dwWidth                             DD ?
-	dwHeight                            DD ?
-	dwXPos                              DD ?
-	dwYPos                              DD ?
-	dwPopHeight                         DD ?
-	dwVisible                           DD ?
-_MUI_DESKTOPFACE_PROPERTIES				ENDS
+_MUI_DESKTOPFACE_PROPERTIES             STRUCT
+    dwDesktopFaceParent                 DD ?
+    dwFadeAlphaLevel                    DD ?
+    dwInitialPositionSet                DD ?
+    dwWidth                             DD ?
+    dwHeight                            DD ?
+    dwXPos                              DD ?
+    dwYPos                              DD ?
+    dwPopHeight                         DD ?
+    dwVisible                           DD ?
+_MUI_DESKTOPFACE_PROPERTIES             ENDS
 
 IFNDEF MUIDF_NOTIFY                     ; Notification Message Structure for ModernUI_DesktopFace
 MUIDF_NOTIFY                            STRUCT
@@ -95,7 +95,7 @@ ENDIF
 .CONST
 ; Internal properties
 @DesktopFaceParent                      EQU 0
-@DesktopFaceFadeAlphaLevel				EQU 4
+@DesktopFaceFadeAlphaLevel              EQU 4
 @DesktopFaceInitialPositionSet          EQU 8
 @DesktopFaceWidth                       EQU 12
 @DesktopFaceHeight                      EQU 16
@@ -119,7 +119,7 @@ DF_POPSTEP_OUT                          EQU 16
 
 .DATA
 ALIGN 4
-szMUIDesktopFaceClass					DB 'ModernUI_DesktopFace',0 	; Class name for creating our ModernUI_DesktopFace control
+szMUIDesktopFaceClass                   DB 'ModernUI_DesktopFace',0     ; Class name for creating our ModernUI_DesktopFace control
 DFNM                                    MUIDF_NOTIFY <>
 
 .CODE
@@ -155,7 +155,7 @@ MUI_ALIGN
 MUIDesktopFaceRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
@@ -163,20 +163,20 @@ MUIDesktopFaceRegister PROC PUBLIC
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUIDesktopFaceClass
-    	mov wc.lpszClassName, eax
-    	mov eax, hinstance
+        mov wc.lpszClassName, eax
+        mov eax, hinstance
         mov wc.hInstance, eax
-    	mov wc.lpfnWndProc, OFFSET _MUI_DesktopFaceWndProc
-    	Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, eax
-    	mov wc.hIcon, 0
-    	mov wc.hIconSm, 0
-    	mov wc.lpszMenuName, NULL
-    	mov wc.hbrBackground, NULL
-    	mov wc.style, CS_DBLCLKS ;or CS_OWNDC
+        mov wc.lpfnWndProc, OFFSET _MUI_DesktopFaceWndProc
+        Invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.hCursor, eax
+        mov wc.hIcon, 0
+        mov wc.hIconSm, 0
+        mov wc.lpszMenuName, NULL
+        mov wc.hbrBackground, NULL
+        mov wc.style, CS_DBLCLKS ;or CS_OWNDC
         mov wc.cbClsExtra, 0
-    	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
-    	Invoke RegisterClassEx, addr wc
+        mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        Invoke RegisterClassEx, addr wc
     .ENDIF  
     ret
 
@@ -190,25 +190,25 @@ MUI_ALIGN
 MUIDesktopFaceCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	LOCAL hControl:DWORD
+    LOCAL hControl:DWORD
     LOCAL dwNewStyle:DWORD
     
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
-	Invoke MUIDesktopFaceRegister
-	
+    Invoke MUIDesktopFaceRegister
+    
     mov eax, dwStyle
     mov dwNewStyle, eax
     or dwNewStyle, WS_POPUP
     and dwNewStyle, (-1 xor WS_CHILD)
-	
+    
     Invoke CreateWindowEx,  0 , Addr szMUIDesktopFaceClass, 0, dwNewStyle, xpos, ypos, 0, 0, hWndParent, NULL, hinstance, NULL ;WS_EX_TOOLWINDOW or
-	mov hControl, eax
-	.IF eax != NULL
-		
-	.ENDIF
-	mov eax, hControl
+    mov hControl, eax
+    .IF eax != NULL
+        
+    .ENDIF
+    mov eax, hControl
     ret
 MUIDesktopFaceCreate ENDP
 
@@ -238,17 +238,17 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
         ret
 
     .ELSEIF eax == WM_CREATE
-		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_DESKTOPFACE_PROPERTIES ; internal properties
-		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_DESKTOPFACE_PROPERTIES ; external properties
+        Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_DESKTOPFACE_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_DESKTOPFACE_PROPERTIES ; external properties
         mov ebx, lParam
-        mov eax, (CREATESTRUCT PTR [ebx]).hWndParent		
-		Invoke _MUI_DesktopFaceInit, hWin, eax
-		mov eax, 0
-		ret    
+        mov eax, (CREATESTRUCT PTR [ebx]).hWndParent        
+        Invoke _MUI_DesktopFaceInit, hWin, eax
+        mov eax, 0
+        ret    
 
     .ELSEIF eax == WM_NCDESTROY
         Invoke MUIFreeMemProperties, hWin, 0
-		Invoke MUIFreeMemProperties, hWin, 4
+        Invoke MUIFreeMemProperties, hWin, 4
         
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -280,7 +280,7 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
 ;        mov eax, rect.top
 ;        Invoke MUISetIntProperty, hWin, @DesktopFaceYPos, eax     
         mov eax, 0
-        ret		
+        ret     
 
     .ELSEIF eax == WM_LBUTTONDOWN
         Invoke _MUI_DesktopFaceNotifyParent, hWin, MUIDFN_LEFTCLICK, NULL
@@ -292,20 +292,20 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
     .ELSEIF eax == WM_LBUTTONDBLCLK
         Invoke _MUI_DesktopFaceNotifyParent, hWin, MUIDFN_DOUBLECLICK, NULL
         mov eax, 0
-        ret		
+        ret     
 
     .ELSEIF eax == WM_RBUTTONDOWN
         Invoke _MUI_DesktopFaceNotifyParent, hWin, MUIDFN_RIGHTCLICK, NULL
         mov eax, 0
-        ret	
+        ret 
 
     .ELSEIF eax == WM_TIMER
         mov eax, wParam
         .IF eax == DF_TIMER_FADEIN ; fade in our window
             Invoke _MUI_DesktopFaceFadeWindow, hWin, TRUE
             
-	    .ELSEIF eax == DF_TIMER_FADEOUT ; fade out our window
-	        Invoke _MUI_DesktopFaceFadeWindow, hWin, FALSE
+        .ELSEIF eax == DF_TIMER_FADEOUT ; fade out our window
+            Invoke _MUI_DesktopFaceFadeWindow, hWin, FALSE
         
         .ELSEIF eax == DF_TIMER_POPIN ; pop in our window
             Invoke _MUI_DesktopFacePopWindow, hWin, TRUE
@@ -313,7 +313,7 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
         .ELSEIF eax == DF_TIMER_POPOUT ; pop out our window
             Invoke _MUI_DesktopFacePopWindow, hWin, FALSE
             
-	    .ENDIF
+        .ENDIF
 
     .ELSEIF eax == WM_SHOWWINDOW
         .IF wParam == TRUE
@@ -329,7 +329,7 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
             
             
             Invoke MUISetIntProperty, hWin, @DesktopFaceFadeAlphaLevel, 0
-            Invoke SetWindowPos, hWin, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOSENDCHANGING or SWP_NOCOPYBITS	 ;SWP_NOZORDER or 
+            Invoke SetWindowPos, hWin, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOSENDCHANGING or SWP_NOCOPYBITS    ;SWP_NOZORDER or 
             ;Invoke ShowWindow, hWin, SW_SHOW
             Invoke SetTimer, hWin, DF_TIMER_FADEIN, 10, NULL ; set timer to fade in window
             
@@ -356,48 +356,48 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
         .ENDIF
         mov eax, 0
         ret
-	
-;	.ELSEIF eax == WM_WINDOWPOSCHANGING
-;	    PrintText 'WM_WINDOWPOSCHANGING'
-;	    mov ebx, lParam
-;	    mov eax, (WINDOWPOS ptr [ebx]).x
-;	    PrintDec eax
-;	    mov eax, (WINDOWPOS ptr [ebx]).y
-;	    PrintDec eax
-	
-	
-	; custom messages start here
-	
-	.ELSEIF eax == MUI_GETPROPERTY
-		Invoke MUIGetExtProperty, hWin, wParam
-		ret
-		
-	.ELSEIF eax == MUI_SETPROPERTY	
-		Invoke MUISetExtProperty, hWin, wParam, lParam
-		
-		mov eax, wParam
-		.IF eax == @DesktopFaceImage && lParam != 0
-		    Invoke MUIGetExtProperty, hWin, @DesktopFaceImageType
-		    .IF eax != MUIDFIT_NONE
-		        Invoke _MUI_DesktopFaceSetSize, hWin
-		    .ENDIF
-		
-		.ELSEIF eax == @DesktopFaceImageType && lParam != 0
-		    Invoke MUIGetExtProperty, hWin, @DesktopFaceImage
-		    .IF eax != 0
-		        Invoke _MUI_DesktopFaceSetSize, hWin
-		    .ENDIF
-		    
-		.ELSEIF eax == @DesktopFaceRegion
-		    Invoke SetWindowRgn, hWin, NULL, FALSE
-		    Invoke _MUI_DesktopFaceSetSize, hWin
-		    Invoke MUISetRegionFromResource, hWin, lParam, NULL, TRUE
-		    Invoke InvalidateRgn, hWin, NULL, TRUE
-		    Invoke InvalidateRect, hWin, NULL, TRUE
-		.ENDIF
-		
-		ret
-		
+    
+;   .ELSEIF eax == WM_WINDOWPOSCHANGING
+;       PrintText 'WM_WINDOWPOSCHANGING'
+;       mov ebx, lParam
+;       mov eax, (WINDOWPOS ptr [ebx]).x
+;       PrintDec eax
+;       mov eax, (WINDOWPOS ptr [ebx]).y
+;       PrintDec eax
+    
+    
+    ; custom messages start here
+    
+    .ELSEIF eax == MUI_GETPROPERTY
+        Invoke MUIGetExtProperty, hWin, wParam
+        ret
+        
+    .ELSEIF eax == MUI_SETPROPERTY  
+        Invoke MUISetExtProperty, hWin, wParam, lParam
+        
+        mov eax, wParam
+        .IF eax == @DesktopFaceImage && lParam != 0
+            Invoke MUIGetExtProperty, hWin, @DesktopFaceImageType
+            .IF eax != MUIDFIT_NONE
+                Invoke _MUI_DesktopFaceSetSize, hWin
+            .ENDIF
+        
+        .ELSEIF eax == @DesktopFaceImageType && lParam != 0
+            Invoke MUIGetExtProperty, hWin, @DesktopFaceImage
+            .IF eax != 0
+                Invoke _MUI_DesktopFaceSetSize, hWin
+            .ENDIF
+            
+        .ELSEIF eax == @DesktopFaceRegion
+            Invoke SetWindowRgn, hWin, NULL, FALSE
+            Invoke _MUI_DesktopFaceSetSize, hWin
+            Invoke MUISetRegionFromResource, hWin, lParam, NULL, TRUE
+            Invoke InvalidateRgn, hWin, NULL, TRUE
+            Invoke InvalidateRect, hWin, NULL, TRUE
+        .ENDIF
+        
+        ret
+        
     .ENDIF
     
     Invoke DefWindowProc, hWin, uMsg, wParam, lParam
@@ -485,22 +485,22 @@ _MUI_DesktopFacePaint PROC PRIVATE hWin:DWORD
     ; Setup Double Buffering
     ;----------------------------------------------------------
     Invoke GetClientRect, hWin, Addr rect
-	Invoke CreateCompatibleDC, hdc
-	mov hdcMem, eax
-	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-	mov hbmMem, eax
-	Invoke SelectObject, hdcMem, hbmMem
-	mov hOldBitmap, eax
+    Invoke CreateCompatibleDC, hdc
+    mov hdcMem, eax
+    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+    mov hbmMem, eax
+    Invoke SelectObject, hdcMem, hbmMem
+    mov hOldBitmap, eax
 
     ;----------------------------------------------------------
     ; Background
     ;----------------------------------------------------------
     ;Invoke _MUI_DesktopFacePaintBackground, hWin, hdcMem, Addr rect
 
-	;----------------------------------------------------------
-	; Draw image
-	;----------------------------------------------------------
-	Invoke _MUI_DesktopFacePaintImage, hWin, hdc, hdcMem, Addr rect
+    ;----------------------------------------------------------
+    ; Draw image
+    ;----------------------------------------------------------
+    Invoke _MUI_DesktopFacePaintImage, hWin, hdc, hdcMem, Addr rect
 
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
@@ -514,7 +514,7 @@ _MUI_DesktopFacePaint PROC PRIVATE hWin:DWORD
     Invoke DeleteObject, hbmMem
     .IF hOldBitmap != 0
         Invoke DeleteObject, hOldBitmap
-    .ENDIF		
+    .ENDIF      
     
     Invoke EndPaint, hWin, Addr ps
 
@@ -570,7 +570,7 @@ _MUI_DesktopFacePaintImage PROC hWin:DWORD, hdc:DWORD, hdcMem:DWORD, lpRect:DWOR
     mov hImage, eax
     Invoke MUIGetExtProperty, hWin, @DesktopFaceImageType        
     mov ImageType, eax ; 0 = none, 1 = bitmap, 2 = icon, 3 = png
-    Invoke MUIGetImageSize, hImage, ImageType, Addr ImageWidth, Addr ImageHeight	    
+    Invoke MUIGetImageSize, hImage, ImageType, Addr ImageWidth, Addr ImageHeight        
 
     mov eax, ImageType
     .IF eax == 1 ; bitmap
@@ -862,7 +862,7 @@ _MUI_DesktopFacePopWindow PROC USES EBX hWin:DWORD, bPopIn:DWORD
 
         mov eax, dwHeight
         .IF dwPopHeight >= eax
-            Invoke SetWindowPos, hWin, HWND_TOPMOST, dwXPos, dwYPos, dwWidth, dwHeight, SWP_NOOWNERZORDER or SWP_NOZORDER or SWP_NOCOPYBITS;or SWP_NOSENDCHANGING or SWP_NOACTIVATE or SWP_NOCOPYBITS	
+            Invoke SetWindowPos, hWin, HWND_TOPMOST, dwXPos, dwYPos, dwWidth, dwHeight, SWP_NOOWNERZORDER or SWP_NOZORDER or SWP_NOCOPYBITS;or SWP_NOSENDCHANGING or SWP_NOACTIVATE or SWP_NOCOPYBITS   
             Invoke KillTimer, hWin, DF_TIMER_POPIN
             Invoke MUIGetExtProperty, hWin, @DesktopFaceRegion
             .IF eax != NULL
@@ -1074,7 +1074,7 @@ MUIDesktopFaceShow PROC hControl:DWORD, bShow:DWORD
 ;        
 ;        
 ;        Invoke MUISetIntProperty, hControl, @DesktopFaceFadeAlphaLevel, 0
-;        Invoke SetWindowPos, hControl, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOZORDER or SWP_NOMOVE or SWP_NOSIZE or SWP_NOSENDCHANGING or SWP_NOCOPYBITS	 ;SWP_NOZORDER or 
+;        Invoke SetWindowPos, hControl, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOZORDER or SWP_NOMOVE or SWP_NOSIZE or SWP_NOSENDCHANGING or SWP_NOCOPYBITS   ;SWP_NOZORDER or 
 ;        Invoke ShowWindow, hControl, SW_SHOW
 ;        Invoke SetTimer, hControl, DF_TIMER_FADEIN, 10, NULL ; set timer to fade in window
 ;        

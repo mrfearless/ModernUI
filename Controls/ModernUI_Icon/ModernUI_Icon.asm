@@ -46,9 +46,9 @@ include ModernUI_Icon.inc
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
-_MUI_IconWndProc				PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_IconInit					PROTO :DWORD
-_MUI_IconPaint					PROTO :DWORD
+_MUI_IconWndProc                PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_IconInit                   PROTO :DWORD
+_MUI_IconPaint                  PROTO :DWORD
 _MUI_IconSetRegion              PROTO :DWORD, :DWORD, :DWORD
 _MUI_IconLoadRegionFromRes      PROTO :DWORD, :DWORD, :DWORD, :DWORD
 
@@ -56,29 +56,29 @@ _MUI_IconLoadRegionFromRes      PROTO :DWORD, :DWORD, :DWORD, :DWORD
 ; Structures for internal use
 ;--------------------------------------------------------------------------------------------------------------------------------------
 ; External public properties
-MUI_ICON_PROPERTIES				STRUCT
-	dwIconBackColor				DD ?
+MUI_ICON_PROPERTIES             STRUCT
+    dwIconBackColor             DD ?
     dwIconUnselected            DD ?
     dwIconUnselectedAlt         DD ?
     dwIconSelected              DD ?
-    dwIconSelectedAlt        	DD ?
+    dwIconSelectedAlt           DD ?
     dwIconDisabled              DD ?
-MUI_ICON_PROPERTIES				ENDS
+MUI_ICON_PROPERTIES             ENDS
 
 ; Internal properties
-_MUI_ICON_PROPERTIES			STRUCT
-	dwEnabledState				DD ?
-	dwMouseOver					DD ?
-	dwSelectedState             DD ?
-	dwIconRegion                DD ?
-	dwMouseDown                 DD ?
-_MUI_ICON_PROPERTIES			ENDS
+_MUI_ICON_PROPERTIES            STRUCT
+    dwEnabledState              DD ?
+    dwMouseOver                 DD ?
+    dwSelectedState             DD ?
+    dwIconRegion                DD ?
+    dwMouseDown                 DD ?
+_MUI_ICON_PROPERTIES            ENDS
 
 
 .CONST
 ; Internal properties
-@IconEnabledState				EQU 0
-@IconMouseOver					EQU 4
+@IconEnabledState               EQU 0
+@IconMouseOver                  EQU 4
 @IconSelectedState              EQU 8
 @IconRegion                     EQU 12
 @IconMouseDown                  EQU 16
@@ -88,7 +88,7 @@ _MUI_ICON_PROPERTIES			ENDS
 
 .DATA
 ALIGN 4
-szMUIIconClass					DB 'ModernUI_Icon',0 	; Class name for creating our ModernUI_Icon control
+szMUIIconClass                  DB 'ModernUI_Icon',0    ; Class name for creating our ModernUI_Icon control
 
 
 .CODE
@@ -124,7 +124,7 @@ MUI_ALIGN
 MUIIconRegister PROC PUBLIC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
@@ -132,20 +132,20 @@ MUIIconRegister PROC PUBLIC
     .IF eax == 0 ; if class not already registered do so
         mov wc.cbSize,sizeof WNDCLASSEX
         lea eax, szMUIIconClass
-    	mov wc.lpszClassName, eax
-    	mov eax, hinstance
+        mov wc.lpszClassName, eax
+        mov eax, hinstance
         mov wc.hInstance, eax
-    	mov wc.lpfnWndProc, OFFSET _MUI_IconWndProc
-    	;Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, NULL;eax
-    	mov wc.hIcon, 0
-    	mov wc.hIconSm, 0
-    	mov wc.lpszMenuName, NULL
-    	mov wc.hbrBackground, NULL
-    	mov wc.style, 0
+        mov wc.lpfnWndProc, OFFSET _MUI_IconWndProc
+        ;Invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.hCursor, NULL;eax
+        mov wc.hIcon, 0
+        mov wc.hIconSm, 0
+        mov wc.lpszMenuName, NULL
+        mov wc.hbrBackground, NULL
+        mov wc.style, 0
         mov wc.cbClsExtra, 0
-    	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
-    	Invoke RegisterClassEx, addr wc
+        mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        Invoke RegisterClassEx, addr wc
     .ENDIF  
     ret
 
@@ -159,27 +159,27 @@ MUI_ALIGN
 MUIIconCreate PROC PRIVATE hWndParent:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	LOCAL hControl:DWORD
-	LOCAL dwNewStyle:DWORD
-	
+    LOCAL hControl:DWORD
+    LOCAL dwNewStyle:DWORD
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
-	Invoke MUIIconRegister
-	
+    Invoke MUIIconRegister
+    
     mov eax, dwStyle
     mov dwNewStyle, eax
     and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         or dwNewStyle, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
-    .ENDIF	
-	
+    .ENDIF  
+    
     Invoke CreateWindowEx, WS_EX_TRANSPARENT, Addr szMUIIconClass, NULL, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
-	mov hControl, eax
-	.IF eax != NULL
-		
-	.ENDIF
-	mov eax, hControl
+    mov hControl, eax
+    .IF eax != NULL
+        
+    .ENDIF
+    mov eax, hControl
     ret
 MUIIconCreate ENDP
 
@@ -196,21 +196,21 @@ _MUI_IconWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
-		; sets text of our control, delete if not required.
-        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
+        ; sets text of our control, delete if not required.
+        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName   
         mov eax, TRUE
         ret
 
     .ELSEIF eax == WM_CREATE
-		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_ICON_PROPERTIES ; internal properties
-		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_ICON_PROPERTIES ; external properties
-		Invoke _MUI_IconInit, hWin
-		mov eax, 0
-		ret    
+        Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_ICON_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_ICON_PROPERTIES ; external properties
+        Invoke _MUI_IconInit, hWin
+        mov eax, 0
+        ret    
 
     .ELSEIF eax == WM_NCDESTROY
         Invoke MUIFreeMemProperties, hWin, 0
-		Invoke MUIFreeMemProperties, hWin, 4
+        Invoke MUIFreeMemProperties, hWin, 4
         
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -249,12 +249,12 @@ _MUI_IconWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         .ENDIF
 
     .ELSEIF eax == WM_LBUTTONUP
-		; simulates click on our control, delete if not required.
-		Invoke GetDlgCtrlID, hWin
-		mov ebx,eax
-		Invoke GetParent, hWin
-		Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
-		
+        ; simulates click on our control, delete if not required.
+        Invoke GetDlgCtrlID, hWin
+        mov ebx,eax
+        Invoke GetParent, hWin
+        Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
+        
         Invoke MUIGetIntProperty, hWin, @IconMouseDown
         .IF eax == TRUE
             Invoke GetClientRect, hWin, addr rect
@@ -267,50 +267,50 @@ _MUI_IconWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         .ELSE
             Invoke InvalidateRect, hWin, NULL, TRUE
             Invoke SetWindowPos, hWin, NULL, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE + SWP_FRAMECHANGED 
-        .ENDIF		
-		
+        .ENDIF      
+        
 
    .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @IconEnabledState
         .IF eax == TRUE   
-    		Invoke MUISetIntProperty, hWin, @IconMouseOver, TRUE
-    		.IF eax != TRUE
-    		    Invoke ShowWindow, hWin, SW_HIDE
-    		    Invoke InvalidateRect, hWin, NULL, TRUE
-    		    Invoke ShowWindow, hWin, SW_SHOW
-    		    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
-    		    mov TE.dwFlags, TME_LEAVE
-    		    mov eax, hWin
-    		    mov TE.hwndTrack, eax
-    		    mov TE.dwHoverTime, NULL
-    		    Invoke TrackMouseEvent, Addr TE
-    		.ENDIF
+            Invoke MUISetIntProperty, hWin, @IconMouseOver, TRUE
+            .IF eax != TRUE
+                Invoke ShowWindow, hWin, SW_HIDE
+                Invoke InvalidateRect, hWin, NULL, TRUE
+                Invoke ShowWindow, hWin, SW_SHOW
+                mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
+                mov TE.dwFlags, TME_LEAVE
+                mov eax, hWin
+                mov TE.hwndTrack, eax
+                mov TE.dwHoverTime, NULL
+                Invoke TrackMouseEvent, Addr TE
+            .ENDIF
         .ENDIF
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @IconMouseOver, FALSE
-		Invoke ShowWindow, hWin, SW_HIDE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke ShowWindow, hWin, SW_SHOW
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
+        Invoke ShowWindow, hWin, SW_HIDE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke ShowWindow, hWin, SW_SHOW
+        Invoke LoadCursor, NULL, IDC_ARROW
+        Invoke SetCursor, eax
 
     .ELSEIF eax == WM_KILLFOCUS
         Invoke MUISetIntProperty, hWin, @IconMouseOver, FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
-	
-	; custom messages start here
-	
-	.ELSEIF eax == MUI_GETPROPERTY
-		Invoke MUIGetExtProperty, hWin, wParam
-		ret
-		
-	.ELSEIF eax == MUI_SETPROPERTY	
-		Invoke MUISetExtProperty, hWin, wParam, lParam
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		ret
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke LoadCursor, NULL, IDC_ARROW
+        Invoke SetCursor, eax
+    
+    ; custom messages start here
+    
+    .ELSEIF eax == MUI_GETPROPERTY
+        Invoke MUIGetExtProperty, hWin, wParam
+        ret
+        
+    .ELSEIF eax == MUI_SETPROPERTY  
+        Invoke MUISetExtProperty, hWin, wParam, lParam
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        ret
 
     .ELSEIF eax == MUIIM_SETREGION
         Invoke MUIIconSetRegion, hWin, wParam
@@ -394,23 +394,23 @@ _MUI_IconPaint PROC PRIVATE hWin:DWORD
     LOCAL BackColor:DWORD
     LOCAL SelectedState:DWORD
     LOCAL EnabledState:DWORD
-	LOCAL hIcon:DWORD
+    LOCAL hIcon:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
 
-	;----------------------------------------------------------
-	; Get some property values
-	;----------------------------------------------------------	
-	; Use Invoke _MUIGetProperty, hWin, 4, @Property 
-	; to get property required: text, back, border colors etc
-	; save them to local vars for processing later in function
-	;----------------------------------------------------------
+    ;----------------------------------------------------------
+    ; Get some property values
+    ;---------------------------------------------------------- 
+    ; Use Invoke _MUIGetProperty, hWin, 4, @Property 
+    ; to get property required: text, back, border colors etc
+    ; save them to local vars for processing later in function
+    ;----------------------------------------------------------
     Invoke GetClientRect, hWin, Addr rect
 
     Invoke MUIGetIntProperty, hWin, @IconEnabledState
     mov EnabledState, eax    
-	Invoke MUIGetIntProperty, hWin, @IconMouseOver
+    Invoke MUIGetIntProperty, hWin, @IconMouseOver
     mov MouseOver, eax
     Invoke MUIGetIntProperty, hWin, @IconSelectedState
     mov SelectedState, eax    
@@ -451,29 +451,29 @@ _MUI_IconPaint PROC PRIVATE hWin:DWORD
         ret
     .ENDIF
 
-	.IF BackColor != -1 ; not transparent
+    .IF BackColor != -1 ; not transparent
 
         ;----------------------------------------------------------
         ; Setup Double Buffering if Back Color is not 0
-        ;----------------------------------------------------------	
-    	Invoke CreateCompatibleDC, hdc
-    	mov hdcMem, eax
-    	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-    	mov hbmMem, eax
-    	Invoke SelectObject, hdcMem, hbmMem
-    	mov hOldBitmap, eax
+        ;---------------------------------------------------------- 
+        Invoke CreateCompatibleDC, hdc
+        mov hdcMem, eax
+        Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+        mov hbmMem, eax
+        Invoke SelectObject, hdcMem, hbmMem
+        mov hOldBitmap, eax
 
- 	    ;----------------------------------------------------------
- 	    ; Fill background
- 	    ;----------------------------------------------------------
- 	    Invoke GetStockObject, DC_BRUSH
- 	    mov hBrush, eax
-  	    Invoke SetDCBrushColor, hdcMem, BackColor
- 	    Invoke FillRect, hdcMem, Addr rect, hBrush
+        ;----------------------------------------------------------
+        ; Fill background
+        ;----------------------------------------------------------
+        Invoke GetStockObject, DC_BRUSH
+        mov hBrush, eax
+        Invoke SetDCBrushColor, hdcMem, BackColor
+        Invoke FillRect, hdcMem, Addr rect, hBrush
 
- 	    ;----------------------------------------------------------
- 	    ; Draw Icon to mem dc
- 	    ;----------------------------------------------------------
+        ;----------------------------------------------------------
+        ; Draw Icon to mem dc
+        ;----------------------------------------------------------
         Invoke DrawIconEx, hdcMem, rect.left, rect.top, hIcon, 0, 0, 0, 0, DI_NORMAL
 
         ;----------------------------------------------------------
@@ -488,7 +488,7 @@ _MUI_IconPaint PROC PRIVATE hWin:DWORD
         Invoke DeleteObject, hbmMem
         .IF hOldBitmap != 0
             Invoke DeleteObject, hOldBitmap
-        .ENDIF		
+        .ENDIF      
         .IF hOldBrush != 0
             Invoke DeleteObject, hOldBrush
         .ENDIF        
@@ -498,16 +498,16 @@ _MUI_IconPaint PROC PRIVATE hWin:DWORD
 
     .ELSE ; transparent background
     
- 	    ;----------------------------------------------------------
- 	    ; Draw Icon direct to hdc, to try to make as transparent
- 	    ; as possible with combination of WS_EX_TRANSPARENT flag
- 	    ;----------------------------------------------------------    
+        ;----------------------------------------------------------
+        ; Draw Icon direct to hdc, to try to make as transparent
+        ; as possible with combination of WS_EX_TRANSPARENT flag
+        ;----------------------------------------------------------    
         ;Invoke SetBkMode, hdc, OPAQUE
         ;Invoke ValidateRgn, hWin, NULL;, FALSE
         ;Invoke ValidateRect, hWin, NULL
 
- 	    Invoke GetStockObject, NULL_BRUSH
- 	    mov hBrush, eax
+        Invoke GetStockObject, NULL_BRUSH
+        mov hBrush, eax
         Invoke FillRect, hdc, Addr rect, hBrush
         Invoke DrawIconEx, hdc, rect.left, rect.top, hIcon, 0, 0, 0, 0, DI_NORMAL
         

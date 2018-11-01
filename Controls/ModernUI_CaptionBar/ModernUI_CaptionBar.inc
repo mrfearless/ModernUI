@@ -45,14 +45,14 @@ MUICaptionBarRegister       PROTO                                           ; Us
 MUICaptionBarCreate         PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszCaptionText, dwCaptionHeight, dwResourceID, dwStyle
 MUICaptionBarSetProperty    PROTO :DWORD, :DWORD, :DWORD                    ; hModernUI_CaptionBar, dwProperty, dwPropertyValue
 MUICaptionBarGetProperty    PROTO :DWORD, :DWORD                            ; hModernUI_CaptionBar, dwProperty
-MUICaptionBarLoadIcons      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
-MUICaptionBarLoadIconsDll   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hCaptionBar, hInstance, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
+MUICaptionBarLoadIcons      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hModernUI_CaptionBar, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
+MUICaptionBarLoadIconsDll   PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD ; hModernUI_CaptionBar, hInstance, idResMin, idResMinAlt, idResMax, idResMaxAlt, idResRes, idResResAlt, idResClose, idResCloseAlt
 MUICaptionBarLoadBackImage  PROTO :DWORD, :DWORD, :DWORD                    ; hModernUI_CaptionBar, dwImageType, dwResIDImage
 
 MUICaptionBarAddButton      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hModernUI_CaptionBar, lpszButtonText, dwResourceID, dwResIDImage, dwResIDImageAlt. Returns in eax hCapButton
 MUICaptionBarAddButtonEx    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hModernUI_CaptionBar, lpszButtonText, dwResourceID, hIcon, hIconAlt. Returns in eax hCapButton
 MUICapButtonSetProperty     PROTO :DWORD, :DWORD, :DWORD                    ; hCapButton, dwProperty, dwPropertyValue
-MUICapButtonGetProperty     PROTO :DWORD, :DWORD                            ; hCapButton, dwProperty, dwPropertyValue
+MUICapButtonGetProperty     PROTO :DWORD, :DWORD                            ; hCapButton, dwProperty
 
 ;------------------------------------------------------------------------------
 ; ModernUI_Caption Structures
@@ -185,3 +185,14 @@ MUICBIT_PNG                     EQU 3
 ; Note setting dialog with WS_CLIPCHILDREN beforehand and using MUI Style (NOT MUICS_WINNOMUISTYLE) will call ApplyStyleToDialog, but other controls will have
 ; a black background for a millisecond before being painting normally. Unset WS_CLIPCHILDREN in dialog, and let ApplyStyleToDialog change it to prevent this
 ; black background for a millisecond thing happening.
+
+
+
+
+
+
+
+
+
+
+

@@ -67,7 +67,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=23
+MilestoneOnDateDate=17
 MilestoneOnDateTimeYear=2018
 MilestoneOnDateTimeMonth=1
 MilestoneOnDateTimeDate=25
@@ -91,7 +91,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=8385677
+PTimer=12980983
 [GroupExpand]
 GroupExpand=1,1,1,0,0,0
 [BookMark]
@@ -108,10 +108,10 @@ GroupExpand=1,1,1,0,0,0
 [BreakPoint]
 0=
 [Collapse]
-1=2147483647,30408703
+1=,
 2=
 [Size]
-1=0,0,0,0,21851
+1=0,0,0,0,8141
 2=0,0,0,0,5043
 [RADebugBP]
 2=
