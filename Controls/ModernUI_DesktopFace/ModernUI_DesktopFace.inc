@@ -84,6 +84,7 @@ MUIDFS_POS_HORZ_CENTER      EQU 10h
 MUIDFS_POS_HORZ_RIGHT       EQU 20h
 MUIDFS_POPIN                EQU 40h
 MUIDFS_POPOUT               EQU 80h
+MUIDFS_NOMOVE               EQU 100h
 
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -97,6 +98,7 @@ MUIDFS_POPOUT               EQU 80h
 @DesktopFaceFadeStepOut     EQU 20  ; steps to subtract opacity during fade out - default 16
 @DesktopFacePopStepIn       EQU 24  ; steps to add height during pop in - default 8
 @DesktopFacePopStepOut      EQU 28  ; steps to substract height during pop out - default 16
+@DesktopFaceBorderColor     EQU 32  ; COLORREF. Border color, -1 = no border (default value). Only shows border if @DesktopFaceRegion is null
 
 
 ; Button Image Types

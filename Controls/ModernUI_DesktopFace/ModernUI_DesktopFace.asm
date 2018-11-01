@@ -18,6 +18,8 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
+MUI_DONTUSEGDIPLUS EQU 1 ; exclude (gdiplus) support
+
 ;DEBUG32 EQU 1
 ;
 ;IFDEF DEBUG32
@@ -39,6 +41,16 @@ includelib gdi32.lib
 include ModernUI.inc
 includelib ModernUI.lib
 
+IFDEF MUI_USEGDIPLUS
+ECHO MUI_USEGDIPLUS
+include gdiplus.inc
+include ole32.inc
+includelib gdiplus.lib
+includelib ole32.lib
+ELSE
+ECHO MUI_DONTUSEGDIPLUS
+ENDIF
+
 include ModernUI_DesktopFace.inc
 
 ;--------------------------------------------------------------------------------------------------------------------------------------
@@ -49,6 +61,8 @@ _MUI_DesktopFaceInit                    PROTO :DWORD, :DWORD
 _MUI_DesktopFacePaint                   PROTO :DWORD
 _MUI_DesktopFacePaintBackground         PROTO :DWORD, :DWORD, :DWORD
 _MUI_DesktopFacePaintImage              PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_DesktopFacePaintBorder             PROTO :DWORD, :DWORD, :DWORD
+
 _MUI_DesktopFaceSetInitialPosition      PROTO :DWORD
 _MUI_DesktopFaceSetSize                 PROTO :DWORD
 _MUI_DesktopFaceFadeWindow              PROTO :DWORD, :DWORD
@@ -69,6 +83,7 @@ MUI_DESKTOPFACE_PROPERTIES              STRUCT
     dwDesktopFaceFadeStepOut            DD ?
     dwDesktopFacePopStepIn              DD ?
     dwDesktopFacePopStepOut             DD ?
+    dwDesktopFaceBorderColor            DD ?
 MUI_DESKTOPFACE_PROPERTIES              ENDS
 
 ; Internal properties
@@ -274,18 +289,16 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
         ret
 
     .ELSEIF eax == WM_LBUTTONUP
-;        Invoke GetWindowRect, hWin, Addr rect
-;        mov eax, rect.left
-;        Invoke MUISetIntProperty, hWin, @DesktopFaceXPos, eax
-;        mov eax, rect.top
-;        Invoke MUISetIntProperty, hWin, @DesktopFaceYPos, eax     
+        Invoke _MUI_DesktopFaceNotifyParent, hWin, MUIDFN_LEFTCLICK, NULL
         mov eax, 0
         ret     
 
     .ELSEIF eax == WM_LBUTTONDOWN
-        Invoke _MUI_DesktopFaceNotifyParent, hWin, MUIDFN_LEFTCLICK, NULL
-        Invoke PostMessage, hWin, WM_NCLBUTTONDOWN, HTCAPTION, NULL
-      
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, MUIDFS_NOMOVE
+        .IF eax != MUIDFS_NOMOVE
+            Invoke PostMessage, hWin, WM_NCLBUTTONDOWN, HTCAPTION, NULL
+        .ENDIF
         mov eax, 0
         ret
 
@@ -455,7 +468,7 @@ _MUI_DesktopFaceInit PROC PRIVATE hControl:DWORD, hWndParent:DWORD
     Invoke MUISetExtProperty, hControl, @DesktopFacePopStepIn, eax
     mov eax, DF_POPSTEP_OUT
     Invoke MUISetExtProperty, hControl, @DesktopFacePopStepOut, eax    
-    
+    Invoke MUISetExtProperty, hControl, @DesktopFaceBorderColor, -1 
     
     
     ;Invoke _MUI_DesktopFaceSetInitialPosition, hControl
@@ -501,6 +514,11 @@ _MUI_DesktopFacePaint PROC PRIVATE hWin:DWORD
     ; Draw image
     ;----------------------------------------------------------
     Invoke _MUI_DesktopFacePaintImage, hWin, hdc, hdcMem, Addr rect
+
+    ;----------------------------------------------------------
+    ; Draw border
+    ;----------------------------------------------------------
+    Invoke _MUI_DesktopFacePaintBorder, hWin, hdcMem, Addr rect
 
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
@@ -616,6 +634,48 @@ _MUI_DesktopFacePaintImage PROC hWin:DWORD, hdc:DWORD, hdcMem:DWORD, lpRect:DWOR
     ret
 
 _MUI_DesktopFacePaintImage ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_DesktopFacePaintBorder
+;------------------------------------------------------------------------------
+_MUI_DesktopFacePaintBorder PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD
+    LOCAL BorderColor:DWORD
+    LOCAL hBrush:DWORD
+    LOCAL hOldBrush:DWORD
+    LOCAL rect:RECT
+
+    Invoke MUIGetExtProperty, hWin, @DesktopFaceRegion
+    .IF eax != 0
+        ret
+    .ENDIF
+
+    Invoke MUIGetExtProperty, hWin, @DesktopFaceBorderColor
+    .IF eax == -1
+        ret
+    .ENDIF
+    mov BorderColor, eax    
+
+    Invoke CopyRect, Addr rect, lpRect
+
+    Invoke GetStockObject, DC_BRUSH
+    mov hBrush, eax
+    Invoke SelectObject, hdc, eax
+    mov hOldBrush, eax
+    Invoke SetDCBrushColor, hdc, BorderColor
+    Invoke FrameRect, hdc, lpRect, hBrush
+    
+    .IF hOldBrush != 0
+        Invoke SelectObject, hdc, hOldBrush
+        Invoke DeleteObject, hOldBrush
+    .ENDIF     
+    .IF hBrush != 0
+        Invoke DeleteObject, hBrush
+    .ENDIF                
+
+    ret
+_MUI_DesktopFacePaintBorder ENDP
 
 
 MUI_ALIGN
