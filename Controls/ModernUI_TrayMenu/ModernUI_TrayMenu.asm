@@ -935,6 +935,7 @@ MUITrayMenuSetTrayIcon PROC PUBLIC USES EBX hControl:DWORD, hTrayIcon:DWORD
     .ENDIF
     Invoke MUISetExtProperty, hControl, @TrayMenuIcon, hTrayIcon
     
+    mov ebx, NID
     mov eax, hTrayIcon
     mov [ebx].NOTIFYICONDATA.hIcon, eax
     .IF lpszTooltip != NULL
