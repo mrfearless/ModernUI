@@ -79,7 +79,13 @@ _MUI_RegionButtonPaint          PROTO :DWORD
 _MUI_RegionButtonPaintBackground PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_RegionButtonPaintBorder    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_RegionButtonNotify         PROTO :DWORD, :DWORD
-_MUI_AdjustPolyPoints           PROTO :DWORD, :DWORD, :DWORD, :DWORD
+
+_MUI_PolygonAdjust              PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_PolygonInflate             PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_PolygonCentroid            PROTO :DWORD, :DWORD, :DWORD
+
+_MUI_PrintPolygonString         PROTO :DWORD, :DWORD
+
 _MUI_ConvertTextToPoints        PROTO :DWORD, :DWORD
 
 _MUI_RegionButtonDown           PROTO :DWORD ; WM_LBUTTONDOWN, WM_KEYDOWN + VK_SPACE
@@ -184,7 +190,14 @@ MUIRB_MAX_CUSTOM_STATES         EQU 32
 ALIGN 4
 szMUIRegionButtonClass          DB 'ModernUI_RegionButton',0    ; Class name for creating our ModernUI_RegionButton control
 RBNM                            MUIRB_NOTIFY <>
+szPrintPolygonLineStart         DB 'POINT <',0
+szPrintPolygonOpenAngleBracket  DB '<',0
+szPrintPolygonCloseAngleBracket DB '>',0
+szPrintPolygonComma             DB ",",0
+szPrintPolygonSpace             DB " ",0
+szPrintPolygonCRLF              DB 13,10,0
 
+szPolypointsString              DB 4096 DUP (0)
 
 .CODE
 
@@ -835,10 +848,12 @@ MUIRegionButtonSetRegionPoly PROC PUBLIC USES EBX hControl:DWORD, ptrPolyData:DW
         mov hRgn, eax
         Invoke GetRgnBox, hRgn, Addr newpos
         Invoke DeleteObject, hRgn
-        Invoke _MUI_AdjustPolyPoints, ptrPolyData, dwPolyDataCount, newpos.left, newpos.top
+        Invoke _MUI_PolygonAdjust, ptrPolyData, dwPolyDataCount, newpos.left, newpos.top, TRUE
         mov pPolyDataNew, eax
+        ;Invoke _MUI_PolygonInflate, pPolyDataNew, dwPolyDataCount, 1, FALSE
         ;-----------------------------------------------------
 
+        ;Invoke _MUI_PrintPolygonString, pPolyDataNew, dwPolyDataCount
 
         .IF pPolyDataNew != 0
             ;PrintText 'Adjusted points'
@@ -879,7 +894,7 @@ MUIRegionButtonSetRegionPoly PROC PUBLIC USES EBX hControl:DWORD, ptrPolyData:DW
             inc dwCounter
             mov eax, dwCounter
         .ENDW
-        Invoke _MUI_AdjustPolyPoints, ptrPolyData, dwPolyCurrent, newpos.left, newpos.top
+        Invoke _MUI_PolygonAdjust, ptrPolyData, dwPolyCurrent, newpos.left, newpos.top, TRUE
         mov pPolyDataNew, eax
         ;-----------------------------------------------------
 
@@ -985,26 +1000,34 @@ MUIRegionButtonSetRegionPoly ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; Returns NULL or new array of points that have been adjusted
+; Adjust the position of a polygon by x and y. Optionally creates a new polygon
+; points array if bNewPolygon == TRUE, otherwise replaces original points with
+; the adjustments. New polygon array can be freed with GlobalFree when not 
+; required anymore.
+; Returns NULL if error or pointer to polgon points array (can be new array of
+; points) if bNewPolygon == TRUE, otherwise it is the original ptrPolyData.
 ;------------------------------------------------------------------------------
-_MUI_AdjustPolyPoints PROC USES EBX EDI ESI ptrPolyData:DWORD, dwPolyDataCount:DWORD, dwXAdjust:DWORD, dwYAdjust:DWORD
+_MUI_PolygonAdjust PROC USES EBX EDI ESI ptrPolyData:DWORD, dwPolyDataCount:DWORD, dwXAdjust:DWORD, dwYAdjust:DWORD, bNewPolygon:DWORD
     LOCAL pTempPolyData:DWORD
     LOCAL dwCurrentPoint:DWORD
     
-    mov eax, dwPolyDataCount
-    mov ebx, SIZEOF POINT
-    mul ebx
-    
-    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
-    .IF eax == NULL
-        ret
+    .IF bNewPolygon == TRUE
+        mov eax, dwPolyDataCount
+        mov ebx, SIZEOF POINT
+        mul ebx
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+        .IF eax == NULL
+            ret
+        .ENDIF
+        mov pTempPolyData, eax
+    .ELSE
+        mov eax, ptrPolyData
+        mov pTempPolyData, eax
     .ENDIF
-    mov pTempPolyData, eax
+
     ; loop through poly points, adjust x, y
-
     mov esi, ptrPolyData
-    mov edi, pTempPolyData
-
+    mov edi, pTempPolyData    
     mov eax, 0
     mov dwCurrentPoint, 0
     .WHILE eax < dwPolyDataCount
@@ -1024,7 +1047,289 @@ _MUI_AdjustPolyPoints PROC USES EBX EDI ESI ptrPolyData:DWORD, dwPolyDataCount:D
 
     mov eax, pTempPolyData
     ret
-_MUI_AdjustPolyPoints ENDP
+_MUI_PolygonAdjust ENDP
+
+
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+_MUI_PolygonInflate PROC USES EBX EDX EDI ESI ptrPolyData:DWORD, dwPolyDataCount:DWORD, dwInflate:DWORD, bNewPolygon:DWORD
+    LOCAL pTempPolyData:DWORD
+    LOCAL dwCurrentPoint:DWORD
+    LOCAL center:POINT
+    LOCAL sumx:DWORD
+    LOCAL sumy:DWORD
+    LOCAL inflate:DWORD
+    
+    .IF bNewPolygon == TRUE
+        mov eax, dwPolyDataCount
+        mov ebx, SIZEOF POINT
+        mul ebx
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+        .IF eax == NULL
+            ret
+        .ENDIF
+        mov pTempPolyData, eax
+    .ELSE
+        mov eax, ptrPolyData
+        mov pTempPolyData, eax
+    .ENDIF
+
+    Invoke _MUI_PolygonCentroid, ptrPolyData, dwPolyDataCount, Addr center
+    ; loop through poly points to get center x, y from sum x and sum y div by count of points
+;    mov esi, ptrPolyData
+;    mov sumx, 0
+;    mov sumy, 0
+;    mov eax, 0
+;    mov dwCurrentPoint, 0
+;    .WHILE eax < dwPolyDataCount
+;        mov eax, [esi]
+;        add sumx, eax
+;        mov eax, [esi+4]
+;        add sumy, eax
+;        add esi, SIZEOF POINT
+;        inc dwCurrentPoint
+;        mov eax, dwCurrentPoint
+;    .ENDW
+;    
+;    xor edx, edx
+;    mov eax, sumx
+;    mov ecx, dwPolyDataCount
+;    div ecx
+;    mov center.x, eax
+;    
+;    xor edx, edx
+;    mov eax, sumy
+;    mov ecx, dwPolyDataCount
+;    div ecx
+;    mov center.y, eax    
+    
+    IFDEF DEBUG32
+        PrintDec center.x
+        PrintDec center.y
+    ENDIF
+    
+    ; loop through poly points, adjust x, y
+    mov esi, ptrPolyData
+    mov edi, pTempPolyData
+    mov eax, 0
+    mov dwCurrentPoint, 0
+    .WHILE eax < dwPolyDataCount
+        
+        mov eax, [esi]
+        .IF eax < center.x
+            sub eax, dwInflate
+        .ELSEIF eax > center.x
+            add eax, dwInflate
+        .ENDIF
+        mov [edi], eax
+        
+        mov eax, [esi+4]
+        .IF eax < center.y
+            sub eax, dwInflate
+        .ELSEIF eax > center.y
+            add eax, dwInflate
+        .ENDIF
+        mov [edi+4], eax
+        
+        add edi, SIZEOF POINT
+        add esi, SIZEOF POINT
+        inc dwCurrentPoint
+        mov eax, dwCurrentPoint
+    .ENDW
+
+    mov eax, pTempPolyData
+    ret
+_MUI_PolygonInflate ENDP
+
+
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+_MUI_PrintPolygonString PROC USES EBX EDI ESI ptrPolyData:DWORD, dwPolyDataCount:DWORD
+    LOCAL dwCurrentPoint:DWORD
+    LOCAL dwCurrentCoords:DWORD
+    ;LOCAL szPolypointsString:DWORD
+    LOCAL dwCoord:DWORD
+    LOCAL szCoord[8]:BYTE
+    
+;    mov ebx, dwPolyDataCount
+;    mov eax, 38d
+;    mul ebx
+;    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+;    .IF eax == NULL
+;        ret
+;    .ENDIF
+;    mov szPolypointsString, eax
+    
+    Invoke RtlZeroMemory, Addr szPolypointsString, SIZEOF szPolypointsString
+    
+    mov esi, ptrPolyData
+    mov eax, 0
+    mov dwCurrentPoint, 0
+    mov dwCurrentCoords, 0
+    .WHILE eax < dwPolyDataCount
+        
+        .IF dwCurrentCoords == 0
+            Invoke szCatStr, Addr szPolypointsString, Addr szPrintPolygonLineStart
+        .ELSE
+            Invoke szCatStr, Addr szPolypointsString, Addr szPrintPolygonOpenAngleBracket
+        .ENDIF
+        
+        mov eax, [esi]
+        mov dwCoord, eax
+        Invoke dwtoa, dwCoord, Addr szCoord
+        Invoke szCatStr, Addr szPolypointsString, Addr szCoord
+        Invoke szCatStr, Addr szPolypointsString, Addr szPrintPolygonComma
+        
+        mov eax, [esi+4]
+        mov dwCoord, eax
+        Invoke dwtoa, dwCoord, Addr szCoord
+        Invoke szCatStr, Addr szPolypointsString, Addr szCoord
+        Invoke szCatStr, Addr szPolypointsString, Addr szPrintPolygonCloseAngleBracket
+        Invoke szCatStr, Addr szPolypointsString, Addr szPrintPolygonSpace
+        
+        
+        inc dwCurrentCoords
+        .IF dwCurrentCoords > 10
+            Invoke szCatStr, Addr szPolypointsString, Addr szPrintPolygonCRLF
+            mov dwCurrentCoords, 0
+        .ENDIF
+        
+        add esi, SIZEOF POINT
+        inc dwCurrentPoint
+        mov eax, dwCurrentPoint
+    .ENDW
+    
+    IFDEF DEBUG32
+        ;lea eax, szPolypointsString
+        ;PrintStringByAddr eax
+        PrintString szPolypointsString
+    ENDIF
+    
+    ;Invoke GlobalFree, szPolypointsString
+    ret
+
+_MUI_PrintPolygonString ENDP
+
+
+_MUI_PolygonCentroid PROC USES EBX ECX EDX EDI ESI ptrPolyData:DWORD, dwPolyDataCount:DWORD, lpdwCentroid:DWORD
+    LOCAL dwCurrentPoint:DWORD
+    LOCAL dwMaxPoints:DWORD
+    LOCAL centroid:POINT
+    LOCAL signedarea:DWORD
+    LOCAL x0:DWORD
+    LOCAL y0:DWORD
+    LOCAL x1:DWORD
+    LOCAL y1:DWORD
+    LOCAL x0y1:DWORD
+    LOCAL x1y0:DWORD
+    LOCAL a:DWORD
+    
+    mov eax, dwPolyDataCount
+    dec eax
+    mov dwMaxPoints, eax
+
+    mov esi, ptrPolyData
+    mov signedarea, 0
+    mov centroid.x, 0
+    mov centroid.y, 0
+    mov eax, 0
+    mov dwCurrentPoint, 0
+    .WHILE eax < dwPolyDataCount
+        .IF eax == dwMaxPoints
+            mov eax, [esi]
+            mov x0, eax
+            mov eax, [esi+4]
+            mov y0, eax
+            mov esi, ptrPolyData
+            mov eax, [esi]
+            mov x1, eax
+            mov eax, [esi+4]
+            mov y1, eax
+        .ELSE
+            mov eax, [esi]
+            mov x0, eax
+            mov eax, [esi+4]
+            mov y0, eax
+            
+            mov eax, [esi+8]
+            mov x1, eax
+            mov eax, [esi+12]
+            mov y1, eax
+        .ENDIF
+
+        mov eax, x0
+        mov ebx, y1
+        mul ebx
+        mov x0y1, eax
+        ;PrintDec x0y1
+        
+        mov eax, x1
+        mov ebx, y0
+        mul ebx
+        mov x1y0, eax
+        ;PrintDec x1y0
+        
+        mov eax, x1y0
+        mov ebx, x0y1
+        sub eax, ebx
+        mov a, eax
+        ;PrintDec a
+        add signedarea, eax
+        ;PrintDec signedarea
+        
+        mov eax, x0
+        add eax, x1
+        mov ebx, a
+        mul ebx
+        add centroid.x, eax
+        
+        mov eax, y0
+        add eax, y1
+        mov ebx, a
+        mul ebx
+        add centroid.y, eax
+
+        add esi, SIZEOF POINT
+        inc dwCurrentPoint
+        mov eax, dwCurrentPoint
+    .ENDW
+
+    mov eax, signedarea
+    shr eax, 1 ; * 0.5
+    mov signedarea, eax
+
+    mov eax, 6
+    mov ebx, signedarea
+    mul ebx
+    mov ecx, eax
+    mov eax, centroid.x
+    xor edx, edx
+    div ecx
+    mov centroid.x, eax
+    
+    mov eax, 6
+    mov ebx, signedarea
+    mul ebx
+    mov ecx, eax
+    mov eax, centroid.y
+    xor edx, edx
+    div ecx
+    mov centroid.y, eax
+
+    .IF lpdwCentroid != 0
+        mov ebx, lpdwCentroid
+        mov eax, centroid.x
+        mov [ebx], eax
+        mov eax, centroid.y
+        mov [ebx+4], eax
+    .ENDIF
+    ;PrintDec centroid.x
+    ;PrintDec centroid.y
+
+    ret
+_MUI_PolygonCentroid ENDP
 
 
 

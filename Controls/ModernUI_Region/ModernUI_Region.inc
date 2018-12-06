@@ -56,6 +56,9 @@ MUIRegionButtomCustomStates     PROTO :DWORD, :DWORD, :DWORD                ; hR
 MUIRegionButtonGetCustomState   PROTO :DWORD                                ; hRegionButton
 MUIRegionButtonSetCustomState   PROTO :DWORD, :DWORD                        ; hRegionButton, dwStateIndex
 
+
+_MUI_PolygonInflate             PROTO :DWORD, :DWORD, :DWORD, :DWORD
+
 ;------------------------------------------------------------------------------
 ; ModernUI_RegionButton Structures
 ;------------------------------------------------------------------------------
