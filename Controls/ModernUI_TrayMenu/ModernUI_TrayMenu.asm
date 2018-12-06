@@ -163,6 +163,7 @@ _MUI_TRAYMENU_PROPERTIES                STRUCT
     NID                                 DD ? ; ptr to NOTIFYICONDATA struct
     dwTrayMenuIconVisible               DD ?
     dwTrayIconVisible                   DD ?
+    dwParent                            DD ?
 _MUI_TRAYMENU_PROPERTIES                ENDS
 
 
@@ -173,6 +174,7 @@ WM_INITSUBCLASS                         EQU WM_USER + 99
 @TrayMenuNID                            EQU 0
 @TrayMenuIconVisible                    EQU 4
 @TrayIconVisible                        EQU 8
+@TrayParent                             EQU 12
 ; External public properties
 
 
@@ -348,6 +350,7 @@ MUITrayMenuCreate PROC PUBLIC hWndParent:DWORD, hTrayMenuIcon:DWORD, lpszTooltip
             Invoke MUISetExtProperty, hControl, @TrayMenuExtraWndHandle, hWndExtra
         .ENDIF
         
+        Invoke MUISetIntProperty, hControl, @TrayParent, hWndParent
         ; otherwise values are set, and MUITrayMenuAssignMenu destroys menu before assigning the prior destoryed handle.
 ;        .IF dwMenuType != NULL
 ;            Invoke MUISetExtProperty, hControl, @TrayMenuType, dwMenuType
@@ -498,8 +501,9 @@ _MUI_TrayMenuSetSubclass PROC hControl:DWORD
     .IF TrayMenuType == MUITMT_NOMENUEVER
         ret
     .ENDIF
-
-    Invoke GetWindow, hControl, GW_OWNER
+    
+    Invoke MUIGetIntProperty, hControl, @TrayParent
+    ;Invoke GetWindow, hControl, GW_OWNER
     mov hParent, eax
     
     ;PrintDec hParent
@@ -531,7 +535,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_TrayMenuWindowSubClass_Proc - sublcass main window to handle our WM_SHELLNOTIFY
 ;------------------------------------------------------------------------------
-_MUI_TrayMenuWindowSubClass_Proc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM, uIdSubclass:UINT, dwRefData:DWORD
+_MUI_TrayMenuWindowSubClass_Proc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM, uIdSubclass:UINT, dwRefData:DWORD
     LOCAL dwStyle:DWORD
     
     mov eax, uMsg
@@ -557,6 +561,9 @@ _MUI_TrayMenuWindowSubClass_Proc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wPa
                     Invoke _MUI_TM_MinimizeToTray, hWin, FALSE
                 .ENDIF
                 xor eax, eax
+                ret
+            .ELSE
+                Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
                 ret
             .ENDIF
         .ENDIF
@@ -623,7 +630,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 _MUI_TrayMenuCleanup PROC PRIVATE hControl:DWORD
     LOCAL NID:DWORD
-    
+
     Invoke MUIGetIntProperty, hControl, @TrayMenuNID
     mov NID, eax
     
@@ -1002,6 +1009,7 @@ MUITrayMenuSetTooltipText PROC PUBLIC USES EBX hControl:DWORD, lpszTooltip:DWORD
         ret
     .ENDIF
     
+    mov ebx, NID
     mov eax, hTrayIcon
     mov [ebx].NOTIFYICONDATA.hIcon, eax
     .IF lpszTooltip != NULL
@@ -1081,6 +1089,8 @@ MUITrayMenuHideTrayIcon PROC PUBLIC hControl:DWORD
         .IF NID != NULL
             Invoke Shell_NotifyIcon, NIM_DELETE, NID ; Remove tray icon
             Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
+            Invoke GlobalFree, NID
+            Invoke MUISetIntProperty, hControl, @TrayMenuNID, 0
             mov eax, TRUE
             ret
         .ENDIF
@@ -1124,8 +1134,11 @@ MUITrayMenuShowTrayIcon PROC PUBLIC hControl:DWORD
             ret
         .ENDIF
         
-        Invoke GetParent, hControl
+        Invoke MUIGetIntProperty, hControl, @TrayParent
         mov hParent, eax
+        
+        ;Invoke GetParent, hControl
+        ;mov hParent, eax
         Invoke _MUI_TM_AddIconAndTooltip, hControl, hParent, hTrayIcon, lpszTooltip
         
         Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, TRUE
