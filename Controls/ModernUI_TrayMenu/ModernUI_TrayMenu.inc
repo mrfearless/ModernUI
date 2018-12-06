@@ -57,7 +57,7 @@ MUITrayMenuSetMenuItemText  PROTO :DWORD, :DWORD, :DWORD                        
 MUITrayMenuHideTrayIcon     PROTO :DWORD                                                         ; hModernUI_TrayMenu
 MUITrayMenuShowTrayIcon     PROTO :DWORD                                                         ; hModernUI_TrayMenu
 MUITrayMenuShowNotification PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                         ; hModernUI_TrayMenu, lpszNotificationMessage, lpszNotificationTitle, dwTimeout, dwStyle
-MUITrayMenuSetTrayIconText  PROTO :DWORD, :DWORD, :DWORD, :DWORD                                 ; hModernUI_TrayIcon, lpszText, lpszFont, dwTextColorRGB
+MUITrayMenuSetTrayIconText  PROTO :DWORD, :DWORD, :DWORD, :DWORD                                 ; hModernUI_TrayMenu, lpszText, lpszFont, dwTextColorRGB
 
 ; Tray Icon Functions (standalone - no menu)
 MUITrayIconCreate           PROTO :DWORD, :DWORD, :DWORD, :DWORD                                 ; hWndParent, dwTrayIconResID, hTrayIcon, lpszTooltip - Returns in eax hModernUI_TrayIcon
@@ -65,7 +65,7 @@ MUITrayIconDestroy          PROTO :DWORD                                        
 MUITrayIconSetTrayIcon      PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayIcon, hTrayIcon
 MUITrayIconSetTooltipText   PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayIcon, lpszTooltip
 MUITrayIconShowNotification PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                         ; hModernUI_TrayIcon, lpszNotificationMessage, lpszNotificationTitle, dwTimeout, dwStyle
-
+MUITrayIconSetTrayIconText  PROTO :DWORD, :DWORD, :DWORD, :DWORD                                 ; hModernUI_TrayIcon, lpszText, lpszFont, dwTextColorRGB
 
 ;------------------------------------------------------------------------------
 ; ModernUI_TrayMenu Structures

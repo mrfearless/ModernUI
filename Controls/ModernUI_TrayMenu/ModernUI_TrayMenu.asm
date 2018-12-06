@@ -182,7 +182,80 @@ szMUITrayIconDisplayDC                  DB 'DISPLAY',0
 szMUITrayMenuClass                      DB 'ModernUI_TrayMenu',0        ; Class name for creating our ModernUI_TrayMenu control
 szMUITrayMenuFont                       DB 'Tahoma',0                   ; Font used for ModernUI_TrayMenu text
 
-
+; File M:\radasm\Masm\projects\Test Projects\cpuload\blank.ico opened at 1150 bytes
+ALIGN 4
+icoMUITrayBlankIcon       db 0,0,1,0,1,0,16,16,0,0,1,0,32,0,104,4
+    db 0,0,22,0,0,0,40,0,0,0,16,0,0,0,32,0
+    db 0,0,1,0,32,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,255
+    db 172,65,255,255,172,65,255,255,172,65,255,255,172,65,255,255
+    db 172,65,255,255,172,65,255,255,172,65,255,255,172,65,255,255
+    db 172,65,255,255,172,65,255,255,172,65,255,255,172,65,255,255
+    db 172,65,255,255,172,65,255,255,172,65,255,255,172,65
 
 
 .CODE
@@ -1206,15 +1279,21 @@ MUITrayIconCreate PROC PUBLIC USES EBX hWndParent:DWORD, dwTrayIconResID:DWORD, 
     mov [ebx].NOTIFYICONDATA.uFlags, eax
     ;mov eax, WM_SHELLNOTIFY
     ;mov [ebx].NOTIFYICONDATA.uCallbackMessage, eax
+    ;.IF hTrayIcon == NULL
+    ;    .IF NID != NULL
+    ;        Invoke GlobalFree, NID
+    ;    .ENDIF    
+    ;    mov eax, NULL
+    ;    ret
+    ;.ENDIF
+    
     .IF hTrayIcon == NULL
-        .IF NID != NULL
-            Invoke GlobalFree, NID
-        .ENDIF    
-        mov eax, NULL
-        ret
+        Invoke MUICreateIconFromMemory, Addr icoMUITrayBlankIcon, 0
+    .ELSE
+        mov eax, hTrayIcon
     .ENDIF
-    ;PrintText 'hTrayMenuIcon'
-    mov eax, hTrayIcon
+    
+    mov ebx, NID
     mov [ebx].NOTIFYICONDATA.hIcon, eax
     mov eax, lpszTooltip
     .IF eax != NULL
@@ -1234,6 +1313,9 @@ MUITrayIconCreate PROC PUBLIC USES EBX hWndParent:DWORD, dwTrayIconResID:DWORD, 
     .IF eax != 0
         mov eax, NID
     .ELSE
+        .IF NID != NULL
+            Invoke GlobalFree, NID
+        .ENDIF
         mov eax, NULL
     .ENDIF
     ret
@@ -1244,7 +1326,7 @@ MUITrayIconCreate ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; TrayIconDestroy
+; MUITrayIconDestroy
 ;------------------------------------------------------------------------------
 MUITrayIconDestroy PROC hTI:DWORD
     LOCAL NID:DWORD
@@ -1268,7 +1350,7 @@ MUITrayIconDestroy ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; TrayIconSetTrayIcon
+; MUITrayIconSetTrayIcon
 ;------------------------------------------------------------------------------
 MUITrayIconSetTrayIcon PROC USES EBX hTI:DWORD, hTrayIcon:DWORD
     LOCAL NID:DWORD
@@ -1314,7 +1396,7 @@ MUITrayIconSetTrayIcon ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; TrayIconSetTooltipText
+; MUITrayIconSetTooltipText
 ;------------------------------------------------------------------------------
 MUITrayIconSetTooltipText PROC USES EBX hTI:DWORD, lpszTooltip:DWORD
     LOCAL NID:DWORD
@@ -1472,6 +1554,37 @@ MUITrayIconShowNotification PROC USES EBX hTI:DWORD, lpszNotificationMessage:DWO
 MUITrayIconShowNotification ENDP
 
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; Returns in eax icon created and set as the tray menu icon. Use DeleteObject once finished
+; using this icon, and before calling this function again (if icon was previously created
+; with this function)
+; Returns in eax hIcon or NULL
+;------------------------------------------------------------------------------
+MUITrayIconSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWORD
+    LOCAL hTrayIcon:DWORD
+
+    .IF hControl == NULL
+        mov eax, NULL
+        ret
+    .ENDIF
+    
+    Invoke _MUI_TM_IconText, lpszText, lpszFont, dwTextColorRGB
+    mov hTrayIcon, eax
+    
+    .IF hTrayIcon == NULL
+        mov eax, NULL
+        ret
+    .ENDIF
+    
+    Invoke MUITrayIconSetTrayIcon, hControl, hTrayIcon
+    
+    mov eax, hTrayIcon
+    ret
+MUITrayIconSetTrayIconText ENDP
+
+
+
 ;==============================================================================
 ; Internal Functions
 ;==============================================================================
@@ -1517,15 +1630,22 @@ _MUI_TM_AddIconAndTooltip PROC PRIVATE USES EBX hControl:DWORD, hWndParent:DWORD
     mov [ebx].NOTIFYICONDATA.uFlags, eax
     mov eax, WM_SHELLNOTIFY
     mov [ebx].NOTIFYICONDATA.uCallbackMessage, eax
+
+;    .IF hTrayMenuIcon == NULL
+;        Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
+;        Invoke GlobalFree, NID
+;        Invoke MUISetIntProperty, hControl, @TrayMenuNID, 0
+;        mov eax, FALSE
+;        ret
+;    .ENDIF
+
     .IF hTrayMenuIcon == NULL
-        Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
-        Invoke GlobalFree, NID
-        Invoke MUISetIntProperty, hControl, @TrayMenuNID, 0
-        mov eax, FALSE
-        ret
+        Invoke MUICreateIconFromMemory, Addr icoMUITrayBlankIcon, 0
+    .ELSE
+        mov eax, hTrayMenuIcon
     .ENDIF
-    ;PrintText 'hTrayMenuIcon'
-    mov eax, hTrayMenuIcon
+    
+    mov ebx, NID    
     mov [ebx].NOTIFYICONDATA.hIcon, eax
     mov eax, lpszTooltip
     .IF eax != NULL
