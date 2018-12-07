@@ -502,8 +502,8 @@ _MUI_TrayMenuSetSubclass PROC hControl:DWORD
         ret
     .ENDIF
     
-    Invoke MUIGetIntProperty, hControl, @TrayParent
-    ;Invoke GetWindow, hControl, GW_OWNER
+    ;Invoke MUIGetIntProperty, hControl, @TrayParent
+    Invoke GetWindow, hControl, GW_OWNER
     mov hParent, eax
     
     ;PrintDec hParent
@@ -562,9 +562,9 @@ _MUI_TrayMenuWindowSubClass_Proc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPARA
                 .ENDIF
                 xor eax, eax
                 ret
-            .ELSE
-                Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
-                ret
+            ;.ELSE
+            ;    Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
+            ;    ret
             .ENDIF
         .ENDIF
     
