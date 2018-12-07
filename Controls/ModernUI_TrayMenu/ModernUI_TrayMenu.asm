@@ -1041,7 +1041,7 @@ MUITrayMenuSetTooltipText ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; Returns in eax icon created and set as the tray menu icon. Use DeleteObject once finished
+; Returns in eax icon created and set as the tray menu icon. Use DestroyIcon once finished
 ; using this icon, and before calling this function again (if icon was previously created
 ; with this function)
 ; Returns in eax hIcon or NULL
@@ -1570,7 +1570,7 @@ MUITrayIconShowNotification ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; Returns in eax icon created and set as the tray menu icon. Use DeleteObject once finished
+; Returns in eax icon created and set as the tray menu icon. Use DestroyIcon once finished
 ; using this icon, and before calling this function again (if icon was previously created
 ; with this function)
 ; Returns in eax hIcon or NULL
@@ -1846,7 +1846,7 @@ MUI_ALIGN
 ; Create Transparent Text Icon For Traybar
 ; Original sourcecode: http://www.techpowerup.com/forums/showthread.php?t=141783
 ;
-; Returns handle to an icon (cursor) in eax, use DeleteObject to free this when 
+; Returns handle to an icon (cursor) in eax, use DestroyIcon to free this when 
 ; you have finished with it
 ;------------------------------------------------------------------------------
 _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWORD
@@ -1866,7 +1866,7 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     LOCAL hAlphaCursor:DWORD
     LOCAL hFont:DWORD
     LOCAL hFontOld:DWORD
-
+    LOCAL SavedDC:DWORD
     
     Invoke lstrlen, lpszText
     mov lentext, eax
@@ -1886,6 +1886,7 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     mov hBitmap, eax
     Invoke CreateCompatibleDC, hdc
     mov hMemDC, eax
+
     Invoke SelectObject, hMemDC, hBitmap
     mov hBitmapOld, eax
 
@@ -1894,7 +1895,7 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     mov hbrBkgnd, eax
     Invoke FillRect, hMemDC, Addr cbox, hbrBkgnd
     Invoke DeleteObject, hbrBkgnd
-    ;Invoke GetStockObject, DEFAULT_GUI_FONT
+
     .IF lpszFont == NULL
         lea eax, szMUITrayMenuFont
     .ELSE
@@ -1903,10 +1904,8 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     Invoke CreateFont, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, eax ;CTEXT("Segoe UI")
     mov hFont, eax
     Invoke SelectObject, hMemDC, hFont
-    mov hFontOld, eax    
-    
-    
-    ;Invoke SelectObject, hMemDC, eax
+    mov hFontOld, eax
+
     Invoke SetBkColor, hMemDC, MUI_RGBCOLOR(72,72,72) ;RGBCOLOR(0,0,0)
     Invoke SetTextColor, hMemDC, dwTextColorRGB ;RGBCOLOR(118,198,238) ;RGBCOLOR(255,255,255)
     Invoke DrawText, hMemDC, lpszText, lentext, Addr cbox, DT_SINGLELINE or DT_VCENTER or DT_CENTER
@@ -1925,9 +1924,7 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     
     ;// Clean up
     Invoke DeleteDC, hdcMem2
-    Invoke DeleteDC, hMemDC
-    Invoke DeleteDC, hdc    
-    
+
     mov ii.fIcon, TRUE
     mov ii.xHotspot, 0
     mov ii.yHotspot, 0
@@ -1940,30 +1937,22 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     Invoke CreateIconIndirect, Addr ii
     mov hAlphaCursor, eax
 
-    Invoke DeleteObject, hFont
-    Invoke DeleteObject, hFontOld
+    ;// Clean up
+    
+    Invoke SelectObject, hMemDC, hBitmapOld
+    Invoke DeleteObject, hBitmapOld
     Invoke DeleteObject, hBitmap
-    Invoke DeleteObject, hbmMask
+    
+    Invoke SelectObject, hMemDC, hFontOld
+    Invoke DeleteObject, hFontOld
+    Invoke DeleteObject, hFont
+    
+    Invoke SelectObject, hdcMem2, hbmMaskOld
     Invoke DeleteObject, hbmMaskOld
-    Invoke DeleteObject, hbrBkgnd
+    Invoke DeleteObject, hbmMask
 
-;    ;Invoke SelectObject, hdcMem2, hbmMaskOld ; deselect mask
-;    ;Invoke DeleteObject, eax
-;    Invoke DeleteObject, hbmMask
-;    Invoke DeleteDC, hdcMem2    
-;    
-;    ;Invoke SelectObject, hMemDC, hBitmapOld ; deselect bitmap
-;    ;Invoke DeleteObject, eax
-;    ;Invoke SelectObject, hMemDC, hFontOld ; deselect font
-;    ;Invoke DeleteObject, eax
-;    Invoke DeleteDC, hMemDC
-;    Invoke DeleteObject, hBitmap
-;    Invoke DeleteObject, hFont
-;    Invoke DeleteObject, hbrBkgnd
-;    Invoke DeleteObject, hbmMaskOld
-;    Invoke DeleteObject, hBitmapOld
-;    Invoke DeleteObject, hFontOld
-;    Invoke DeleteDC, hdc
+    Invoke DeleteDC, hMemDC
+    Invoke DeleteDC, hdc
 
     mov eax, hAlphaCursor
     ret
