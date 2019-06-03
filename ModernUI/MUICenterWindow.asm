@@ -131,7 +131,7 @@ MUICenterWindow PROC hWndChild:DWORD, hWndParent:DWORD
 MUICenterWindow ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

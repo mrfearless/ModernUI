@@ -54,7 +54,7 @@ MUI_ALIGN
 ;
 ;
 ;------------------------------------------------------------------------------
-_MUIGetProperty PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwProperty:DWORD
+_MUIGetProperty PROC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwProperty:DWORD
     Invoke GetWindowLong, hControl, cbWndExtraOffset
     .IF eax == 0
         ret
@@ -76,7 +76,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Sets property value and returns previous value in eax.
 ;------------------------------------------------------------------------------
-_MUISetProperty PROC PUBLIC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+_MUISetProperty PROC USES EBX hControl:DWORD, cbWndExtraOffset:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     LOCAL dwPrevValue:DWORD
     Invoke GetWindowLong, hControl, cbWndExtraOffset
     .IF eax == 0
@@ -97,7 +97,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Gets external property value and returns it in eax
 ;------------------------------------------------------------------------------
-MUIGetExtProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
+MUIGetExtProperty PROC hControl:DWORD, dwProperty:DWORD
     Invoke _MUIGetProperty, hControl, MUI_EXTERNAL_PROPERTIES, dwProperty ; get external properties
     ret
 MUIGetExtProperty ENDP
@@ -107,7 +107,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Sets external property value and returns previous value in eax.
 ;------------------------------------------------------------------------------
-MUISetExtProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUISetExtProperty PROC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke _MUISetProperty, hControl, MUI_EXTERNAL_PROPERTIES, dwProperty, dwPropertyValue ; set external properties
     ret
 MUISetExtProperty ENDP
@@ -117,7 +117,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Gets internal property value and returns it in eax
 ;------------------------------------------------------------------------------
-MUIGetIntProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
+MUIGetIntProperty PROC hControl:DWORD, dwProperty:DWORD
     Invoke _MUIGetProperty, hControl, MUI_INTERNAL_PROPERTIES, dwProperty ; get internal properties
     ret
 MUIGetIntProperty ENDP
@@ -127,7 +127,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Sets internal property value and returns previous value in eax.
 ;------------------------------------------------------------------------------
-MUISetIntProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUISetIntProperty PROC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke _MUISetProperty, hControl, MUI_INTERNAL_PROPERTIES, dwProperty, dwPropertyValue ; set internal properties
     ret
 MUISetIntProperty ENDP
@@ -140,7 +140,7 @@ MUI_ALIGN
 ; For properties (parent) in main ModernUI controls that store pointers to 
 ; another (child) defined properties structure
 ;------------------------------------------------------------------------------
-MUIGetExtPropertyEx PROC PUBLIC hControl:DWORD, dwParentProperty:DWORD, dwChildProperty:DWORD
+MUIGetExtPropertyEx PROC hControl:DWORD, dwParentProperty:DWORD, dwChildProperty:DWORD
     Invoke _MUIGetProperty, hControl, MUI_EXTERNAL_PROPERTIES, dwParentProperty ; get parent external properties
     .IF eax != 0
         add eax, dwChildProperty
@@ -156,7 +156,7 @@ MUI_ALIGN
 ; For properties (parent) in main ModernUI controls that store pointers to 
 ; another (child) defined properties structure
 ;------------------------------------------------------------------------------
-MUISetExtPropertyEx PROC PUBLIC USES EBX hControl:DWORD, dwParentProperty:DWORD, dwChildProperty:DWORD, dwPropertyValue:DWORD
+MUISetExtPropertyEx PROC USES EBX hControl:DWORD, dwParentProperty:DWORD, dwChildProperty:DWORD, dwPropertyValue:DWORD
     LOCAL dwPrevValue:DWORD
     Invoke _MUIGetProperty, hControl, MUI_EXTERNAL_PROPERTIES, dwParentProperty ; get parent external properties
     .IF eax != 0
@@ -178,7 +178,7 @@ MUI_ALIGN
 ; For properties (parent) in main ModernUI controls that store pointers to 
 ; another (child) defined properties structure
 ;------------------------------------------------------------------------------
-MUIGetIntPropertyEx PROC PUBLIC hControl:DWORD, dwParentProperty:DWORD, dwChildProperty:DWORD
+MUIGetIntPropertyEx PROC hControl:DWORD, dwParentProperty:DWORD, dwChildProperty:DWORD
     Invoke _MUIGetProperty, hControl, MUI_INTERNAL_PROPERTIES, dwParentProperty ; get parent internal properties
     .IF eax != 0
         add eax, dwChildProperty
@@ -194,7 +194,7 @@ MUI_ALIGN
 ; For properties (parent) in main ModernUI controls that store pointers to 
 ; another (child) defined properties structure
 ;------------------------------------------------------------------------------
-MUISetIntPropertyEx PROC PUBLIC USES EBX hControl:DWORD, dwParentProperty:DWORD, dwChildProperty:DWORD, dwPropertyValue:DWORD
+MUISetIntPropertyEx PROC USES EBX hControl:DWORD, dwParentProperty:DWORD, dwChildProperty:DWORD, dwPropertyValue:DWORD
     LOCAL dwPrevValue:DWORD
     Invoke _MUIGetProperty, hControl, MUI_INTERNAL_PROPERTIES, dwParentProperty ; get parent internal properties
     .IF eax != 0
@@ -214,7 +214,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Gets Extra external property value and returns it in eax
 ;------------------------------------------------------------------------------
-MUIGetExtPropertyExtra PROC PUBLIC hControl:DWORD, dwProperty:DWORD
+MUIGetExtPropertyExtra PROC hControl:DWORD, dwProperty:DWORD
     Invoke _MUIGetProperty, hControl, MUI_EXTERNAL_PROPERTIES_EXTRA, dwProperty ; get external properties
     ret
 MUIGetExtPropertyExtra ENDP
@@ -224,7 +224,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Sets Extra external property value and returns previous value in eax.
 ;------------------------------------------------------------------------------
-MUISetExtPropertyExtra PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUISetExtPropertyExtra PROC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke _MUISetProperty, hControl, MUI_EXTERNAL_PROPERTIES_EXTRA, dwProperty, dwPropertyValue ; set external properties
     ret
 MUISetExtPropertyExtra ENDP
@@ -234,7 +234,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Gets Extra internal property value and returns it in eax
 ;------------------------------------------------------------------------------
-MUIGetIntPropertyExtra PROC PUBLIC hControl:DWORD, dwProperty:DWORD
+MUIGetIntPropertyExtra PROC hControl:DWORD, dwProperty:DWORD
     Invoke _MUIGetProperty, hControl, MUI_INTERNAL_PROPERTIES_EXTRA, dwProperty ; get internal properties
     ret
 MUIGetIntPropertyExtra ENDP
@@ -244,15 +244,12 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Sets Extra internal property value and returns previous value in eax.
 ;------------------------------------------------------------------------------
-MUISetIntPropertyExtra PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUISetIntPropertyExtra PROC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke _MUISetProperty, hControl, MUI_INTERNAL_PROPERTIES_EXTRA, dwProperty, dwPropertyValue ; set internal properties
     ret
 MUISetIntPropertyExtra ENDP
 
-
-
-
-END
+MODERNUI_LIBEND
 
 
 

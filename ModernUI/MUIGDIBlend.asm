@@ -105,7 +105,7 @@ MUIGDIBlend PROC USES EBX hWin:DWORD, hdc:DWORD, dwColor:DWORD, dwTransparency:D
 MUIGDIBlend ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

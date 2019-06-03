@@ -79,7 +79,7 @@ MUILoadRegionFromResource PROC USES EBX hInst:DWORD, idRgnRes:DWORD, lpRegion:DW
 MUILoadRegionFromResource ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

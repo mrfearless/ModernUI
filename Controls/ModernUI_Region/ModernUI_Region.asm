@@ -2148,7 +2148,7 @@ _MUI_CustomStateGetStateFlag PROC hControl:DWORD, dwStateIndex:DWORD
     ret
 _MUI_CustomStateGetStateFlag ENDP
 
-END
+MODERNUI_LIBEND
 
 
 

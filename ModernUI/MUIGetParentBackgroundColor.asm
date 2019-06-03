@@ -39,7 +39,7 @@ MUI_ALIGN
 ; Useful for certain controls to retrieve the parents background color and then
 ; to set their own background color based on the same value.
 ;------------------------------------------------------------------------------
-MUIGetParentBackgroundColor PROC PUBLIC hControl:DWORD
+MUIGetParentBackgroundColor PROC hControl:DWORD
     LOCAL hParent:DWORD
     LOCAL hBrush:DWORD
     LOCAL logbrush:LOGBRUSH
@@ -73,7 +73,7 @@ MUIGetParentBackgroundColor PROC PUBLIC hControl:DWORD
 MUIGetParentBackgroundColor ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

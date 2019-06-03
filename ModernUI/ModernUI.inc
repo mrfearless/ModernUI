@@ -68,12 +68,20 @@ MUIAllocStructureMemory         PROTO :DWORD,:DWORD,:DWORD                      
 ; ModernUI GDI Functions:
 MUIGDIDoubleBufferStart         PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD        ; hWin, hdcSource, lpHDCBuffer, lpClientRect, lphBufferBitmap
 MUIGDIDoubleBufferFinish        PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hdcBuffer, hBufferBitmap, hBitmapUsed, hFontUsed, hBrushUsed, hPenUsed
-MUIGDIBlend                     PROTO :DWORD, :DWORD, :DWORD, :DWORD            ; hWin, hdc, dwColor, dwBlendLevel
-MUIGDIBlendBitmaps              PROTO :DWORD, :DWORD, :DWORD, :DWORD            ; hBitmap1, hBitmap2, dwColorBitmap2, dwTransparency
-       
+MUIGDIBlend                     PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, hdc, dwColor, dwBlendLevel
+MUIGDIBlendBitmaps              PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hBitmap1, hBitmap2, dwColorBitmap2, dwTransparency
+MUIGDIStretchBitmap             PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hBitmap, lpBoundsRect, lpdwBitmapWidth, lpdwBitmapHeight, lpdwX, lpdwY
+MUIGDIStretchImage              PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hImage, dwImageType, lpBoundsRect, lpdwImageWidth, lpdwImageHeight, lpdwImageX, lpdwImageY
+MUILoadImageFromResource        PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD        ; hWin, dwInstanceProperty, dwProperty, dwImageType, dwImageResId
+MUILoadBitmapFromResource       PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, dwInstanceProperty, dwProperty, idBmpRes
+MUILoadIconFromResource         PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, dwInstanceProperty, dwProperty, idIcoRes
+
+
 ; ModernUI GDIPlus Functions:
 MUIGDIPlusStart                 PROTO                                           ; Wrapper for GDIPlus startup
 MUIGDIPlusFinish                PROTO                                           ; Wrapper for GDIPlus shutdown
+MUILoadPngFromResource          PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, dwInstanceProperty, dwProperty, idPngRes
+MUILoadJpgFromResource          TEXTEQU <MUILoadPngFromResource>                ; hWin, dwInstanceProperty, dwProperty, idJpgRes
 
 ; ModernUI Painting & Color Functions:
 MUIPaintBackground              PROTO :DWORD,:DWORD,:DWORD                      ; hDialogWindow, dwBackColor, dwBorderColor
@@ -95,6 +103,7 @@ MUIPointSizeToLogicalUnit       PROTO :DWORD,:DWORD                             
 
 ; ModernUI Image Functions:
 MUIGetImageSize                 PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hImage, dwImageType, lpdwImageWidth, lpdwImageHeight
+MUIGetImageSizeEx               PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hWin, hImage, dwImageType, lpdwImageWidth, lpdwImageHeight, lpdwImageXPos, lpdwImageYPos
 MUICreateIconFromMemory         PROTO :DWORD,:DWORD                             ; pIconData, iIcon
 MUICreateCursorFromMemory       PROTO :DWORD                                    ; pCursorData
 MUICreateBitmapFromMemory       PROTO :DWORD                                    ; pBitmapData
@@ -111,6 +120,11 @@ MUIDPIScaledScreen              PROTO :DWORD,:DWORD                             
 MUIDPISetDPIAware               PROTO
 
 .CONST
+IFDEF MODERNUI_DLL
+    MODERNUI_LIBEND TEXTEQU <>
+ELSE
+    MODERNUI_LIBEND TEXTEQU <END>
+ENDIF
 
 ;------------------------------------------
 ; Define MUI_USEGDIPLUS to compile
@@ -132,7 +146,6 @@ MUI_EXTERNAL_PROPERTIES         EQU 4               ; cbWndExtra offset for exte
 MUI_INTERNAL_PROPERTIES_EXTRA   EQU 8               ; cbWndExtra offset for extra internal properties pointer
 MUI_EXTERNAL_PROPERTIES_EXTRA   EQU 12              ; cbWndExtra offset for extra external properties pointer
 MUI_PROPERTY_ADDRESS            EQU 80000000h       ; OR with dwProperty in MUIGetIntProperty/MUIGetExtProperty to return address of property 
-
 
 MUI_ALIGN                       TEXTEQU <ALIGN 16>
 

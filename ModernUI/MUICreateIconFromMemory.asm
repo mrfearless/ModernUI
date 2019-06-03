@@ -98,7 +98,7 @@ MUICreateIconFromMemory PROC USES EDX pIconData:DWORD, iIcon:DWORD
 MUICreateIconFromMemory ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

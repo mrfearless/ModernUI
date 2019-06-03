@@ -55,7 +55,7 @@ MUI_ALIGN
 ;        Invoke InvalidateRect, hWin, NULL, TRUE
 ; 
 ;------------------------------------------------------------------------------
-MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD
+MUIPaintBackground PROC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD
     LOCAL ps:PAINTSTRUCT
     LOCAL hdc:HDC
     LOCAL rect:RECT
@@ -143,7 +143,7 @@ MUIPaintBackground PROC PUBLIC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWOR
 MUIPaintBackground ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

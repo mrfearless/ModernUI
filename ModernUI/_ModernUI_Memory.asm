@@ -34,7 +34,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Allocs memory for the properties of a control
 ;------------------------------------------------------------------------------
-MUIAllocMemProperties PROC PUBLIC hControl:DWORD, cbWndExtraOffset:DWORD, dwSize:DWORD
+MUIAllocMemProperties PROC hControl:DWORD, cbWndExtraOffset:DWORD, dwSize:DWORD
     LOCAL pMem:DWORD
     Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, dwSize
     .IF eax == NULL
@@ -54,7 +54,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Frees memory for the properties of a control
 ;------------------------------------------------------------------------------
-MUIFreeMemProperties PROC PUBLIC hControl:DWORD, cbWndExtraOffset:DWORD
+MUIFreeMemProperties PROC hControl:DWORD, cbWndExtraOffset:DWORD
     Invoke GetWindowLong, hControl, cbWndExtraOffset
     .IF eax != NULL
         invoke GlobalFree, eax
@@ -67,7 +67,7 @@ MUIFreeMemProperties PROC PUBLIC hControl:DWORD, cbWndExtraOffset:DWORD
 MUIFreeMemProperties ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

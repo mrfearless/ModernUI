@@ -210,12 +210,15 @@ _MUI_BUTTON_PROPERTIES                      STRUCT
 _MUI_BUTTON_PROPERTIES                      ENDS
 
 IFDEF MUI_USEGDIPLUS
+IFNDEF UNKNOWN
 UNKNOWN STRUCT
    QueryInterface   DWORD ?
    AddRef           DWORD ?
    Release          DWORD ?
 UNKNOWN ENDS
+ENDIF
 
+IFNDEF IStream
 IStream STRUCT
 IUnknown            UNKNOWN <>
 Read                DWORD ?
@@ -230,6 +233,7 @@ UnlockRegion        DWORD ?
 Stat                DWORD ?
 Clone               DWORD ?
 IStream ENDS
+ENDIF
 ENDIF
 
 .CONST
@@ -3649,4 +3653,4 @@ ENDIF
 
 
 
-END
+MODERNUI_LIBEND

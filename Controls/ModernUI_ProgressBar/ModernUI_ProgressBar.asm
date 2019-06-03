@@ -626,4 +626,4 @@ MUIProgressBarStep ENDP
 
 
 
-END
+MODERNUI_LIBEND

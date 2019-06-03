@@ -150,7 +150,7 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
 MUIAllocStructureMemory endp
 
 
-END
+MODERNUI_LIBEND
 
 
 

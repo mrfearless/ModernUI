@@ -56,7 +56,7 @@ MUI_gdipsi           GdiplusStartupInput <1,0,0,0>
 ; Placed at start of program before WinMain call
 ;------------------------------------------------------------------------------
 MUI_ALIGN
-MUIGDIPlusStart PROC PUBLIC
+MUIGDIPlusStart PROC
     .IF MUI_GDIPLUS == 0
         ;PrintText 'GdiplusStartup'
         Invoke GdiplusStartup, Addr MUI_GDIPlusToken, Addr MUI_gdipsi, NULL
@@ -73,7 +73,7 @@ MUIGDIPlusStart ENDP
 ; Placed after WinMain call before ExitProcess
 ;------------------------------------------------------------------------------
 MUI_ALIGN
-MUIGDIPlusFinish PROC PUBLIC
+MUIGDIPlusFinish PROC
     ;PrintDec MUI_GDIPLUS
     dec MUI_GDIPLUS
     .IF MUI_GDIPLUS == 0
@@ -87,4 +87,4 @@ MUIGDIPlusFinish ENDP
 ENDIF
 
 
-END
+MODERNUI_LIBEND

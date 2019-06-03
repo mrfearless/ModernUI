@@ -38,7 +38,7 @@ MUI_ALIGN
 ; size. For use in setting background of child to 'transparent'
 ; Returns in eax hBitmap or NULL
 ;------------------------------------------------------------------------------
-MUIGetParentBackgroundBitmap PROC PUBLIC hControl:DWORD
+MUIGetParentBackgroundBitmap PROC hControl:DWORD
     LOCAL rcWin:RECT
     LOCAL rcWnd:RECT
     LOCAL parWnd:DWORD
@@ -95,7 +95,7 @@ MUIGetParentBackgroundBitmap PROC PUBLIC hControl:DWORD
 MUIGetParentBackgroundBitmap ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

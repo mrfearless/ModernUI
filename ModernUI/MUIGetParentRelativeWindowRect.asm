@@ -58,4 +58,4 @@ MUIGetParentRelativeWindowRect ENDP
 
 
 
-END
+MODERNUI_LIBEND

@@ -63,7 +63,7 @@ MUICreateBitmapFromMemory PROC USES ECX EDX pBitmapData:DWORD
 MUICreateBitmapFromMemory ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

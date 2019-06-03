@@ -45,7 +45,7 @@ MUI_ALIGN
 ; dwImageLocation: 0=center center, 1=bottom left, 2=bottom right, 3=top left, 
 ; 4=top right, 5=center top, 6=center bottom
 ;------------------------------------------------------------------------------
-MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD, hImage:DWORD, dwImageType:DWORD, dwImageLocation:DWORD
+MUIPaintBackgroundImage PROC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD, hImage:DWORD, dwImageType:DWORD, dwImageLocation:DWORD
     LOCAL ps:PAINTSTRUCT
     LOCAL hdc:HDC
     LOCAL rect:RECT
@@ -273,7 +273,7 @@ MUIPaintBackgroundImage PROC PUBLIC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBo
 MUIPaintBackgroundImage ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

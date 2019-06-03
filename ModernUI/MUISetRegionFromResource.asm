@@ -92,7 +92,7 @@ MUISetRegionFromResource PROC USES EBX hWin:DWORD, idRgnRes:DWORD, lpdwCopyRgn:D
 MUISetRegionFromResource ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

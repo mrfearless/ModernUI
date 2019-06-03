@@ -1483,4 +1483,4 @@ _MUI_TooltipParentSubclass ENDP
 
 
 
-END
+MODERNUI_LIBEND

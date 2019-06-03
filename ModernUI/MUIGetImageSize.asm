@@ -41,94 +41,110 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIGetImageSize
 ;------------------------------------------------------------------------------
-MUIGetImageSize PROC PRIVATE USES EBX hImage:DWORD, dwImageType:DWORD, lpdwImageWidth:DWORD, lpdwImageHeight:DWORD
+MUIGetImageSize PROC USES EBX hImage:DWORD, dwImageType:DWORD, lpdwImageWidth:DWORD, lpdwImageHeight:DWORD
     LOCAL bm:BITMAP
     LOCAL iinfo:ICONINFO
     LOCAL nImageWidth:DWORD
     LOCAL nImageHeight:DWORD
-
-    mov eax, dwImageType
-    .IF eax == MUIIT_NONE
-        mov eax, 0
-        mov ebx, lpdwImageWidth
-        mov [ebx], eax
-        mov ebx, lpdwImageHeight
-        mov [ebx], eax    
-        mov eax, FALSE
-        ret
-        
-    .ELSEIF eax == MUIIT_BMP ; bitmap/icon
-        Invoke RtlZeroMemory, Addr bm, SIZEOF BITMAP
-        Invoke GetObject, hImage, SIZEOF bm, Addr bm
-        .IF eax != 0
-            mov eax, bm.bmWidth
-            mov ebx, lpdwImageWidth
-            mov [ebx], eax
-            mov eax, bm.bmHeight
-            mov ebx, lpdwImageHeight
-            mov [ebx], eax
-        .ELSE
-            mov eax, 0
-            mov ebx, lpdwImageWidth
-            mov [ebx], eax
-            mov eax, 0
-            mov ebx, lpdwImageHeight
-            mov [ebx], eax
-        .ENDIF
+    LOCAL RetVal:DWORD
     
-    .ELSEIF eax == MUIIT_ICO ; icon    
-        Invoke GetIconInfo, hImage, Addr iinfo ; get icon information
-        mov eax, iinfo.hbmColor ; bitmap info of icon has width/height
-        .IF eax != NULL
-            Invoke GetObject, iinfo.hbmColor, SIZEOF bm, Addr bm
-            mov eax, bm.bmWidth
-            mov ebx, lpdwImageWidth
-            mov [ebx], eax
-            mov eax, bm.bmHeight
-            mov ebx, lpdwImageHeight
-            mov [ebx], eax
-        .ELSE ; Icon has no color plane, image width/height data stored in mask
+    mov nImageWidth, 0
+    mov nImageHeight, 0
+    mov RetVal, FALSE
+    
+    .IF hImage == NULL
+        ; fall out and return defaults
+    .ELSE
+
+        mov eax, dwImageType
+        ;-----------------------------------
+        ; BITMAP
+        ;-----------------------------------
+        .IF eax == MUIIT_BMP ; bitmap/icon
+            Invoke RtlZeroMemory, Addr bm, SIZEOF BITMAP
+            Invoke GetObject, hImage, SIZEOF bm, Addr bm
+            .IF eax != 0
+                mov eax, bm.bmWidth
+                mov nImageWidth, eax
+                mov eax, bm.bmHeight
+                mov nImageHeight, eax
+                mov RetVal, TRUE
+            .ENDIF
+        ;-----------------------------------
+
+
+        ;-----------------------------------
+        ; ICON
+        ;-----------------------------------
+        .ELSEIF eax == MUIIT_ICO ; icon    
+            Invoke GetIconInfo, hImage, Addr iinfo ; get icon information
+            mov eax, iinfo.hbmColor ; bitmap info of icon has width/height
+            .IF eax != NULL
+                Invoke GetObject, iinfo.hbmColor, SIZEOF bm, Addr bm
+                .IF eax != 0
+                    mov eax, bm.bmWidth
+                    mov nImageWidth, eax
+                    mov eax, bm.bmHeight
+                    mov nImageHeight, eax
+                    mov RetVal, TRUE
+                .ENDIF
+            .ELSE ; Icon has no color plane, image width/height data stored in mask
+                mov eax, iinfo.hbmMask
+                .IF eax != NULL
+                    Invoke GetObject, iinfo.hbmMask, SIZEOF bm, Addr bm
+                    .IF eax != 0
+                        mov eax, bm.bmWidth
+                        mov nImageWidth, eax
+                        mov eax, bm.bmHeight
+                        shr eax, 1 ;bmp.bmHeight / 2;
+                        mov nImageHeight, eax
+                        mov RetVal, TRUE
+                    .ENDIF
+                .ENDIF
+            .ENDIF
+            ; free up color and mask icons created by the GetIconInfo function
+            mov eax, iinfo.hbmColor
+            .IF eax != NULL
+                Invoke DeleteObject, eax
+            .ENDIF
             mov eax, iinfo.hbmMask
             .IF eax != NULL
-                Invoke GetObject, iinfo.hbmMask, SIZEOF bm, Addr bm
-                mov eax, bm.bmWidth
-                mov ebx, lpdwImageWidth
-                mov [ebx], eax
-                mov eax, bm.bmHeight
-                shr eax, 1 ;bmp.bmHeight / 2;
-                mov ebx, lpdwImageHeight
-                mov [ebx], eax                
+                Invoke DeleteObject, eax
             .ENDIF
+        ;-----------------------------------
+
+
+        ;-----------------------------------
+        ; PNG
+        ;-----------------------------------
+        .ELSEIF eax == MUIIT_PNG ; png
+            IFDEF MUI_USEGDIPLUS
+            Invoke GdipGetImageWidth, hImage, Addr nImageWidth
+            Invoke GdipGetImageHeight, hImage, Addr nImageHeight
+            mov RetVal, TRUE
+            ENDIF
         .ENDIF
-        ; free up color and mask icons created by the GetIconInfo function
-        mov eax, iinfo.hbmColor
-        .IF eax != NULL
-            Invoke DeleteObject, eax
-        .ENDIF
-        mov eax, iinfo.hbmMask
-        .IF eax != NULL
-            Invoke DeleteObject, eax
-        .ENDIF
-    
-    .ELSEIF eax == MUIIT_PNG ; png
-        IFDEF MUI_USEGDIPLUS
-        Invoke GdipGetImageWidth, hImage, Addr nImageWidth
-        Invoke GdipGetImageHeight, hImage, Addr nImageHeight
-        mov eax, nImageWidth
-        mov ebx, lpdwImageWidth
-        mov [ebx], eax
-        mov eax, nImageHeight
-        mov ebx, lpdwImageHeight
-        mov [ebx], eax
-        ENDIF
+        ;-----------------------------------
+
     .ENDIF
-    
-    mov eax, TRUE
+
+
+    .IF lpdwImageWidth != 0
+        mov ebx, lpdwImageWidth
+        mov eax, nImageWidth
+        mov [ebx], eax
+    .ENDIF
+    .IF lpdwImageHeight != 0
+        mov ebx, lpdwImageHeight
+        mov eax, nImageHeight
+        mov [ebx], eax
+    .ENDIF
+    mov eax, RetVal
     ret
 MUIGetImageSize ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

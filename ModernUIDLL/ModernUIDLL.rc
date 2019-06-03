@@ -1,0 +1,2 @@
+#include "Res/ModernUIDLLRes.rc"
+#include "Res/ModernUIDLLVer.rc"

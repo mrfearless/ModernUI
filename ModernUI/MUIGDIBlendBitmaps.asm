@@ -32,7 +32,7 @@ include ModernUI.inc
 
 
 .DATA
-szMUIBlendBitmapsDisplayDC DB 'DISPLAY',0
+szMUIGDIBlendBitmapsDisplayDC DB 'DISPLAY',0
 
 .CODE
 
@@ -64,7 +64,7 @@ MUIGDIBlendBitmaps PROC hBitmap1:DWORD, hBitmap2:DWORD, dwColorBitmap2:DWORD, dw
     LOCAL bm:BITMAP
     LOCAL rect:RECT
 
-    Invoke CreateDC, Addr szMUIBlendBitmapsDisplayDC, NULL, NULL, NULL
+    Invoke CreateDC, Addr szMUIGDIBlendBitmapsDisplayDC, NULL, NULL, NULL
     mov hdc, eax
     
     Invoke RtlZeroMemory, Addr bm, SIZEOF BITMAP
@@ -172,7 +172,7 @@ MUIGDIBlendBitmaps PROC hBitmap1:DWORD, hBitmap2:DWORD, dwColorBitmap2:DWORD, dw
 MUIGDIBlendBitmaps ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

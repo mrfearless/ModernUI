@@ -36,7 +36,7 @@ MUI_ALIGN
 ; DS_CENTER, DS_CENTERMOUSE, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_MINIMIZE, 
 ; WS_MAXIMIZE
 ;------------------------------------------------------------------------------
-MUIApplyToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD, dwClipping:DWORD
+MUIApplyToDialog PROC hWin:DWORD, dwDropShadow:DWORD, dwClipping:DWORD
     LOCAL dwStyle:DWORD
     LOCAL dwNewStyle:DWORD
     LOCAL dwClassStyle:DWORD
@@ -119,7 +119,7 @@ MUIApplyToDialog PROC PUBLIC hWin:DWORD, dwDropShadow:DWORD, dwClipping:DWORD
 MUIApplyToDialog ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

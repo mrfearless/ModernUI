@@ -1468,4 +1468,4 @@ _MUI_SP_ResizePanels ENDP
 
 
 
-END
+MODERNUI_LIBEND

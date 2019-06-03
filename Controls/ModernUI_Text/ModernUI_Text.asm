@@ -2,11 +2,9 @@
 ;
 ; ModernUI Control - ModernUI_Text
 ;
-; Copyright (c) 2018 by fearless
+; Copyright (c) 2019 by fearless
 ;
 ; All Rights Reserved
-;
-; http://www.LetTheLight.in
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
@@ -215,7 +213,6 @@ MUI_TEXT_ALIGN_MASK             EQU 00000300h
 @TextEnabledState               EQU 0
 @TextMouseOver                  EQU 4
 @TextBuffer                     EQU 8
-
 @TextPtrColorStack              EQU 12 ; Stack of text colors for DTE
 @TextColorStackIndex            EQU 16 ; Current index of color stack
 @TextPtrListStack               EQU 20 ; Stack of list items for DTE
@@ -505,8 +502,8 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         .IF eax != 0
             Invoke GlobalFree, eax
         .ENDIF    
-        Invoke MUIFreeMemProperties, hWin, 0
-        Invoke MUIFreeMemProperties, hWin, 4
+        Invoke MUIFreeMemProperties, hWin, MUI_INTERNAL_PROPERTIES
+        Invoke MUIFreeMemProperties, hWin, MUI_EXTERNAL_PROPERTIES
         mov eax, 0
         ret        
         
@@ -1613,4 +1610,4 @@ IFDEF MUI_DRAWTEXTEXT
 include ModernUI_DrawTextEXT.asm
 ENDIF
 
-END
+MODERNUI_LIBEND

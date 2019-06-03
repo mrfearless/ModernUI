@@ -460,7 +460,7 @@ MUIDPIScaleFont ENDP
 
 
 
-END
+MODERNUI_LIBEND
 
 ;// Definition: relative pixel = 1 pixel at 96 DPI and scaled based on actual DPI.
 ;class CDPI

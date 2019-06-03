@@ -1098,4 +1098,4 @@ _MUI_ProgressBarMMTimerProc PROC uTimerID:DWORD, uMsg:DWORD, dwUser:DWORD, dw1:D
 _MUI_ProgressBarMMTimerProc ENDP
 ENDIF
 
-END
+MODERNUI_LIBEND

@@ -215,7 +215,7 @@ MUICreateCursorFromMemory PROC USES EBX pCursorData:DWORD
 MUICreateCursorFromMemory ENDP
 
 
-END
+MODERNUI_LIBEND
 
 
 

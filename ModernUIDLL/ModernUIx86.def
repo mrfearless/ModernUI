@@ -1,0 +1,220 @@
+;==============================================================================
+;
+; ModernUI Library v0.0.0.5
+;
+; Copyright (c) 2019 by fearless
+;
+; All Rights Reserved
+;
+; http://github.com/mrfearless/ModernUI
+;
+;
+; This software is provided 'as-is', without any express or implied warranty.
+; In no event will the author be held liable for any damages arising from the
+; use of this software.
+;
+; Permission is granted to anyone to use this software for any non-commercial
+; program. If you use the library in an application, an acknowledgement in the
+; application or documentation is appreciated but not required.
+;
+; You are allowed to make modifications to the source code, but you must leave
+; the original copyright notices intact and not misrepresent the origin of the
+; software. It is not allowed to claim you wrote the original software.
+; Modified files must have a clear notice that the files are modified, and not
+; in the original state. This includes the name of the person(s) who modified
+; the code.
+;
+; If you want to distribute or redistribute any portion of this package, you
+; will need to include the full package in it's original state, including this
+; license and all the copyrights.
+;
+; While distributing this package (in it's original state) is allowed, it is
+; not allowed to charge anything for this. You may not sell or include the
+; package in any commercial package without having permission of the author.
+; Neither is it allowed to redistribute any of the package's components with
+; commercial applications.
+;
+;==============================================================================
+
+LIBRARY ModernUIx86
+EXPORTS
+
+	;--------------------------------------------------------------------------
+	; ModernUI Library
+	;--------------------------------------------------------------------------
+	; ModernUI Base Functions:
+	MUIGetExtProperty
+	MUISetExtProperty
+	MUIGetIntProperty
+	MUISetIntProperty
+	MUIGetExtPropertyEx
+	MUISetExtPropertyEx
+	MUIGetIntPropertyEx
+	MUISetIntPropertyEx
+	MUIGetExtPropertyExtra
+	MUISetExtPropertyExtra
+	MUIGetIntPropertyExtra
+	MUISetIntPropertyExtra
+	; ModernUI Memory Functions:
+	MUIAllocMemProperties
+	MUIFreeMemProperties
+	MUIAllocStructureMemory
+	; ModernUI GDI Functions:
+	MUIGDIDoubleBufferStart
+	MUIGDIDoubleBufferFinish
+	MUIGDIBlend
+	MUIGDIBlendBitmaps
+	MUIGDIStretchBitmap
+	MUIGDIStretchImage
+	MUILoadImageFromResource
+	MUILoadBitmapFromResource
+	MUILoadIconFromResource
+	; ModernUI GDIPlus Functions:
+	MUIGDIPlusStart
+	MUIGDIPlusFinish
+	MUILoadPngFromResource
+	; ModernUI Painting & Color Functions:
+	MUIPaintBackground
+	MUIPaintBackgroundImage
+	MUIGetParentBackgroundColor
+	MUIGetParentBackgroundBitmap
+	; ModernUI Window/Dialog Functions:
+	MUIApplyToDialog
+	MUICenterWindow
+	MUIGetParentRelativeWindowRect
+	; ModernUI Region Functions:
+	MUILoadRegionFromResource
+	MUISetRegionFromResource
+	; ModernUI Font Functions:
+	MUIPointSizeToLogicalUnit
+	; ModernUI Image Functions:
+	MUIGetImageSize
+	MUIGetImageSizeEx
+	MUICreateIconFromMemory
+	MUICreateCursorFromMemory
+	MUICreateBitmapFromMemory
+	; ModernUI DPI & Scaling Functions:
+	MUIDPI
+	MUIDPIScaleX
+	MUIDPIScaleY
+	MUIDPIScaleRect
+	MUIDPIScaleControl
+	MUIDPIScaleFontSize
+	MUIDPIScaleFont
+	MUIDPIScaledScreen
+	MUIDPISetDPIAware
+	;--------------------------------------------------------------------------
+	; ModernUI_Button Control
+	;--------------------------------------------------------------------------
+	MUIButtonRegister
+	MUIButtonCreate
+	MUIButtonSetProperty
+	MUIButtonGetProperty
+	MUIButtonGetState
+	MUIButtonSetState
+	MUIButtonLoadImages
+	MUIButtonSetImages
+	MUIButtonNotifySetText
+	MUIButtonNotifyLoadImage
+	MUIButtonNotifySetImage
+	MUIButtonNotifySetFont
+	MUIButtonNotify
+	MUIButtonNoteSetText
+	MUIButtonNoteSetFont
+	MUIButtonSetAllProperties
+	;--------------------------------------------------------------------------
+	; ModernUI_CaptionBar Control
+	;--------------------------------------------------------------------------
+	MUICaptionBarRegister
+	MUICaptionBarCreate
+	MUICaptionBarSetProperty
+	MUICaptionBarGetProperty
+	MUICaptionBarLoadIcons
+	MUICaptionBarLoadIconsDll
+	MUICaptionBarLoadBackImage
+	MUICaptionBarAddButton
+	;--------------------------------------------------------------------------
+	; ModernUI_Checkbox Control
+	;--------------------------------------------------------------------------
+	MUICheckboxRegister
+	MUICheckboxCreate
+	MUICheckboxSetProperty
+	MUICheckboxGetProperty
+	MUICheckboxGetState
+	MUICheckboxSetState
+	MUICheckboxLoadImages
+	MUICheckboxSetImages
+	;--------------------------------------------------------------------------
+	; ModernUI_ProgressBar Control
+	;--------------------------------------------------------------------------
+	MUIProgressBarRegister
+	MUIProgressBarCreate
+	MUIProgressBarSetProperty
+	MUIProgressBarGetProperty
+	MUIProgressBarSetMinMax
+	MUIProgressBarSetPercent
+	MUIProgressBarGetPercent
+	MUIProgressBarStep
+	;--------------------------------------------------------------------------
+	; ModernUI_ProgressDots Control
+	;--------------------------------------------------------------------------
+	MUIProgressDotsRegister
+	MUIProgressDotsCreate
+	MUIProgressDotsSetProperty
+	MUIProgressDotsGetProperty
+	MUIProgressDotsAnimateStart
+	MUIProgressDotsAnimateStop
+	;--------------------------------------------------------------------------
+	; ModernUI_SmartPanel Control
+	;--------------------------------------------------------------------------
+	MUISmartPanelRegister
+	MUISmartPanelCreate
+	MUISmartPanelSetProperty
+	MUISmartPanelGetProperty
+	MUISmartPanelGetCurrentPanel
+	MUISmartPanelSetCurrentPanel
+	MUISmartPanelCurrentPanelIndex
+	MUISmartPanelNextPanel
+	MUISmartPanelPrevPanel
+	MUISmartPanelSetIsDlgMsgVar
+	MUISmartPanelRegisterPanel
+	;--------------------------------------------------------------------------
+	; ModernUI_Text Control
+	;--------------------------------------------------------------------------
+	MUITextRegister
+	MUITextCreate
+	MUITextSetProperty
+	MUITextGetProperty
+	MUITextSetBufferSize
+	;--------------------------------------------------------------------------
+	; ModernUI_Tooltip Control
+	;--------------------------------------------------------------------------
+	MUITooltipRegister
+	MUITooltipCreate
+	MUITooltipSetProperty
+	MUITooltipGetProperty
+	;--------------------------------------------------------------------------
+	; ModernUI_TrayMenu Control
+	;--------------------------------------------------------------------------
+	MUITrayMenuRegister
+	MUITrayMenuCreate
+	MUITrayMenuSetProperty
+	MUITrayMenuGetProperty
+	MUITrayMenuAssignMenu
+	; Tray Menu Item Functions
+	MUITrayMenuSetTrayIcon
+	MUITrayMenuSetTooltipText
+	MUITrayMenuEnableMenuItem
+	MUITrayMenuDisableMenuItem
+	MUITrayMenuChangeMenuItemState
+	MUITrayMenuHideTrayIcon
+	MUITrayMenuShowTrayIcon
+	MUITrayMenuShowNotification
+	MUITrayMenuSetTrayIconText
+	; Tray Icon Functions (standalone - no menu)
+	MUITrayIconCreate
+	MUITrayIconDestroy
+	MUITrayIconSetTrayIcon
+	MUITrayIconSetTooltipText
+	MUITrayIconShowNotification
+	MUITrayIconSetTrayIconText
