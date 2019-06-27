@@ -35,9 +35,14 @@ bool MUI_EXPORT MUIAllocMemProperties(HWND hControl, DWORD cbWndExtraOffset, DWO
 bool MUI_EXPORT MUIFreeMemProperties(HWND hControl, DWORD cbWndExtraOffset);
 unsigned int MUI_EXPORT MUIAllocStructureMemory(DWORD dwPtrStructMem, DWORD TotalItems, DWORD ItemSize);
 
-// ModernUI GDI DoubleBuffer Functions:
+// ModernUI GDI Functions:
 bool MUI_EXPORT MUIGDIDoubleBufferStart(HWND hWin, HDC hdcSource, HDC *lpHDCBuffer, RECT *lpClientRect, HBITMAP *lphBufferBitmap);
 bool MUI_EXPORT MUIGDIDoubleBufferFinish(HDC hdcBuffer, HBITMAP hBufferBitmap, HBITMAP hBitmapUsed, HFONT hFontUsed, HBRUSH hBrushUsed, HPEN hPenUsed);
+bool MUI_EXPORT MUIGDIBlend (HWNDhWin, HDC hdc, int dwColor, int dwBlendLevel);
+bool MUI_EXPORT MUIGDIBlendBitmaps(HBITMAP hBitmap1, HBITMAP hBitmap2, int dwColorBitmap2, int dwTransparency);
+HBITMAP MUI_EXPORT MUIGDIStretchBitmap(HBITMAP hBitmap, RECT *lpBoundsRect, int *lpdwBitmapWidth, int *lpdwBitmapHeight, int *lpdwX, int *lpdwY);
+HBITMAP MUI_EXPORT MUIGDIStretchImage(hImage, dwImageType, RECT *lpBoundsRect, int *lpdwImageWidth, int *lpdwImageHeight, int *lpdwImageX, int *lpdwImageY);
+HBITMAP MUI_EXPORT MUIGDIRotateBitmapCenter(HWND hWin, HBITMAP hBitmap, int dwAngle, int dwBackColor);
 
 // ModernUI GDIPlus Functions:
 void MUI_EXPORT MUIGDIPlusStart();

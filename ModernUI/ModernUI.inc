@@ -72,6 +72,8 @@ MUIGDIBlend                     PROTO :DWORD,:DWORD,:DWORD,:DWORD               
 MUIGDIBlendBitmaps              PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hBitmap1, hBitmap2, dwColorBitmap2, dwTransparency
 MUIGDIStretchBitmap             PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hBitmap, lpBoundsRect, lpdwBitmapWidth, lpdwBitmapHeight, lpdwX, lpdwY
 MUIGDIStretchImage              PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD ; hImage, dwImageType, lpBoundsRect, lpdwImageWidth, lpdwImageHeight, lpdwImageX, lpdwImageY
+MUIGDIRotateCenterBitmap        PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, hBitmap, dwAngle, dwBackColor
+
 MUILoadImageFromResource        PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD        ; hWin, dwInstanceProperty, dwProperty, dwImageType, dwImageResId
 MUILoadBitmapFromResource       PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, dwInstanceProperty, dwProperty, idBmpRes
 MUILoadIconFromResource         PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, dwInstanceProperty, dwProperty, idIcoRes
@@ -80,8 +82,12 @@ MUILoadIconFromResource         PROTO :DWORD,:DWORD,:DWORD,:DWORD               
 ; ModernUI GDIPlus Functions:
 MUIGDIPlusStart                 PROTO                                           ; Wrapper for GDIPlus startup
 MUIGDIPlusFinish                PROTO                                           ; Wrapper for GDIPlus shutdown
+MUIGDIPlusDoubleBufferStart     PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, pGraphics, lpBitmapHandle, lpGraphicsBuffer
+MUIGDIPlusDoubleBufferFinish    PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, pGraphics, hBitmap, pGraphicsBuffer
+MUIGDIPlusRotateCenterImage     PROTO :DWORD,:REAL4,:DWORD                      ; hImage, fAngle, dwBackColor
 MUILoadPngFromResource          PROTO :DWORD,:DWORD,:DWORD,:DWORD               ; hWin, dwInstanceProperty, dwProperty, idPngRes
 MUILoadJpgFromResource          TEXTEQU <MUILoadPngFromResource>                ; hWin, dwInstanceProperty, dwProperty, idJpgRes
+
 
 ; ModernUI Painting & Color Functions:
 MUIPaintBackground              PROTO :DWORD,:DWORD,:DWORD                      ; hDialogWindow, dwBackColor, dwBorderColor

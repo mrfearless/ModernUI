@@ -98,6 +98,9 @@ MUIGDIDoubleBufferFinish PROC hdcBuffer:HDC, hBufferBitmap:HBITMAP, hBitmapUsed:
 MUIGDIDoubleBufferFinish ENDP
 
 
+
+
+
 MODERNUI_LIBEND
 
 

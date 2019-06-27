@@ -75,6 +75,7 @@ Include .\..\ModernUI\MUIGDIBlend.asm
 Include .\..\ModernUI\MUIGDIBlendBitmaps.asm
 Include .\..\ModernUI\MUIGDIStretchBitmap.asm
 Include .\..\ModernUI\MUIGDIStretchImage.asm
+Include .\..\ModernUI\MUIGDIRotateBitmapCenter.asm
 Include .\..\ModernUI\MUIGetImageSize.asm
 Include .\..\ModernUI\MUIGetImageSizeEx.asm
 Include .\..\ModernUI\MUIGetParentBackgroundBitmap.asm

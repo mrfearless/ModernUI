@@ -63,7 +63,7 @@ ENDIF
 
 
 MUI_ALIGN
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Load JPG/PNG from resource using GDI+
 ;   Actually, this function can load any image format supported by GDI+
 ;
@@ -80,6 +80,7 @@ MUI_ALIGN
 ;
 ; To load a JPG/PNG resource and simply return its handle, use -1 in property.
 ;
+; NOTE: NOT WORKING 21/6/2019 
 ;-------------------------------------------------------------------------------------
 MUILoadPngFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DWORD, idResPng:DWORD
     local rcRes:HRSRC

@@ -1,0 +1,4 @@
+#include "Res/MUISpinner1Mnu.rc"
+#include "Res/MUISpinner1Ver.rc"
+#include "Res/MUISpinner1Dlg.rc"
+#include "Res/MUISpinner1Res.rc"
