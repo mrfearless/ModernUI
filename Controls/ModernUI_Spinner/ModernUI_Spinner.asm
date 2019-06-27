@@ -76,6 +76,21 @@ ENDIF
 
 include ModernUI_Spinner.inc
 
+SPINNER_USE_TIMERQUEUE                 EQU 1 ; comment out to use WM_SETIMER instead of TimerQueue
+SPINNER_USE_MMTIMER                    EQU 1 ; comment out to use WM_SETIMER or TimerQueue - otherwise overrides WM_SETIMER and TimerQueue
+
+IFDEF SPINNER_USE_MMTIMER
+include winmm.inc
+includelib winmm.lib
+ECHO *** ModernUI_Spinner - Using Multimedia Timer ***
+ELSE
+IFDEF SPINNER_USE_TIMERQUEUE
+ECHO *** ModernUI_Spinner - Using TimerQueue ***
+ELSE
+ECHO *** ModernUI_Spinner - Using WM_TIMER ***
+ENDIF
+ENDIF
+
 ;------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;------------------------------------------------------------------------------
@@ -92,6 +107,13 @@ IFDEF MUI_USEGDIPLUS
 _MUI_SpinnerLoadPng                 PROTO :DWORD, :DWORD
 ENDIF
 _MUI_SpinnerRotateCenterImage       PROTO :DWORD,:REAL4 ; hImage, fAngle
+IFDEF SPINNER_USE_MMTIMER
+_MUI_SpinnerMMTimerProc             PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+ELSE
+IFDEF SPINNER_USE_TIMERQUEUE
+_MUI_SpinnerTimerProc               PROTO :DWORD, :DWORD
+ENDIF
+ENDIF
 
 
 ;------------------------------------------------------------------------------
@@ -111,6 +133,15 @@ _MUI_SPINNER_PROPERTIES				STRUCT
     dwSpinnerFrameIndex             DD ?
     dwSpinnerFramesArray            DD ?  ; points to array of SPINNER_FRAME structures for handle to each spinner step image
     dwSpinnerImageType              DD ?  ; BMP, ICO or PNG
+    IFDEF SPINNER_USE_MMTIMER
+    hTimer                          DD ?
+    ELSE
+    IFDEF SPINNER_USE_TIMERQUEUE
+    bUseTimerQueue                  DD ?
+    hQueue                          DD ?
+    hTimer                          DD ?
+    ENDIF
+    ENDIF
 _MUI_SPINNER_PROPERTIES				ENDS
 
 SPINNER_FRAME                       STRUCT
@@ -147,6 +178,7 @@ ENDIF
 .CONST
 SPINNER_MAX_FRAMES                  EQU 60
 SPINNER_DEFAULT_SPEED               EQU 80
+SPINNER_TIME_INTERVAL               EQU 80 ; Milliseconds for timer firing
 
 ; Internal properties
 @SpinnerMouseOver					EQU 0
@@ -154,7 +186,15 @@ SPINNER_DEFAULT_SPEED               EQU 80
 @SpinnerFrameIndex                  EQU 8
 @SpinnerFramesArray                 EQU 12
 @SpinnerImageType                   EQU 16
-
+IFDEF SPINNER_USE_MMTIMER
+@SpinnerTimer                       EQU 20
+ELSE
+IFDEF SPINNER_USE_TIMERQUEUE
+@SpinnerUseTimerQueue               EQU 20
+@SpinnerQueue                       EQU 24
+@SpinnerTimer                       EQU 28
+ENDIF
+ENDIF
 
 .DATA
 szMUISpinnerClass					DB 'ModernUI_Spinner',0 	    ; Class name for creating our Spinner control
@@ -338,6 +378,8 @@ _MUI_SpinnerWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LP
 	    mov eax, wParam
 	    .IF eax == hWin
 	        Invoke _MUI_SpinnerNextFrameIndex, hWin
+            Invoke InvalidateRect, hWin, NULL, TRUE
+            Invoke UpdateWindow, hWin
 	    .ENDIF
 	    
 	; custom messages start here
@@ -384,7 +426,7 @@ _MUI_SpinnerInit PROC hWin:DWORD
     ;PrintDec dwStyle
     
     ; Set default initial external property values     
-
+    
     Invoke MUIGetParentBackgroundColor, hWin
     .IF eax == -1 ; if background was NULL then try a color as default
         Invoke GetSysColor, COLOR_WINDOW
@@ -392,7 +434,16 @@ _MUI_SpinnerInit PROC hWin:DWORD
     Invoke MUISetExtProperty, hWin, @SpinnerBackColor, eax ;MUI_RGBCOLOR(255,255,255)
     ;Invoke MUISetExtProperty, hWin, @SpinnerBackColor, MUI_RGBCOLOR(255,255,255)
     Invoke MUISetExtProperty, hWin, @SpinnerSpeed, SPINNER_DEFAULT_SPEED
-
+    
+    IFDEF SPINNER_USE_MMTIMER
+    Invoke MUISetIntProperty, hWin, @SpinnerTimer, 0
+    ELSE
+    IFDEF SPINNER_USE_TIMERQUEUE
+    Invoke MUISetIntProperty, hWin, @SpinnerUseTimerQueue, TRUE
+    Invoke MUISetIntProperty, hWin, @SpinnerQueue, 0
+    Invoke MUISetIntProperty, hWin, @SpinnerTimer, 0
+    ENDIF
+    ENDIF
     
     ; Alloc memory for max frames
     mov eax, SPINNER_MAX_FRAMES
@@ -478,8 +529,6 @@ _MUI_SpinnerNextFrameIndex PROC USES EBX hWin:DWORD
     LOCAL hSpinnerBitmapToRotate:DWORD
     LOCAL hSpinnerRotatedBitmap:DWORD
 
-    Invoke MUISpinnerPause, hWin
-
     Invoke MUIGetIntProperty, hWin, @SpinnerTotalFrames
     mov TotalFrames, eax
     .IF eax == 0
@@ -493,10 +542,6 @@ _MUI_SpinnerNextFrameIndex PROC USES EBX hWin:DWORD
     .ENDIF
     mov NextFrame, eax
     Invoke MUISetIntProperty, hWin, @SpinnerFrameIndex, NextFrame
-    
-    Invoke MUISpinnerResume, hWin
-    
-    Invoke InvalidateRect, hWin, NULL, TRUE
     
     ret
 _MUI_SpinnerNextFrameIndex ENDP
@@ -769,22 +814,99 @@ MUI_ALIGN
 ; MUISpinnerEnable
 ;------------------------------------------------------------------------------
 MUISpinnerEnable PROC hControl:DWORD
-    LOCAL dwSpeed:DWORD
+    LOCAL dwTimeInterval:DWORD
+    IFDEF SPINNER_USE_MMTIMER
+    LOCAL hTimer:DWORD
+    ELSE
+    IFDEF SPINNER_USE_TIMERQUEUE
+    LOCAL hQueue:DWORD
+    LOCAL hTimer:DWORD
+    ENDIF
+    ENDIF
     
     .IF hControl == NULL
         xor eax, eax
         ret
     .ENDIF
     
+    Invoke ShowWindow, hControl, SW_SHOWNORMAL;SW_SHOWNA
     Invoke MUIGetExtProperty, hControl, @SpinnerSpeed
-    mov dwSpeed, eax
     .IF eax == 0
-        mov dwSpeed, SPINNER_DEFAULT_SPEED
-        Invoke MUISetExtProperty, hControl, @SpinnerSpeed, dwSpeed
+        Invoke MUISetIntProperty, hControl, @SpinnerSpeed, SPINNER_TIME_INTERVAL
+        mov eax, SPINNER_TIME_INTERVAL
     .ENDIF
+    mov dwTimeInterval, eax    
     
-    Invoke ShowWindow, hControl, SW_SHOWNORMAL
-    Invoke SetTimer, hControl, hControl, dwSpeed, NULL
+    Invoke InvalidateRect, hControl, NULL, TRUE
+   
+    IFDEF SPINNER_USE_MMTIMER
+    
+        Invoke MUIGetIntProperty, hControl, @SpinnerTimer
+        mov hTimer, eax
+        .IF hTimer != 0
+            Invoke timeKillEvent, hTimer
+        .ENDIF
+    
+        Invoke timeSetEvent, dwTimeInterval, 0, Addr _MUI_SpinnerMMTimerProc, hControl, TIME_PERIODIC
+        mov hTimer, eax
+        .IF eax != 0 ; success
+            Invoke MUISetIntProperty, hControl, @SpinnerTimer, hTimer
+        .ELSE ; fallback to WM_TIMER style
+            Invoke MUISetIntProperty, hControl, @SpinnerTimer, 0
+            Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+        .ENDIF
+
+    ELSE
+        IFDEF SPINNER_USE_TIMERQUEUE
+        
+            Invoke MUIGetIntProperty, hControl, @SpinnerUseTimerQueue
+            .IF eax == TRUE
+                Invoke MUIGetIntProperty, hControl, @SpinnerQueue
+                mov hQueue, eax
+                Invoke MUIGetIntProperty, hControl, @SpinnerTimer
+                mov hTimer, eax
+                .IF hQueue != NULL ; re-use existing hQueue
+                    Invoke ChangeTimerQueueTimer, hQueue, hTimer, dwTimeInterval, dwTimeInterval
+                    .IF eax == 0 ; failed 
+                        Invoke DeleteTimerQueueEx, hQueue, FALSE
+                        Invoke MUISetIntProperty, hControl, @SpinnerQueue, 0
+                        Invoke MUISetIntProperty, hControl, @SpinnerTimer, 0
+                        Invoke MUISetIntProperty, hControl, @SpinnerUseTimerQueue, FALSE
+                        Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+                    .ENDIF
+                .ELSE ; Try to create TimerQueue 
+                    Invoke CreateTimerQueue
+                    .IF eax != NULL
+                        mov hQueue, eax
+                        Invoke CreateTimerQueueTimer, Addr hTimer, hQueue, Addr _MUI_SpinnerTimerProc, hControl, dwTimeInterval, dwTimeInterval, 0
+                        .IF eax == 0 ; failed, so fall back to WM_TIMER usage
+                            Invoke DeleteTimerQueueEx, hQueue, FALSE
+                            Invoke MUISetIntProperty, hControl, @SpinnerQueue, 0
+                            Invoke MUISetIntProperty, hControl, @SpinnerTimer, 0
+                            Invoke MUISetIntProperty, hControl, @SpinnerUseTimerQueue, FALSE
+                            Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+                        .ELSE ; Success! - so save TimerQueue handles for re-use
+                            IFDEF DEBUG32
+                            PrintText 'Using QueueTimer'
+                            ENDIF
+                            Invoke MUISetIntProperty, hControl, @SpinnerQueue, hQueue
+                            Invoke MUISetIntProperty, hControl, @SpinnerTimer, hTimer
+                        .ENDIF
+                    .ELSE ; failed, so fall back to WM_TIMER usage
+                        Invoke MUISetIntProperty, hControl, @SpinnerUseTimerQueue, FALSE
+                        Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+                    .ENDIF
+                .ENDIF
+            .ELSE  ; Not using TimerQueue, previous failure?, so fall back to WM_TIMER usage
+                Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+            .ENDIF
+        
+        ELSE ; compiled define says to use WM_TIMER instead
+        
+            Invoke SetTimer, hControl, hControl, dwTimeInterval, NULL
+            
+        ENDIF
+    ENDIF
     
     mov eax, TRUE
     ret
@@ -795,13 +917,68 @@ MUI_ALIGN
 ; MUISpinnerDisable
 ;------------------------------------------------------------------------------
 MUISpinnerDisable PROC hControl:DWORD
+    IFDEF SPINNER_USE_MMTIMER
+    LOCAL hTimer:DWORD
+    ELSE
+    IFDEF SPINNER_USE_TIMERQUEUE
+    LOCAL hQueue:DWORD
+    LOCAL hTimer:DWORD
+    ENDIF
+    ENDIF
+    
     .IF hControl == NULL
         xor eax, eax
         ret
     .ENDIF
     
-    Invoke KillTimer, hControl, hControl
     Invoke ShowWindow, hControl, SW_HIDE
+    
+    IFDEF SPINNER_USE_MMTIMER
+    
+        Invoke MUIGetIntProperty, hControl, @SpinnerTimer
+        mov hTimer, eax
+        .IF hTimer != 0
+            Invoke timeKillEvent, hTimer
+            .IF eax == MMSYSERR_INVALPARAM
+                Invoke KillTimer, hControl, hControl
+            .ENDIF
+        .ENDIF
+
+    ELSE
+        IFDEF SPINNER_USE_TIMERQUEUE
+        
+            Invoke MUIGetIntProperty, hControl, @SpinnerUseTimerQueue
+            .IF eax == TRUE
+                Invoke MUIGetIntProperty, hControl, @SpinnerQueue
+                mov hQueue, eax
+                Invoke MUIGetIntProperty, hControl, @SpinnerTimer
+                mov hTimer, eax
+                .IF hQueue != NULL
+                    Invoke ChangeTimerQueueTimer, hQueue, hTimer, INFINITE, 0
+                    .IF eax == 0 ; failed, fall back to use KillTimer for WM_TIMER usage
+                        Invoke DeleteTimerQueueEx, hQueue, FALSE
+                        Invoke MUISetIntProperty, hControl, @SpinnerQueue, 0
+                        Invoke MUISetIntProperty, hControl, @SpinnerTimer, 0
+                        Invoke MUISetIntProperty, hControl, @SpinnerUseTimerQueue, FALSE
+                        Invoke KillTimer, hControl, hControl
+                    .ENDIF
+                .ELSE ; fall back to use KillTimer for WM_TIMER usage
+                    Invoke MUISetIntProperty, hControl, @SpinnerUseTimerQueue, FALSE
+                    Invoke KillTimer, hControl, hControl
+                .ENDIF
+            .ELSE ; Not using TimerQueue, previous failure? back to use KillTimer for WM_TIMER usage
+                Invoke KillTimer, hControl, hControl
+            .ENDIF
+            
+        ELSE ; compiled define says to use WM_TIMER instead
+        
+            Invoke KillTimer, hControl, hControl
+            
+        ENDIF
+    ENDIF
+
+    Invoke InvalidateRect, hControl, NULL, TRUE    
+    
     mov eax, TRUE
     ret
 MUISpinnerDisable ENDP
@@ -811,11 +988,63 @@ MUI_ALIGN
 ; MUISpinnerPause
 ;------------------------------------------------------------------------------
 MUISpinnerPause PROC hControl:DWORD
+    IFDEF SPINNER_USE_MMTIMER
+    LOCAL hTimer:DWORD
+    ELSE
+    IFDEF SPINNER_USE_TIMERQUEUE
+    LOCAL hQueue:DWORD
+    LOCAL hTimer:DWORD
+    ENDIF
+    ENDIF
+    
     .IF hControl == NULL
         xor eax, eax
         ret
     .ENDIF
-    Invoke KillTimer, hControl, hControl
+    
+    IFDEF SPINNER_USE_MMTIMER
+    
+        Invoke MUIGetIntProperty, hControl, @SpinnerTimer
+        mov hTimer, eax
+        .IF hTimer != 0
+            Invoke timeKillEvent, hTimer
+            .IF eax == MMSYSERR_INVALPARAM
+                Invoke KillTimer, hControl, hControl
+            .ENDIF
+        .ENDIF
+
+    ELSE
+        IFDEF SPINNER_USE_TIMERQUEUE
+        
+            Invoke MUIGetIntProperty, hControl, @SpinnerUseTimerQueue
+            .IF eax == TRUE
+                Invoke MUIGetIntProperty, hControl, @SpinnerQueue
+                mov hQueue, eax
+                Invoke MUIGetIntProperty, hControl, @SpinnerTimer
+                mov hTimer, eax
+                .IF hQueue != NULL
+                    Invoke ChangeTimerQueueTimer, hQueue, hTimer, INFINITE, 0
+                    .IF eax == 0 ; failed, fall back to use KillTimer for WM_TIMER usage
+                        Invoke DeleteTimerQueueEx, hQueue, FALSE
+                        Invoke MUISetIntProperty, hControl, @SpinnerQueue, 0
+                        Invoke MUISetIntProperty, hControl, @SpinnerTimer, 0
+                        Invoke MUISetIntProperty, hControl, @SpinnerUseTimerQueue, FALSE
+                        Invoke KillTimer, hControl, hControl
+                    .ENDIF
+                .ELSE ; fall back to use KillTimer for WM_TIMER usage
+                    Invoke MUISetIntProperty, hControl, @SpinnerUseTimerQueue, FALSE
+                    Invoke KillTimer, hControl, hControl
+                .ENDIF
+            .ELSE ; Not using TimerQueue, previous failure? back to use KillTimer for WM_TIMER usage
+                Invoke KillTimer, hControl, hControl
+            .ENDIF
+            
+        ELSE ; compiled define says to use WM_TIMER instead
+        
+            Invoke KillTimer, hControl, hControl
+            
+        ENDIF
+    ENDIF
     mov eax, TRUE
     ret
 MUISpinnerPause ENDP
@@ -1355,7 +1584,6 @@ MUISpinnerLoadSpriteSheet PROC hControl:DWORD, dwSpriteCount:DWORD, dwImageType:
     ret
 MUISpinnerLoadSpriteSheet ENDP 
 
-
 ;------------------------------------------------------------------------------
 ; Load JPG/PNG from resource using GDI+
 ;   Actually, this function can load any image format supported by GDI+
@@ -1621,6 +1849,33 @@ tidyup:
     ret
 _MUI_SpinnerRotateCenterImage endp
 
+;------------------------------------------------------------------------------
+; _MUI_SpinnerTimerProc for TimerQueue
+;------------------------------------------------------------------------------
+IFDEF SPINNER_USE_TIMERQUEUE
+MUI_ALIGN
+_MUI_SpinnerTimerProc PROC USES EBX lpParam:DWORD, TimerOrWaitFired:DWORD
+    ; lpParam is hControl
+    Invoke _MUI_SpinnerNextFrameIndex, lpParam
+    Invoke InvalidateRect, lpParam, NULL, TRUE
+    Invoke UpdateWindow, lpParam
+    ret
+_MUI_SpinnerTimerProc ENDP
+ENDIF
+
+;------------------------------------------------------------------------------
+; _MUI_SpinnerMMTimerProc for Multimedia Timer
+;------------------------------------------------------------------------------
+IFDEF SPINNER_USE_MMTIMER
+MUI_ALIGN
+_MUI_SpinnerMMTimerProc PROC uTimerID:DWORD, uMsg:DWORD, dwUser:DWORD, dw1:DWORD, dw2:DWORD
+    ; dwUser is hControl
+    Invoke _MUI_SpinnerNextFrameIndex, dwUser
+    Invoke InvalidateRect, dwUser, NULL, TRUE
+    Invoke UpdateWindow, dwUser
+    ret
+_MUI_SpinnerMMTimerProc ENDP
+ENDIF
 
 MODERNUI_LIBEND
 

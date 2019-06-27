@@ -104,10 +104,10 @@ IDC_SPINNER8            EQU 1108
 IDC_SPINNER9            EQU 1109
 IDC_SPINNER7B           EQU 1110
 
-IDC_SPINNERSPRITE1        EQU 1121
-IDC_SPINNERSPRITE2        EQU 1122
-IDC_SPINNERSPRITE3        EQU 1123
-IDC_SPINNERSPRITE4        EQU 1124
+IDC_SPINNERSPRITE1      EQU 1121
+IDC_SPINNERSPRITE2      EQU 1122
+IDC_SPINNERSPRITE3      EQU 1123
+IDC_SPINNERSPRITE4      EQU 1124
 
 
 ; Main Menu 
@@ -122,8 +122,8 @@ IDM_HELP_ABOUT          EQU 10101
 ; MUIButton1 Initialized Data
 ;-----------------------------------------------------------------------------------------
 ClassName               DB 'DLGCLASS',0
-AppName                 DB 'MUIButton Example #1',0
-AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
+AppName                 DB 'MUISpinner Example #1',0
+AboutMsg                DB 'www.github.com/mrfearless',13,10,'Copyright © fearless 2019',0
 
 bSpinner1Pause          DD FALSE
 bSpinner2Pause          DD FALSE
