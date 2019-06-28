@@ -177,7 +177,7 @@ ENDIF
 
 .CONST
 SPINNER_MAX_FRAMES                  EQU 60
-SPINNER_DEFAULT_SPEED               EQU 80
+SPINNER_TIME_INTERVAL_MIN           EQU 10
 SPINNER_TIME_INTERVAL               EQU 80 ; Milliseconds for timer firing
 
 ; Internal properties
@@ -383,13 +383,47 @@ _MUI_SpinnerWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LP
 	    .ENDIF
 	    
 	; custom messages start here
-	
+	.ELSEIF eax == MUISPNM_ADDFRAME ; wParam = dwImageType, lParam = hImage
+	    Invoke MUISpinnerAddFrame, hWin, wParam, lParam
+	    ret
+	.ELSEIF eax == MUISPNM_LOADFRAME; wParam = dwImageType, lParam = idResImage
+	    Invoke MUISpinnerLoadFrame, hWin, wParam, lParam
+	    ret
+	.ELSEIF eax == MUISPNM_ENABLE   ; wParam & lParam = NULL
+	    Invoke MUISpinnerEnable, hWin
+	    ret
+	.ELSEIF eax == MUISPNM_DISABLE  ; wParam & lParam = NULL
+	    Invoke MUISpinnerDisable, hWin
+	    ret
+	.ELSEIF eax == MUISPNM_RESET    ; wParam & lParam = NULL
+	    Invoke MUISpinnerReset, hWin
+	    ret
+	.ELSEIF eax == MUISPNM_PAUSE    ; wParam & lParam = NULL
+	    Invoke MUISpinnerPause, hWin
+	    ret
+	.ELSEIF eax == MUISPNM_RESUME   ; wParam & lParam = NULL
+	    Invoke MUISpinnerResume, hWin
+	    ret
+	.ELSEIF eax == MUISPNM_SPEED    ; wParam = dwMillisecSpeed	
+	    Invoke MUISpinnerSpeed, hWin, wParam
+	    ret
 	.ELSEIF eax == MUI_GETPROPERTY
 		Invoke MUIGetExtProperty, hWin, wParam
 		ret
-		
-	.ELSEIF eax == MUI_SETPROPERTY	
-		Invoke MUISetExtProperty, hWin, wParam, lParam
+	.ELSEIF eax == MUI_SETPROPERTY
+	    mov eax, wParam
+	    .IF eax == @SpinnerSpeed
+            .IF lParam == 0
+                mov eax, SPINNER_TIME_INTERVAL
+            .ELSEIF sdword ptr lParam < 10
+                mov eax, SPINNER_TIME_INTERVAL_MIN
+            .ELSE
+                mov eax, lParam
+            .ENDIF
+            Invoke MUISetExtProperty, hWin, wParam, eax	
+	    .ELSE
+		    Invoke MUISetExtProperty, hWin, wParam, lParam
+		.ENDIF
 		ret
 		
     .ENDIF
@@ -433,7 +467,7 @@ _MUI_SpinnerInit PROC hWin:DWORD
     .ENDIF
     Invoke MUISetExtProperty, hWin, @SpinnerBackColor, eax ;MUI_RGBCOLOR(255,255,255)
     ;Invoke MUISetExtProperty, hWin, @SpinnerBackColor, MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hWin, @SpinnerSpeed, SPINNER_DEFAULT_SPEED
+    Invoke MUISetExtProperty, hWin, @SpinnerSpeed, SPINNER_TIME_INTERVAL
     
     IFDEF SPINNER_USE_MMTIMER
     Invoke MUISetIntProperty, hWin, @SpinnerTimer, 0
@@ -1074,6 +1108,21 @@ MUISpinnerReset PROC hControl:DWORD
     ret
 MUISpinnerReset ENDP
 
+;------------------------------------------------------------------------------
+; MUISpinnerReset - reset step to 0 or angle to 0
+;------------------------------------------------------------------------------
+MUISpinnerSpeed PROC hControl:DWORD, dwMillisecSpeed:DWORD
+    .IF dwMillisecSpeed == 0
+        mov eax, SPINNER_TIME_INTERVAL
+    .ELSEIF sdword ptr dwMillisecSpeed < 10
+        mov eax, SPINNER_TIME_INTERVAL_MIN
+    .ELSE
+        mov eax, dwMillisecSpeed
+    .ENDIF
+    Invoke MUISetExtProperty, hControl, @SpinnerSpeed, eax
+    ret
+MUISpinnerSpeed ENDP
+
 MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUISpinnerAddFrame - Adds an image frame to the spinner control
@@ -1584,6 +1633,8 @@ MUISpinnerLoadSpriteSheet PROC hControl:DWORD, dwSpriteCount:DWORD, dwImageType:
     ret
 MUISpinnerLoadSpriteSheet ENDP 
 
+
+
 ;------------------------------------------------------------------------------
 ; Load JPG/PNG from resource using GDI+
 ;   Actually, this function can load any image format supported by GDI+
@@ -1705,10 +1756,12 @@ _MUI_SpinnerRotateCenterImage PROC USES EBX hImage:DWORD, fAngle:REAL4
     LOCAL matrix:DWORD
     LOCAL pBitmap:DWORD
     LOCAL pBrush:DWORD
-    LOCAL ImageWidth:DWORD
-    LOCAL ImageHeight:DWORD
-    LOCAL HalfImageWidth:DWORD
-    LOCAL HalfImageHeight:DWORD
+    LOCAL dwImageWidth:DWORD
+    LOCAL dwImageHeight:DWORD
+    LOCAL ImageWidth:REAL4
+    LOCAL ImageHeight:REAL4
+    LOCAL dwX:DWORD
+    LOCAL dwY:DWORD
     LOCAL x:REAL4
     LOCAL y:REAL4
     LOCAL xneg:REAL4
@@ -1762,20 +1815,25 @@ angle_is_not_360:
     mov pBitmap, 0
     mov pBrush, 0
 
-    Invoke MUIGetImageSize, hImage, MUIIT_PNG, Addr ImageWidth, Addr ImageHeight
+    Invoke MUIGetImageSize, hImage, MUIIT_PNG, Addr dwImageWidth, Addr dwImageHeight
     Invoke GdipGetImageGraphicsContext, hImage, Addr pGraphics
-    Invoke GdipCreateBitmapFromGraphics, ImageWidth, ImageHeight, pGraphics, Addr pBitmap 
+    Invoke GdipCreateBitmapFromGraphics, dwImageWidth, dwImageHeight, pGraphics, Addr pBitmap 
     Invoke GdipGetImageGraphicsContext, pBitmap, Addr pGraphicsBuffer
     
-    Invoke GdipSetPixelOffsetMode, pGraphics, PixelOffsetModeHighQuality
+    ;Invoke GdipSetPixelOffsetMode, pGraphics, PixelOffsetModeHighQuality
     Invoke GdipSetPixelOffsetMode, pGraphicsBuffer, PixelOffsetModeHighQuality
-    Invoke GdipSetPageUnit, pGraphics, UnitPixel
+    ;Invoke GdipSetPageUnit, pGraphics, UnitPixel
     Invoke GdipSetPageUnit, pGraphicsBuffer, UnitPixel   
-    Invoke GdipSetSmoothingMode, pGraphics, SmoothingModeAntiAlias  
+    ;Invoke GdipSetSmoothingMode, pGraphics, SmoothingModeAntiAlias  
     Invoke GdipSetSmoothingMode, pGraphicsBuffer, SmoothingModeAntiAlias
-    Invoke GdipSetInterpolationMode, pGraphics, InterpolationModeHighQualityBicubic
+    ;Invoke GdipSetInterpolationMode, pGraphics, InterpolationModeHighQualityBicubic
     Invoke GdipSetInterpolationMode, pGraphicsBuffer, InterpolationModeHighQualityBicubic
-
+    
+    fld dwImageWidth
+    fstp ImageWidth
+    fld dwImageHeight
+    fstp ImageHeight
+    
     ;---------------------------------------------------------------------------------
     ; Check if angle is 180, if it is then do a flip instead of rotating
     ; (fixes the speed wobble issue when 180.0 is the angle)
@@ -1789,7 +1847,8 @@ angle_is_not_360:
     jmp other_angle
     
 angle_is_180:
-    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
+    Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
+    ;Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
     Invoke GdipImageRotateFlip, pBitmap, Rotate180FlipNone
     jmp tidyup
 
@@ -1820,12 +1879,21 @@ other_angle:
     fmul
     fstp yneg
     
+    fld xneg
+    fistp dwX
+    
+    fld yneg
+    fistp dwY
+    
     Invoke GdipResetWorldTransform, pGraphicsBuffer
     Invoke GdipCreateMatrix, Addr matrix
     Invoke GdipTranslateMatrix, matrix, x, y, MatrixOrderPrepend
     Invoke GdipRotateMatrix, matrix, fAngle, MatrixOrderPrepend
     Invoke GdipSetWorldTransform, pGraphicsBuffer, matrix
-    Invoke GdipDrawImage, pGraphicsBuffer, hImage, xneg, yneg
+    
+    Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, dwX, dwY, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL    
+    
+    ;Invoke GdipDrawImage, pGraphicsBuffer, hImage, xneg, yneg
     Invoke GdipResetWorldTransform, pGraphicsBuffer
 
 tidyup:

@@ -100,10 +100,10 @@ Menu=1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0
 47=,409,7,Images\Gear32x32.png
 [StringTable]
 [VerInf]
-FV=0.3.0.9
-FileVersion=0.3.0.9
-PV=0.3.0.9
-ProductVersion=0.3.0.9
+FV=0.3.1.9
+FileVersion=0.3.1.9
+PV=0.3.1.9
+ProductVersion=0.3.1.9
 Nme=VERINF1
 ID=1
 VerOS=0x00000004
@@ -139,7 +139,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=27
+MilestoneOnDateDate=28
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=31
@@ -163,7 +163,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=79002243
+PTimer=84544677
 [Collapse]
 1=65536
 2=
