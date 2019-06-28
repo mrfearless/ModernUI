@@ -39,27 +39,25 @@ WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 
 ICO_MAIN                EQU 100
 
-BMP_SPIN1               EQU 201 ; "Images/squares-circle-grey 1.bmp"
-BMP_SPIN2               EQU 202 ; "Images/squares-circle-grey 2.bmp"
-BMP_SPIN3               EQU 203 ; "Images/squares-circle-grey 3.bmp"
-BMP_SPIN4               EQU 204 ; "Images/squares-circle-grey 4.bmp"
-BMP_SPIN5               EQU 205 ; "Images/squares-circle-grey 5.bmp"
-BMP_SPIN6               EQU 206 ; "Images/squares-circle-grey 6.bmp"
-BMP_SPIN7               EQU 207 ; "Images/squares-circle-grey 7.bmp"
-BMP_SPIN8               EQU 208 ; "Images/squares-circle-grey 8.bmp"
+BMP_SPIN1               EQU 201 ; "Images/FramesSpinners/squares-circle-grey 1.bmp"
+BMP_SPIN2               EQU 202 ; "Images/FramesSpinners/squares-circle-grey 2.bmp"
+BMP_SPIN3               EQU 203 ; "Images/FramesSpinners/squares-circle-grey 3.bmp"
+BMP_SPIN4               EQU 204 ; "Images/FramesSpinners/squares-circle-grey 4.bmp"
+BMP_SPIN5               EQU 205 ; "Images/FramesSpinners/squares-circle-grey 5.bmp"
+BMP_SPIN6               EQU 206 ; "Images/FramesSpinners/squares-circle-grey 6.bmp"
+BMP_SPIN7               EQU 207 ; "Images/FramesSpinners/squares-circle-grey 7.bmp"
+BMP_SPIN8               EQU 208 ; "Images/FramesSpinners/squares-circle-grey 8.bmp"
 
-BMP_SPINROTATE          EQU 300 ; "Images/771.bmp" - 12 segments fading
+PNG_SPIN2               EQU 402 ; "Images/SingleImageSpinners/small_12fadelines_spinner.png" - small segment fading
+PNG_SPIN3               EQU 403 ; "Images/SingleImageSpinners/fadedcircle_spinner64x64.png" - faded circle
+PNG_SPIN4               EQU 404 ; "Images/SingleImageSpinners/green_3recyclearrows_spinner64x64.png" - 3 recycle green arrows
+PNG_SPIN5               EQU 405 ; "Images/SingleImageSpinners/brokenwheel_12faded_spinner64x64.png" - 12 segments fading
+PNG_SPIN6               EQU 406 ; "Images/SingleImageSpinners/blue_circlearrows64x64.png" - blue with arrows
+PNG_SPIN7               EQU 407 ; "Images/SingleImageSpinners/large_gear_spinner64x64.png" - large gear
+PNG_SPIN8               EQU 408 ; "Images/SingleImageSpinners/green_3arrows_spinner48x48.png" - 3 green arrows
+PNG_SPIN7B              EQU 409 ; "Images/SingleImageSpinners/small_gear_spinner32x322.png" - small gear
 
-PNG_SPIN2               EQU 402 ; "Images/35.png" - small segment fading
-PNG_SPIN3               EQU 403 ; "Images/6.png" - faded circle
-PNG_SPIN4               EQU 404 ; "Images/3Green64x64.png" - 3 recycle green arrows
-PNG_SPIN5               EQU 405 ; "Images/771.png" - 12 segments fading
-PNG_SPIN6               EQU 406 ; "Images/156bluex64x64.png" - blue with arrows
-PNG_SPIN7               EQU 407 ; "Images/Gear64x64.png" - large gear
-PNG_SPIN8               EQU 408 ; "Images/74448x48.png" - 3 green arrows
-PNG_SPIN7B              EQU 409 ; "Images/Gear32x32.png" - small gear
-
-PNG_CLOCK1              EQU 501 ; "Images/832/832 01.png"
+PNG_CLOCK1              EQU 501 ; "Images/FramesSpinners/832/832 01.png"
 PNG_CLOCK2              EQU 502 ; 
 PNG_CLOCK3              EQU 503 ; 
 PNG_CLOCK4              EQU 504 ; 
@@ -82,12 +80,12 @@ PNG_CLOCK20             EQU 520 ;
 PNG_CLOCK21             EQU 521 ; 
 PNG_CLOCK22             EQU 522 ; 
 PNG_CLOCK23             EQU 523 ; 
-PNG_CLOCK24             EQU 524 ; "Images/832/832 24.png"
+PNG_CLOCK24             EQU 524 ; "Images/FramesSpinners/832/832 24.png"
 
-BMP_CLOCK_SPRITESHEET   EQU 600 ; "Images/832/832grey.bmp"
-PNG_CLOCK_SPRITESHEET   EQU 601 ; "Images/832/832trans.png"
-PNG_INFINITY_SPRITESHEET EQU 602 ; "Images/379strip.png"
-PNG_SEARCH_SPRITESHEET  EQU 603 ; "Images/320stripgreen.png"
+BMP_CLOCK_SPRITESHEET   EQU 600 ; "Images/SpritesheetSpinners/clock_grey_spritesheet1782x81.bmp"
+PNG_CLOCK_SPRITESHEET   EQU 601 ; "Images/SpritesheetSpinners/clock_spritesheet1782x81.png"
+PNG_INFINITY_SPRITESHEET EQU 602 ; "Images/SpritesheetSpinners/infinity_spritesheet1280x39.png"
+PNG_SEARCH_SPRITESHEET  EQU 603 ; "Images/SpritesheetSpinners/green_searcharrow_spritesheet1152x64.png"
 
 ; Main Dialog
 IDD_DIALOG              EQU 1000
@@ -123,7 +121,7 @@ IDM_HELP_ABOUT          EQU 10101
 ;-----------------------------------------------------------------------------------------
 ClassName               DB 'DLGCLASS',0
 AppName                 DB 'MUISpinner Example #1',0
-AboutMsg                DB 'www.github.com/mrfearless',13,10,'Copyright © fearless 2019',0
+AboutMsg                DB 'Copyright © fearless 2019',0
 
 bSpinner1Pause          DD FALSE
 bSpinner2Pause          DD FALSE
