@@ -9,7 +9,7 @@ For the x64 version of the ModernUI_Spinner control, visit [here](https://github
 
 ## Setup ModernUI_Spinner
 
-* Download the latest version of the ModernUI_Spinner and extract the files. The latest release can be found in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder, or via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or can be downloaded directly from [here](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Spinner.zip?raw=true).
+* Download the latest version of the ModernUI_Spinner and extract the files. The latest release can be found via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or from the downloads section below.
 * Copy the `ModernUI_Spinner.inc` file to your `masm32\include` folder (or wherever your includes are located)
 * Copy the `ModernUI_Spinner.lib` file to your `masm32\lib` folder (or wherever your libraries are located)
 * Add the main ModernUI library to your project (if you haven't done so already):
@@ -27,3 +27,8 @@ includelib ModernUI_Spinner.lib
 ## ModernUI_Spinner API Help
 
 Documentation is available for the ModernUI_Spinner functions, styles and properties used by the control on the wiki: [ModernUI_Spinner Control](https://github.com/mrfearless/ModernUI/wiki/ModernUI_Spinner-Control)
+
+
+## ModernUI_Spinner Downloads
+- Release: [ModernUI_Spinner.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Spinner.zip?raw=true)
+- Source: [ModernUI_Spinner_Source.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Spinner_Source.zip?raw=true)

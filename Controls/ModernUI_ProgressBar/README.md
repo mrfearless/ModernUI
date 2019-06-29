@@ -9,7 +9,7 @@ For the x64 version of the ModernUI_ProgressBar control, visit [here](https://gi
 
 ## Setup ModernUI_ProgressBar
 
-* Download the latest version of the ModernUI_ProgressBar and extract the files. The latest release can be found in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder, or via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or can be downloaded directly from [here](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_ProgressBar.zip?raw=true).
+* Download the latest version of the ModernUI_ProgressBar and extract the files. The latest release can be found via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or from the downloads section below.
 * Copy the `ModernUI_ProgressBar.inc` file to your `masm32\include` folder (or wherever your includes are located)
 * Copy the `ModernUI_ProgressBar.lib` file to your `masm32\lib` folder (or wherever your libraries are located)
 * Add the main ModernUI library to your project (if you haven't done so already):
@@ -27,3 +27,7 @@ includelib ModernUI_ProgressBar.lib
 ## ModernUI_ProgressBar API Help
 
 Documentation is available for the ModernUI_ProgressBar functions, styles and properties used by the control on the wiki: [ModernUI_ProgressBar Control](https://github.com/mrfearless/ModernUI/wiki/ModernUI_ProgressBar-Control)
+
+## ModernUI_ProgressBar Downloads
+- Release: [ModernUI_ProgressBar.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_ProgressBar.zip?raw=true)
+- Source: [ModernUI_ProgressBar_Source.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_ProgressBar_Source.zip?raw=true)

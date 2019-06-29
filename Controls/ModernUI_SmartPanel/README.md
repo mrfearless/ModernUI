@@ -11,7 +11,7 @@ For the x64 version of the ModernUI_SmartPanel control, visit [here](https://git
 
 ## Setup ModernUI_SmartPanel
 
-* Download the latest version of the ModernUI_SmartPanel and extract the files. The latest release can be found in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder, or via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or can be downloaded directly from [here](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_SmartPanel.zip?raw=true).
+* Download the latest version of the ModernUI_SmartPanel and extract the files. The latest release can be found via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or from the downloads section below.
 * Copy the `ModernUI_SmartPanel.inc` file to your `masm32\include` folder (or wherever your includes are located)
 * Copy the `ModernUI_SmartPanel.lib` file to your `masm32\lib` folder (or wherever your libraries are located)
 * Add the main ModernUI library to your project (if you haven't done so already):
@@ -29,3 +29,7 @@ includelib ModernUI_SmartPanel.lib
 ## ModernUI_SmartPanel API Help
 
 Documentation is available for the ModernUI_SmartPanel functions, styles and properties used by the control on the wiki: [ModernUI_SmartPanel Control](https://github.com/mrfearless/ModernUI/wiki/ModernUI_SmartPanel-Control)
+
+## ModernUI_SmartPanel Downloads
+- Release: [ModernUI_SmartPanel.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_SmartPanel.zip?raw=true)
+- Source: [ModernUI_SmartPanel_Source.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_SmartPanel_Source.zip?raw=true)

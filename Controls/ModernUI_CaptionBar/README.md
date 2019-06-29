@@ -11,7 +11,7 @@ For the x64 version of the ModernUI_CaptionBar control, visit [here](https://git
 
 ## Setup ModernUI_CaptionBar
 
-* Download the latest version of the ModernUI_CaptionBar and extract the files. The latest release can be found in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder, or via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or can be downloaded directly from [here](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_CaptionBar.zip?raw=true).
+* Download the latest version of the ModernUI_CaptionBar and extract the files. The latest release can be found via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or from the downloads section below.
 * Copy the `ModernUI_CaptionBar.inc` file to your `masm32\include` folder (or wherever your includes are located)
 * Copy the `ModernUI_CaptionBar.lib` file to your `masm32\lib` folder (or wherever your libraries are located)
 * Add the main ModernUI library to your project (if you haven't done so already):
@@ -29,3 +29,7 @@ includelib ModernUI_CaptionBar.lib
 ## ModernUI_CaptionBar API Help
 
 Documentation is available for the ModernUI_CaptionBar functions, styles and properties used by the control on the wiki: [ModernUI_CaptionBar Control](https://github.com/mrfearless/ModernUI/wiki/ModernUI_CaptionBar-Control)
+
+## ModernUI_CaptionBar Downloads
+- Release: [ModernUI_CaptionBar.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_CaptionBar.zip?raw=true)
+- Source: [ModernUI_CaptionBar_Source.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_CaptionBar_Source.zip?raw=true)

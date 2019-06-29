@@ -9,7 +9,7 @@ For the x64 version of the ModernUI_ProgressDots control, visit [here](https://g
 
 ## Setup ModernUI_ProgressDots
 
-* Download the latest version of the ModernUI_ProgressDots and extract the files. The latest release can be found in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder, or via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or can be downloaded directly from [here](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_ProgressDots.zip?raw=true).
+* Download the latest version of the ModernUI_ProgressDots and extract the files. The latest release can be found via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or from the downloads section below.
 * Copy the `ModernUI_ProgressDots.inc` file to your `masm32\include` folder (or wherever your includes are located)
 * Copy the `ModernUI_ProgressDots.lib` file to your `masm32\lib` folder (or wherever your libraries are located)
 * Add the main ModernUI library to your project (if you haven't done so already):
@@ -27,3 +27,7 @@ includelib ModernUI_ProgressDots.lib
 ## ModernUI_ProgressDots API Help
 
 Documentation is available for the ModernUI_ProgressDots functions, styles and properties used by the control on the wiki: [ModernUI_ProgressDots Control](https://github.com/mrfearless/ModernUI/wiki/ModernUI_ProgressDots-Control)
+
+## ModernUI_ProgressDots Downloads
+- Release: [ModernUI_ProgressDots.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_ProgressDots.zip?raw=true)
+- Source: [ModernUI_ProgressDots_Source.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_ProgressDots_Source.zip?raw=true)

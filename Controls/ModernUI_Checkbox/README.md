@@ -11,7 +11,7 @@ For the x64 version of the ModernUI_Checkbox control, visit [here](https://githu
 
 ## Setup ModernUI_Checkbox
 
-* Download the latest version of the ModernUI_Checkbox and extract the files. The latest release can be found in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder, or via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or can be downloaded directly from [here](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Checkbox.zip?raw=true).
+* Download the latest version of the ModernUI_Checkbox and extract the files. The latest release can be found via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or from the downloads section below.
 * Copy the `ModernUI_Checkbox.inc` file to your `masm32\include` folder (or wherever your includes are located)
 * Copy the `ModernUI_Checkbox.lib` file to your `masm32\lib` folder (or wherever your libraries are located)
 * Add the main ModernUI library to your project (if you haven't done so already):
@@ -29,3 +29,7 @@ includelib ModernUI_Checkbox.lib
 ## ModernUI_Checkbox API Help
 
 Documentation is available for the ModernUI_Checkbox functions, styles and properties used by the control on the wiki: [ModernUI_Checkbox Control](https://github.com/mrfearless/ModernUI/wiki/ModernUI_Checkbox-Control)
+
+## ModernUI_Checkbox Downloads
+- Release: [ModernUI_Checkbox.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Checkbox.zip?raw=true)
+- Source: [ModernUI_Checkbox_Source.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Checkbox_Source.zip?raw=true)

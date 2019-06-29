@@ -9,7 +9,7 @@ For the x64 version of the ModernUI_TrayMenu control, visit [here](https://githu
 
 ## Setup ModernUI_TrayMenu
 
-* Download the latest version of the ModernUI_TrayMenu and extract the files. The latest release can be found in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder, or via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or can be downloaded directly from [here](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_TrayMenu.zip?raw=true).
+* Download the latest version of the ModernUI_TrayMenu and extract the files. The latest release can be found via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or from the downloads section below.
 * Copy the `ModernUI_TrayMenu.inc` file to your `masm32\include` folder (or wherever your includes are located)
 * Copy the `ModernUI_TrayMenu.lib` file to your `masm32\lib` folder (or wherever your libraries are located)
 * Add the main ModernUI library to your project (if you haven't done so already):
@@ -27,3 +27,7 @@ includelib ModernUI_TrayMenu.lib
 ## ModernUI_TrayMenu API Help
 
 Documentation is available for the ModernUI_TrayMenu functions, styles and properties used by the control on the wiki: [ModernUI_TrayMenu Control](https://github.com/mrfearless/ModernUI/wiki/ModernUI_TrayMenu-Control)
+
+## ModernUI_TrayMenu Downloads
+- Release: [ModernUI_TrayMenu.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_TrayMenu.zip?raw=true)
+- Source: [ModernUI_TrayMenu_Source.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_TrayMenu_Source.zip?raw=true)

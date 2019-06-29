@@ -11,7 +11,7 @@ For the x64 version of the ModernUI_Button control, visit [here](https://github.
 
 ## Setup ModernUI_Button
 
-* Download the latest version of the ModernUI_Button and extract the files. The latest release can be found in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder, or via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or can be downloaded directly from [here](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Button.zip?raw=true).
+* Download the latest version of the ModernUI_Button and extract the files. The latest release can be found via the [releases](https://github.com/mrfearless/ModernUI/releases) section of this Github repository or from the downloads section below.
 * Copy the `ModernUI_Button.inc` file to your `masm32\include` folder (or wherever your includes are located)
 * Copy the `ModernUI_Button.lib` file to your `masm32\lib` folder (or wherever your libraries are located)
 * Add the main ModernUI library to your project (if you haven't done so already):
@@ -29,3 +29,8 @@ includelib ModernUI_Button.lib
 ## ModernUI_Button API Help
 
 Documentation is available for the ModernUI_Button functions, styles and properties used by the control on the wiki: [ModernUI_Button Control](https://github.com/mrfearless/ModernUI/wiki/ModernUI_Button-Control)
+
+
+## ModernUI_Button Downloads
+- Release: [ModernUI_Button.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Button.zip?raw=true)
+- Source: [ModernUI_Button_Source.zip](https://github.com/mrfearless/ModernUI/blob/master/Release/ModernUI_Button_Source.zip?raw=true)
