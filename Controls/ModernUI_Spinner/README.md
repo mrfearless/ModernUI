@@ -17,7 +17,7 @@ For the x64 version of the ModernUI_Spinner control, visit [here](https://github
 include ModernUI.inc
 includelib ModernUI.lib
 ```
-* Add the ModernUI_Button control to your project:
+* Add the ModernUI_Spinner control to your project:
 ```assembly
 include ModernUI_Spinner.inc
 includelib ModernUI_Spinner.lib

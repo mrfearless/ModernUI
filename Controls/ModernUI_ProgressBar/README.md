@@ -17,7 +17,7 @@ For the x64 version of the ModernUI_ProgressBar control, visit [here](https://gi
 include ModernUI.inc
 includelib ModernUI.lib
 ```
-* Add the ModernUI_Button control to your project:
+* Add the ModernUI_ProgressBar control to your project:
 ```assembly
 include ModernUI_ProgressBar.inc
 includelib ModernUI_ProgressBar.lib
