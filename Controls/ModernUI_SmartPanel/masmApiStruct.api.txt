@@ -1,0 +1,10 @@
+;------------------------------------------------------------------------------
+; ModernUI_SmartPanel Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiStruct.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUISP_ITEM,iItem,lParam,hPanel
+NM_MUISMARTPANEL,hdr,itemOld,itemNew

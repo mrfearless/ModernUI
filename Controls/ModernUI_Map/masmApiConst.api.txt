@@ -1,0 +1,8 @@
+;------------------------------------------------------------------------------
+; ModernUI Additions 
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------

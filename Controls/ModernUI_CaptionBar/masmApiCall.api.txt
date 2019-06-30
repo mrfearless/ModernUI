@@ -1,0 +1,19 @@
+;------------------------------------------------------------------------------
+; ModernUI_CaptionBar Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiCall.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUICaptionBarRegister
+MUICaptionBarCreate,hWndParent,lpszCaptionText,dwCaptionHeight,dwResourceID,dwStyle
+MUICaptionBarSetProperty,hModernUI_CaptionBar,dwProperty,dwPropertyValue
+MUICaptionBarGetProperty,hModernUI_CaptionBar,dwProperty
+MUICaptionBarLoadIcons,hModernUI_CaptionBar,idResMin,idResMinAlt,idResMax,idResMaxAlt,idResRes,idResResAlt,idResClose,idResCloseAlt
+MUICaptionBarLoadIconsDll,hModernUI_CaptionBar,hInstance,idResMin,idResMinAlt,idResMax,idResMaxAlt,idResRes,idResResAlt,idResClose,idResCloseAlt
+MUICaptionBarLoadBackImage,hModernUI_CaptionBar,dwImageType,dwResIDImage
+MUICaptionBarAddButton,hModernUI_CaptionBar,lpszButtonText,dwResourceID,dwResIDImage,dwResIDImageAlt
+MUICaptionBarAddButtonEx,hModernUI_CaptionBar,lpszButtonText,dwResourceID,hIcon,hIconAlt
+MUICapButtonSetProperty,hCapButton,dwProperty,dwPropertyValue
+MUICapButtonGetProperty,hCapButton,dwProperty

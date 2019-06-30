@@ -1,0 +1,15 @@
+;------------------------------------------------------------------------------
+; ModernUI_SmartPanel Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmMessage.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUISPM_REGISTERPANEL,EQU WM_USER + 1760
+MUISPM_SETCURRENTPANEL,EQU WM_USER + 1759
+MUISPM_GETCURRENTPANEL,EQU WM_USER + 1758
+MUISPM_NEXTPANEL,EQU WM_USER + 1757
+MUISPM_PREVPANEL,EQU WM_USER + 1756
+MUISPM_GETTOTALPANELS,EQU WM_USER + 1755
+MUISPM_SETISDLGMSGVAR,EQU WM_USER + 1754

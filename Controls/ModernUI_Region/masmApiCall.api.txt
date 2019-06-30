@@ -1,0 +1,22 @@
+;------------------------------------------------------------------------------
+; ModernUI_Region Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiCall.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUIRegionButtonRegister
+MUIRegionButtonCreate,hWndParent,lpszText,xpos,ypos,dwResourceID,dwStyle
+MUIRegionButtonSetProperty,hRegionButton,dwProperty,dwPropertyValue
+MUIRegionButtonGetProperty,hRegionButton,dwProperty
+MUIRegionButtonSetRegion,hRegionButton,ptrRegionData,dwRegionDataSize
+MUIRegionButtonSetRegionPoly,hRegionButton,ptrPolyData,dwPolyDataCount,dwPolyType,dwXAdjust,dwYAdjust,lpBoundsRect
+MUIRegionButtonSetRegionBitmap,hRegionButton,hBitmap
+MUIRegionButtonGetState,hRegionButton
+MUIRegionButtonSetState,hRegionButton,bState
+MUIRegionButtonSetBrush,hRegionButton,hBitmapBrush,lpBoundsRect,dwBlendLevel
+MUIRegionButtonSetBitmap,hRegionButton,BitmapResID
+MUIRegionButtomCustomStates,hRegionButton,lpCustomStatesArray,dwTotalCustomStates
+MUIRegionButtonGetCustomState,hRegionButton
+MUIRegionButtonSetCustomState,hRegionButton,dwStateIndex

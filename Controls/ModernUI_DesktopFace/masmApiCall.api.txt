@@ -1,0 +1,16 @@
+;------------------------------------------------------------------------------
+; ModernUI_DesktopFace
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiCall.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUIDesktopFaceRegister
+MUIDesktopFaceCreate,hWndParent,xpos,ypos,dwStyle
+MUIDesktopFaceSetProperty,hModernUI_DesktopFace,dwProperty,dwPropertyValue
+MUIDesktopFaceGetProperty,hModernUI_DesktopFace,dwProperty
+MUIDesktopFaceSetImage,hModernUI_DesktopFace,dwImageType,dwImageHandle
+MUIDesktopFaceSetRegion,hModernUI_DesktopFace,idRgnResID
+MUIDesktopFaceSetOpacity,hModernUI_DesktopFace,dwOpacity
+MUIDesktopFaceShow,hModernUI_DesktopFace,bShow

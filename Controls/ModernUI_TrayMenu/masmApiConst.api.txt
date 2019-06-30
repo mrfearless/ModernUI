@@ -1,0 +1,19 @@
+;------------------------------------------------------------------------------
+; ModernUI_TrayMenu Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+4MUITrayMenuCreate,MUITMT_MENUDEFER,MUITMT_POPUPMENU,MUITMT_MENUITEMS,MUITMT_NOMENUEVER
+6MUITrayMenuCreate,MUITMS_DEFAULT,MUITMS_MINONCLOSE,MUITMS_HIDEIFMIN,MUITMS_MINONCLOSE or MUITMS_HIDEIFMIN,MUITMS_HWNDEXTRA
+2MUITrayMenuSetProperty,@TrayMenuIcon,@TrayMenuTooltipText,@TrayMenuVisible,@TrayMenuType,@TrayMenuHandleMenu,@TrayMenuExtraWndHandle
+2MUITrayMenuGetProperty,@TrayMenuIcon,@TrayMenuTooltipText,@TrayMenuVisible,@TrayMenuType,@TrayMenuHandleMenu,@TrayMenuExtraWndHandle
+3MUITrayMenuSetProperty,MUI_RGBCOLOR,MUITMT_MENUDEFER,MUITMT_POPUPMENU,MUITMT_MENUITEMS,MUITMT_NOMENUEVER
+2MUITrayMenuAssignMenu,MUITMT_MENUDEFER,MUITMT_POPUPMENU,MUITMT_MENUITEMS,MUITMT_NOMENUEVER
+5MUITrayMenuShowNotification,MUITMNI_NONE,MUITMNI_INFO,MUITMNI_WARNING,MUITMNI_ERROR 
+5MUITrayIconShowNotification,MUITMNI_NONE,MUITMNI_INFO,MUITMNI_WARNING,MUITMNI_ERROR 
+4MUITrayMenuSetTrayIconText,MUI_RGBCOLOR
+3MUITrayMenuChangeMenuItemState,MFS_DISABLED,MFS_ENABLED,MFS_GRAYED
+4MUITrayIconSetTrayIconText,MUI_RGBCOLOR

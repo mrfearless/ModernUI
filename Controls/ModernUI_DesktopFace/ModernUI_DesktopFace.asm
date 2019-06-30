@@ -194,7 +194,6 @@ MUIDesktopFaceRegister PROC PUBLIC
         Invoke RegisterClassEx, addr wc
     .ENDIF  
     ret
-
 MUIDesktopFaceRegister ENDP
 
 
@@ -233,7 +232,6 @@ MUI_ALIGN
 ; _MUI_DesktopFaceWndProc - Main processing window for our control
 ;-------------------------------------------------------------------------------------
 _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
-    LOCAL msg:MSG
     LOCAL rect:RECT
     
     mov eax,uMsg
@@ -377,8 +375,7 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
 ;       PrintDec eax
 ;       mov eax, (WINDOWPOS ptr [ebx]).y
 ;       PrintDec eax
-    
-    
+
     ; custom messages start here
     
     .ELSEIF eax == MUI_GETPROPERTY
@@ -408,14 +405,12 @@ _MUI_DesktopFaceWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARA
             Invoke InvalidateRgn, hWin, NULL, TRUE
             Invoke InvalidateRect, hWin, NULL, TRUE
         .ENDIF
-        
         ret
         
     .ENDIF
     
     Invoke DefWindowProc, hWin, uMsg, wParam, lParam
     ret
-
 _MUI_DesktopFaceWndProc ENDP
 
 
@@ -449,8 +444,7 @@ _MUI_DesktopFaceInit PROC PRIVATE hControl:DWORD, hWndParent:DWORD
     ;    mov dwStyle, eax
     ;    Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
     ;.ENDIF
-    
-    
+
     Invoke GetClassLong, hControl, GCL_STYLE
     and eax,(-1 xor CS_DROPSHADOW)
     Invoke SetClassLong, hControl, GCL_STYLE, eax
@@ -469,12 +463,9 @@ _MUI_DesktopFaceInit PROC PRIVATE hControl:DWORD, hWndParent:DWORD
     mov eax, DF_POPSTEP_OUT
     Invoke MUISetExtProperty, hControl, @DesktopFacePopStepOut, eax    
     Invoke MUISetExtProperty, hControl, @DesktopFaceBorderColor, -1 
-    
-    
-    ;Invoke _MUI_DesktopFaceSetInitialPosition, hControl
-    
-    ret
 
+    ;Invoke _MUI_DesktopFaceSetInitialPosition, hControl
+    ret
 _MUI_DesktopFaceInit ENDP
 
 
@@ -535,7 +526,6 @@ _MUI_DesktopFacePaint PROC PRIVATE hWin:DWORD
     .ENDIF      
     
     Invoke EndPaint, hWin, Addr ps
-
     ret
 _MUI_DesktopFacePaint ENDP
 
@@ -562,7 +552,6 @@ _MUI_DesktopFacePaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD
         Invoke DeleteObject, hBrush
     .ENDIF      
     ret
-
 _MUI_DesktopFacePaintBackground ENDP
 
 
@@ -630,9 +619,7 @@ _MUI_DesktopFacePaintImage PROC hWin:DWORD, hdc:DWORD, hdcMem:DWORD, lpRect:DWOR
         .ENDIF
         ENDIF
     .ENDIF
-
     ret
-
 _MUI_DesktopFacePaintImage ENDP
 
 
@@ -673,7 +660,6 @@ _MUI_DesktopFacePaintBorder PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD
     .IF hBrush != 0
         Invoke DeleteObject, hBrush
     .ENDIF                
-
     ret
 _MUI_DesktopFacePaintBorder ENDP
 
@@ -778,9 +764,7 @@ _MUI_DesktopFaceSetInitialPosition PROC USES EBX hWin:DWORD
         ;PrintText 'Unknown h position'
         ;PrintDec dwPos        
     .ENDIF
-    
 
-    
     IFDEF DEBUG32
     ;PrintDec nLeft
     ;PrintDec nTop
@@ -791,15 +775,11 @@ _MUI_DesktopFaceSetInitialPosition PROC USES EBX hWin:DWORD
     Invoke SetWindowPos, hWin, HWND_TOPMOST, nLeft, nTop, 0, 0, SWP_NOOWNERZORDER or SWP_NOSIZE or SWP_NOZORDER or SWP_NOSENDCHANGING or SWP_NOACTIVATE
     Invoke MUISetIntProperty, hWin, @DesktopFaceXPos, nLeft
     Invoke MUISetIntProperty, hWin, @DesktopFaceYPos, nTop
-    
     ;PrintText 'Initial'
     ;PrintDec nLeft
     ;PrintDec nTop
-    
     Invoke MUISetIntProperty, hWin, @DesktopFaceInitialPositionSet, TRUE
-
     ret
-
 _MUI_DesktopFaceSetInitialPosition ENDP
 
 
@@ -888,7 +868,6 @@ _MUI_DesktopFaceFadeWindow PROC hWin:DWORD, bFadeIn:DWORD
         .ENDIF
     .ENDIF
     ret
-
 _MUI_DesktopFaceFadeWindow ENDP
 
 
@@ -928,8 +907,7 @@ _MUI_DesktopFacePopWindow PROC USES EBX hWin:DWORD, bPopIn:DWORD
             .IF eax != NULL
                 Invoke MUISetRegionFromResource, hWin, eax, NULL, TRUE
             .ENDIF
-       
-            
+
         .ELSE
             mov eax, dwHeight
             mov ebx, dwPopHeight
@@ -951,12 +929,11 @@ _MUI_DesktopFacePopWindow PROC USES EBX hWin:DWORD, bPopIn:DWORD
             mov eax, dwPopHeight
             add eax, dwPopStep;DF_POPSTEP; 8d
             Invoke MUISetIntProperty, hWin, @DesktopFacePopHeight, eax
-         
-            
+
         .ENDIF    
     
     .ELSE
-        
+
         mov eax, dwHeight
         .IF sdword ptr dwPopHeight <= 0
             Invoke SetWindowPos, hWin, HWND_TOPMOST, dwXPos, dwYPos, dwWidth, 0, SWP_NOZORDER or SWP_NOSENDCHANGING or SWP_NOACTIVATE or SWP_NOCOPYBITS
@@ -980,8 +957,6 @@ _MUI_DesktopFacePopWindow PROC USES EBX hWin:DWORD, bPopIn:DWORD
             Invoke MUISetIntProperty, hWin, @DesktopFacePopHeight, eax
         .ENDIF    
     .ENDIF
-
-
     ret
 _MUI_DesktopFacePopWindow ENDP
 
@@ -1029,7 +1004,6 @@ _MUI_DesktopFaceApplyPopRegion PROC USES EBX hControl:DWORD, dwWidth:DWORD, dwHe
     ;Invoke InvalidateRect, hControl, NULL, TRUE
     ;Invoke UpdateWindow, hControl
     ret
-
 _MUI_DesktopFaceApplyPopRegion ENDP
 
 
@@ -1065,8 +1039,7 @@ _MUI_DesktopFaceNotifyParent PROC hControl:DWORD, dwNotifyMsg:DWORD, lParam:DWOR
         Invoke PostMessage, hParent, WM_NOTIFY, idControl, Addr DFNM
         mov eax, TRUE
     .ENDIF
- 
-    ret
+     ret
 _MUI_DesktopFaceNotifyParent ENDP
 
 
@@ -1118,8 +1091,7 @@ MUIDesktopFaceShow PROC hControl:DWORD, bShow:DWORD
             ret
         .ENDIF
         Invoke ShowWindow, hControl, SW_SHOW
-        
-        
+
 ;        Invoke KillTimer, hControl, DF_TIMER_FADEOUT
 ;        Invoke KillTimer, hControl, DF_TIMER_POPOUT
 ;        
@@ -1145,7 +1117,7 @@ MUIDesktopFaceShow PROC hControl:DWORD, bShow:DWORD
 ;            Invoke SetTimer, hControl, DF_TIMER_POPIN, 10, NULL ; set timer to pop in window
 ;        .ENDIF
 ;        Invoke _MUI_DesktopFaceNotifyParent, hControl, MUIDFN_SHOW, NULL
-        
+
     .ELSE
 
        ; Invoke IsWindowVisible, hControl
@@ -1153,7 +1125,7 @@ MUIDesktopFaceShow PROC hControl:DWORD, bShow:DWORD
         ;.IF eax == FALSE
         ;    ret
         ;.ENDIF        
-        
+
         Invoke KillTimer, hControl, DF_TIMER_FADEIN
         Invoke KillTimer, hControl, DF_TIMER_POPIN
 
@@ -1169,8 +1141,7 @@ MUIDesktopFaceShow PROC hControl:DWORD, bShow:DWORD
         ;Invoke GetWindowRect, hControl, Addr rect
         ;PrintDec rect.left
         ;PrintDec rect.top        
-        
-        
+
         Invoke MUIGetExtProperty, hControl, @DesktopFaceOpacity
         Invoke MUISetIntProperty, hControl, @DesktopFaceFadeAlphaLevel, eax
         Invoke SetTimer, hControl, DF_TIMER_FADEOUT, 10, NULL ; set timer to fade out window
@@ -1183,10 +1154,9 @@ MUIDesktopFaceShow PROC hControl:DWORD, bShow:DWORD
             Invoke SetTimer, hControl, DF_TIMER_POPOUT, 10, NULL ; set timer to pop out window
         .ENDIF
         Invoke _MUI_DesktopFaceNotifyParent, hControl, MUIDFN_HIDE, NULL
-        
+
     .ENDIF
     ret
-
 MUIDesktopFaceShow ENDP
 
 

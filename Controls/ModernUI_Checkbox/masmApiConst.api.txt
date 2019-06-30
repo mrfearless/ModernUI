@@ -1,0 +1,15 @@
+;------------------------------------------------------------------------------
+; ModernUI_Checkbox Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+8MUICheckboxCreate,MUICBS_CHECK,MUICBS_RADIO,MUICBS_HAND,MUICBS_NOFOCUSRECT,MUICBS_THEMEDARK,MUICBS_THEME
+2MUICheckboxSetProperty,@CheckboxTextFont,@CheckboxTextColor,@CheckboxTextColorAlt,@CheckboxTextColorSel,@CheckboxTextColorSelAlt,@CheckboxTextColorDisabled,@CheckboxBackColor,@CheckboxImageType,@CheckboxImage,@CheckboxImageAlt,@CheckboxImageSel,@CheckboxImageSelAlt,@CheckboxImageDisabled,@CheckboxImageDisabledSel,@CheckboxDllInstance,@CheckboxParam
+2MUICheckboxGetProperty,@CheckboxTextFont,@CheckboxTextColor,@CheckboxTextColorAlt,@CheckboxTextColorSel,@CheckboxTextColorSelAlt,@CheckboxTextColorDisabled,@CheckboxBackColor,@CheckboxImageType,@CheckboxImage,@CheckboxImageAlt,@CheckboxImageSel,@CheckbxImageSelAlt,@CheckboxImageDisabled,@CheckboxImageDisabledSel,@CheckboxDllInstance,@CheckboxParam
+3MUICheckboxSetProperty,MUI_RGBCOLOR
+2MUICheckboxSetState,TRUE,FALSE
+2MUICheckboxLoadImages,MUICIT_NONE,MUICIT_BMP,MUICIT_ICO,MUICIT_PNG
+2MUICheckboxSetImages,MUICIT_NONE,MUICIT_BMP,MUICIT_ICO,MUICIT_PNG

@@ -1,0 +1,12 @@
+;------------------------------------------------------------------------------
+; ModernUI_Tooltip Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiCall.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUITooltipRegister
+MUITooltipCreate,hWndBuddyControl,lpszText,dwWidth,dwStyle
+MUITooltipSetProperty,hModernUI_Tooltip,dwProperty,dwPropertyValue
+MUITooltipGetProperty,hModernUI_Tooltip,dwProperty

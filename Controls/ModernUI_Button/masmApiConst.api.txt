@@ -1,0 +1,19 @@
+;------------------------------------------------------------------------------
+; ModernUI_Button Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+8MUIButtonCreate,MUIBS_LEFT,MUIBS_BOTTOM,MUIBS_CENTER,MUIBS_AUTOSTATE,MUIBS_PUSHBUTTON,MUIBS_HAND,MUIBS_KEEPIMAGES,MUIBS_DROPDOWN,MUIBS_NOFOCUSRECT,MUIBS_THEME
+2MUIButtonSetProperty,@ButtonTextFont,@ButtonTextColor,@ButtonTextColorAlt,@ButtonTextColorSel,@ButtonTextColorSelAlt,@ButtonTextColorDisabled,@ButtonBackColor,@ButtonBackColorAlt,@ButtonBackColorSel,@ButtonBackColorSelAlt,@ButtonBackColorDisabled,@ButtonBorderColor,@ButtonBorderColorAlt,@ButtonBorderColorSel,@ButtonBorderColorSelAlt,@ButtonBorderColorDisabled,@ButtonBorderStyle,@ButtonAccentColor,@ButtonAccentColorAlt,@ButtonAccentColorSel,@ButtonAccentColorSelAlt,@ButtonAccentStyle,@ButtonAccentStyleAlt,@ButtonAccentStyleSel,@ButtonAccentStyleSelAlt,@ButtonImageType,@ButtonImage,@ButtonImageAlt,@ButtonImageSel,@ButtonImageSelAlt,@ButtonImageDisabled,@ButtonRightImage,@ButtonRightImageAlt,@ButtonRightImageSel,@ButtonRightImageSelAlt,@ButtonRightImageDisabled,@ButtonNotifyTextFont,@ButtonNotifyTextColor,@ButtonNotifyBackColor,@ButtonNotifyRound,@ButtonNotifyImageType,@ButtonNotifyImage,@ButtonNoteTextFont,@ButtonNoteTextColor,@ButtonNoteTextColorDisabled,@ButtonPaddingLeftIndent,@ButtonPaddingGeneral,@ButtonPaddingStyle,@ButtonPaddingTextImage,@ButtonDllInstance,@ButtonParam
+2MUIButtonGetProperty,@ButtonTextFont,@ButtonTextColor,@ButtonTextColorAlt,@ButtonTextColorSel,@ButtonTextColorSelAlt,@ButtonTextColorDisabled,@ButtonBackColor,@ButtonBackColorAlt,@ButtonBackColorSel,@ButtonBackColorSelAlt,@ButtonBackColorDisabled,@ButtonBorderColor,@ButtonBorderColorAlt,@ButtonBorderColorSel,@ButtonBorderColorSelAlt,@ButtonBorderColorDisabled,@ButtonBorderStyle,@ButtonAccentColor,@ButtonAccentColorAlt,@ButtonAccentColorSel,@ButtonAccentColorSelAlt,@ButtonAccentStyle,@ButtonAccentStyleAlt,@ButtonAccentStyleSel,@ButtonAccentStyleSelAlt,@ButtonImageType,@ButtonImage,@ButtonImageAlt,@ButtonImageSel,@ButtonImageSelAlt,@ButtonImageDisabled,@ButtonRightImage,@ButtonRightImageAlt,@ButtonRightImageSel,@ButtonRightImageSelAlt,@ButtonRightImageDisabled,@ButtonNotifyTextFont,@ButtonNotifyTextColor,@ButtonNotifyBackColor,@ButtonNotifyRound,@ButtonNotifyImageType,@ButtonNotifyImage,@ButtonNoteTextFont,@ButtonNoteTextColor,@ButtonNoteTextColorDisabled,@ButtonPaddingLeftIndent,@ButtonPaddingGeneral,@ButtonPaddingStyle,@ButtonPaddingTextImage,@ButtonDllInstance,@ButtonParam
+3MUIButtonSetProperty,MUI_RGBCOLOR,MUIBBS_NONE,MUIBBS_LEFT,MUIBBS_TOP,MUIBBS_BOTTOM,MUIBBS_RIGHT,MUIBBS_ALL,MUIBAS_NONE,MUIBAS_LEFT,MUIBAS_TOP,MUIBAS_BOTTOM,MUIBAS_RIGHT,MUIBAS_ALL,MUIBIT_NONE,MUIBIT_BMP,MUIBIT_ICO,MUIBIT_PNG,MUIBPS_NONE,MUIBPS_LEFT,MUIBPS_TOP,MUIBPS_BOTTOM,MUIBPS_RIGHT,MUIBPS_ALL
+2MUIButtonSetState,TRUE,FALSE
+2MUIButtonLoadImages,MUIBIT_NONE,MUIBIT_BMP,MUIBIT_ICO,MUIBIT_PNG
+2MUIButtonSetImages,MUIBIT_NONE,MUIBIT_BMP,MUIBIT_ICO,MUIBIT_PNG
+2MUIButtonNotify,TRUE,FALSE
+2MUIButtonNotifyLoadImage,MUIBIT_NONE,MUIBIT_BMP,MUIBIT_ICO,MUIBIT_PNG
+2MUIButtonNotifySetImage,MUIBIT_NONE,MUIBIT_BMP,MUIBIT_ICO,MUIBIT_PNG
+2MUIButtonSetAllProperties,MUI_BUTTON_DEFAULT_THEME,MUI_BUTTON_LIGHT_THEME,MUI_BUTTON_DARK_THEME,MUI_CHECKBOX_LIGHT_THEME,MUI_CHECKBOX_DARK_THEME,MUI_MENUITEM_LIGHT_THEME,MUI_MENUITEM_DARK_THEME

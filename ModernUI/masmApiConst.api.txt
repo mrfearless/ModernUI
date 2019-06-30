@@ -1,0 +1,23 @@
+;------------------------------------------------------------------------------
+; ModernUI base library
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+2MUIAllocMemProperties,MUI_INTERNAL_PROPERTIES,MUI_EXTERNAL_PROPERTIES
+2MUIFreeMemProperties,MUI_INTERNAL_PROPERTIES,MUI_EXTERNAL_PROPERTIES
+2MUIApplyToDialog,TRUE,FALSE
+3MUIApplyToDialog,TRUE,FALSE
+2MUIPaintBackground,MUI_RGBCOLOR
+3MUIPaintBackground,MUI_RGBCOLOR
+2MUIPaintBackgroundImage,MUI_RGBCOLOR
+3MUIPaintBackgroundImage,MUI_RGBCOLOR
+5MUIPaintBackgroundImage,MUIIT_NONE,MUIIT_BMP,MUIIT_ICO,MUIIT_PNG
+6MUIPaintBackgroundImage,MUIIL_CENTER,MUIIL_BOTTOMLEFT,MUIIL_BOTTOMRIGHT,MUIIL_TOPLEFT,MUIIL_TOPRIGHT,MUIIL_TOPCENTER,MUIIL_BOTTOMCENTER
+2MUIGetImageSize,MUIIT_NONE,MUIIT_BMP,MUIIT_ICO,MUIIT_PNG
+3MUIGetImageSizeEx,MUIIT_NONE,MUIIT_BMP,MUIIT_ICO,MUIIT_PNG
+4UISetRegionFromResource,TRUE,FALSE
+3MUIGDIBlend,MUI_RGBCOLOR
+3MUIGDIBlendBitmaps,MUI_RGBCOLOR

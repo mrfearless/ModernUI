@@ -1,0 +1,9 @@
+;------------------------------------------------------------------------------
+; ModernUI_Button Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiStruct.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUI_BUTTON_PROPERTIES,dwTextFont,dwTextColor,dwTextColorAlt,dwTextColorSel,dwTextColorSelAlt,dwTextColorDisabled,dwBackColor,dwBackColorAlt,dwBackColorSel,dwBackColorSelAlt,dwBackColorDisabled,dwBorderColor,dwBorderColorAlt,dwBorderColorSel,dwBorderColorSelAlt,dwBorderColorDisabled,dwBorderStyle,dwAccentColor,dwAccentColorAlt,dwAccentColorSel,dwAccentColorSelAlt,dwAccentStyle,dwAccentStyleAlt,dwAccentStyleSel,dwAccentStyleSelAlt,dwImageType,dwImage,dwImageAlt,dwImageSel,dwImageSelAlt,dwImageDisabled,dwRightImage,dwRightImageAlt,dwRightImageSel,dwRightImageSelAlt,dwRightImageDisabled,dwNotifyTextFont,dwNotifyTextColor,dwNotifyBackColor,dwNotifyRound,dwNotifyImageType,dwNotifyImage,dwButtonNoteTextFont,dwButtonNoteTextColor,dwButtonNoteTextColorDisabled,dwButtonPaddingLeftIndent,dwButtonPaddingGeneral,dwButtonPaddingStyle,dwButtonPaddingTextImage,dwButtonDllInstance

@@ -1,0 +1,11 @@
+;------------------------------------------------------------------------------
+; ModernUI_Button Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmMessage.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+; ModernUI_Button Control
+MUIBM_GETSTATE,EQU WM_USER + 1779
+MUIBM_SETSTATE,EQU WM_USER + 1778

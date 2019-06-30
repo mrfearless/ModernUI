@@ -1,0 +1,12 @@
+;------------------------------------------------------------------------------
+; ModernUI_Region Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmMessage.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUIRB_GETSTATE,EQU WM_USER + 1798
+MUIRB_SETSTATE,EQU WM_USER + 1797
+MUIRB_SETREGION,EQU WM_USER + 1796
+MUIRB_SETBITMAP,EQU WM_USER + 1795

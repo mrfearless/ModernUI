@@ -301,12 +301,14 @@ _MUI_ProgressDotsWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPAR
         Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_PROGRESSDOTS_PROPERTIES ; internal properties
         Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_PROGRESSDOTS_PROPERTIES ; external properties
         Invoke _MUI_ProgressDotsInit, hWin
-
         ret    
 
     .ELSEIF eax == WM_NCDESTROY
+        Invoke MUIProgressDotsAnimateStop, hWin
         Invoke MUIFreeMemProperties, hWin, 0
         Invoke MUIFreeMemProperties, hWin, 4
+        mov eax, 0
+        ret
         
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1

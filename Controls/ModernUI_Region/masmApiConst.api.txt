@@ -1,0 +1,13 @@
+;------------------------------------------------------------------------------
+; ModernUI_Region Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+6MUIRegionButtonCreate,MUIRB_HAND,MUIRB_MOVE,MUIRB_PUSHBUTTON,MUIRB_MOUSEMOVEPARENT,MUIRB_AUTOSTATE,MUIRB_AUTOCUSTOMSTATE
+2MUIRegionButtonSetProperty,@RegionButtonBackColor,@RegionButtonBackColorAlt,@RegionButtonBackColorSel,@RegionButtonBackColorSelAlt,@RegionButtonBackColorDisabled,@RegionButtonBorderColor,@RegionButtonBorderColorAlt,@RegionButtonBorderColorSel,@RegionButtonBorderColorSelAlt,@RegionButtonBorderColorDisabled,@RegionButtonBorderSize,@RegionButtonBorderSizeAlt,@RegionButtonBorderSizeSel,@RegionButtonBorderSizeSelAlt,@RegionButtonBorderSizeDisabled,@RegionButtonUserData 
+2MUIRegionButtonGetProperty,@RegionButtonBackColor,@RegionButtonBackColorAlt,@RegionButtonBackColorSel,@RegionButtonBackColorSelAlt,@RegionButtonBackColorDisabled,@RegionButtonBorderColor,@RegionButtonBorderColorAlt,@RegionButtonBorderColorSel,@RegionButtonBorderColorSelAlt,@RegionButtonBorderColorDisabled,@RegionButtonBorderSize,@RegionButtonBorderSizeAlt,@RegionButtonBorderSizeSel,@RegionButtonBorderSizeSelAlt,@RegionButtonBorderSizeDisabled,@RegionButtonUserData 
+3MUIRegionButtonSetProperty,MUI_RGBCOLOR
+2MUIRegionButtonSetState,TRUE,FALSE

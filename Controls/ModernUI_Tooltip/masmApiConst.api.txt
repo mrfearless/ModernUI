@@ -1,0 +1,12 @@
+;------------------------------------------------------------------------------
+; ModernUI_Tooltip Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+4MUITooltipCreate,MUITTS_POS_BELOW,MUITTS_POS_RIGHT,MUITTS_POS_ABOVE,MUITTS_POS_LEFT,MUITTS_POS_MOUSE,MUITTS_NODROPSHADOW,MUITTS_FADEIN,MUITTS_TIMEOUT
+2MUITooltipSetProperty,@TooltipFont,@TooltipTextColor,@TooltipBackColor,@TooltipBorderColor,@TooltipShowDelay,@TooltipShowTimeout,@TooltipInfoTitleText,@TooltipOffsetX,@TooltipOffsetY
+2MUITooltipGetProperty,@TooltipFont,@TooltipTextColor,@TooltipBackColor,@TooltipBorderColor,@TooltipShowDelay,@TooltipShowTimeout,@TooltipInfoTitleText,@TooltipOffsetX,@TooltipOffsetY
+3MUITooltipSetProperty,MUI_RGBCOLOR

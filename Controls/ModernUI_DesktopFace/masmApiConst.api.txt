@@ -1,0 +1,13 @@
+;------------------------------------------------------------------------------
+; ModernUI_DesktopFace
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+4MUIDesktopFaceCreate,MUIDFS_POS_AS_SPECIFIED,MUIDFS_POS_VERT_BOTTOM,MUIDFS_POS_VERT_TOP,MUIDFS_POS_VERT_CENTER,MUIDFS_POS_HORZ_LEFT,MUIDFS_POS_HORZ_CENTER,MUIDFS_POS_HORZ_RIGHT,MUIDFS_POPIN,MUIDFS_POPOUT,MUIDFS_NOMOVE
+2MUIDesktopFaceSetProperty,@DesktopFaceImageType,@DesktopFaceImage,@DesktopFaceRegion,@DesktopFaceOpacity,@DesktopFaceFadeStepIn,@DesktopFaceFadeStepOut,@DesktopFacePopStepIn,@DesktopFacePopStepOut,@DesktopFaceBorderColor
+2MUIDesktopFaceGetProperty,@DesktopFaceImageType,@DesktopFaceImage,@DesktopFaceRegion,@DesktopFaceOpacity,@DesktopFaceFadeStepIn,@DesktopFaceFadeStepOut,@DesktopFacePopStepIn,@DesktopFacePopStepOut,@DesktopFaceBorderColor
+3MUIDesktopFaceSetProperty,MUI_RGBCOLOR,MUIDFIT_NONE,MUIDFIT_BMP,MUIDFIT_ICO,MUIDFIT_PNG
+2MUIDesktopFaceShow,TRUE,FALSE

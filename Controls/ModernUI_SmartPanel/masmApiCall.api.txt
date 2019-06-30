@@ -1,0 +1,19 @@
+;------------------------------------------------------------------------------
+; ModernUI_SmartPanel Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiCall.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUISmartPanelRegister
+MUISmartPanelCreate,hWndParent,xpos,ypos,dwWidth,dwHeight,dwResourceID,dwStyle
+MUISmartPanelSetProperty,hModernUI_SmartPanel,dwProperty,dwPropertyValue
+MUISmartPanelGetProperty,hModernUI_SmartPanel,dwProperty
+MUISmartPanelGetCurrentPanel,hModernUI_SmartPanel
+MUISmartPanelSetCurrentPanel,hModernUI_SmartPanel,PanelIndex,bNotify
+MUISmartPanelNextPanel,hModernUI_SmartPanel,bNotify
+MUISmartPanelPrevPanel,hModernUI_SmartPanel,bNotify
+MUISmartPanelSetIsDlgMsgVar,hModernUI_SmartPanel,lpdwVar
+MUISmartPanelRegisterPanel,hModernUI_SmartPanel,dwResIdPanelDlg,lpdwPanelProc
+MUISmartPanelCurrentPanelIndex,hModernUI_SmartPanel

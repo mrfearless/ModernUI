@@ -1,0 +1,16 @@
+;------------------------------------------------------------------------------
+; ModernUI_CaptionBar Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+5MUICaptionBarCreate,MUICS_LEFT,MUICS_CENTER,MUICS_NOMINBUTTON,MUICS_NOMAXBUTTON,MUICS_NOCLOSEBUTTON,MUICS_REDCLOSEBUTTON,MUICS_NOMOVEWINDOW,MUICS_WINNOMUISTYLE,MUICS_WINNODROPSHADOW,MUICS_USEICONSFORBUTTONS,MUICS_KEEPICONS,MUICS_NOCAPTIONTITLETEXT,MUICS_NOBORDER,MUICS_WINSIZE,MUICS_THEME
+2MUICaptionBarSetProperty,@CaptionBarTextColor,@CaptionBarTextFont,@CaptionBarBackColor,@CaptionBarBackImageType,@CaptionBarBackImage,@CaptionBarBackImageOffsetX,@CaptionBarBackImageOffsetY,@CaptionBarBtnTxtRollColor,@CaptionBarBtnBckRollColor,@CaptionBarBtnBorderColor,@CaptionBarBtnBorderRollColor,@CaptionBarBtnWidth,@CaptionBarBtnHeight,@CaptionBarBtnOffsetX,@CaptionBarBtnOffsetY,@CaptionBarBtnIcoMin,@CaptionBarBtnIcoMinAlt,@CaptionBarBtnIcoMax,@CaptionBarBtnIcoMaxAlt,@CaptionBarBtnIcoRes,@CaptionBarBtnIcoResAlt,@CaptionBarBtnIcoClose,@CaptionBarBtnIcoCloseAlt,@CaptionBarWindowBackColor,@CaptionBarWindowBorderColor,@CaptionBarDllInstance,@CaptionBarParam
+2MUICaptionBarGetProperty,@CaptionBarTextColor,@CaptionBarTextFont,@CaptionBarBackColor,@CaptionBarBackImageType,@CaptionBarBackImage,@CaptionBarBackImageOffsetX,@CaptionBarBackImageOffsetY,@CaptionBarBtnTxtRollColor,@CaptionBarBtnBckRollColor,@CaptionBarBtnBorderColor,@CaptionBarBtnBorderRollColor,@CaptionBarBtnWidth,@CaptionBarBtnHeight,@CaptionBarBtnOffsetX,@CaptionBarBtnOffsetY,@CaptionBarBtnIcoMin,@CaptionBarBtnIcoMinAlt,@CaptionBarBtnIcoMax,@CaptionBarBtnIcoMaxAlt,@CaptionBarBtnIcoRes,@CaptionBarBtnIcoResAlt,@CaptionBarBtnIcoClose,@CaptionBarBtnIcoCloseAlt,@CaptionBarWindowBackColor,@CaptionBarWindowBorderColor,@CaptionBarDllInstance,@CaptionBarParam
+3MUICaptionBarSetProperty,MUI_RGBCOLOR,MUICBIT_NONE,MUICBIT_BMP,MUICBIT_ICO,MUICBIT_PNG
+2MUICaptionBarLoadBackImage,MUICBIT_NONE,MUICBIT_BMP,MUICBIT_ICO,MUICBIT_PNG
+2MUICapButtonSetProperty,@CapButtonTextColor,@CapButtonTextRollColor,@CapButtonBackColor,@CapButtonBackRollColor,@CapButtonBorderColor,@CapButtonBorderRollColor,@CapButtonIco,@CapButtonIcoAlt,@CapButtonParam,@CapButtonResourceID
+2MUICapButtonGetProperty,@CapButtonTextColor,@CapButtonTextRollColor,@CapButtonBackColor,@CapButtonBackRollColor,@CapButtonBorderColor,@CapButtonBorderRollColor,@CapButtonIco,@CapButtonIcoAlt,@CapButtonParam,@CapButtonResourceID
+3MUICapButtonSetProperty,MUI_RGBCOLOR
