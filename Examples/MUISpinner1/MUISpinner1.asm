@@ -19,8 +19,8 @@ include MUISpinner1.inc
 
 .code
 
-;start:
-WinMainCRTStartup PROC
+start:
+
     Invoke GetModuleHandle,NULL
     mov hInstance, eax
     Invoke GetCommandLine
@@ -33,7 +33,6 @@ WinMainCRTStartup PROC
     Invoke WinMain, hInstance, NULL, CommandLine, SW_SHOWDEFAULT
     Invoke ExitProcess, eax
     ret
-WinMainCRTStartup ENDP
 
 ;-------------------------------------------------------------------------------------
 ; WinMain
@@ -155,6 +154,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         mov hSpinner5, eax
         ; Load single png stored as a resource and rotate it into 12 segments
         Invoke MUISpinnerLoadImage, hSpinner5, PNG_SPIN5, 12, FALSE
+        Invoke MUISpinnerSetProperty, hSpinner5, @SpinnerSpeed, 500
         Invoke MUISpinnerEnable, hSpinner5
         
         ;-----------------------------------------------------------------------------
@@ -443,5 +443,5 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
     ret
 WndProc endp
 
-end WinMainCRTStartup
-;end start
+
+end start

@@ -1,0 +1,26 @@
+;------------------------------------------------------------------------------
+; ModernUI_Spinner Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiCall.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUISpinnerRegister
+MUISpinnerCreate,hWndParent,xpos,ypos,dwWidth,dwHeight,dwResourceID,dwStyle
+MUISpinnerSetProperty,hModernUI_Spinner,dwProperty,dwPropertyValue
+MUISpinnerGetProperty,hModernUI_Spinner,dwProperty
+MUISpinnerAddFrame,hModernUI_Spinner,dwImageType,hImage
+MUISpinnerAddFrames,hModernUI_Spinner,dwCount,dwImageType,lpArrayImageHandles
+MUISpinnerLoadFrame,hModernUI_Spinner,dwImageType,idResImage
+MUISpinnerLoadFrames,hModernUI_Spinner,dwCount,dwImageType,lpArrayResourceIDs
+MUISpinnerAddImage,hModernUI_Spinner,hImage,dwNoFramesToCreate,bReverse
+MUISpinnerLoadImage,hModernUI_Spinner,idResImage,dwNoFramesToCreate,bReverse
+MUISpinnerAddSpriteSheet,hModernUI_Spinner,dwSpriteCount,dwImageType,hImageSpriteSheet,bReverse
+MUISpinnerLoadSpriteSheet,hModernUI_Spinner,dwSpriteCount,dwImageType,idResSpriteSheet,bReverse
+MUISpinnerEnable,hModernUI_Spinner
+MUISpinnerDisable,hModernUI_Spinner
+MUISpinnerReset,hModernUI_Spinner
+MUISpinnerPause,hModernUI_Spinner
+MUISpinnerResume,hModernUI_Spinner
+MUISpinnerSpeed,hModernUI_Spinner,dwMillisecSpeed

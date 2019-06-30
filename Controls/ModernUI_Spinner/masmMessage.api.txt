@@ -1,0 +1,16 @@
+;------------------------------------------------------------------------------
+; ModernUI_Spinner Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmMessage.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUISPNM_ADDFRAME,EQU WM_USER+1752 ; wParam = dwImageType lParam = hImage
+MUISPNM_LOADFRAME,EQU WM_USER+1751 ; wParam = dwImageType lParam = idResImage
+MUISPNM_ENABLE,EQU WM_USER+1750 ; wParam & lParam = NULL
+MUISPNM_DISABLE,EQU WM_USER+1749 ; wParam & lParam = NULL
+MUISPNM_RESET,EQU WM_USER+1748 ; wParam & lParam = NULL
+MUISPNM_PAUSE,EQU WM_USER+1747 ; wParam & lParam = NULL
+MUISPNM_RESUME,EQU WM_USER+1746 ; wParam & lParam = NULL
+MUISPNM_SPEED,EQU WM_USER+1745 ; wParam = dwMillisecSpeed
