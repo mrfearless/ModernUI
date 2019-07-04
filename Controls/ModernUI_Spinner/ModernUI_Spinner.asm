@@ -555,10 +555,6 @@ MUI_ALIGN
 _MUI_SpinnerNextFrameIndex PROC USES EBX hWin:DWORD
     LOCAL TotalFrames:DWORD
     LOCAL NextFrame:DWORD
-    LOCAL dwSpinnerRotateStep:DWORD
-    LOCAL BackColor:DWORD
-    LOCAL hSpinnerBitmapToRotate:DWORD
-    LOCAL hSpinnerRotatedBitmap:DWORD
 
     Invoke MUIGetIntProperty, hWin, @SpinnerTotalFrames
     mov TotalFrames, eax
@@ -1828,7 +1824,7 @@ _MUI_SpinnerRotateCenterImage PROC hImage:DWORD, fAngle:REAL4
     fstp st(0)
     ;ffree st(0)
     jz angle_is_180
-    jmp other_angle
+    jmp angle_is_not_180
     
 angle_is_180:
     ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
@@ -1836,7 +1832,96 @@ angle_is_180:
     Invoke GdipImageRotateFlip, pBitmap, Rotate180FlipNone
     jmp tidyup
 
-other_angle:
+angle_is_not_180:
+
+    ;---------------------------------------------------------------------------------
+    ; Check if angle is 90, if it is then do a flip instead of rotating
+    ;---------------------------------------------------------------------------------
+    finit           ; init fpu
+    fld fAngle
+    fcom FP4(90.0) ; compare ST(0) with the value of the real4_var variable: 180.0
+    fstsw ax        ; copy the Status Word containing the result to AX
+    fwait           ; insure the previous instruction is completed
+    sahf            ; transfer the condition codes to the CPU's flag register
+    fstp st(0)
+    ;ffree st(0)
+    jz angle_is_90
+    jmp angle_is_not_90
+    
+angle_is_90:
+    ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
+    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
+    Invoke GdipImageRotateFlip, pBitmap, Rotate90FlipNone
+    jmp tidyup
+
+angle_is_not_90:
+
+    ;---------------------------------------------------------------------------------
+    ; Check if angle is 270, if it is then do a flip instead of rotating
+    ;---------------------------------------------------------------------------------
+    finit           ; init fpu
+    fld fAngle
+    fcom FP4(270.0) ; compare ST(0) with the value of the real4_var variable: 180.0
+    fstsw ax        ; copy the Status Word containing the result to AX
+    fwait           ; insure the previous instruction is completed
+    sahf            ; transfer the condition codes to the CPU's flag register
+    fstp st(0)
+    ;ffree st(0)
+    jz angle_is_270
+    jmp angle_is_not_270
+    
+angle_is_270:
+    ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
+    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
+    Invoke GdipImageRotateFlip, pBitmap, Rotate270FlipNone
+    jmp tidyup
+
+angle_is_not_270:
+
+    ;---------------------------------------------------------------------------------
+    ; Check if angle is 360, if it is then do a flip instead of rotating
+    ;---------------------------------------------------------------------------------
+    finit           ; init fpu
+    fld fAngle
+    fcom FP4(360.0) ; compare ST(0) with the value of the real4_var variable: 180.0
+    fstsw ax        ; copy the Status Word containing the result to AX
+    fwait           ; insure the previous instruction is completed
+    sahf            ; transfer the condition codes to the CPU's flag register
+    fstp st(0)
+    ;ffree st(0)
+    jz angle_is_360
+    jmp angle_is_not_360
+    
+angle_is_360:
+    ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
+    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
+    Invoke GdipImageRotateFlip, pBitmap, RotateNoneFlipNone
+    jmp tidyup
+
+angle_is_not_360:
+
+    ;---------------------------------------------------------------------------------
+    ; Check if angle is 0, if it is then do a flip instead of rotating
+    ;---------------------------------------------------------------------------------
+    finit           ; init fpu
+    fld fAngle
+    fcom FP4(0.0)   ; compare ST(0) with the value of the real4_var variable: 180.0
+    fstsw ax        ; copy the Status Word containing the result to AX
+    fwait           ; insure the previous instruction is completed
+    sahf            ; transfer the condition codes to the CPU's flag register
+    fstp st(0)
+    ;ffree st(0)
+    jz angle_is_0
+    jmp angle_is_not_0
+    
+angle_is_0:
+    ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
+    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
+    Invoke GdipImageRotateFlip, pBitmap, RotateNoneFlipNone
+    jmp tidyup
+
+angle_is_not_0:
+
 
     ;---------------------------------------------------------------------------------
     ; Do the actual rotation, calc Translate x, y position for GdipTranslateMatrix to
