@@ -1,0 +1,32 @@
+;------------------------------------------------------------------------------
+; ModernUI_Animation Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+2MUIAnimationSetProperty,@AnimationBackColor,@AnimationLoop,@AnimationNotifications,@AnimationDllInstance,@AnimationParam,@AnimationNotifyCallback
+3MUIAnimationSetProperty,MUI_RGBCOLOR,TRUE,FALSE
+2MUIAnimationGetProperty,@AnimationBackColor,@AnimationLoop,@AnimationNotifications,@AnimationDllInstance,@AnimationParam,@AnimationNotifyCallback
+2MUIAnimationAddFrame,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+2MUIAnimationAddFrames,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+2MUIAnimationLoadFrame,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+2MUIAnimationLoadFrames,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+2MUIAnimationAddSpriteSheet,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+7MUIAnimationAddSpriteSheet,MUIAFT_FULL,MUIAFT_COMPACT
+2MUIAnimationLoadSpriteSheet,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+7MUIAnimationLoadSpriteSheet,MUIAFT_FULL,MUIAFT_COMPACT
+2MUIAnimationInsertFrame,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+5MUIAnimationInsertFrame,FALSE,TRUE
+2MUIAnimationInsertFrames,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+5MUIAnimationInsertFrames,FALSE,TRUE
+2MUIAnimationStep,FALSE,TRUE
+2MUIAnimationExportSpriteSheet,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+2MUIAnimationExportFrame,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+2MUIAnimationExportFrames,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+5MUIAnimationExportFrames,FALSE,TRUE
+2MUIAnimationImportSpriteSheet,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+2MUIAnimationImportFrame,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+3MUIAnimationSetFrameImage,MUIAIT_PNG,MUIAIT_BMP,MUIAIT_ICO,MUIAIT_NONE
+2_MUI_AnimationNotify,MUIAN_STOP,MUIAN_START,MUIAN_PAUSE,MUIAN_RESUME,MUIAN_STEP,MUIAN_FRAME

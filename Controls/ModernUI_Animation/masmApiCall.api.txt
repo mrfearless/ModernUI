@@ -1,0 +1,45 @@
+;------------------------------------------------------------------------------
+; ModernUI_Animation Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiCall.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUIAnimationRegister
+MUIAnimationCreate,hWndParent,xpos,ypos,dwWidth,dwHeight,dwResourceID,dwStyle
+MUIAnimationSetProperty,hModernUI_Animation,dwProperty,dwPropertyValue
+MUIAnimationGetProperty,hModernUI_Animation,dwProperty
+MUIAnimationAddFrame,hModernUI_Animation,dwImageType,lpMuiAnimationFrameStruct
+MUIAnimationAddFrames,hModernUI_Animation,dwImageType,lpArrayMuiAnimationFrameStructs,dwCount
+MUIAnimationLoadFrame,hModernUI_Animation,dwImageType,lpMuiAnimationFrameStruct
+MUIAnimationLoadFrames,hModernUI_Animation,dwImageType,lpArrayMuiAnimationFrameStructs,dwCount
+MUIAnimationAddSpriteSheet,hModernUI_Animation,dwImageType,hImageSpriteSheet,dwSpriteCount,lpFrameTimes,dwFrameTimeSize,dwFrameTimeType
+MUIAnimationLoadSpriteSheet,hModernUI_Animation,dwImageType,idResSpriteSheet,dwSpriteCount,lpFrameTimes,dwFrameTimeSize,dwFrameTimeType
+MUIAnimationClear,hModernUI_Animation
+MUIAnimationDeleteFrame,hModernUI_Animation,dwFrameIndex
+MUIAnimationDeleteFrames,hModernUI_Animation
+MUIAnimationInsertFrame,hModernUI_Animation,dwImageType,lpMuiAnimationFrameStruct,dwFrameIndex,bInsertBefore
+MUIAnimationInsertFrames,hModernUI_Animation,dwImageType,lpArrayMuiAnimationFrameStructs,dwCount,dwFrameIndex,bInsertBefore
+MUIAnimationMoveFrame,hModernUI_Animation,dwFrameIndexFrom,dwFrameIndexTo
+MUIAnimationCopyFrame,hModernUI_Animation,dwFrameIndexFrom,dwFrameIndexTo
+MUIAnimationCropFrame,hModernUI_Animation,dwFrameIndex,lpRect
+MUIAnimationCropFrames,hModernUI_Animation,lpRect
+MUIAnimationExportSpriteSheet,hModernUI_Animation,dwImageType,lpszSpritesheetFilename,lpszFrameTimesFilename
+MUIAnimationExportFrame,hModernUI_Animation,dwImageType,lpszFrameFilename,dwFrameIndex
+MUIAnimationExportFrames,hModernUI_Animation,dwImageType,lpszFrameFolder,lpszFilePrefix,bFileFrameNo
+MUIAnimationImportSpriteSheet,hModernUI_Animation,dwImageType,lpszSpritesheetFilename,lpszFrameTimesFilename
+MUIAnimationImportFrame,hModernUI_Animation,dwImageType,lpszFrameFilename,dwFrameIndex
+MUIAnimationGetFrameInfo,hModernUI_Animation,dwFrameIndex,lpMuiAnimationFrameStruct
+MUIAnimationGetFrameImage,hModernUI_Animation,dwFrameIndex,lpdwFrameType
+MUIAnimationGetFrameTime,hModernUI_Animation,dwFrameIndex
+MUIAnimationSetFrameInfo,hModernUI_Animation,dwFrameIndex,lpMuiAnimationFrameStruct
+MUIAnimationSetFrameImage,hModernUI_Animation,dwFrameIndex,dwFrameType,hFrameImage
+MUIAnimationSetFrameTime,hModernUI_Animation,dwFrameIndex,dwFrameTime
+MUIAnimationStart,hModernUI_Animation
+MUIAnimationStop,hModernUI_Animation
+MUIAnimationPause,hModernUI_Animation
+MUIAnimationResume,hModernUI_Animation
+MUIAnimationStep,hModernUI_Animation,bReverse
+MUIAnimationSpeed,hModernUI_Animation,dwSpeedFactor
+MUIAnimationNotifyCallback,hModernUI_Animation,lpNMAnimationStruct

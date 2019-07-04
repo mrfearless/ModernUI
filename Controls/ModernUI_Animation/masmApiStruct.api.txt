@@ -1,0 +1,11 @@
+;------------------------------------------------------------------------------
+; ModernUI_Animation Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiStruct.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+MUI_ANIMATION_FRAME,dwFrameType,dwFrameImage,dwFrameTime,lParam
+NM_ANIMATION_FRAME,dwFrameIndex,dwFrameType,dwFrameImage,dwFrameTime,lParam
+NM_ANIMATION,hdr:NMHDR,item:MUI_ANIMATION_FRAME
