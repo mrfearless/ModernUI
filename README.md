@@ -11,17 +11,17 @@ If you like this project and would like to support me, consider donating via [Li
 
 # ModernUI Controls
 
-![](./assets/ModernUI_Button48x48.png) [ModernUI_Button](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Button) 
-![](./assets/ModernUI_CaptionBar48x48.png) [ModernUI_CaptionBar](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_CaptionBar) 
-![](./assets/ModernUI_Checkbox48x48.png) [ModernUI_Checkbox](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Checkbox) 
-![](./assets/ModernUI_ProgressBar48x48.png) [ModernUI_ProgressBar](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_ProgressBar) 
-![](./assets/ModernUI_ProgressDots48x48.png) [ModernUI_ProgressDots](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_ProgressDots) 
-![](./assets/ModernUI_RegionButton48x48.png) [ModernUI_Region](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Region) 
-![](./assets/ModernUI_SmartPanel48x48.png) [ModernUI_SmartPanel](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_SmartPanel) 
-![](./assets/ModernUI_Spinner48x48.png) [ModernUI_Spinner](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Spinner) 
-![](./assets/ModernUI_Text48x48.png) [ModernUI_Text](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Text) 
-![](./assets/ModernUI_Tooltip48x48.png) [ModernUI_Tooltip](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Tooltip) 
-![](./assets/ModernUI_TrayMenu48x48.png) [ModernUI_TrayMenu](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_TrayMenu)
+- ![](./assets/ModernUI_Button48x48.png) [ModernUI_Button](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Button) 
+- ![](./assets/ModernUI_CaptionBar48x48.png) [ModernUI_CaptionBar](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_CaptionBar) 
+- ![](./assets/ModernUI_Checkbox48x48.png) [ModernUI_Checkbox](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Checkbox) 
+- ![](./assets/ModernUI_ProgressBar48x48.png) [ModernUI_ProgressBar](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_ProgressBar) 
+- ![](./assets/ModernUI_ProgressDots48x48.png) [ModernUI_ProgressDots](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_ProgressDots) 
+- ![](./assets/ModernUI_RegionButton48x48.png) [ModernUI_Region](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Region) 
+- ![](./assets/ModernUI_SmartPanel48x48.png) [ModernUI_SmartPanel](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_SmartPanel) 
+- ![](./assets/ModernUI_Spinner48x48.png) [ModernUI_Spinner](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Spinner) 
+- ![](./assets/ModernUI_Text48x48.png) [ModernUI_Text](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Text) 
+- ![](./assets/ModernUI_Tooltip48x48.png) [ModernUI_Tooltip](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_Tooltip) 
+- ![](./assets/ModernUI_TrayMenu48x48.png) [ModernUI_TrayMenu](https://github.com/mrfearless/ModernUI/tree/master/Controls/ModernUI_TrayMenu)
 
 # ModernUI Library Setup 
 
