@@ -41,26 +41,30 @@
 ;------------------------------------------------------------------------------
 ; ModernUI_SmartPanel Prototypes
 ;------------------------------------------------------------------------------
-MUISmartPanelRegister          PROTO                                                                   ; Use 'ModernUI_SmartPanel' as class in RadASM custom class control
-MUISmartPanelCreate            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD            ; hWndParent, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
-MUISmartPanelSetProperty       PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_SmartPanel, dwProperty, dwPropertyValue
-MUISmartPanelGetProperty       PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, dwProperty
+MUISmartPanelRegister           PROTO                                                   ; Use 'ModernUI_SmartPanel' as class in RadASM custom class control
+MUISmartPanelCreate             PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD  ; hWndParent, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
+MUISmartPanelSetProperty        PROTO :DWORD,:DWORD,:DWORD                              ; hModernUI_SmartPanel, dwProperty, dwPropertyValue
+MUISmartPanelGetProperty        PROTO :DWORD,:DWORD                                     ; hModernUI_SmartPanel, dwProperty
 
-MUISmartPanelGetCurrentPanel   PROTO :DWORD                                                            ; hModernUI_SmartPanel. Returns hDialog in eax.
-MUISmartPanelSetCurrentPanel   PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_SmartPanel, PanelIndex, bNotify
-MUISmartPanelCurrentPanelIndex PROTO :DWORD                                                            ; hModernUI_SmartPanel. Returns PanelIndex in eax
+MUISmartPanelGetCurrentPanel    PROTO :DWORD                                            ; hModernUI_SmartPanel. Returns hDialog in eax.
+MUISmartPanelSetCurrentPanel    PROTO :DWORD,:DWORD,:DWORD                              ; hModernUI_SmartPanel, PanelIndex, bNotify
+MUISmartPanelCurrentPanelIndex  PROTO :DWORD                                            ; hModernUI_SmartPanel. Returns PanelIndex in eax
 
-MUISmartPanelNextPanel         PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, bNotify
-MUISmartPanelPrevPanel         PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, bNotify
-MUISmartPanelSetIsDlgMsgVar    PROTO :DWORD, :DWORD                                                    ; hModernUI_SmartPanel, Addr lpdwVar
-MUISmartPanelRegisterPanel     PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_SmartPanel, dwResIdPanelDlg, lpdwPanelProc
+MUISmartPanelNextPanel          PROTO :DWORD,:DWORD                                     ; hModernUI_SmartPanel, bNotify
+MUISmartPanelPrevPanel          PROTO :DWORD,:DWORD                                     ; hModernUI_SmartPanel, bNotify
+MUISmartPanelSetIsDlgMsgVar     PROTO :DWORD,:DWORD                                     ; hModernUI_SmartPanel, Addr lpdwVar
+MUISmartPanelRegisterPanel      PROTO :DWORD,:DWORD,:DWORD                              ; hModernUI_SmartPanel, dwResIdPanelDlg, lpdwPanelProc
 
+MUISmartPanelSetPanelParam      PROTO :DWORD,:DWORD,:DWORD                              ; hModernUI_SmartPanel, PanelIndex, lParam
+MUISmartPanelGetPanelParam      PROTO :DWORD,:DWORD                                     ; hModernUI_SmartPanel, PanelIndex
+
+MUISmartPanelNotifyCallback     PROTO :DWORD,:DWORD                                     ; hModernUI_SmartPanel, lpNMSmartPanelStruct
 
 ;------------------------------------------------------------------------------
 ; ModernUI_SmartPanel Structures
 ;------------------------------------------------------------------------------
 
-IFNDEF MUISP_ITEM ; SmartPanel Notification Item
+IFNDEF MUISP_ITEM               ; SmartPanel Notification Item
 MUISP_ITEM                      STRUCT
     iItem                       DD 0
     lParam                      DD 0
@@ -68,7 +72,7 @@ MUISP_ITEM                      STRUCT
 MUISP_ITEM                      ENDS
 ENDIF
 
-IFNDEF NM_MUISMARTPANEL ; Notification Message Structure for SmartPanel
+IFNDEF NM_MUISMARTPANEL         ; Notification Message Structure for SmartPanel
 NM_MUISMARTPANEL                STRUCT
     hdr                         NMHDR <>
     itemOld                     MUISP_ITEM <>
@@ -89,6 +93,8 @@ MUISPM_NEXTPANEL                EQU WM_USER+1757 ; wParam send notify msg to par
 MUISPM_PREVPANEL                EQU WM_USER+1756 ; wParam send notify msg to parent TRUE/FALSE. lparam = NULL, moves to previous panel. If at begining and wraparound is specified moves to last panel, otherwise stops here.
 MUISPM_GETTOTALPANELS           EQU WM_USER+1755 ; wParam & lparam = NULL, returns in eax total panels
 MUISPM_SETISDLGMSGVAR           EQU WM_USER+1754 ; Address of variable to hold current panel dialog handle for use with IsDialogMessage message loop calls
+MUISPM_GETPANELPARAM            EQU WM_USER+1753 ; wParam = panel index, lParam = custom user value to set
+MUISPM_SETPANELPARAM            EQU WM_USER+1752 ; wParam = panel index, lParam = custom user value to set
 
 ;SmartPanel Notifications
 MUISPN_SELCHANGED               EQU 0            ; Used with WM_NOTIFY. wParam is a NM_MUISMARTPANEL struct
@@ -112,8 +118,10 @@ MUISPS_DESIGN_INFO              EQU 1000h ; only used at design time to show tex
 ;------------------------------------------------------------------------------
 @SmartPanelPanelsColor          EQU 0   ; RGBCOLOR for panel's background. -1 = ignore, use system default. Default value is -1
 @SmartPanelBorderColor          EQU 4   ; RGBCOLOR for border color of MUISmartPanel. -1 = none. Default value is -1
-@SmartPanelDllInstance          EQU 8   ; reserved for future use
-@SmartPanelParam                EQU 12  ; user custom data
+@SmartPanelNotifications        EQU 8   ; BOOL. Allow notifications via WM_NOTIFY. Default is TRUE
+@SmartPanelNotifyCallback       EQU 12  ; DWORD. Address of custom notifications callback function (MUISmartPanelNotifyCallback)
+@SmartPanelDllInstance          EQU 16  ; reserved for future use
+@SmartPanelParam                EQU 20  ; user custom data
 
 
 

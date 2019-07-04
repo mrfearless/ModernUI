@@ -7,8 +7,8 @@
 ;
 ;------------------------------------------------------------------------------
 7MUISmartPanelCreate,MUISPS_NORMAL,MUISPS_NOSLIDE,MUISPS_SLIDEPANELS_SLOW,MUISPS_SLIDEPANELS_NORMAL,MUISPS_SLIDEPANELS,MUISPS_SLIDEPANELS_FAST,MUISPS_SLIDEPANELS_VFAST,MUISPS_SLIDEPANELS_INSTANT,MUISPS_SPS_WRAPAROUND,MUISPS_SPS_SKIPBETWEEN,MUISPS_DESIGN_INFO
-2MUISmartPanelSetProperty,@SmartPanelPanelsColor,@SmartPanelBorderColor,@SmartPanelDllInstance,@SmartPanelParam
-2MUISmartPanelGetProperty,@SmartPanelPanelsColor,@SmartPanelBorderColor,@SmartPanelDllInstance,@SmartPanelParam
+2MUISmartPanelSetProperty,@SmartPanelPanelsColor,@SmartPanelBorderColor,@SmartPanelNotifications,@SmartPanelNotifyCallback,@SmartPanelDllInstance,@SmartPanelParam
+2MUISmartPanelGetProperty,@SmartPanelPanelsColor,@SmartPanelBorderColor,@SmartPanelNotifications,@SmartPanelNotifyCallback,@SmartPanelDllInstance,@SmartPanelParam
 3MUISmartPanelSetCurrentPanel,TRUE,FALSE
 2MUISmartPanelNextPanel,TRUE,FALSE
 2MUISmartPanelPrevPanel,TRUE,FALSE

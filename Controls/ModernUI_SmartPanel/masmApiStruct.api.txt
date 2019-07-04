@@ -7,4 +7,4 @@
 ;
 ;------------------------------------------------------------------------------
 MUISP_ITEM,iItem,lParam,hPanel
-NM_MUISMARTPANEL,hdr,itemOld,itemNew
+NM_MUISMARTPANEL,hdr:NMHDR,itemOld:MUISP_ITEM,itemNew:MUISP_ITEM
