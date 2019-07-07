@@ -1,3 +1,15 @@
+//=============================================================================
+//
+// ModernUI Library
+//
+// Copyright (c) 2019 by fearless
+//
+// All Rights Reserved
+//
+// http://github.com/mrfearless/ModernUI
+//
+//=============================================================================
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,15 +50,27 @@ unsigned int MUI_EXPORT MUIAllocStructureMemory(DWORD dwPtrStructMem, DWORD Tota
 // ModernUI GDI Functions:
 bool MUI_EXPORT MUIGDIDoubleBufferStart(HWND hWin, HDC hdcSource, HDC *lpHDCBuffer, RECT *lpClientRect, HBITMAP *lphBufferBitmap);
 bool MUI_EXPORT MUIGDIDoubleBufferFinish(HDC hdcBuffer, HBITMAP hBufferBitmap, HBITMAP hBitmapUsed, HFONT hFontUsed, HBRUSH hBrushUsed, HPEN hPenUsed);
-bool MUI_EXPORT MUIGDIBlend (HWNDhWin, HDC hdc, int dwColor, int dwBlendLevel);
+bool MUI_EXPORT MUIGDIBlend (HWND hWin, HDC hdc, COLORREF dwColor, int dwBlendLevel);
 bool MUI_EXPORT MUIGDIBlendBitmaps(HBITMAP hBitmap1, HBITMAP hBitmap2, int dwColorBitmap2, int dwTransparency);
 HBITMAP MUI_EXPORT MUIGDIStretchBitmap(HBITMAP hBitmap, RECT *lpBoundsRect, int *lpdwBitmapWidth, int *lpdwBitmapHeight, int *lpdwX, int *lpdwY);
 HBITMAP MUI_EXPORT MUIGDIStretchImage(hImage, dwImageType, RECT *lpBoundsRect, int *lpdwImageWidth, int *lpdwImageHeight, int *lpdwImageX, int *lpdwImageY);
 HBITMAP MUI_EXPORT MUIGDIRotateBitmapCenter(HWND hWin, HBITMAP hBitmap, int dwAngle, int dwBackColor);
+void MUI_EXPORT MUIGDIPaintFill(HDC hdc, RECT *lpFillRect, COLORREF dwFillColor);
+void MUI_EXPORT MUIGDIPaintFrame(HDC hdc, RECT *lpFrameRect, COLORREF dwFrameColor, DWORD dwFrameStyle);
+
 
 // ModernUI GDIPlus Functions:
 void MUI_EXPORT MUIGDIPlusStart();
 void MUI_EXPORT MUIGDIPlusFinish();
+void MUI_EXPORT MUIGDIPlusDoubleBufferStart(HWND hWin, HANDLE pGraphics, HANDLE *lpBitmapHandle, HANDLE *lpGraphicsBuffer);
+void MUI_EXPORT MUIGDIPlusDoubleBufferFinish(HWND hWin, HANDLE pGraphics, HBITMAP hBitmap, HANDLE pGraphicsBuffer);
+void MUI_EXPORT MUIGDIPlusRotateCenterImage(HANDLE hImage, FLOAT fAngle);
+void MUI_EXPORT MUIGDIPlusPaintFill(pGraphics, GDIPRECT *lpFillGdipRect, ARGBCOLOR dwFillColor);
+void MUI_EXPORT MUIGDIPlusPaintFillI(pGraphics, RECT *lpFillRectI, COLORREF dwFillColor);
+void MUI_EXPORT MUIGDIPlusPaintFrame(pGraphics, GDIPRECT *lpFrameGdipRect, ARGBCOLOR dwFrameColor, DWORD dwFrameStyle);
+void MUI_EXPORT MUIGDIPlusPaintFrameI(pGraphics, RECT *lpFrameRectI, COLORREF dwFrameColor, DWORD dwFrameStyle);
+HANDLE MUI_EXPORT MUILoadPngFromResource(HWND hWin, DWORD dwInstanceProperty, DWORD dwProperty, DWORD idPngRes);
+void MUI_EXPORT MUIGDIPlusRectToGdipRect(RECT *lpRect, GDIPRECT *lpGdipRect);
 
 // ModernUI Painting & Color Functions:
 void MUI_EXPORT MUIPaintBackground(HWND hDialogWindow, COLORREF dwBackColor, COLORREF dwBorderColor);
@@ -68,9 +92,12 @@ unsigned int MUI_EXPORT MUIPointSizeToLogicalUnit(HWND hControl, DWORD dwPointSi
 
 // ModernUI Image Functions:
 bool MUI_EXPORT MUIGetImageSize(HANDLE hImage, DWORD dwImageType, DWORD *lpdwImageWidth, DWORD *lpdwImageHeight);
-bool MUI_EXPORT MUICreateIconFromMemory(DWORD pIconData, DWORD iIcon);
-bool MUI_EXPORT MUICreateCursorFromMemory(DWORD pCursorData);
-bool MUI_EXPORT MUICreateBitmapFromMemory(DWORD pBitmapData);
+HICON MUI_EXPORT MUICreateIconFromMemory(DWORD pIconData, DWORD iIcon);
+HICON MUI_EXPORT MUICreateCursorFromMemory(DWORD pCursorData);
+HBITMAP MUI_EXPORT MUICreateBitmapFromMemory(DWORD pBitmapData);
+HBITMAP MUI_EXPORT MUILoadBitmapFromResource(HWND hWin, DWORD dwInstanceProperty, DWORD dwProperty, DWORD idBmpRes);
+HICON MUI_EXPORT MUILoadIconFromResource(HWND hWin, DWORD dwInstanceProperty, DWORD dwProperty, DWORD idIcoRes);
+HANDLE MUI_EXPORT MUILoadImageFromResource(HWND hWin, DWORD dwInstanceProperty, DWORD dwProperty, DWORD dwImageType, DWORD dwImageResId);
 
 // ModernUI DPI & Scaling Functions:
 void MUIDPI(DWORD *lpdwDPIX, DWORD *lpdwDPIY);
@@ -123,11 +150,34 @@ bool MUIDPISetDPIAware();
 #define MUIIL_TOPCENTER                 5
 #define MUIIL_BOTTOMCENTER              6
 
+
+//------------------------------------------
+// MUIGDIPaintFrame Frame Style
+//------------------------------------------
+#define MUIPFS_NONE                     0
+#define MUIPFS_LEFT                     1
+#define MUIPFS_TOP                      2
+#define MUIPFS_BOTTOM                   4
+#define MUIPFS_RIGHT                    8
+#define MUIPFS_ALL                      MUIPFS_LEFT + MUIPFS_TOP + MUIPFS_BOTTOM + MUIPFS_RIGHT
+
+
 //------------------------------------------
 // ModernUI Macros
 //------------------------------------------
 #define MUI_RGBCOLOR(r,g,b) ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
+//#define MUI_ARGBCOLOR(a,r,g,b) ((DWORD)(((BYTE)(b)|((BYTE)(g)<<8)|((BYTE)(r)<<16)|((BYTE)(a)<<24))))
+#define MUI_ARGBCOLOR(a,r,g,b) ((DWORD(a)<<24) + (DWORD(r)<<16) + (DWORD(g)<<8) + DWORD(b))
 
+//------------------------------------------
+// ModernUI Structures
+//------------------------------------------
+typedef struct GDIPRECT{
+    double left;
+    double top;
+    double right;
+    double bottom;
+} GDIPRECT;
 
 
 #ifdef __cplusplus

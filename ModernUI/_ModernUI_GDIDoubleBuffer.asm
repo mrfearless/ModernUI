@@ -1,17 +1,14 @@
 ;==============================================================================
 ;
-; ModernUI Library v0.0.0.5
+; ModernUI Library
 ;
-; Copyright (c) 2018 by fearless
+; Copyright (c) 2019 by fearless
 ;
 ; All Rights Reserved
-;
-; http://www.LetTheLight.in
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
 ;==============================================================================
-
 .686
 .MMX
 .XMM
@@ -36,6 +33,22 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIGDIDoubleBufferStart - Starts double buffering. Used in a WM_PAINT event. 
 ; Place after BeginPaint call
+;
+; Example:
+;
+;    hdc:HDC 
+;    LOCAL hdcMem:HDC
+;    LOCAL hBufferBitmap:DWORD
+;    LOCAL rect:RECT
+;
+;    Invoke BeginPaint, hWin, Addr ps
+;    mov hdc, eax
+;
+;    ;----------------------------------------------------------
+;    ; Setup Double Buffering
+;    ;----------------------------------------------------------
+;    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap 
+;
 ;------------------------------------------------------------------------------
 MUIGDIDoubleBufferStart PROC USES EBX hWin:DWORD, hdcSource:HDC, lpHDCBuffer:DWORD, lpClientRect:DWORD, lphBufferBitmap:DWORD
     LOCAL hdcBuffer:DWORD
@@ -72,6 +85,21 @@ MUI_ALIGN
 ; is hBufferBitmap) or a font, brush or pen in your code in the hdcBuffer 
 ; you can pass the handles here for cleaning up, otherwise pass 0 for the
 ; parameters that you havent used.
+;
+; Example:
+;
+;    ;----------------------------------------------------------
+;    ; BitBlt from hdcMem back to hdc
+;    ;----------------------------------------------------------
+;    Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+;
+;    ;----------------------------------------------------------
+;    ; Finish Double Buffering & Cleanup
+;    ;----------------------------------------------------------    
+;    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, hBrush, 0
+;
+;    Invoke EndPaint, hWin, Addr ps
+;
 ;------------------------------------------------------------------------------
 MUIGDIDoubleBufferFinish PROC hdcBuffer:HDC, hBufferBitmap:HBITMAP, hBitmapUsed:HBITMAP, hFontUsed:HFONT, hBrushUsed:HBRUSH, hPenUsed:HPEN
     .IF hdcBuffer != 0

@@ -1,17 +1,14 @@
 ;==============================================================================
 ;
-; ModernUI Library v0.0.0.5
+; ModernUI Library
 ;
-; Copyright (c) 2018 by fearless
+; Copyright (c) 2019 by fearless
 ;
 ; All Rights Reserved
-;
-; http://www.LetTheLight.in
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
 ;==============================================================================
-
 .686
 .MMX
 .XMM
@@ -54,13 +51,5 @@ MUIPointSizeToLogicalUnit PROC hWin:DWORD, dwPointSize:DWORD
 MUIPointSizeToLogicalUnit ENDP
 
 
-
-
-
-
-
-
 MODERNUI_LIBEND
-
-
 

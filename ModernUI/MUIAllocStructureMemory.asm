@@ -1,17 +1,14 @@
 ;==============================================================================
 ;
-; ModernUI Library v0.0.0.5
+; ModernUI Library
 ;
-; Copyright (c) 2018 by fearless
+; Copyright (c) 2019 by fearless
 ;
 ; All Rights Reserved
-;
-; http://www.LetTheLight.in
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
 ;==============================================================================
-
 .686
 .MMX
 .XMM
@@ -58,7 +55,7 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
     
     ;PrintText 'AllocStructureMemory'
     .IF TotalItems == 0
-        Invoke GlobalAlloc, GMEM_FIXED+GMEM_ZEROINIT, ItemSize ;
+        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, ItemSize ;
         .IF eax != NULL
             mov StructData, eax
             mov ebx, dwPtrStructMem
@@ -99,7 +96,7 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
             .IF TotalItems >= 2
                 Invoke GlobalUnlock, StructData
             .ENDIF
-            Invoke GlobalReAlloc, StructData, StructSize, GMEM_ZEROINIT + GMEM_MOVEABLE ; resize memory for structure
+            Invoke GlobalReAlloc, StructData, StructSize, GMEM_ZEROINIT or GMEM_MOVEABLE ; resize memory for structure
             .IF eax != NULL
                 ;PrintDec eax
                 Invoke GlobalLock, eax
@@ -122,7 +119,7 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
             mov ebx, ItemSize
             mul ebx
             mov StructSize, eax ; save new size to alloc mem for        
-            Invoke GlobalAlloc, GMEM_FIXED+GMEM_ZEROINIT, StructSize ;GMEM_FIXED+GMEM_ZEROINIT
+            Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, StructSize ;GMEM_FIXED+GMEM_ZEROINIT
             .IF eax != NULL
                 mov StructData, eax
                 ;mov ebx, dwPtrStructMem ; alloc memory so dont return anything to this as it was null when we got it
