@@ -8,8 +8,8 @@ include MUICaptionBar1.inc
 
 .code
 
-start:
-
+;start:
+WinMainCRTStartup PROC
     Invoke GetModuleHandle,NULL
     mov hInstance, eax
     Invoke GetCommandLine
@@ -21,6 +21,8 @@ start:
     
     Invoke WinMain, hInstance, NULL, CommandLine, SW_SHOWDEFAULT
     Invoke ExitProcess, eax
+    ret
+WinMainCRTStartup ENDP
 
 ;-------------------------------------------------------------------------------------
 ; WinMain
@@ -134,4 +136,5 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
     ret
 WndProc endp
 
-end start
+end WinMainCRTStartup
+;end start

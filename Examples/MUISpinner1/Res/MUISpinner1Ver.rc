@@ -1,7 +1,7 @@
 #define VERINF1 1
 VERINF1 VERSIONINFO
-FILEVERSION 0,3,4,6
-PRODUCTVERSION 0,3,4,6
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
 FILEOS 0x00000004
 FILETYPE 0x00000001
 BEGIN
@@ -9,12 +9,12 @@ BEGIN
   BEGIN
     BLOCK "040904B0"
     BEGIN
-      VALUE "FileVersion", "0.3.4.6\0"
-      VALUE "FileDescription", "MUISpinner1 Example #1\0"
+      VALUE "FileVersion", "1.0.0.0\0"
+      VALUE "FileDescription", "MUISpinner1\0"
       VALUE "InternalName", "MUISpinner1\0"
       VALUE "OriginalFilename", "MUISpinner1\0"
       VALUE "ProductName", "MUISpinner1\0"
-      VALUE "ProductVersion", "0.3.4.6\0"
+      VALUE "ProductVersion", "1.0.0.0\0"
     END
   END
   BLOCK "VarFileInfo"

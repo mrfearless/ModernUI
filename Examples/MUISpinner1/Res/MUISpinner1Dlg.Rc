@@ -1,6 +1,6 @@
 #define IDD_DIALOG 1000
 IDD_DIALOG DIALOGEX 6,6,380,201
-CAPTION "MUISpinner Examples"
+CAPTION "ModernUI_Spinner Control Examples"
 FONT 8,"MS Sans Serif",0,0
 CLASS "DLGCLASS"
 STYLE 0x12CF0800

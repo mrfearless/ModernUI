@@ -120,7 +120,7 @@ IDM_HELP_ABOUT          EQU 10101
 ; MUIButton1 Initialized Data
 ;-----------------------------------------------------------------------------------------
 ClassName               DB 'DLGCLASS',0
-AppName                 DB 'MUISpinner Example #1',0
+AppName                 DB 'ModernUI_Spinner Control Examples',0
 AboutMsg                DB 'Copyright © fearless 2019',0
 
 bSpinner1Pause          DD FALSE

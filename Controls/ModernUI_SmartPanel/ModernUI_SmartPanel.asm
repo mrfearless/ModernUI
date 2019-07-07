@@ -2,11 +2,9 @@
 ;
 ; ModernUI Control - ModernUI_SmartPanel
 ;
-; Copyright (c) 2018 by fearless
+; Copyright (c) 2019 by fearless
 ;
 ; All Rights Reserved
-;
-; http://www.LetTheLight.in
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
@@ -77,7 +75,6 @@ include ModernUI_SmartPanel.inc
 _MUI_SmartPanelWndProc          PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_SmartPanelInit             PROTO :DWORD
 _MUI_SmartPanelCleanup          PROTO :DWORD
-;_MUI_SmartPanelPaint           PROTO :DWORD
 _MUI_SmartPanelGetPanelHandle   PROTO :DWORD, :DWORD
 _MUI_SmartPanelNavNotify        PROTO :DWORD, :DWORD, :DWORD
 _MUI_SmartPanelSlidePanels      PROTO :DWORD, :DWORD, :DWORD, :DWORD
@@ -152,13 +149,13 @@ SlideVFast                      EQU 3
 @SmartPanelBitmap               EQU 24
 @SPSubclassCounter              EQU 28
 @SmartPanelNotifyData           EQU 32
-; External public properties
+
 
 
 .DATA
 ALIGN 4
 szMUISmartPanelClass            DB 'ModernUI_SmartPanel',0  ; Class name for creating our ModernUI_SmartPanel control
-SPNM                            NM_MUISMARTPANEL <> ; Notification data passed via WM_NOTIFY
+
 
 
 .CODE
@@ -257,7 +254,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_SmartPanelWndProc - Main processing window for our control
 ;------------------------------------------------------------------------------
-_MUI_SmartPanelWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
+_MUI_SmartPanelWndProc PROC hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     
     mov eax,uMsg
     .IF eax == WM_NCCREATE
@@ -356,7 +353,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_SmartPanelInit - set initial default values
 ;------------------------------------------------------------------------------
-_MUI_SmartPanelInit PROC USES EBX hWin:DWORD 
+_MUI_SmartPanelInit PROC hWin:DWORD 
     LOCAL dwStyle:DWORD
     LOCAL dwExStyle:DWORD
     LOCAL hParent:DWORD
@@ -481,52 +478,14 @@ _MUI_SmartPanelCleanup PROC hWin:DWORD
         .ENDIF
     .ENDIF
     
+    Invoke MUIGetIntProperty, hWin, @SmartPanelNotifyData
+    .IF eax != NULL
+        Invoke GlobalFree, eax
+    .ENDIF
+    
     mov eax, 0
     ret
-
 _MUI_SmartPanelCleanup ENDP
-
-MUI_ALIGN
-;;------------------------------------------------------------------------------
-;; _MUI_SmartPanelPaint - 
-;;------------------------------------------------------------------------------
-;_MUI_SmartPanelPaint PROC hWin:DWORD
-;    LOCAL ps:PAINTSTRUCT 
-;    LOCAL rect:RECT
-;    LOCAL hdc:HDC
-;    LOCAL hdcMem:DWORD
-;    LOCAL hBitmap:DWORD
-;    LOCAL hbmOld:DWORD
-;
-;    Invoke BeginPaint, hWin, Addr ps
-;    mov hdc, eax
-;
-;    Invoke MUIGetIntProperty, hWin, @SmartPanelBitmap
-;    mov hBitmap, eax
-;    
-;    .IF eax != 0
-;
-;        Invoke GetClientRect, hWin, Addr rect
-;
-;        Invoke CreateCompatibleDC, hdc
-;        mov hdcMem, eax
-;        Invoke SelectObject, hdcMem, hBitmap
-;        mov hbmOld, eax
-;
-;        Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
-;
-;        Invoke SelectObject, hdcMem, hbmOld
-;        Invoke DeleteDC, hdcMem
-;        .IF hbmOld != 0
-;            Invoke DeleteObject, hbmOld
-;        .ENDIF
-;
-;    .ENDIF
-;
-;    Invoke EndPaint, hWin, Addr ps
-;    ret
-;
-;_MUI_SmartPanelPaint ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -841,7 +800,7 @@ MUI_ALIGN
 ; MUISmartPanelSetPanelParam - sets lParam of panel
 ; Returns: NULL or lParam as set
 ;------------------------------------------------------------------------------
-MUISmartPanelSetPanelParam PROC hControl:DWORD, PanelIndex:DWORD, lParam:DWORD
+MUISmartPanelSetPanelParam PROC USES EBX hControl:DWORD, PanelIndex:DWORD, lParam:DWORD
     LOCAL TotalPanels:DWORD
     LOCAL pItemData:DWORD
     LOCAL pItemDataEntry:DWORD
@@ -882,7 +841,7 @@ MUI_ALIGN
 ; MUISmartPanelGetPanelParam - Get lParam of panel
 ; Returns: lParam of panel or NULL
 ;------------------------------------------------------------------------------
-MUISmartPanelGetPanelParam PROC hControl:DWORD, PanelIndex:DWORD
+MUISmartPanelGetPanelParam PROC USES EBX hControl:DWORD, PanelIndex:DWORD
     LOCAL TotalPanels:DWORD
     LOCAL pItemData:DWORD
     LOCAL pItemDataEntry:DWORD
@@ -946,6 +905,13 @@ _MUI_SmartPanelNavNotify PROC USES EBX EDX hWin:DWORD, OldSelection:DWORD, NewSe
     .ENDIF
     mov NotifyData, eax
     
+    Invoke MUIGetIntProperty, hWin, @SmartPanelPanelsArray
+    .IF eax == NULL
+        xor eax, eax
+        ret
+    .ENDIF
+    mov pItemData, eax
+    
     ; fill notify NMHDR
     mov ebx, NotifyData
     mov eax, hWin
@@ -954,9 +920,6 @@ _MUI_SmartPanelNavNotify PROC USES EBX EDX hWin:DWORD, OldSelection:DWORD, NewSe
     mov [ebx].NM_MUISMARTPANEL.hdr.code, eax
     
     ; get new and old item data
-    Invoke MUIGetIntProperty, hWin, @SmartPanelPanelsArray
-    mov pItemData, eax
-    
     mov eax, OldSelection
     mov ebx, SIZEOF MUISP_ITEM
     mul ebx
