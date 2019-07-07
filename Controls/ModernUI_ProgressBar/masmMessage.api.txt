@@ -6,3 +6,5 @@
 ; Paste this text at the end of \Radasm\Masm\masmMessage.api to add to Radasm
 ;
 ;------------------------------------------------------------------------------
+MUIPBM_STEP,EQU WM_USER + 1750
+MUIPBM_SETPERCENT,EQU WM_USER + 1749

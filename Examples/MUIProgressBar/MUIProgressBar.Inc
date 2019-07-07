@@ -39,12 +39,18 @@ WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 ;-----------------------------------------------------------------------------------------
 ; MUIProgressBar Constants
 ;-----------------------------------------------------------------------------------------
+ICO_MAIN                EQU 100
+
 ; Main Dialog
 IDD_DIALOG              EQU 1000
 IDC_CAPTIONBAR          EQU 1001
 IDC_STARTBUTTON         EQU 1002
 IDC_EXITBUTTON          EQU 1003
-IDC_PB                  EQU 1004
+IDC_PB1                 EQU 1011
+IDC_PB2                 EQU 1012
+IDC_PB3                 EQU 1013
+IDC_PB4                 EQU 1014
+IDC_PB5                 EQU 1015
 
 ; Main Menu 
 IDM_MENU                EQU 10000
@@ -58,11 +64,13 @@ IDM_HELP_ABOUT          EQU 10101
 ; MUIProgressBar Initialized Data
 ;-----------------------------------------------------------------------------------------
 ClassName               DB 'DLGCLASS',0
-AppName                 DB 'MUIProgressBar Example',0
-AboutMsg                DB 'www.LetTheLight.in',13,10,'Copyright © fearless 2016',0
+AppName                 DB 'ModernUI_ProgressBar Examples',0
+AboutMsg                DB 'Copyright © fearless 2019',0
 
 szStartButtonText       db "Start",0
 szExitButtonText        db "Exit",0
+
+dwTimer1                DD 0
 
 .DATA?
 ;-----------------------------------------------------------------------------------------
@@ -75,7 +83,11 @@ hWnd                    DD ?
 hCaptionBar             DD ?
 hStartBtn               DD ?
 hExitBtn                DD ?
-hPB                     DD ?
+hPB1                    DD ?
+hPB2                    DD ?
+hPB3                    DD ?
+hPB4                    DD ?
+hPB5                    DD ?
 RtlGenRandom            DD ?  
 
 

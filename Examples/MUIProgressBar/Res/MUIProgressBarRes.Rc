@@ -1,2 +1,3 @@
 #define MANIFEST 						24
 1						MANIFEST  DISCARDABLE "MUIProgressBar.xml"
+100						ICON      DISCARDABLE "ModernUI.ico"

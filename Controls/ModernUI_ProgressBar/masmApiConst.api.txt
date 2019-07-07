@@ -6,6 +6,9 @@
 ; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
 ;
 ;------------------------------------------------------------------------------
-2MUIProgressBarSetProperty,@ProgressBarTextColor,@ProgressBarTextFont,@ProgressBarBackColor,@ProgressBarProgressColor,@ProgressBarBorderColor,@ProgressBarPercent,@ProgressBarMin,@ProgressBarMax,@ProgressBarStep
-2MUIProgressBarGetProperty,@ProgressBarTextColor,@ProgressBarTextFont,@ProgressBarBackColor,@ProgressBarProgressColor,@ProgressBarBorderColor,@ProgressBarPercent,@ProgressBarMin,@ProgressBarMax,@ProgressBarStep
-3MUIProgressBarSetProperty,MUI_RGBCOLOR
+7MUIProgressBarCreate,MUIPBS_PULSE,MUIPBS_NOPULSE,MUIPBS_TEXT_NONE,MUIPBS_TEXT_CENTRE,MUIPBS_TEXT_FOLLOW,MUIPBS_R2G
+2MUIProgressBarSetProperty,@ProgressBarTextColor,@ProgressBarTextFont,@ProgressBarBackColor,@ProgressBarProgressColor,@ProgressBarBorderColor,@ProgressBarPercent,@ProgressBarMin,@ProgressBarMax,@ProgressBarStep,@ProgressBarPulse,@ProgressBarTextType
+2MUIProgressBarGetProperty,@ProgressBarTextColor,@ProgressBarTextFont,@ProgressBarBackColor,@ProgressBarProgressColor,@ProgressBarBorderColor,@ProgressBarPercent,@ProgressBarMin,@ProgressBarMax,@ProgressBarStep,@ProgressBarPulse,@ProgressBarTextType
+3MUIProgressBarSetProperty,MUI_RGBCOLOR,TRUE,FALSE,MUIPBTT_CENTRE,MUIPBTT_FOLLOW,MUIPBTT_NONE
+
+
