@@ -53,7 +53,10 @@ includelib ModernUI_Button.lib
 * ModernUI controls are separated in their own folders found in the [Controls](https://github.com/mrfearless/ModernUI/tree/master/Controls) folder. Each control comes with a RadASM project to help with building the control from the source files.
 * There are a number of examples included in this Github repository that highlight the usage of using the various ModernUI Controls, these can be found in the [Examples](https://github.com/mrfearless/ModernUI/tree/master/Examples) folder. Each example has a RadASM project to help build the example.
 * The ModernUI Library and the ModernUI Controls can be found pre-packaged in the [Release](https://github.com/mrfearless/ModernUI/tree/master/Release) folder. Also included in this folder are RadASM auto-complete api files, some design time ModernUI RadASM controls, and some useful ModernUI style icons.
-* Some documentation is available for some of the ModernUI functions and properties used in the ModernUI Library or ModernUI Controls. See the [wiki](https://github.com/mrfearless/ModernUI/wiki) for more details.
+
+# Documentation
+
+Documentation is now available at [modernui-docs.readthedocs.io](https://modernui-docs.readthedocs.io)
 
 # Additional Resources
 
