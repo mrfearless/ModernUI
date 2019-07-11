@@ -30,6 +30,8 @@ include gdiplus.inc
 includelib gdiplus.lib
 ENDIF
 
+EXTERNDEF MUIGetImageSize            :PROTO hImage:MUIIMAGE,ImageHandleType:MUIIT,lpImageWidth:LPMUIVALUE,lpImageHeight:LPMUIVALUE
+
 
 .CODE
 
@@ -39,7 +41,7 @@ MUI_ALIGN
 ; MUIGetImageSizeEx - Similar to MUIGetImageSize, but also returns centering
 ; x and y co-ord information based on rectangle of hWin
 ;------------------------------------------------------------------------------
-MUIGetImageSizeEx PROC USES EBX hWin:DWORD, hImage:DWORD, dwImageType:DWORD, lpdwImageWidth:DWORD, lpdwImageHeight:DWORD, lpdwImageXPos:DWORD, lpdwImageYPos:DWORD
+MUIGetImageSizeEx PROC USES EBX hWin:MUIWND, hImage:MUIIMAGE, ImageHandleType:MUIIT, lpImageWidth:LPMUIVALUE, lpImageHeight:LPMUIVALUE, lpImageX:LPMUIVALUE, lpImageY:LPMUIVALUE
     LOCAL rect:RECT
     LOCAL dwImageWidth:DWORD
     LOCAL dwImageHeight:DWORD
@@ -47,7 +49,7 @@ MUIGetImageSizeEx PROC USES EBX hWin:DWORD, hImage:DWORD, dwImageType:DWORD, lpd
     LOCAL dwYPos:DWORD
     LOCAL RetVal:DWORD
 
-    Invoke MUIGetImageSize, hImage, dwImageType, Addr dwImageWidth, Addr dwImageHeight
+    Invoke MUIGetImageSize, hImage, ImageHandleType, Addr dwImageWidth, Addr dwImageHeight
     .IF eax == FALSE
         mov dwImageWidth, 0
         mov dwImageHeight, 0
@@ -75,23 +77,23 @@ MUIGetImageSizeEx PROC USES EBX hWin:DWORD, hImage:DWORD, dwImageType:DWORD, lpd
         mov RetVal, TRUE
     .ENDIF
 
-    .IF lpdwImageWidth != 0
-        mov ebx, lpdwImageWidth
+    .IF lpImageWidth != 0
+        mov ebx, lpImageWidth
         mov eax, dwImageWidth
         mov [ebx], eax
     .ENDIF
-    .IF lpdwImageHeight != 0
-        mov ebx, lpdwImageHeight
+    .IF lpImageHeight != 0
+        mov ebx, lpImageHeight
         mov eax, dwImageHeight
         mov [ebx], eax
     .ENDIF
-    .IF lpdwImageXPos != 0
-        mov ebx, lpdwImageXPos
+    .IF lpImageX != 0
+        mov ebx, lpImageX
         mov eax, dwXPos
         mov [ebx], eax
     .ENDIF
-    .IF lpdwImageYPos != 0
-        mov ebx, lpdwImageYPos
+    .IF lpImageY != 0
+        mov ebx, lpImageY
         mov eax, dwYPos
         mov [ebx], eax
     .ENDIF    

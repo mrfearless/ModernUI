@@ -40,17 +40,17 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUILoadImageFromResource
 ;------------------------------------------------------------------------------
-MUILoadImageFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DWORD, dwImageType:DWORD, dwImageResId:DWORD
-    mov eax, dwImageType
+MUILoadImageFromResource PROC hWin:MUIWND, InstanceProperty:MUIPROPERTY, Property:MUIPROPERTY, ImageHandleType:MUIIT, idResImage:RESID
+    mov eax, ImageHandleType
     .IF eax == MUIIT_NONE
         mov eax, NULL
     .ELSEIF eax == MUIIT_BMP ; bitmap/icon
-        Invoke MUILoadBitmapFromResource, hWin, dwInstanceProperty, dwProperty, dwImageResId
+        Invoke MUILoadBitmapFromResource, hWin, InstanceProperty, Property, idResImage
     .ELSEIF eax == MUIIT_ICO ; icon  
-        Invoke MUILoadIconFromResource, hWin, dwInstanceProperty, dwProperty, dwImageResId
+        Invoke MUILoadIconFromResource, hWin, InstanceProperty, Property, idResImage
     IFDEF MUI_USEGDIPLUS
     .ELSEIF eax == MUIIT_PNG ; png
-        Invoke MUILoadPngFromResource, hWin, dwInstanceProperty, dwProperty, dwImageResId
+        Invoke MUILoadPngFromResource, hWin, InstanceProperty, Property, idResImage
     .ELSEIF eax > MUIIT_PNG
         mov eax, NULL
     ELSE

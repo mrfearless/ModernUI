@@ -16,6 +16,7 @@ extern "C" {
 #Include "ModernUI_ProgressBar.h"
 #Include "ModernUI_ProgressDots.h"
 #Include "ModernUI_SmartPanel.h"
+#Include "ModernUI_Spinner.h"
 #Include "ModernUI_TextWide.h"
 #Include "ModernUI_TrayMenu.h"
 

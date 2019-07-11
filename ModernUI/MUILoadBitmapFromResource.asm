@@ -39,17 +39,17 @@ MUI_ALIGN
 ; To load a bitmap resource and simply return its handle, use -1 in property.
 ;
 ;------------------------------------------------------------------------------
-MUILoadBitmapFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DWORD, idResBitmap:DWORD
+MUILoadBitmapFromResource PROC hWin:MUIWND, InstanceProperty:MUIPROPERTY, Property:MUIPROPERTY, idResBitmap:RESID
     LOCAL hinstance:DWORD
     LOCAL hOldBitmap:DWORD
 
-    .IF (hWin == NULL && dwInstanceProperty != -1) || idResBitmap == NULL
+    .IF (hWin == NULL && InstanceProperty != -1) || idResBitmap == NULL
         mov eax, NULL
         ret
     .ENDIF
 
-    .IF dwInstanceProperty != -1
-        Invoke MUIGetExtProperty, hWin, dwInstanceProperty
+    .IF InstanceProperty != -1
+        Invoke MUIGetExtProperty, hWin, InstanceProperty
         .IF eax == 0
             Invoke GetModuleHandle, NULL
         .ENDIF
@@ -58,8 +58,8 @@ MUILoadBitmapFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:
     .ENDIF
     mov hinstance, eax
 
-    .IF dwProperty != -1
-        Invoke MUIGetExtProperty, hWin, dwProperty
+    .IF Property != -1
+        Invoke MUIGetExtProperty, hWin, Property
         .IF eax != 0
             mov hOldBitmap, eax
         .ELSE
@@ -68,8 +68,8 @@ MUILoadBitmapFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:
     .ENDIF
 
     Invoke LoadBitmap, hinstance, idResBitmap
-    .IF dwProperty != -1
-        Invoke MUISetExtProperty, hWin, dwProperty, eax
+    .IF Property != -1
+        Invoke MUISetExtProperty, hWin, Property, eax
         mov eax, hOldBitmap
     .ENDIF
     ret

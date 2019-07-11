@@ -51,7 +51,7 @@ MUI_ALIGN
 ;
 ;http://www.masmforum.com/board/index.php?topic=16267.msg134434#msg134434
 ;------------------------------------------------------------------------------
-MUICreateIconFromMemory PROC USES EDX pIconData:DWORD, iIcon:DWORD
+MUICreateIconFromMemory PROC USES EDX pIconData:POINTER, iIcon:MUIVALUE
     LOCAL sz[2]:DWORD
 
     xor eax, eax

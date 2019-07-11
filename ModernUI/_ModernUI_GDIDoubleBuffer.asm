@@ -34,6 +34,10 @@ MUI_ALIGN
 ; MUIGDIDoubleBufferStart - Starts double buffering. Used in a WM_PAINT event. 
 ; Place after BeginPaint call
 ;
+; lpHDCBuffer points to a variable used to store the dc of the double buffer.
+; lpClientRect points to a rect structure used to store the client rectangle.
+; lphBufferBitmap points to a variable used to store the double buffer bitmap.
+;
 ; Example:
 ;
 ;    hdc:HDC 
@@ -50,7 +54,7 @@ MUI_ALIGN
 ;    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap 
 ;
 ;------------------------------------------------------------------------------
-MUIGDIDoubleBufferStart PROC USES EBX hWin:DWORD, hdcSource:HDC, lpHDCBuffer:DWORD, lpClientRect:DWORD, lphBufferBitmap:DWORD
+MUIGDIDoubleBufferStart PROC USES EBX hWin:MUIWND, hdcSource:HDC, lpHDCBuffer:LPHDC, lpClientRect:LPRECT, lphBufferBitmap:LPHBITMAP
     LOCAL hdcBuffer:DWORD
     LOCAL hBufferBitmap:DWORD
 
@@ -79,6 +83,9 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIGDIDoubleBufferFinish - Finishes double buffering - cleans up afterwards.
 ; Used in a WM_PAINT event. Place before EndPaint call and after all Blt calls
+;
+; hdcBuffer is the dc of the double buffer (eg. hdcMem). 
+; hBufferBitmap is the handle to the double buffer bitmap.
 ;
 ; hBitmapUsed, hFontUsed, hBrushUsed, and hPenUsed are optional parameters.
 ; If you have used a bitmap image (not the double buffer bitmap which

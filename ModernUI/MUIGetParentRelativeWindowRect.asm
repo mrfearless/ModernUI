@@ -30,15 +30,15 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Get rectangle of a window/control relative to it's parent
 ;------------------------------------------------------------------------------
-MUIGetParentRelativeWindowRect PROC hControl:DWORD, lpRectControl:DWORD
+MUIGetParentRelativeWindowRect PROC hWin:MUIWND, lpRectControl:LPRECT
     LOCAL hParent:DWORD
     
-    Invoke GetWindowRect, hControl, lpRectControl
+    Invoke GetWindowRect, hWin, lpRectControl
     .IF eax == 0
         mov eax, FALSE
         ret
     .ENDIF
-    Invoke GetAncestor, hControl, GA_PARENT
+    Invoke GetAncestor, hWin, GA_PARENT
     mov hParent, eax
     Invoke MapWindowPoints, HWND_DESKTOP, hParent, lpRectControl, 2
 
@@ -47,12 +47,5 @@ MUIGetParentRelativeWindowRect PROC hControl:DWORD, lpRectControl:DWORD
 MUIGetParentRelativeWindowRect ENDP
 
 
-
-
-
-
-
-
-
-
 MODERNUI_LIBEND
+

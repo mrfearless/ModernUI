@@ -49,7 +49,7 @@ MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; MUIGDIPlusRotateCenterImage
 ;-------------------------------------------------------------------------------------
-MUIGDIPlusRotateCenterImage PROC hImage:DWORD, fAngle:REAL4
+MUIGDIPlusRotateCenterImage PROC hImage:GPIMAGE, fAngle:REAL4
     LOCAL pGraphics:DWORD
     LOCAL pGraphicsBuffer:DWORD
     LOCAL matrix:DWORD

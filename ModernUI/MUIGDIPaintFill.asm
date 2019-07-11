@@ -36,7 +36,7 @@ MUI_ALIGN
 ; lpFillRect is a pointer to a RECT containing the bounding box to fill
 ; dwFillColor is an RGBCOLOR to paint fill the rectangle with
 ;------------------------------------------------------------------------------
-MUIGDIPaintFill PROC hdc:DWORD, lpFillRect:DWORD, dwFillColor:DWORD
+MUIGDIPaintFill PROC hdc:HDC, lpFillRect:LPRECT, FillColor:MUICOLORRGB
     LOCAL hBrush:DWORD
     LOCAL hBrushOld:DWORD
     LOCAL rect:RECT
@@ -49,7 +49,7 @@ MUIGDIPaintFill PROC hdc:DWORD, lpFillRect:DWORD, dwFillColor:DWORD
     mov hBrush, eax
     Invoke SelectObject, hdc, eax
     mov hBrushOld, eax
-    Invoke SetDCBrushColor, hdc, dwFillColor
+    Invoke SetDCBrushColor, hdc, FillColor
     Invoke FillRect, hdc, Addr rect, hBrush
     .IF hBrushOld != 0
         Invoke SelectObject, hdc, hBrushOld

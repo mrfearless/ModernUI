@@ -37,7 +37,7 @@ ENDIF
 MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Paint the background of the main window specified color
-; optional provide dwBorderColor for border. If dwBorderColor = 0, no border is
+; optional provide BorderColor for border. If BorderColor = 0, no border is
 ; drawn. If you require black for border, use 1, or MUI_RGBCOLOR(1,1,1)
 ;
 ; If you are using this on a window/dialog that does not use the 
@@ -52,54 +52,31 @@ MUI_ALIGN
 ;        Invoke InvalidateRect, hWin, NULL, TRUE
 ; 
 ;------------------------------------------------------------------------------
-MUIPaintBackground PROC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD
+MUIPaintBackground PROC hWin:MUIWND, BackColor:MUICOLORRGB, BorderColor:MUICOLORRGB
     LOCAL ps:PAINTSTRUCT
-    LOCAL hdc:HDC
     LOCAL rect:RECT
-    LOCAL hdcMem:DWORD
-    LOCAL hbmMem:DWORD
-    LOCAL hOldBitmap:DWORD
-    LOCAL hBrush:DWORD
-    LOCAL hOldBrush:DWORD
+    LOCAL hdc:HDC
+    LOCAL hdcMem:HDC
+    LOCAL hBufferBitmap:HBITMAP
 
     Invoke BeginPaint, hWin, addr ps
     mov hdc, eax
-    Invoke GetClientRect, hWin, Addr rect
-    
+
     ;----------------------------------------------------------
     ; Setup Double Buffering
-    ;----------------------------------------------------------    
-    Invoke CreateCompatibleDC, hdc
-    mov hdcMem, eax
-    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-    mov hbmMem, eax
-    Invoke SelectObject, hdcMem, hbmMem
-    mov hOldBitmap, eax 
+    ;----------------------------------------------------------
+    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap
 
     ;----------------------------------------------------------
-    ; Fill background
+    ; Paint background
     ;----------------------------------------------------------
-    Invoke GetStockObject, DC_BRUSH
-    mov hBrush, eax
-    Invoke SelectObject, hdcMem, eax
-    mov hOldBrush, eax
-    Invoke SetDCBrushColor, hdcMem, dwBackcolor
-    Invoke FillRect, hdcMem, Addr rect, hBrush
+    Invoke MUIGDIPaintFill, hdcMem, Addr rect, BackColor
 
     ;----------------------------------------------------------
-    ; Draw border if !0
+    ; Paint Border
     ;----------------------------------------------------------
-    .IF dwBorderColor != 0
-        .IF hOldBrush != 0
-            Invoke SelectObject, hdcMem, hOldBrush
-            Invoke DeleteObject, hOldBrush
-        .ENDIF        
-        Invoke GetStockObject, DC_BRUSH
-        mov hBrush, eax
-        Invoke SelectObject, hdcMem, eax
-        mov hOldBrush, eax
-        Invoke SetDCBrushColor, hdcMem, dwBorderColor
-        Invoke FrameRect, hdcMem, Addr rect, hBrush
+    .IF BorderColor != 0
+        Invoke MUIGDIPaintFrame, hdcMem, Addr rect, BorderColor, MUIPFS_ALL
     .ENDIF
     
     ;----------------------------------------------------------
@@ -107,36 +84,14 @@ MUIPaintBackground PROC hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD
     ;----------------------------------------------------------
     Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
 
-;    .IF dwBorderColor != 0
-;        Invoke GetStockObject, DC_BRUSH
-;        mov hBrush, eax
-;        Invoke SelectObject, hdc, eax
-;        Invoke SetDCBrushColor, hdc, dwBorderColor
-;        Invoke FrameRect, hdc, Addr rect, hBrush
-;    .ENDIF
-
     ;----------------------------------------------------------
-    ; Cleanup
-    ;----------------------------------------------------------
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdcMem, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF
-    .IF hOldBitmap != 0
-        Invoke SelectObject, hdcMem, hOldBitmap
-        Invoke DeleteObject, hOldBitmap
-    .ENDIF
-    Invoke SelectObject, hdcMem, hbmMem
-    Invoke DeleteObject, hbmMem
-    Invoke DeleteDC, hdcMem
+    ; Finish Double Buffering & Cleanup
+    ;----------------------------------------------------------    
+    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0    
 
     Invoke EndPaint, hWin, addr ps
     mov eax, 0
     ret
-
 MUIPaintBackground ENDP
 
 

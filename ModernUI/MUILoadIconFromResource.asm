@@ -36,7 +36,7 @@ MUI_ALIGN
 ; hinstance to load icon resource. If dwProperty == -1, no property to set, 
 ; so eax will contain hIcon or NULL
 ;------------------------------------------------------------------------------
-MUILoadIconFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DWORD, idResIcon:DWORD
+MUILoadIconFromResource PROC hWin:MUIWND, InstanceProperty:MUIPROPERTY, Property:MUIPROPERTY, idResIcon:RESID
     LOCAL hinstance:DWORD
     LOCAL hOldIcon:DWORD
 
@@ -45,8 +45,8 @@ MUILoadIconFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DW
         ret
     .ENDIF
 
-    .IF dwInstanceProperty != 0
-        Invoke MUIGetExtProperty, hWin, dwInstanceProperty
+    .IF InstanceProperty != 0
+        Invoke MUIGetExtProperty, hWin, InstanceProperty
         .IF eax == 0
             Invoke GetModuleHandle, NULL
         .ENDIF
@@ -54,8 +54,8 @@ MUILoadIconFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DW
         Invoke GetModuleHandle, NULL
     .ENDIF
     mov hinstance, eax
-    .IF dwProperty != -1
-        Invoke MUIGetExtProperty, hWin, dwProperty
+    .IF Property != -1
+        Invoke MUIGetExtProperty, hWin, Property
         .IF eax != 0
             mov hOldIcon, eax
         .ELSE
@@ -64,8 +64,8 @@ MUILoadIconFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DW
     .ENDIF
     
     Invoke LoadImage, hinstance, idResIcon, IMAGE_ICON, 0, 0, 0
-    .IF dwProperty != -1
-        Invoke MUISetExtProperty, hWin, dwProperty, eax
+    .IF Property != -1
+        Invoke MUISetExtProperty, hWin, Property, eax
         mov eax, hOldIcon
     .ENDIF
     ret

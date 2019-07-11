@@ -80,7 +80,7 @@ MUI_ALIGN
 ;
 ; NOTE: NOT WORKING 21/6/2019 
 ;-------------------------------------------------------------------------------------
-MUILoadPngFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DWORD, idResPng:DWORD
+MUILoadPngFromResource PROC hWin:MUIWND, InstanceProperty:MUIPROPERTY, Property:MUIPROPERTY, idResPng:RESID
     local rcRes:HRSRC
     local hResData:HRSRC
     local pResData:HANDLE
@@ -97,13 +97,13 @@ MUILoadPngFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DWO
     LOCAL dwImageWidth:DWORD
     LOCAL dwImageHeight:DWORD
 
-    .IF (hWin == NULL && dwInstanceProperty != -1) || idResPng == NULL
+    .IF (hWin == NULL && InstanceProperty != -1) || idResPng == NULL
         mov eax, NULL
         ret
     .ENDIF
 
-    .IF dwInstanceProperty != -1
-        Invoke MUIGetExtProperty, hWin, dwInstanceProperty
+    .IF InstanceProperty != -1
+        Invoke MUIGetExtProperty, hWin, InstanceProperty
         .IF eax == 0
             Invoke GetModuleHandle, NULL
         .ENDIF
@@ -112,8 +112,8 @@ MUILoadPngFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DWO
     .ENDIF
     mov hinstance, eax
 
-    .IF dwProperty != -1
-        Invoke MUIGetExtProperty, hWin, dwProperty
+    .IF Property != -1
+        Invoke MUIGetExtProperty, hWin, Property
         .IF eax != 0
             mov pImageOld, eax
         .ELSE
@@ -202,8 +202,8 @@ MUILoadPngFromResource PROC hWin:DWORD, dwInstanceProperty:DWORD, dwProperty:DWO
     ; ------------------------------------------------------------------
     ; STEP 7: Set property if required, and return pImage or pImageOld
     ; ------------------------------------------------------------------
-    .IF dwProperty != -1
-        Invoke MUISetExtProperty, hWin, dwProperty, pImage
+    .IF Property != -1
+        Invoke MUISetExtProperty, hWin, Property, pImage
         mov eax, pImageOld
     .ELSE
         mov eax, pImage

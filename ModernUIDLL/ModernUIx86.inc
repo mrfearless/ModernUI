@@ -1,6 +1,6 @@
 ;==============================================================================
 ;
-; ModernUI Library v0.0.0.5
+; ModernUI Library v0.0.0.6
 ;
 ; Copyright (c) 2019 by fearless
 ;
@@ -46,6 +46,7 @@ include ModernUI_Checkbox.inc
 include ModernUI_ProgressBar.inc
 include ModernUI_ProgressDots.inc
 include ModernUI_SmartPanel.inc
+include ModernUI_Spinner.inc
 include ModernUI_Text.inc
 include ModernUI_Tooltip.inc
 include ModernUI_TrayMenu.inc

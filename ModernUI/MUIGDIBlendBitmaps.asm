@@ -39,7 +39,7 @@ MUI_ALIGN
 ; MUIGDIBlendBitmaps - Blends two bitmaps together, or alternatively one bitmap
 ; and a block of color. dwTransparency determines level of blending
 ;------------------------------------------------------------------------------
-MUIGDIBlendBitmaps PROC hBitmap1:DWORD, hBitmap2:DWORD, dwColorBitmap2:DWORD, dwTransparency:DWORD
+MUIGDIBlendBitmaps PROC USES EBX hBitmap1:HBITMAP, hBitmap2:HBITMAP, ColorBitmap2:MUICOLORRGB, Transparency:MUIVALUE
     LOCAL nBmpWidth:DWORD
     LOCAL nBmpHeight:DWORD  
     LOCAL hdc:HDC
@@ -127,7 +127,7 @@ MUIGDIBlendBitmaps PROC hBitmap1:DWORD, hBitmap2:DWORD, dwColorBitmap2:DWORD, dw
         Invoke DeleteObject, hBitmap2Old
         Invoke DeleteDC, hdcBmp
     .ELSE
-        Invoke CreateSolidBrush, dwColorBitmap2
+        Invoke CreateSolidBrush, ColorBitmap2
         mov hBrush, eax
         Invoke SelectObject, hdcTemp, hBrush
         mov hBrushOld, eax
@@ -145,7 +145,7 @@ MUIGDIBlendBitmaps PROC hBitmap1:DWORD, hBitmap2:DWORD, dwColorBitmap2:DWORD, dw
 
     mov bf.BlendOp, AC_SRC_OVER
     mov bf.BlendFlags, 0
-    mov eax, dwTransparency
+    mov eax, Transparency
     mov bf.SourceConstantAlpha, al ;transparency
     mov bf.AlphaFormat, 0 ;0;AC_SRC_ALPHA; AC_SRC_ALPHA   
 

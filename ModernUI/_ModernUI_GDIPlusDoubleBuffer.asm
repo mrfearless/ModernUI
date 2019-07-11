@@ -35,7 +35,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Start Double Buffering for GDI+
 ;------------------------------------------------------------------------------
-MUIGDIPlusDoubleBufferStart PROC USES EBX hWin:DWORD, pGraphics:DWORD, lpBitmapHandle:DWORD, lpGraphicsBuffer:DWORD
+MUIGDIPlusDoubleBufferStart PROC USES EBX hWin:MUIWND, pGraphics:GPGRAPHICS, lpBitmapHandle:LPGPIMAGE, lpGraphicsBuffer:LPGPGRAPHICS
     LOCAL rect:RECT
     LOCAL pBuffer:DWORD
     LOCAL pBitmap:DWORD
@@ -64,13 +64,13 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Finish Double Buffering for GDI+ & copy finished pGraphicsBuffer to pGraphics (HDC)
 ;------------------------------------------------------------------------------
-MUIGDIPlusDoubleBufferFinish PROC hWin:DWORD, pGraphics:DWORD, hBitmap:DWORD, pGraphicsBuffer:DWORD
+MUIGDIPlusDoubleBufferFinish PROC hWin:MUIWND, pGraphics:GPGRAPHICS, pBitmap:GPIMAGE, pGraphicsBuffer:GPGRAPHICS
     LOCAL rect:RECT
     
     Invoke GetClientRect, hWin, Addr rect
-    Invoke GdipDrawImageRectI, pGraphics, hBitmap, 0, 0, rect.right, rect.bottom
+    Invoke GdipDrawImageRectI, pGraphics, pBitmap, 0, 0, rect.right, rect.bottom
     Invoke GdipDeleteGraphics, pGraphicsBuffer   
-    invoke GdipDisposeImage, hBitmap
+    invoke GdipDisposeImage, pBitmap
     xor eax, eax
     ret
 MUIGDIPlusDoubleBufferFinish ENDP

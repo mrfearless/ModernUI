@@ -38,7 +38,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIGetImageSize
 ;------------------------------------------------------------------------------
-MUIGetImageSize PROC USES EBX hImage:DWORD, dwImageType:DWORD, lpdwImageWidth:DWORD, lpdwImageHeight:DWORD
+MUIGetImageSize PROC USES EBX hImage:MUIIMAGE, ImageHandleType:MUIIT, lpImageWidth:LPMUIVALUE, lpImageHeight:LPMUIVALUE
     LOCAL bm:BITMAP
     LOCAL iinfo:ICONINFO
     LOCAL nImageWidth:DWORD
@@ -53,7 +53,7 @@ MUIGetImageSize PROC USES EBX hImage:DWORD, dwImageType:DWORD, lpdwImageWidth:DW
         ; fall out and return defaults
     .ELSE
 
-        mov eax, dwImageType
+        mov eax, ImageHandleType
         ;-----------------------------------
         ; BITMAP
         ;-----------------------------------
@@ -126,13 +126,13 @@ MUIGetImageSize PROC USES EBX hImage:DWORD, dwImageType:DWORD, lpdwImageWidth:DW
     .ENDIF
 
 
-    .IF lpdwImageWidth != 0
-        mov ebx, lpdwImageWidth
+    .IF lpImageWidth != 0
+        mov ebx, lpImageWidth
         mov eax, nImageWidth
         mov [ebx], eax
     .ENDIF
-    .IF lpdwImageHeight != 0
-        mov ebx, lpdwImageHeight
+    .IF lpImageHeight != 0
+        mov ebx, lpImageHeight
         mov eax, nImageHeight
         mov [ebx], eax
     .ENDIF

@@ -31,16 +31,16 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Allocs memory for the properties of a control
 ;------------------------------------------------------------------------------
-MUIAllocMemProperties PROC hControl:DWORD, cbWndExtraOffset:DWORD, dwSize:DWORD
+MUIAllocMemProperties PROC hWin:MUIWND, cbWndExtraOffset:MUIPROPERTIES, SizeToAllocate:MUIVALUE
     LOCAL pMem:DWORD
-    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, dwSize
+    Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, SizeToAllocate
     .IF eax == NULL
         mov eax, FALSE
         ret
     .ENDIF
     mov pMem, eax
     
-    Invoke SetWindowLong, hControl, cbWndExtraOffset, pMem
+    Invoke SetWindowLong, hWin, cbWndExtraOffset, pMem
     
     mov eax, TRUE
     ret
@@ -51,11 +51,11 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Frees memory for the properties of a control
 ;------------------------------------------------------------------------------
-MUIFreeMemProperties PROC hControl:DWORD, cbWndExtraOffset:DWORD
-    Invoke GetWindowLong, hControl, cbWndExtraOffset
+MUIFreeMemProperties PROC hWin:MUIWND, cbWndExtraOffset:MUIPROPERTIES
+    Invoke GetWindowLong, hWin, cbWndExtraOffset
     .IF eax != NULL
         invoke GlobalFree, eax
-        Invoke SetWindowLong, hControl, cbWndExtraOffset, 0
+        Invoke SetWindowLong, hWin, cbWndExtraOffset, 0
         mov eax, TRUE
     .ELSE
         mov eax, FALSE

@@ -41,7 +41,7 @@ MUI_ALIGN
 ; x and y positioning to center the new bitmap in the rectangle specified by
 ; lpBoundsRect are returned in lpdwX and lpdwY.
 ;------------------------------------------------------------------------------
-MUIGDIStretchBitmap PROC USES EBX hBitmap:DWORD, lpBoundsRect:DWORD, lpdwBitmapWidth:DWORD, lpdwBitmapHeight:DWORD, lpdwX:DWORD, lpdwY:DWORD
+MUIGDIStretchBitmap PROC USES EBX hBitmap:HBITMAP, lpBoundsRect:LPRECT, lpBitmapWidth:LPMUIVALUE, lpBitmapHeight:LPMUIVALUE, lpBitmapX:LPMUIVALUE, lpBitmapY:LPMUIVALUE
     LOCAL dwBitmapWidth:DWORD
     LOCAL dwBitmapHeight:DWORD
     LOCAL dwNewBitmapWidth:DWORD
@@ -60,23 +60,23 @@ MUIGDIStretchBitmap PROC USES EBX hBitmap:DWORD, lpBoundsRect:DWORD, lpdwBitmapW
     LOCAL hBitmapOld:DWORD
     
     .IF hBitmap == 0 || lpBoundsRect == 0
-        .IF lpdwBitmapWidth != 0
-            mov ebx, lpdwBitmapWidth
+        .IF lpBitmapWidth != 0
+            mov ebx, lpBitmapWidth
             mov eax, 0
             mov [ebx], eax
         .ENDIF
-        .IF lpdwBitmapHeight != 0
-            mov ebx, lpdwBitmapHeight
+        .IF lpBitmapHeight != 0
+            mov ebx, lpBitmapHeight
             mov eax, 0
             mov [ebx], eax
         .ENDIF
-        .IF lpdwX != 0
-            mov ebx, lpdwX
+        .IF lpBitmapX != 0
+            mov ebx, lpBitmapX
             mov eax, 0
             mov [ebx], eax    
         .ENDIF
-        .IF lpdwY != 0
-            mov ebx, lpdwY
+        .IF lpBitmapY != 0
+            mov ebx, lpBitmapY
             mov eax, 0
             mov [ebx], eax
         .ENDIF    
@@ -167,26 +167,26 @@ MUIGDIStretchBitmap PROC USES EBX hBitmap:DWORD, lpBoundsRect:DWORD, lpdwBitmapW
     Invoke DeleteObject, hStretchedBitmapOld     
     Invoke DeleteDC, hdc
 
-    .IF lpdwBitmapWidth != 0
-        mov ebx, lpdwBitmapWidth
+    .IF lpBitmapWidth != 0
+        mov ebx, lpBitmapWidth
         mov eax, dwNewBitmapWidth
         mov [ebx], eax
     .ENDIF
 
-    .IF lpdwBitmapHeight != 0
-        mov ebx, lpdwBitmapHeight
+    .IF lpBitmapHeight != 0
+        mov ebx, lpBitmapHeight
         mov eax, dwNewBitmapHeight
         mov [ebx], eax
     .ENDIF
 
-    .IF lpdwX != 0
-        mov ebx, lpdwX
+    .IF lpBitmapX != 0
+        mov ebx, lpBitmapX
         mov eax, X
         mov [ebx], eax    
     .ENDIF
 
-    .IF lpdwY != 0
-        mov ebx, lpdwY
+    .IF lpBitmapY != 0
+        mov ebx, lpBitmapY
         mov eax, Y
         mov [ebx], eax
     .ENDIF

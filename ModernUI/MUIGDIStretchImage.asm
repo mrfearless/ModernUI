@@ -30,7 +30,8 @@ include gdiplus.inc
 includelib gdiplus.lib
 ENDIF
 
-EXTERNDEF MUIGDIStretchBitmap           :PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+;EXTERNDEF MUIGDIStretchBitmap           :PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+EXTERNDEF MUIGDIStretchBitmap            :PROTO :HBITMAP,:LPRECT,:LPMUIVALUE,:LPMUIVALUE,:LPMUIVALUE,:LPMUIVALUE
 ;EXTERNDEF MUIGDIStretchIcon             :PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 ;EXTERNDEF MUIGDIStretchPng              :PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
@@ -46,11 +47,11 @@ MUI_ALIGN
 ; in the rectangle specified by lpBoundsRect are returned in lpdwImageX and 
 ; lpdwImageY.
 ;------------------------------------------------------------------------------
-MUIGDIStretchImage PROC USES EBX hImage:DWORD, dwImageType:DWORD, lpBoundsRect:DWORD, lpdwImageWidth:DWORD, lpdwImageHeight:DWORD, lpdwImageX:DWORD, lpdwImageY:DWORD
+MUIGDIStretchImage PROC USES EBX hImage:MUIIMAGE, ImageHandleType:MUIIT, lpBoundsRect:LPRECT, lpImageWidth:LPMUIVALUE, lpImageHeight:LPMUIVALUE, lpImageX:LPMUIVALUE, lpImageY:LPMUIVALUE
 
-    mov eax, dwImageType
+    mov eax, ImageHandleType
     .IF eax == MUIIT_BMP ; bitmap/icon
-        Invoke MUIGDIStretchBitmap, hImage, lpBoundsRect, lpdwImageWidth, lpdwImageHeight, lpdwImageX, lpdwImageY
+        Invoke MUIGDIStretchBitmap, hImage, lpBoundsRect, lpImageWidth, lpImageHeight, lpImageX, lpImageY
         ret
         
     .ELSEIF eax == MUIIT_ICO ; icon
@@ -65,23 +66,23 @@ MUIGDIStretchImage PROC USES EBX hImage:DWORD, dwImageType:DWORD, lpBoundsRect:D
 
     .ENDIF
     
-    .IF lpdwImageX != 0
-        mov ebx, lpdwImageX
+    .IF lpImageX != 0
+        mov ebx, lpImageX
         mov eax, 0
         mov [ebx], eax    
     .ENDIF
-    .IF lpdwImageY != 0
-        mov ebx, lpdwImageY
+    .IF lpImageY != 0
+        mov ebx, lpImageY
         mov eax, 0
         mov [ebx], eax    
     .ENDIF
-    .IF lpdwImageWidth != 0
-        mov ebx, lpdwImageWidth
+    .IF lpImageWidth != 0
+        mov ebx, lpImageWidth
         mov eax, 0
         mov [ebx], eax
     .ENDIF
-    .IF lpdwImageHeight != 0
-        mov ebx, lpdwImageHeight
+    .IF lpImageHeight != 0
+        mov ebx, lpImageHeight
         mov eax, 0
         mov [ebx], eax
     .ENDIF    

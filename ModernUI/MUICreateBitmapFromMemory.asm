@@ -37,7 +37,7 @@ MUI_ALIGN
 ;
 ; http://www.masmforum.com/board/index.php?topic=16267.msg134453#msg134453
 ;------------------------------------------------------------------------------
-MUICreateBitmapFromMemory PROC USES ECX EDX pBitmapData:DWORD
+MUICreateBitmapFromMemory PROC USES ECX EDX pBitmapData:POINTER
     LOCAL hDC:DWORD
     LOCAL hBmp:DWORD
 

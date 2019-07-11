@@ -34,7 +34,7 @@ MUI_ALIGN
 ; Convert font point size eg '12' to logical unit size for use with CreateFont,
 ; CreateFontIndirect
 ;------------------------------------------------------------------------------
-MUIPointSizeToLogicalUnit PROC hWin:DWORD, dwPointSize:DWORD
+MUIPointSizeToLogicalUnit PROC hWin:MUIWND, PointSize:MUIVALUE
     LOCAL hdc:HDC
     LOCAL dwLogicalUnit:DWORD
     
@@ -42,7 +42,7 @@ MUIPointSizeToLogicalUnit PROC hWin:DWORD, dwPointSize:DWORD
     mov hdc, eax
     Invoke SetMapMode, hdc, MM_TEXT
     Invoke GetDeviceCaps, hdc, LOGPIXELSY
-    Invoke MulDiv, dwPointSize, eax, 72d
+    Invoke MulDiv, PointSize, eax, 72d
     neg eax
     mov dwLogicalUnit, eax
     Invoke ReleaseDC, hWin, hdc

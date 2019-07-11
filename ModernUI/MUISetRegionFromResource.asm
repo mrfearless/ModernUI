@@ -26,7 +26,7 @@ includelib gdi32.lib
 include ModernUI.inc
 
 
-EXTERNDEF MUILoadRegionFromResource :PROTO :DWORD,:DWORD,:DWORD,:DWORD
+EXTERNDEF MUILoadRegionFromResource :PROTO hInst:HINSTANCE, idRgnRes:RESID, lpRegionData:POINTER, lpSizeRegionData:LPMUIVALUE
 
 
 .CODE
@@ -35,10 +35,10 @@ EXTERNDEF MUILoadRegionFromResource :PROTO :DWORD,:DWORD,:DWORD,:DWORD
 MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Sets a window/controls region from a region stored as an RC_DATA resource: 
-; idRgnRes if lpdwCopyRgn != NULL a copy of region handle is provided (for any
+; idRgnRes if lpCopyRgnHandle != NULL a copy of region handle is provided (for any
 ; future calls to FrameRgn for example)
 ;------------------------------------------------------------------------------
-MUISetRegionFromResource PROC USES EBX hWin:DWORD, idRgnRes:DWORD, lpdwCopyRgn:DWORD, bRedraw:DWORD
+MUISetRegionFromResource PROC USES EBX hWin:MUIWND, idRgnRes:RESID, lpCopyRgnHandle:LPMUIVALUE, bRedraw:BOOL
     LOCAL hinstance:DWORD
     LOCAL ptrRegionData:DWORD
     LOCAL dwRegionDataSize:DWORD
@@ -54,9 +54,9 @@ MUISetRegionFromResource PROC USES EBX hWin:DWORD, idRgnRes:DWORD, lpdwCopyRgn:D
     
     Invoke MUILoadRegionFromResource, hinstance, idRgnRes, Addr ptrRegionData, Addr dwRegionDataSize
     .IF eax == FALSE
-        .IF lpdwCopyRgn != NULL
+        .IF lpCopyRgnHandle != NULL
             mov eax, NULL
-            mov ebx, lpdwCopyRgn
+            mov ebx, lpCopyRgnHandle
             mov [ebx], eax
         .ENDIF
         mov eax, FALSE    
@@ -67,9 +67,9 @@ MUISetRegionFromResource PROC USES EBX hWin:DWORD, idRgnRes:DWORD, lpdwCopyRgn:D
     Invoke ExtCreateRegion, NULL, dwRegionDataSize, ptrRegionData
     mov hRgn, eax
     .IF eax == NULL
-        .IF lpdwCopyRgn != NULL
+        .IF lpCopyRgnHandle != NULL
             mov eax, NULL
-            mov ebx, lpdwCopyRgn
+            mov ebx, lpCopyRgnHandle
             mov [ebx], eax
         .ENDIF
         mov eax, FALSE
@@ -77,10 +77,10 @@ MUISetRegionFromResource PROC USES EBX hWin:DWORD, idRgnRes:DWORD, lpdwCopyRgn:D
     .ENDIF
     Invoke SetWindowRgn, hWin, hRgn, bRedraw
     
-    .IF lpdwCopyRgn != NULL
+    .IF lpCopyRgnHandle != NULL
         Invoke ExtCreateRegion, NULL, dwRegionDataSize, ptrRegionData
         mov hRgn, eax
-        mov ebx, lpdwCopyRgn
+        mov ebx, lpCopyRgnHandle
         mov [ebx], eax
     .ENDIF
 

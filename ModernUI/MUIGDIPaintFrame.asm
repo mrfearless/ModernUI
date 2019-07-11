@@ -46,7 +46,7 @@ MUI_ALIGN
 ; - MUIPFS_RIGHT
 ; - MUIPFS_ALL
 ;------------------------------------------------------------------------------
-MUIGDIPaintFrame PROC hdc:DWORD, lpFrameRect:DWORD, dwFrameColor:DWORD, dwFrameStyle:DWORD
+MUIGDIPaintFrame PROC hdc:HDC, lpFrameRect:LPRECT, FrameColor:MUICOLORRGB, FrameStyle:MUIPFS
     LOCAL hBrush:DWORD
     LOCAL hBrushOld:DWORD
     LOCAL hPen:DWORD
@@ -54,9 +54,9 @@ MUIGDIPaintFrame PROC hdc:DWORD, lpFrameRect:DWORD, dwFrameColor:DWORD, dwFrameS
     LOCAL rect:RECT
     LOCAL pt:POINT
 
-    .IF dwFrameColor != -1
-        .IF dwFrameStyle != MUIPFS_NONE
-            mov eax, dwFrameStyle
+    .IF FrameColor != -1
+        .IF FrameStyle != MUIPFS_NONE
+            mov eax, FrameStyle
             and eax, MUIPFS_ALL
             .IF eax == MUIPFS_ALL 
                 ;--------------------------------------------------------------
@@ -66,7 +66,7 @@ MUIGDIPaintFrame PROC hdc:DWORD, lpFrameRect:DWORD, dwFrameColor:DWORD, dwFrameS
                 mov hBrush, eax
                 Invoke SelectObject, hdc, eax
                 mov hBrushOld, eax
-                Invoke SetDCBrushColor, hdc, dwFrameColor
+                Invoke SetDCBrushColor, hdc, FrameColor
                 Invoke FrameRect, hdc, lpFrameRect, hBrush
                 .IF hBrushOld != 0
                     Invoke SelectObject, hdc, hBrushOld
@@ -79,18 +79,18 @@ MUIGDIPaintFrame PROC hdc:DWORD, lpFrameRect:DWORD, dwFrameColor:DWORD, dwFrameS
                 ;--------------------------------------------------------------
                 ; Paint only certain parts of the frame
                 ;--------------------------------------------------------------
-                Invoke CreatePen, PS_SOLID, 1, dwFrameColor
+                Invoke CreatePen, PS_SOLID, 1, FrameColor
                 mov hPen, eax
                 Invoke SelectObject, hdc, hPen
                 mov hPenOld, eax 
                 Invoke CopyRect, Addr rect, lpFrameRect
-                mov eax, dwFrameStyle
+                mov eax, FrameStyle
                 and eax, MUIPFS_TOP
                 .IF eax == MUIPFS_TOP
                     Invoke MoveToEx, hdc, rect.left, rect.top, Addr pt
                     Invoke LineTo, hdc, rect.right, rect.top
                 .ENDIF
-                mov eax, dwFrameStyle
+                mov eax, FrameStyle
                 and eax, MUIPFS_RIGHT
                 .IF eax == MUIPFS_RIGHT
                     dec rect.right                
@@ -98,7 +98,7 @@ MUIGDIPaintFrame PROC hdc:DWORD, lpFrameRect:DWORD, dwFrameColor:DWORD, dwFrameS
                     Invoke LineTo, hdc, rect.right, rect.bottom
                     inc rect.right
                 .ENDIF
-                mov eax, dwFrameStyle
+                mov eax, FrameStyle
                 and eax, MUIPFS_BOTTOM
                 .IF eax == MUIPFS_BOTTOM
                     dec rect.bottom
@@ -106,7 +106,7 @@ MUIGDIPaintFrame PROC hdc:DWORD, lpFrameRect:DWORD, dwFrameColor:DWORD, dwFrameS
                     Invoke LineTo, hdc, rect.right, rect.bottom
                     inc rect.bottom
                 .ENDIF
-                mov eax, dwFrameStyle
+                mov eax, FrameStyle
                 and eax, MUIPFS_LEFT
                 .IF eax == MUIPFS_LEFT
                     Invoke MoveToEx, hdc, rect.left, rect.top, Addr pt

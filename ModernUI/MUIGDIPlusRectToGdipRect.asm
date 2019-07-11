@@ -41,7 +41,7 @@ MUI_ALIGN
 ; Convert normal RECT structure to GDIPRECT structure.
 ; Pass Addr of RECT struct (to convert from) & Addr of GDIPRECT Struct to convert to
 ;-------------------------------------------------------------------------------------
-MUIGDIPlusRectToGdipRect PROC USES EBX EDX lpRect:DWORD, lpGdipRect:DWORD
+MUIGDIPlusRectToGdipRect PROC USES EBX EDX lpRect:LPRECT, lpGdipRect:LPGPRECT
     mov ebx, lpRect
     mov edx, lpGdipRect
     finit

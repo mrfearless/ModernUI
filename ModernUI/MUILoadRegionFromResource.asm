@@ -30,7 +30,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUILoadRegionFromResource - Loads region from a resource
 ;------------------------------------------------------------------------------
-MUILoadRegionFromResource PROC USES EBX hInst:DWORD, idRgnRes:DWORD, lpRegion:DWORD, lpdwSizeRegion:DWORD
+MUILoadRegionFromResource PROC USES EBX hInst:HINSTANCE, idRgnRes:RESID, lpRegionData:POINTER, lpSizeRegionData:LPMUIVALUE
     LOCAL hRes:DWORD
     ; Load region
     Invoke FindResource, hInst, idRgnRes, RT_RCDATA ; load rng image as raw data
@@ -38,8 +38,8 @@ MUILoadRegionFromResource PROC USES EBX hInst:DWORD, idRgnRes:DWORD, lpRegion:DW
         mov hRes, eax
         Invoke SizeofResource, hInst, hRes
         .IF eax != 0
-            .IF lpdwSizeRegion != NULL
-                mov ebx, lpdwSizeRegion
+            .IF lpSizeRegionData != NULL
+                mov ebx, lpSizeRegionData
                 mov [ebx], eax
             .ELSE
                 mov eax, FALSE
@@ -49,8 +49,8 @@ MUILoadRegionFromResource PROC USES EBX hInst:DWORD, idRgnRes:DWORD, lpRegion:DW
             .IF eax != NULL
                 Invoke LockResource, eax
                 .IF eax != NULL
-                    .IF lpRegion != NULL
-                        mov ebx, lpRegion
+                    .IF lpRegionData != NULL
+                        mov ebx, lpRegionData
                         mov [ebx], eax
                         mov eax, TRUE
                     .ELSE

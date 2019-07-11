@@ -38,29 +38,27 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Same as MUIPaintBackground, but with an image.
 ;
-; dwImageType: 0=none, 1=bmp, 2=ico
-; dwImageLocation: 0=center center, 1=bottom left, 2=bottom right, 3=top left, 
+; ImageHandleType: 0=none, 1=bmp, 2=ico
+; ImageLocation: 0=center center, 1=bottom left, 2=bottom right, 3=top left, 
 ; 4=top right, 5=center top, 6=center bottom
 ;------------------------------------------------------------------------------
-MUIPaintBackgroundImage PROC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderColor:DWORD, hImage:DWORD, dwImageType:DWORD, dwImageLocation:DWORD
+MUIPaintBackgroundImage PROC USES EBX hWin:MUIWND, BackColor:MUICOLORRGB, BorderColor:MUICOLORRGB, hImage:MUIIMAGE, ImageHandleType:MUIIT, ImageLocation:MUIIL
     LOCAL ps:PAINTSTRUCT
-    LOCAL hdc:HDC
     LOCAL rect:RECT
     LOCAL pt:POINT
-    LOCAL hdcMem:DWORD
-    LOCAL hdcMemBmp:DWORD
-    LOCAL hbmMem:DWORD
-    LOCAL hbmMemBmp:DWORD
-    LOCAL hOldBitmap:DWORD
-    LOCAL hBrush:DWORD
-    LOCAL hOldBrush:DWORD
+    LOCAL hdc:HDC
+    LOCAL hdcMem:HDC
+    LOCAL hBufferBitmap:HBITMAP
+    LOCAL hdcMemBmp:HDC
+    LOCAL hbmMem:HBITMAP
+    LOCAL hbmMemBmp:HBITMAP
     LOCAL ImageWidth:DWORD
     LOCAL ImageHeight:DWORD
     LOCAL pGraphics:DWORD
     LOCAL pGraphicsBuffer:DWORD
     LOCAL pBitmap:DWORD
     
-    .IF dwImageType == MUIIT_PNG
+    .IF ImageHandleType == MUIIT_PNG
         mov pGraphics, 0
         mov pGraphicsBuffer, 0
         mov pBitmap, 0
@@ -68,42 +66,22 @@ MUIPaintBackgroundImage PROC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderCol
     
     Invoke BeginPaint, hWin, addr ps
     mov hdc, eax
-    Invoke GetClientRect, hWin, Addr rect
-    
+
     ;----------------------------------------------------------
     ; Setup Double Buffering
-    ;----------------------------------------------------------      
-    Invoke CreateCompatibleDC, hdc
-    mov hdcMem, eax
-    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-    mov hbmMem, eax
-    Invoke SelectObject, hdcMem, hbmMem
-    mov hOldBitmap, eax 
+    ;----------------------------------------------------------
+    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap
 
     ;----------------------------------------------------------
-    ; Fill background
+    ; Paint background
     ;----------------------------------------------------------
-    Invoke GetStockObject, DC_BRUSH
-    mov hBrush, eax
-    Invoke SelectObject, hdcMem, eax
-    mov hOldBrush, eax
-    Invoke SetDCBrushColor, hdcMem, dwBackcolor
-    Invoke FillRect, hdcMem, Addr rect, hBrush
+    Invoke MUIGDIPaintFill, hdcMem, Addr rect, BackColor
 
     ;----------------------------------------------------------
-    ; Draw border if !0
+    ; Paint Border
     ;----------------------------------------------------------
-    .IF dwBorderColor != 0
-        .IF hOldBrush != 0
-            Invoke SelectObject, hdcMem, hOldBrush
-            Invoke DeleteObject, hOldBrush
-        .ENDIF    
-        Invoke GetStockObject, DC_BRUSH
-        mov hBrush, eax
-        Invoke SelectObject, hdcMem, eax
-        mov hOldBrush, eax
-        Invoke SetDCBrushColor, hdcMem, dwBorderColor
-        Invoke FrameRect, hdcMem, Addr rect, hBrush
+    .IF BorderColor != 0
+        Invoke MUIGDIPaintFrame, hdcMem, Addr rect, BorderColor, MUIPFS_ALL
     .ENDIF
     
     .IF hImage != NULL
@@ -111,9 +89,9 @@ MUIPaintBackgroundImage PROC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderCol
         ; Calc left and top of image based on 
         ; client rect and image width and height
         ;----------------------------------------
-        Invoke MUIGetImageSize, hImage, dwImageType, Addr ImageWidth, Addr ImageHeight
+        Invoke MUIGetImageSize, hImage, ImageHandleType, Addr ImageWidth, Addr ImageHeight
 
-        mov eax, dwImageLocation
+        mov eax, ImageLocation
         .IF eax == MUIIL_CENTER
             mov eax, rect.right
             shr eax, 1
@@ -191,7 +169,7 @@ MUIPaintBackgroundImage PROC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderCol
         ;----------------------------------------
         ; Draw image depending on what type it is
         ;----------------------------------------
-        mov eax, dwImageType
+        mov eax, ImageHandleType
         .IF eax == MUIIT_NONE
             
         .ELSEIF eax == MUIIT_BMP
@@ -246,27 +224,13 @@ MUIPaintBackgroundImage PROC USES EBX hWin:DWORD, dwBackcolor:DWORD, dwBorderCol
     Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
 
     ;----------------------------------------------------------
-    ; Cleanup
-    ;----------------------------------------------------------
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdcMem, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF
-    .IF hOldBitmap != 0
-        Invoke SelectObject, hdcMem, hOldBitmap
-        Invoke DeleteObject, hOldBitmap
-    .ENDIF
-    Invoke SelectObject, hdcMem, hbmMem
-    Invoke DeleteObject, hbmMem
-    Invoke DeleteDC, hdcMem
+    ; Finish Double Buffering & Cleanup
+    ;----------------------------------------------------------    
+    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0    
 
     invoke EndPaint, hWin, addr ps
     mov eax, 0
     ret
-
 MUIPaintBackgroundImage ENDP
 
 

@@ -33,7 +33,7 @@ MUI_ALIGN
 ; DS_CENTER, DS_CENTERMOUSE, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_MINIMIZE, 
 ; WS_MAXIMIZE
 ;------------------------------------------------------------------------------
-MUIApplyToDialog PROC hWin:DWORD, dwDropShadow:DWORD, dwClipping:DWORD
+MUIApplyToDialog PROC hWin:MUIWND, bDropShadow:BOOL, bClipping:BOOL
     LOCAL dwStyle:DWORD
     LOCAL dwNewStyle:DWORD
     LOCAL dwClassStyle:DWORD
@@ -72,7 +72,7 @@ MUIApplyToDialog PROC hWin:DWORD, dwDropShadow:DWORD, dwClipping:DWORD
         or dwNewStyle, WS_MAXIMIZE
     .ENDIF        
 
-    .IF dwClipping == TRUE
+    .IF bClipping == TRUE
         mov eax, dwStyle
         and eax, WS_CLIPSIBLINGS
         .IF eax == WS_CLIPSIBLINGS
@@ -88,7 +88,7 @@ MUIApplyToDialog PROC hWin:DWORD, dwDropShadow:DWORD, dwClipping:DWORD
     Invoke GetClassLong, hWin, GCL_STYLE
     mov dwClassStyle, eax
     
-    .IF dwDropShadow == TRUE
+    .IF bDropShadow == TRUE
         mov eax, dwClassStyle
         and eax, CS_DROPSHADOW
         .IF eax != CS_DROPSHADOW

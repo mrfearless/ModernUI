@@ -61,7 +61,7 @@ MUI_ALIGN
 ;   pCursorData = Pointer to the cursor file data
 ;
 ;------------------------------------------------------------------------------
-MUICreateCursorFromMemory PROC USES EBX pCursorData:DWORD
+MUICreateCursorFromMemory PROC USES EBX pCursorData:POINTER
     LOCAL hinstance:DWORD
     LOCAL pCursorDirEntry:DWORD
     LOCAL pInfoHeader:DWORD

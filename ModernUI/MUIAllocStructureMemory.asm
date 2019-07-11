@@ -48,7 +48,7 @@ MUI_ALIGN
 ; On return eax contains the pointer to the new structure item or -1 if there 
 ; was a problem alloc'ing memory.
 ;------------------------------------------------------------------------------
-MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, ItemSize:DWORD
+MUIAllocStructureMemory PROC USES EBX PtrStructMem:POINTER, TotalItems:MUIVALUE, ItemSize:MUIVALUE
     LOCAL StructDataOffset:DWORD
     LOCAL StructSize:DWORD
     LOCAL StructData:DWORD
@@ -58,7 +58,7 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
         Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, ItemSize ;
         .IF eax != NULL
             mov StructData, eax
-            mov ebx, dwPtrStructMem
+            mov ebx, PtrStructMem
             mov [ebx], eax ; save pointer to memory alloc'd for structure
             mov StructDataOffset, 0 ; save offset for new entry
             ;IFDEF DEBUG32
@@ -73,7 +73,7 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
         .ENDIF
     .ELSE
         
-        .IF dwPtrStructMem != NULL
+        .IF PtrStructMem != NULL
         
             ; calc new size to grow structure and offset to new entry
             mov eax, TotalItems
@@ -85,7 +85,7 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
             sub eax, ebx
             mov StructDataOffset, eax ; save offset for new entry
             
-            mov ebx, dwPtrStructMem ; get value from addr of passed dword dwPtrStructMem into eax, this is our pointer to previous mem location of structure
+            mov ebx, PtrStructMem ; get value from addr of passed dword PtrStructMem into eax, this is our pointer to previous mem location of structure
             mov eax, [ebx]
             mov StructData, eax
             ;IFDEF DEBUG32
@@ -102,8 +102,8 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
                 Invoke GlobalLock, eax
                 mov StructData, eax
                 
-                mov ebx, dwPtrStructMem
-                mov [ebx], eax ; save new pointer to memory alloc'd for structure back to dword address passed as dwPtrStructMem
+                mov ebx, PtrStructMem
+                mov [ebx], eax ; save new pointer to memory alloc'd for structure back to dword address passed as PtrStructMem
             .ELSE
                 IFDEF DEBUG32
                 PrintText '_AllocStructureMemory::Mem error GlobalReAlloc'
@@ -122,7 +122,7 @@ MUIAllocStructureMemory PROC USES EBX dwPtrStructMem:DWORD, TotalItems:DWORD, It
             Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, StructSize ;GMEM_FIXED+GMEM_ZEROINIT
             .IF eax != NULL
                 mov StructData, eax
-                ;mov ebx, dwPtrStructMem ; alloc memory so dont return anything to this as it was null when we got it
+                ;mov ebx, PtrStructMem ; alloc memory so dont return anything to this as it was null when we got it
                 ;mov [ebx], eax ; save pointer to memory alloc'd for structure
                 mov StructDataOffset, 0 ; save offset for new entry
                 ;IFDEF DEBUG32

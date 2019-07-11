@@ -48,7 +48,7 @@ MUI_ALIGN
 ; Center rotate bitmap at an angle and use specified back color to fill
 ; Returns in eax new hBitmapRotated. Use DeleteObject when finished.
 ;------------------------------------------------------------------------------
-MUIGDIRotateCenterBitmap PROC hWin:DWORD, hBitmap:DWORD, dwAngle:DWORD, dwBackColor:DWORD
+MUIGDIRotateCenterBitmap PROC hWin:MUIWND, hBitmap:HBITMAP, Angle:MUIVALUE, BackColor:MUICOLORRGB
     LOCAL hdc:HDC
     LOCAL hdcOriginal:HDC
     LOCAL hdcRotated:HDC
@@ -60,7 +60,7 @@ MUIGDIRotateCenterBitmap PROC hWin:DWORD, hBitmap:DWORD, dwAngle:DWORD, dwBackCo
     LOCAL xCenter:DWORD
     LOCAL yCenter:DWORD
     LOCAL rect:RECT
-    LOCAL angle:REAL4
+    LOCAL fAngle:REAL4
     
     Invoke GetDC, hWin
     mov hdc, eax
@@ -93,7 +93,7 @@ MUIGDIRotateCenterBitmap PROC hWin:DWORD, hBitmap:DWORD, dwAngle:DWORD, dwBackCo
     mov hBrush, eax
     Invoke SelectObject, hdcRotated, hBrush
     mov hBrushOld, eax
-    Invoke SetDCBrushColor, hdcRotated, dwBackColor
+    Invoke SetDCBrushColor, hdcRotated, BackColor
     inc rect.bottom
     Invoke FillRect, hdcRotated, Addr rect, hBrush
     dec rect.bottom
@@ -103,9 +103,9 @@ MUIGDIRotateCenterBitmap PROC hWin:DWORD, hBitmap:DWORD, dwAngle:DWORD, dwBackCo
     
     ; Rotate the bitmap
     finit
-    fild dwAngle ;FP4(25.0)
-    fstp angle
-    Invoke RotateBitBltAtD, hdcRotated, hdcOriginal, xCenter, yCenter, angle, rect, 0, 0
+    fild Angle ;FP4(25.0)
+    fstp fAngle
+    Invoke RotateBitBltAtD, hdcRotated, hdcOriginal, xCenter, yCenter, fAngle, rect, 0, 0
     
     ; Tidy up
     Invoke SelectObject, hdcOriginal, hBitmapOld
