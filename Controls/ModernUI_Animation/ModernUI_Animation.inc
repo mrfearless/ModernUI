@@ -51,8 +51,8 @@ MUIAnimationAddFrames       PROTO :DWORD,:DWORD,:DWORD,:DWORD                   
 MUIAnimationLoadFrame       PROTO :DWORD,:DWORD,:DWORD						        ; hModernUI_Animation, dwImageType, lpMuiAnimationFrameStruct
 MUIAnimationLoadFrames      PROTO :DWORD,:DWORD,:DWORD,:DWORD                       ; hModernUI_Animation, dwImageType, lpArrayMuiAnimationFrameStructs, dwCount
 ; Create a series of animation frames images from a sprite sheet
-MUIAnimationAddSpriteSheet  PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD                ; hModernUI_Animation, dwImageType, hImageSpriteSheet, dwSpriteCount, lpFrameTimes, dwFrameTimeSize, dwFrameTimeType
-MUIAnimationLoadSpriteSheet PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD                ; hModernUI_Animation, dwImageType, idResSpriteSheet, dwSpriteCount, lpFrameTimes, dwFrameTimeSize, dwFrameTimeType
+MUIAnimationAddSpriteSheet  PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD  ; hModernUI_Animation, dwImageType, hImageSpriteSheet, dwSpriteCount, lpFrameTimes, dwFrameTimeSize, dwFrameTimeType
+MUIAnimationLoadSpriteSheet PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD  ; hModernUI_Animation, dwImageType, idResSpriteSheet, dwSpriteCount, lpFrameTimes, dwFrameTimeSize, dwFrameTimeType
 ; Insert image handle as an animation frame image
 MUIAnimationInsertFrame     PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD                ; hModernUI_Animation, dwImageType, lpMuiAnimationFrameStruct, dwFrameIndex, bInsertBefore
 MUIAnimationInsertFrames    PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD         ; hModernUI_Animation, dwImageType, lpArrayMuiAnimationFrameStructs, dwCount, dwFrameIndex, bInsertBefore
@@ -90,7 +90,9 @@ MUIAnimationStop            PROTO :DWORD                                        
 MUIAnimationPause           PROTO :DWORD                                            ; hModernUI_Animation
 MUIAnimationResume          PROTO :DWORD                                            ; hModernUI_Animation
 MUIAnimationStep            PROTO :DWORD,:DWORD                                     ; hModernUI_Animation, bReverse
-MUIAnimationSpeed           PROTO :DWORD,:DWORD                                     ; hModernUI_Animation, dwSpeedFactor
+MUIAnimationSpeed           PROTO :DWORD,:REAL4                                     ; hModernUI_Animation, fSpeedFactor
+
+MUIAnimationSetDefaultTime  PROTO :DWORD,:DWORD                                     ; hModernUI_Animation, dwDefaultFrameTime
 
 MUIAnimationNotifyCallback  PROTO :DWORD,:DWORD                                     ; hModernUI_Animation, lpNMAnimationStruct
 
@@ -128,6 +130,19 @@ MUI_ANIMATION_FRAME         STRUCT
 MUI_ANIMATION_FRAME         ENDS
 ENDIF
 
+IFNDEF MUI_ANIMATION_FT_FULL ; For array of frame times for every frame in array
+MUI_ANIMATION_FT_FULL     STRUCT
+    dwFrameTime           DD ?
+MUI_ANIMATION_FT_FULL     ENDS
+ENDIF
+
+IFNDEF MUI_ANIMATION_FT_COMPACT ; For array of frame times for specified frame indexes in each entry
+MUI_ANIMATION_FT_COMPACT  STRUCT
+    dwFrameID             DD ?
+    dwFrameTime           DD ?
+MUI_ANIMATION_FT_COMPACT  ENDS
+ENDIF
+
 IFNDEF NM_ANIMATION_FRAME   ; ModernUI_Animation Notification Item
 NM_ANIMATION_FRAME          STRUCT
     dwFrameIndex            DD ?    ; DWORD. Frame index
@@ -152,18 +167,26 @@ ENDIF
 ;------------------------------------------------------------------------------
 
 ; ModernUI_Animation Styles
-
+MUIAS_NOSTRETCH             EQU 0
+MUIAS_NOCENTER              EQU 1
+MUIAS_CENTER                EQU 2
+MUIAS_STRETCH               EQU 3
+MUIAS_LCLICK                EQU 4
+MUIAS_RCLICK                EQU 8
+MUIAS_HAND                  EQU 10h
+MUIAS_CONTROL               EQU 20h
 
 ;------------------------------------------------------------------------------
 ; ModernUI_Animation Properties: Use with MUIAnimationSetProperty / 
 ; MUIAnimationGetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;------------------------------------------------------------------------------
 @AnimationBackColor         EQU 0   ; RGBCOLOR. Background color of animation
-@AnimationLoop              EQU 4   ; BOOL. Loop animation back to start. Default is TRUE
-@AnimationNotifications     EQU 8   ; BOOL. Allow notifications via WM_NOTIFY. Default is TRUE
-@AnimationNotifyCallback    EQU 12  ; DWORD. Address of custom notifications callback function (MUIAnimationNotifyCallback)
-@AnimationDllInstance       EQU 16  ; DWORD. Instance of DLL if using control in a DLL
-@AnimationParam             EQU 20  ; DWORD. Custom user specified value
+@AnimationBorderColor       EQU 4   ; RGBCOLOR. Border color of animation
+@AnimationLoop              EQU 8   ; BOOL. Loop animation back to start. Default is TRUE
+@AnimationNotifications     EQU 12  ; BOOL. Allow notifications via WM_NOTIFY. Default is TRUE
+@AnimationNotifyCallback    EQU 16  ; DWORD. Address of custom notifications callback function (MUIAnimationNotifyCallback)
+@AnimationDllInstance       EQU 20  ; DWORD. Instance of DLL if using control in a DLL
+@AnimationParam             EQU 24  ; DWORD. Custom user specified value
 
 
 ; Animation Image Type:

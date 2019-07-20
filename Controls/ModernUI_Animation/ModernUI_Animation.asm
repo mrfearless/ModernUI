@@ -44,14 +44,14 @@ option casemap:none
 include \masm32\macros\macros.asm
 
 ;DEBUG32 EQU 1
-
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include user32.inc
@@ -92,7 +92,6 @@ _MUI_AnimationWndProc         PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_AnimationInit            PROTO :DWORD
 _MUI_AnimationCleanup         PROTO :DWORD
 _MUI_AnimationPaint           PROTO :DWORD
-_MUI_AnimationPaintBackground PROTO :DWORD, :DWORD, :DWORD
 _MUI_AnimationPaintImages     PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_AnimationNotify          PROTO :DWORD, :DWORD
 
@@ -123,6 +122,7 @@ _MUI_AnimationTimerStop       PROTO :DWORD
 ; External public properties
 MUI_ANIMATION_PROPERTIES      STRUCT
 	dwBackColor			      DD ?  ; RGBCOLOR. Background color of animation
+	dwBorderColor             DD ?  ; RGBCOLOR. Border color of animation
 	dwAnimationLoop           DD ?  ; BOOL. Loop animation back to start. Default is TRUE
 	dwAnimationNotifications  DD ?  ; BOOL. Allow notifications via WM_NOTIFY. Default is TRUE
 	dwAnimationNotifyCallback DD ?  ; DWORD. Address of custom notifications callback function
@@ -139,8 +139,10 @@ _MUI_ANIMATION_PROPERTIES     STRUCT
     dwFramesImageType         DD ?  ; DWORD. BMP, ICO or PNG
     dwFrameTimeDefault        DD ?  ; DWORD. Default frame time for all frames that have frame time as 0
     dwFrameSpeed              DD ?  ; DWORD. Current frame's speed (frame time)
+    fSpeedFactor              DD ?
     dwNotifyData              DD ?  ; DWORD. Pointer to NM_ANIMATION notification structure data
-    IFDEF SPINNER_USE_TIMERQUEUE
+    dwAnimationStatus         DD ?  ; DWORD. 0 == stopped, 1 == paused, 2 == step mode, 3 == playing
+    IFDEF ANIMATION_USE_TIMERQUEUE
     bUseTimerQueue            DD ?  ; BOOL. Use timerqueue - if timerqueue api calls fail can fallback to WM_TIMER
     hQueue                    DD ?  ; DWORD. Handle to timerqueue
     hTimer                    DD ?  ; DWORD. Handle to timerqueue timer
@@ -153,7 +155,7 @@ _MUI_ANIMATION_FRAME          STRUCT
     dwFrameImage              DD ?  ; Handle to image: Bitmap, Icon or PNG
     dwFrameTime               DD ?  ; Frame time in milliseconds
     lParam                    DD ?  ; Custom user specified value
-_MUI_ANIMATION_FRAME               ENDS
+_MUI_ANIMATION_FRAME          ENDS
 ENDIF
 
 IFNDEF NM_ANIMATION_FRAME     ; ModernUI_Animation Notification Item
@@ -205,7 +207,13 @@ ENDIF
 ANIMATION_FRAME_TIME_MIN      EQU 10
 ANIMATION_FRAME_TIME_DEFAULT  EQU 250 ; Milliseconds for timer firing
 
-; Internal properties
+
+MUIANI_STATUS_STOPPED         EQU 0
+MUIANI_STATUS_PAUSED          EQU 1
+MUIANI_STATUS_STEPPING        EQU 2
+MUIANI_STATUS_PLAYING         EQU 3
+
+
 ; Internal properties
 @AnimationMouseOver           EQU 0
 @AnimationTotalFrames         EQU 4
@@ -214,11 +222,13 @@ ANIMATION_FRAME_TIME_DEFAULT  EQU 250 ; Milliseconds for timer firing
 @AnimationImageType           EQU 16
 @AnimationFrameTimeDefault    EQU 20
 @AnimationFrameSpeed          EQU 24
-@AnimationNotifyData          EQU 28
+@AnimationSpeedFactor         EQU 28
+@AnimationNotifyData          EQU 32
+@AnimationStatus              EQU 36
 IFDEF ANIMATION_USE_TIMERQUEUE
-@AnimationUseTimerQueue       EQU 32
-@AnimationQueue               EQU 36
-@AnimationTimer               EQU 40
+@AnimationUseTimerQueue       EQU 40
+@AnimationQueue               EQU 44
+@AnimationTimer               EQU 48
 ENDIF
 
 
@@ -269,8 +279,8 @@ MUIAnimationRegister PROC
     	mov eax, hinstance
         mov wc.hInstance, eax
     	mov wc.lpfnWndProc, OFFSET _MUI_AnimationWndProc
-    	Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, eax
+    	;Invoke LoadCursor, NULL, IDC_ARROW
+    	mov wc.hCursor, NULL ;eax
     	mov wc.hIcon, 0
     	mov wc.hIconSm, 0
     	mov wc.lpszMenuName, NULL
@@ -320,13 +330,11 @@ MUI_ALIGN
 ; _MUI_AnimationWndProc - Main processing window for our control
 ;------------------------------------------------------------------------------
 _MUI_AnimationWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
-    LOCAL TE:TRACKMOUSEEVENT
+    LOCAL dwStyle:DWORD
     
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
-		; sets text of our control, delete if not required.
-        ;Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
         mov eax, TRUE
         ret
 
@@ -340,10 +348,14 @@ _MUI_AnimationWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:
 		mov eax, 0
 		ret 
 
-    .ELSEIF eax == WM_NCDESTROY
+    .ELSEIF eax == WM_DESTROY
         Invoke _MUI_AnimationCleanup, hWin
+		mov eax, 0
+		ret
+        
+    .ELSEIF eax == WM_NCDESTROY
         Invoke MUIFreeMemProperties, hWin, MUI_INTERNAL_PROPERTIES
-		Invoke MUIFreeMemProperties, hWin, MUI_EXTERNAL_PROPERTIES
+        Invoke MUIFreeMemProperties, hWin, MUI_EXTERNAL_PROPERTIES
         IFDEF MUI_USEGDIPLUS
         Invoke MUIGDIPlusFinish
         ENDIF
@@ -359,36 +371,60 @@ _MUI_AnimationWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:
         mov eax, 0
         ret
 
+    .ELSEIF eax== WM_SETCURSOR
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, MUIAS_HAND
+        .IF eax == MUIAS_HAND
+            invoke LoadCursor, NULL, IDC_HAND
+        .ELSE
+            invoke LoadCursor, NULL, IDC_ARROW
+        .ENDIF
+        Invoke SetCursor, eax
+        mov eax, 0
+        ret    
+
     .ELSEIF eax == WM_LBUTTONUP
-		; simulates click on our control, delete if not required.
+		; simulates click on our control, passing it to parent
 		Invoke GetDlgCtrlID, hWin
 		mov ebx,eax
 		Invoke GetParent, hWin
 		Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
-
-   .ELSEIF eax == WM_MOUSEMOVE
-		Invoke MUISetIntProperty, hWin, @AnimationMouseOver, TRUE
-		.IF eax != TRUE
-		    Invoke InvalidateRect, hWin, NULL, TRUE
-		    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
-		    mov TE.dwFlags, TME_LEAVE
-		    mov eax, hWin
-		    mov TE.hwndTrack, eax
-		    mov TE.dwHoverTime, NULL
-		    Invoke TrackMouseEvent, Addr TE
+		
+		Invoke GetWindowLong, hWin, GWL_STYLE
+		mov dwStyle, eax
+		and eax, MUIAS_LCLICK
+		.IF eax == MUIAS_LCLICK
+		    Invoke MUIGetIntProperty, hWin, @AnimationStatus
+		    .IF eax == MUIANI_STATUS_STOPPED
+		        Invoke MUIAnimationStart, hWin
+		    .ELSEIF eax == MUIANI_STATUS_PAUSED
+		        Invoke MUIAnimationResume, hWin
+		    .ELSEIF eax == MUIANI_STATUS_STEPPING
+		        Invoke MUIAnimationStep, hWin, FALSE
+		    .ELSEIF eax == MUIANI_STATUS_PLAYING
+		        mov eax, dwStyle
+		        and eax, MUIAS_CONTROL
+		        .IF eax != MUIAS_CONTROL
+		            Invoke MUIAnimationPause, hWin
+		        .ENDIF
+		    .ENDIF
 		.ENDIF
-
-    .ELSEIF eax == WM_MOUSELEAVE
-        Invoke MUISetIntProperty, hWin, @AnimationMouseOver, FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
-
-    .ELSEIF eax == WM_KILLFOCUS
-        Invoke MUISetIntProperty, hWin, @AnimationMouseOver, FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
+		
+    .ELSEIF eax == WM_RBUTTONUP
+		Invoke GetWindowLong, hWin, GWL_STYLE
+		and eax, MUIAS_RCLICK
+		.IF eax == MUIAS_RCLICK
+		    Invoke MUIGetIntProperty, hWin, @AnimationStatus
+		    .IF eax == MUIANI_STATUS_STOPPED
+		        Invoke MUIAnimationStart, hWin
+		    .ELSEIF eax == MUIANI_STATUS_PAUSED
+		        Invoke MUIAnimationResume, hWin
+		    .ELSEIF eax == MUIANI_STATUS_STEPPING
+		        Invoke MUIAnimationStep, hWin, TRUE
+		    .ELSEIF eax == MUIANI_STATUS_PLAYING
+		        Invoke MUIAnimationPause, hWin
+		    .ENDIF
+		.ENDIF
     
 	.ELSEIF eax == WM_TIMER
 	    mov eax, wParam
@@ -397,7 +433,6 @@ _MUI_AnimationWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:
 	    .ENDIF
     
 	; custom messages start here
-	
 	.ELSEIF eax == MUI_GETPROPERTY
 		Invoke MUIGetExtProperty, hWin, wParam
 		ret
@@ -436,13 +471,20 @@ _MUI_AnimationInit PROC hWin:DWORD
     .ENDIF
     ;PrintDec dwStyle
     
-    ; Set default initial external property values     
-    Invoke MUISetExtProperty, hWin, @AnimationBackColor, MUI_RGBCOLOR(21,133,181)
+    ; Set default initial external property values
+    Invoke MUIGetParentBackgroundColor, hWin
+    .IF eax == -1 ; if background was NULL then try a color as default
+        Invoke GetSysColor, COLOR_WINDOW
+    .ENDIF    
+    Invoke MUISetExtProperty, hWin, @AnimationBackColor, eax ;MUI_RGBCOLOR(240,240,240)
+    Invoke MUISetExtProperty, hWin, @AnimationBorderColor, MUI_RGBCOLOR(48,48,48)
     Invoke MUISetExtProperty, hWin, @AnimationLoop, TRUE
     Invoke MUISetIntProperty, hWin, @AnimationFrameTimeDefault, ANIMATION_FRAME_TIME_DEFAULT
 
     IFDEF ANIMATION_USE_TIMERQUEUE
     Invoke MUISetIntProperty, hWin, @AnimationUseTimerQueue, TRUE
+    Invoke MUISetIntProperty, hWin, @AnimationQueue, 0
+    Invoke MUISetIntProperty, hWin, @AnimationTimer, 0
     ENDIF
 
     Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, SIZEOF NM_ANIMATION
@@ -460,65 +502,35 @@ MUI_ALIGN
 ; _MUI_AnimationCleanup - cleanup
 ;------------------------------------------------------------------------------
 _MUI_AnimationCleanup PROC USES EBX hWin:DWORD
-    LOCAL pAnimationFramesArray:DWORD
-    LOCAL pCurrentFrame:DWORD
-    LOCAL TotalFrames:DWORD
-    LOCAL FrameIndex:DWORD
-    LOCAL ImageType:DWORD
-    LOCAL hImage:DWORD
-    
+    IFDEF ANIMATION_USE_TIMERQUEUE
+    LOCAL hQueue:DWORD
+    ENDIF
+
+    IFDEF DEBUG32
+    PrintText '_MUI_AnimationCleanup'
+    ENDIF
+
     Invoke _MUI_AnimationTimerStop, hWin
-    
     Invoke MUIAnimationClear, hWin
-    
-;    Invoke MUIGetIntProperty, hWin, @AnimationImageType
-;    mov ImageType, eax    
-;    
-;    Invoke MUIGetIntProperty, hWin, @AnimationFramesArray
-;    .IF eax != NULL
-;        mov pAnimationFramesArray, eax
-;        mov pCurrentFrame, eax
-;        
-;        Invoke MUIGetIntProperty, hWin, @AnimationTotalFrames
-;        mov TotalFrames, eax
-;        
-;        mov FrameIndex, 0
-;        mov eax, 0
-;        .WHILE eax < TotalFrames
-;            mov ebx, pCurrentFrame
-;            
-;            mov eax, [ebx]._MUI_ANIMATION_FRAME.dwFrameImage ; get bitmap handle and delete object if it exists
-;            
-;            .IF eax != NULL
-;                mov hImage, eax
-;                
-;                mov eax, ImageType
-;                .IF eax == MUIAIT_BMP
-;                    ;PrintText 'Deleteing bitmap'
-;                    Invoke DeleteObject, hImage
-;                .ELSEIF eax == MUIAIT_ICO
-;                    Invoke DestroyIcon, hImage
-;                .ELSEIF eax == MUIAIT_PNG
-;                    IFDEF MUI_USEGDIPLUS
-;                    Invoke GdipDisposeImage, hImage
-;                    ENDIF
-;                .ENDIF
-;            .ENDIF
-;            
-;            add pCurrentFrame, SIZEOF _MUI_ANIMATION_FRAME
-;            inc FrameIndex
-;            mov eax, FrameIndex
-;        .ENDW
-;    
-;        Invoke GlobalFree, pAnimationFramesArray
-;    
-;    .ENDIF
-    
+
+    IFDEF ANIMATION_USE_TIMERQUEUE
+        Invoke MUIGetIntProperty, hWin, @AnimationUseTimerQueue
+        .IF eax == TRUE
+            Invoke MUIGetIntProperty, hWin, @AnimationQueue
+            mov hQueue, eax
+            Invoke DeleteTimerQueueEx, hQueue, NULL
+            Invoke MUISetIntProperty, hWin, @AnimationQueue, NULL
+            Invoke MUISetIntProperty, hWin, @AnimationTimer, NULL
+        .ENDIF
+    ENDIF
+
     Invoke MUIGetIntProperty, hWin, @AnimationNotifyData
     .IF eax != NULL
         Invoke GlobalFree, eax
+        ;PrintText 'deleted notify data'
+        Invoke MUISetIntProperty, hWin, @AnimationNotifyData, NULL
     .ENDIF
-    
+
     ret
 _MUI_AnimationCleanup ENDP
 
@@ -531,9 +543,9 @@ _MUI_AnimationPaint PROC hWin:DWORD
     LOCAL rect:RECT
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
-    LOCAL hbmMem:DWORD
-    LOCAL hBitmap:DWORD
-    LOCAL hOldBitmap:DWORD
+    LOCAL hBufferBitmap:DWORD
+    LOCAL BackColor:DWORD
+    LOCAL BorderColor:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
@@ -541,22 +553,20 @@ _MUI_AnimationPaint PROC hWin:DWORD
     ;----------------------------------------------------------
     ; Get some property values
     ;---------------------------------------------------------- 
-    Invoke GetClientRect, hWin, Addr rect
+    Invoke MUIGetExtProperty, hWin, @AnimationBackColor
+    mov BackColor, eax
+    Invoke MUIGetExtProperty, hWin, @AnimationBorderColor
+    mov BorderColor, eax
 
     ;----------------------------------------------------------
     ; Setup Double Buffering
     ;----------------------------------------------------------
-    Invoke CreateCompatibleDC, hdc
-    mov hdcMem, eax
-    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-    mov hbmMem, eax
-    Invoke SelectObject, hdcMem, hbmMem
-    mov hOldBitmap, eax
+    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap
 
     ;----------------------------------------------------------
-    ; Background
+    ; Paint background
     ;----------------------------------------------------------
-    Invoke _MUI_AnimationPaintBackground, hWin, hdcMem, Addr rect
+    Invoke MUIGDIPaintFill, hdcMem, Addr rect, BackColor
     
     ;----------------------------------------------------------
     ; Images
@@ -564,65 +574,24 @@ _MUI_AnimationPaint PROC hWin:DWORD
     Invoke _MUI_AnimationPaintImages, hWin, hdc, hdcMem, Addr rect
 
     ;----------------------------------------------------------
-    ; Border
+    ; Paint Border
     ;----------------------------------------------------------
-    ;Invoke _MUI_AnimationPaintBorder, hWin, hdcMem, Addr rect
+    Invoke MUIGDIPaintFrame, hdcMem, Addr rect, BorderColor, MUIPFS_ALL
     
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
     ;----------------------------------------------------------
     Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
-    
+
     ;----------------------------------------------------------
-    ; Cleanup
-    ;----------------------------------------------------------
-    .IF hOldBitmap != 0
-        Invoke SelectObject, hdcMem, hOldBitmap
-        Invoke DeleteObject, hOldBitmap
-    .ENDIF
-    Invoke SelectObject, hdcMem, hbmMem
-    Invoke DeleteObject, hbmMem
-    Invoke DeleteDC, hdcMem
+    ; Finish Double Buffering & Cleanup
+    ;----------------------------------------------------------    
+    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0    
     
     Invoke EndPaint, hWin, Addr ps
     
     ret
 _MUI_AnimationPaint ENDP
-
-MUI_ALIGN
-;------------------------------------------------------------------------------
-; _MUI_AnimationPaintBackground
-;------------------------------------------------------------------------------
-_MUI_AnimationPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD
-    LOCAL BackColor:DWORD
-    LOCAL hBrush:DWORD
-    LOCAL hOldBrush:DWORD
-    LOCAL rect:RECT
-
-    Invoke CopyRect, Addr rect, lpRect
-    inc rect.bottom ; rect needs to be increased for FillRect call
-    inc rect.right ; rect needs to be increased for FillRect call
-    
-    Invoke MUIGetExtProperty, hWin, @AnimationBackColor
-    mov BackColor, eax
-    
-    Invoke GetStockObject, DC_BRUSH
-    mov hBrush, eax
-    Invoke SelectObject, hdc, eax
-    mov hOldBrush, eax
-    Invoke SetDCBrushColor, hdc, BackColor
-    Invoke FillRect, hdc, Addr rect, hBrush
-    
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdc, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF      
-    
-    ret
-_MUI_AnimationPaintBackground ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -638,10 +607,17 @@ _MUI_AnimationPaintImages PROC USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD
     LOCAL pBitmap:DWORD
     LOCAL ImageWidth:DWORD
     LOCAL ImageHeight:DWORD
+    LOCAL dwStyle:DWORD
+    LOCAL bStretch:DWORD
     LOCAL rect:RECT
     LOCAL pt:POINT
     
-    Invoke MUIGetIntProperty, hWin, @AnimationImageType
+    IFDEF DEBUG32
+    ;PrintText '_MUI_AnimationPaintImages'
+    ENDIF
+    
+    ;Invoke MUIGetIntProperty, hWin, @AnimationImageType
+    Invoke _MUI_AnimationFrameType, hWin, -1
     .IF eax == 0
         ret
     .ENDIF
@@ -654,27 +630,60 @@ _MUI_AnimationPaintImages PROC USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD
     .ENDIF
     mov hImage, eax
     
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
+    
     Invoke CopyRect, Addr rect, lpRect
     Invoke MUIGetImageSize, hImage, ImageType, Addr ImageWidth, Addr ImageHeight
     
-    mov eax, rect.right
-    shr eax, 1
-    mov ebx, ImageWidth
-    shr ebx, 1
-    sub eax, ebx
-    .IF sdword ptr eax < 0
-        mov eax, 0
+    
+    mov eax, dwStyle
+    and eax, MUIAS_STRETCH
+    .IF eax == MUIAS_STRETCH
+        mov bStretch, TRUE
+    .ELSE
+        mov bStretch, FALSE
     .ENDIF
-    mov pt.x, eax
-    mov eax, rect.bottom
-    shr eax, 1
-    mov ebx, ImageHeight
-    shr ebx, 1
-    sub eax, ebx
-    .IF sdword ptr eax < 0
-        mov eax, 0
+    
+    .IF bStretch == TRUE
+        mov pt.x, 0
+        mov pt.y, 0
+    .ELSE
+        mov eax, dwStyle
+        and eax, MUIAS_CENTER
+        .IF eax == MUIAS_CENTER
+            mov eax, rect.right
+            shr eax, 1
+            mov ebx, ImageWidth
+            shr ebx, 1
+            sub eax, ebx
+            .IF sdword ptr eax < 0
+                mov eax, 0
+            .ENDIF
+            mov pt.x, eax
+            mov eax, rect.bottom
+            shr eax, 1
+            mov ebx, ImageHeight
+            shr ebx, 1
+            sub eax, ebx
+            .IF sdword ptr eax < 0
+                mov eax, 0
+            .ENDIF
+            mov pt.y, eax
+        .ELSE
+            mov pt.x, 0
+            mov pt.y, 0
+        .ENDIF
     .ENDIF
-    mov pt.y, eax
+    
+    IFDEF DEBUG32
+    ;PrintDec pt.x
+    ;PrintDec pt.y
+    ;PrintDec ImageWidth
+    ;PrintDec ImageHeight
+    ;PrintDec rect.right
+    ;PrintDec rect.bottom
+    ENDIF
     
     mov eax, ImageType
     .IF eax == MUIAIT_BMP ; bitmap
@@ -683,8 +692,12 @@ _MUI_AnimationPaintImages PROC USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD
         mov hdcMem, eax
         Invoke SelectObject, hdcMem, hImage
         mov hbmOld, eax
-
-        Invoke BitBlt, hdcDest, pt.x, pt.y, ImageWidth, ImageHeight, hdcMem, 0, 0, SRCCOPY
+        
+        .IF bStretch == TRUE
+            Invoke StretchBlt, hdcDest, pt.x, pt.y, rect.right, rect.bottom, hdcMem, 0, 0, ImageWidth, ImageHeight, SRCCOPY
+        .ELSE
+            Invoke BitBlt, hdcDest, pt.x, pt.y, ImageWidth, ImageHeight, hdcMem, 0, 0, SRCCOPY
+        .ENDIF
 
         Invoke SelectObject, hdcMem, hbmOld
         Invoke DeleteDC, hdcMem
@@ -693,7 +706,11 @@ _MUI_AnimationPaintImages PROC USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD
         .ENDIF
         
     .ELSEIF eax == MUIAIT_ICO ; icon
-        Invoke DrawIconEx, hdcDest, pt.x, pt.y, hImage, 0, 0, 0, 0, DI_NORMAL
+        .IF bStretch == TRUE
+            Invoke DrawIconEx, hdcDest, pt.x, pt.y, hImage, rect.right, rect.bottom, 0, 0, DI_NORMAL
+        .ELSE
+            Invoke DrawIconEx, hdcDest, pt.x, pt.y, hImage, 0, 0, 0, 0, DI_NORMAL
+        .ENDIF
     
     .ELSEIF eax == MUIAIT_PNG ; png
         IFDEF MUI_USEGDIPLUS
@@ -711,7 +728,11 @@ _MUI_AnimationPaintImages PROC USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD
         Invoke GdipSetInterpolationMode, pGraphicsBuffer, InterpolationModeHighQualityBicubic
         
         Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
-        Invoke GdipDrawImageRectI, pGraphics, pBitmap, pt.x, pt.y, ImageWidth, ImageHeight
+        .IF bStretch == TRUE
+            Invoke GdipDrawImageRectRectI, pGraphics, pBitmap, pt.x, pt.y, rect.right, rect.bottom, 0, 0, ImageWidth, ImageHeight, UnitPixel, 0, 0, 0
+        .ELSE
+            Invoke GdipDrawImageRectI, pGraphics, pBitmap, pt.x, pt.y, ImageWidth, ImageHeight
+        .ENDIF
         .IF pBitmap != NULL
             Invoke GdipDisposeImage, pBitmap
         .ENDIF
@@ -726,38 +747,6 @@ _MUI_AnimationPaintImages PROC USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD
 
     ret
 _MUI_AnimationPaintImages ENDP
-
-MUI_ALIGN
-;------------------------------------------------------------------------------
-; _MUI_AnimationPaintBorder
-;------------------------------------------------------------------------------
-_MUI_AnimationPaintBorder PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD
-;    LOCAL BorderColor:DWORD
-;    LOCAL hBrush:DWORD
-;    LOCAL hOldBrush:DWORD
-;    
-;    ;Invoke MUIGetExtProperty, hWin, @AnimationBorderColor
-;    mov eax, -1
-;    mov BorderColor, eax
-;    
-;    .IF BorderColor != -1
-;        Invoke GetStockObject, DC_BRUSH
-;        mov hBrush, eax
-;        Invoke SelectObject, hdc, eax
-;        mov hOldBrush, eax
-;        Invoke SetDCBrushColor, hdc, BorderColor
-;        Invoke FrameRect, hdc, lpRect, hBrush
-;        
-;        .IF hOldBrush != 0
-;            Invoke SelectObject, hdc, hOldBrush
-;            Invoke DeleteObject, hOldBrush
-;        .ENDIF     
-;        .IF hBrush != 0
-;            Invoke DeleteObject, hBrush
-;        .ENDIF                
-;    .ENDIF
-    ret
-_MUI_AnimationPaintBorder ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -876,7 +865,7 @@ _MUI_AnimationFrameData PROC USES EBX hWin:DWORD, dwFrameIndex:DWORD
         mov eax, NULL
         ret
     .ENDIF
-    .IF dwFrameIndex >= eax ; TotalFrames
+    .IF dwFrameIndex >= eax && dwFrameIndex != -1 ; eax = TotalFrames
         mov eax, NULL
         ret
     .ENDIF
@@ -917,6 +906,9 @@ MUI_ALIGN
 _MUI_AnimationFrameType PROC hWin:DWORD, dwFrameIndex:DWORD
     Invoke _MUI_AnimationFrameData, hWin, dwFrameIndex
     .IF eax == NULL
+        IFDEF DEBUG32
+        ;PrintText '_MUI_AnimationFrameType::_MUI_AnimationFrameData::NULL'
+        ENDIF
         ret
     .ENDIF
     mov eax, [eax]._MUI_ANIMATION_FRAME.dwFrameType
@@ -931,6 +923,9 @@ MUI_ALIGN
 _MUI_AnimationFrameImage PROC hWin:DWORD, dwFrameIndex:DWORD
     Invoke _MUI_AnimationFrameData, hWin, dwFrameIndex
     .IF eax == NULL
+        IFDEF DEBUG32
+        ;PrintText '_MUI_AnimationFrameImage::_MUI_AnimationFrameData::NULL'
+        ENDIF
         ret
     .ENDIF
     mov eax, [eax]._MUI_ANIMATION_FRAME.dwFrameImage
@@ -1041,7 +1036,12 @@ MUI_ALIGN
 ; MUIAnimationStart - Starts animation playing
 ; Returns: TRUE if successful or FALSE otherwise
 ;------------------------------------------------------------------------------
-MUIAnimationStart PROC hControl:DWORD
+MUIAnimationStart PROC USES EBX hControl:DWORD
+
+    IFDEF DEBUG32
+    ;PrintText 'MUIAnimationStart'
+    ENDIF
+    
     .IF hControl == NULL
         xor eax, eax
         ret
@@ -1064,6 +1064,8 @@ MUIAnimationStart PROC hControl:DWORD
     
     Invoke InvalidateRect, hControl, NULL, TRUE
     Invoke UpdateWindow, hControl
+    
+    Invoke MUISetIntProperty, hControl, @AnimationStatus, MUIANI_STATUS_PLAYING
     Invoke _MUI_AnimationNotify, hControl, MUIAN_START
     Invoke _MUI_AnimationTimerStart, hControl
     ret
@@ -1083,6 +1085,8 @@ MUIAnimationStop PROC hControl:DWORD
     Invoke MUISetIntProperty, hControl, @AnimationFrameIndex, 0 ; reset for play to start at frame 0
     Invoke InvalidateRect, hControl, NULL, TRUE
     Invoke UpdateWindow, hControl
+    
+    Invoke MUISetIntProperty, hControl, @AnimationStatus, MUIANI_STATUS_STOPPED
     Invoke _MUI_AnimationNotify, hControl, MUIAN_STOP
     mov eax, TRUE
     ret
@@ -1101,6 +1105,8 @@ MUIAnimationPause PROC hControl:DWORD
     Invoke _MUI_AnimationTimerStop, hControl
     Invoke InvalidateRect, hControl, NULL, TRUE
     Invoke UpdateWindow, hControl
+    
+    Invoke MUISetIntProperty, hControl, @AnimationStatus, MUIANI_STATUS_PAUSED
     Invoke _MUI_AnimationNotify, hControl, MUIAN_PAUSE
     mov eax, TRUE
     ret
@@ -1125,6 +1131,8 @@ MUIAnimationResume PROC hControl:DWORD
     
     Invoke InvalidateRect, hControl, NULL, TRUE
     Invoke UpdateWindow, hControl
+    
+    Invoke MUISetIntProperty, hControl, @AnimationStatus, MUIANI_STATUS_PLAYING
     Invoke _MUI_AnimationNotify, hControl, MUIAN_START
     Invoke _MUI_AnimationTimerStart, hControl
     ret
@@ -1190,10 +1198,35 @@ MUIAnimationStep PROC hControl:DWORD, bReverse:DWORD
 
     Invoke InvalidateRect, hControl, NULL, TRUE
     Invoke UpdateWindow, hControl
+    
+    Invoke MUISetIntProperty, hControl, @AnimationStatus, MUIANI_STATUS_STEPPING
     Invoke _MUI_AnimationNotify, hControl, MUIAN_STEP
     mov eax, NextFrame
     ret
 MUIAnimationStep ENDP
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIAnimationSpeed
+;------------------------------------------------------------------------------
+MUIAnimationSpeed PROC hControl:DWORD, fSpeedFactor:REAL4
+    Invoke MUISetIntProperty, hControl, @AnimationSpeedFactor, fSpeedFactor
+    ret
+MUIAnimationSpeed ENDP
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIAnimationSpeed
+;------------------------------------------------------------------------------
+MUIAnimationSetDefaultTime PROC hControl:DWORD, dwDefaultFrameTime:DWORD
+    .IF eax == 0 || eax == -1 || eax > 60000 ; 0, -1 or 60seconds
+        mov eax, ANIMATION_FRAME_TIME_DEFAULT
+    .ELSE
+        mov eax, dwDefaultFrameTime
+    .ENDIF
+    Invoke MUISetIntProperty, hControl, @AnimationFrameTimeDefault, eax
+    ret
+MUIAnimationSetDefaultTime ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -1291,26 +1324,32 @@ MUIAnimationSetFrameInfo PROC USES EBX EDX hControl:DWORD, dwFrameIndex:DWORD, l
     .ENDIF
     mov FrameData, eax
     
-    ; Get previous frame image and type
-    mov ebx, FrameData
-    mov eax, [ebx]._MUI_ANIMATION_FRAME.dwFrameType
-    mov dwPrevFrameType, eax
-    mov eax, [ebx]._MUI_ANIMATION_FRAME.dwFrameImage    
-    mov dwPrevFrameImage, eax
-    
-    ; Delete previous image
-    mov eax, dwPrevFrameType
-    .IF eax == MUIAIT_NONE
-    .ELSEIF eax == MUIAIT_BMP
-        ;PrintText 'Deleteing bitmap'
-        Invoke DeleteObject, dwPrevFrameImage
-    .ELSEIF eax == MUIAIT_ICO
-        Invoke DestroyIcon, dwPrevFrameImage
-    .ELSEIF eax == MUIAIT_PNG
-        IFDEF MUI_USEGDIPLUS
-        Invoke GdipDisposeImage, dwPrevFrameImage
-        ENDIF
-    .ENDIF
+;    ; Get previous frame image and type
+;    mov ebx, FrameData
+;    mov eax, [ebx]._MUI_ANIMATION_FRAME.dwFrameType
+;    mov dwPrevFrameType, eax
+;    mov eax, [ebx]._MUI_ANIMATION_FRAME.dwFrameImage    
+;    mov dwPrevFrameImage, eax
+;    
+;    ; Delete previous image
+;    mov eax, dwPrevFrameType
+;    .IF eax == MUIAIT_NONE
+;    .ELSEIF eax == MUIAIT_BMP
+;        ;PrintText 'Deleteing bitmap'
+;        .IF dwPrevFrameImage != NULL
+;            Invoke DeleteObject, dwPrevFrameImage
+;        .ENDIF
+;    .ELSEIF eax == MUIAIT_ICO
+;        .IF dwPrevFrameImage != NULL
+;            Invoke DestroyIcon, dwPrevFrameImage
+;        .ENDIF
+;    .ELSEIF eax == MUIAIT_PNG
+;        IFDEF MUI_USEGDIPLUS
+;        .IF dwPrevFrameImage != NULL
+;            Invoke GdipDisposeImage, dwPrevFrameImage
+;        .ENDIF
+;        ENDIF
+;    .ENDIF
     
     ; Set frame info
     mov ebx, lpMuiAnimationFrameStruct
@@ -1383,7 +1422,7 @@ MUI_ALIGN
 ; Returns: 
 ;------------------------------------------------------------------------------
 MUIAnimationSetFrameTime PROC USES EBX hControl:DWORD, dwFrameIndex:DWORD, dwFrameTime:DWORD
-    Invoke _MUI_AnimationFrameData, hControl, dwFrameIndex
+    Invoke _MUI_AnimationFrameData, hControl, dwFrameIndex ; auto checks if dwFrameIndex < @AnimationTotalFrames
     .IF eax == NULL
         xor eax, eax
         ret
@@ -1394,7 +1433,6 @@ MUIAnimationSetFrameTime PROC USES EBX hControl:DWORD, dwFrameIndex:DWORD, dwFra
     mov eax, TRUE
     ret
 MUIAnimationSetFrameTime ENDP
-
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -1651,6 +1689,12 @@ MUIAnimationDeleteFrames PROC hControl:DWORD
     LOCAL ImageType:DWORD
     LOCAL hImage:DWORD
     
+    IFDEF DEBUG32
+    PrintText 'MUIAnimationDeleteFrames'
+    ENDIF
+    
+    Invoke _MUI_AnimationTimerStop, hControl
+    
     Invoke MUIGetIntProperty, hControl, @AnimationImageType
     mov ImageType, eax    
     
@@ -1672,6 +1716,9 @@ MUIAnimationDeleteFrames PROC hControl:DWORD
             .IF eax != NULL
                 mov hImage, eax
                 
+                mov eax, NULL
+                mov [ebx]._MUI_ANIMATION_FRAME.dwFrameImage, eax
+                
                 mov eax, ImageType
                 .IF eax == MUIAIT_BMP
                     ;PrintText 'Deleteing bitmap'
@@ -1689,10 +1736,17 @@ MUIAnimationDeleteFrames PROC hControl:DWORD
             inc FrameIndex
             mov eax, FrameIndex
         .ENDW
-    
-        Invoke GlobalFree, pAnimationFramesArray
-        Invoke MUISetIntProperty, hControl, @AnimationFramesArray, NULL
+        Invoke MUISetIntProperty, hControl, @AnimationTotalFrames, 0
+        
+        ;PrintText 'deleted image handles'
+        .IF pAnimationFramesArray != NULL
+            Invoke MUISetIntProperty, hControl, @AnimationFramesArray, NULL
+            Invoke GlobalFree, pAnimationFramesArray
+            ;PrintText 'deleted frame array'
+        .ENDIF
+        
     .ENDIF
+
     ret
 MUIAnimationDeleteFrames ENDP
 
@@ -1709,6 +1763,10 @@ MUIAnimationAddFrame PROC USES EBX EDX hControl:DWORD, dwImageType:DWORD, lpMuiA
     LOCAL FrameTime:DWORD
     LOCAL FrameData:DWORD
     LOCAL dwSize:DWORD
+    
+    IFDEF DEBUG32
+    ;PrintText 'MUIAnimationAddFrame'
+    ENDIF
     
     .IF hControl == NULL || dwImageType == NULL || lpMuiAnimationFrameStruct == NULL
         xor eax, eax
@@ -1756,9 +1814,11 @@ MUIAnimationAddFrame PROC USES EBX EDX hControl:DWORD, dwImageType:DWORD, lpMuiA
     mov eax, [ebx].MUI_ANIMATION_FRAME.lParam
     mov [edx]._MUI_ANIMATION_FRAME.lParam, eax
     
+    .IF TotalFrames == 0
+        Invoke MUISetIntProperty, hControl, @AnimationFrameSpeed, FrameTime
+    .ENDIF
     inc TotalFrames
     Invoke MUISetIntProperty, hControl, @AnimationTotalFrames, TotalFrames
-    Invoke MUISetIntProperty, hControl, @AnimationFrameSpeed, FrameTime
     
     mov eax, TRUE
     ret
@@ -1794,6 +1854,259 @@ MUIAnimationAddFrames PROC hControl:DWORD, dwImageType:DWORD, lpArrayMuiAnimatio
     mov eax, TRUE
     ret
 MUIAnimationAddFrames ENDP
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIAnimationAddSpriteSheet
+;------------------------------------------------------------------------------
+MUIAnimationAddSpriteSheet PROC USES EBX ECX EDX hControl:DWORD, dwImageType:DWORD, hImageSpriteSheet:DWORD, dwSpriteCount:DWORD, lpFrameTimes:DWORD, dwFrameTimeSize:DWORD, dwFrameTimeType:DWORD
+    LOCAL hImageSpriteSheetOld:DWORD
+    LOCAL hIcoSpriteSheet:DWORD
+    LOCAL ImageWidth:DWORD
+    LOCAL ImageHeight:DWORD
+    LOCAL pAnimationFramesArray:DWORD
+    LOCAL FrameWidth:DWORD
+    LOCAL FrameHeight:DWORD
+    LOCAL FrameID:DWORD
+    LOCAL FrameTime:DWORD
+    LOCAL FrameTimeEntry:DWORD
+    LOCAL FrameTimeCount:DWORD
+    LOCAL nFrameTimeCompact:DWORD
+    LOCAL nFrame:DWORD
+    LOCAL hFrame:DWORD
+    LOCAL hFrameOld:DWORD
+    LOCAL x:DWORD
+    LOCAL y:DWORD
+    LOCAL hdc:DWORD
+    LOCAL hdcFrame:DWORD
+    LOCAL hdcSpriteSheet:DWORD
+    LOCAL pGraphics:DWORD
+    LOCAL pGraphicsFrame:DWORD
+    LOCAL pFrame:DWORD
+    LOCAL FrameStruct:MUI_ANIMATION_FRAME
+    
+    IFDEF DEBUG32
+    ;PrintText 'MUISpinnerAddSpriteSheet'
+    ENDIF
+    
+    .IF hControl == NULL || dwImageType == NULL || dwSpriteCount == 0 || hImageSpriteSheet == NULL || lpFrameTimes == NULL || dwFrameTimeSize == 0
+        xor eax, eax
+        ret
+    .ENDIF
+    
+    ;--------------------------------------------------------------------------
+    ; Check frame entries count in lpFrameTimes array is same as spritecount
+    ; and get frame entries count
+    ;--------------------------------------------------------------------------
+    .IF dwFrameTimeType == MUIAFT_FULL
+        xor edx, edx
+        mov eax, dwFrameTimeSize
+        mov ecx, SIZEOF MUI_ANIMATION_FT_FULL
+        div ecx
+        mov FrameTimeCount, eax
+        .IF eax != dwSpriteCount
+            IFDEF DEBUG32
+            PrintText 'Frame time entries not equal to spritecount!'
+            ENDIF
+            xor eax, eax
+            ret
+        .ENDIF
+    .ELSE
+        xor edx, edx
+        mov eax, dwFrameTimeSize
+        mov ecx, SIZEOF MUI_ANIMATION_FT_COMPACT
+        div ecx
+        mov FrameTimeCount, eax
+        ;PrintDec FrameTimeCount
+    .ENDIF
+    
+    mov eax, lpFrameTimes
+    mov FrameTimeEntry, eax    
+
+    ;--------------------------------------------------------------------------
+    ; Calc frame width
+    ;--------------------------------------------------------------------------
+    Invoke MUIGetImageSize, hImageSpriteSheet, dwImageType, Addr ImageWidth, Addr ImageHeight
+    
+    xor edx, edx
+    mov eax, ImageWidth
+    mov ecx, dwSpriteCount
+    div ecx
+    mov FrameWidth, eax
+    mov eax, ImageHeight
+    mov FrameHeight, eax
+
+    Invoke GetDC, hControl
+    mov hdc, eax
+    
+    ;--------------------------------------------------------------------------
+    ; Get spritesheet image and create a dc + bitmap to store our sprite frame
+    ;--------------------------------------------------------------------------
+    mov eax, dwImageType
+    .IF eax == MUIAIT_BMP
+        Invoke CreateCompatibleDC, hdc
+        mov hdcSpriteSheet, eax
+        Invoke SelectObject, hdcSpriteSheet, hImageSpriteSheet
+        mov hImageSpriteSheetOld, eax
+        Invoke CreateCompatibleDC, hdc
+        mov hdcFrame, eax
+    .ELSEIF eax == MUIAIT_ICO
+        Invoke CreateCompatibleDC, hdc
+        mov hdcSpriteSheet, eax
+        Invoke CreateCompatibleBitmap, hdc, ImageWidth, ImageHeight
+        mov hIcoSpriteSheet, eax
+        Invoke SelectObject, hdcSpriteSheet, hIcoSpriteSheet
+        mov hImageSpriteSheetOld, eax
+        Invoke CreateCompatibleDC, hdc
+        mov hdcFrame, eax
+        Invoke DrawIconEx, hdcSpriteSheet, 0, 0, hImageSpriteSheet, 0, 0, 0, 0, DI_NORMAL
+    .ELSEIF eax == MUIAIT_PNG
+        mov pGraphics, 0
+        mov pGraphicsFrame, 0
+        mov pFrame, 0
+        Invoke GdipCreateFromHDC, hdc, Addr pGraphics
+    .ENDIF
+    
+    ;--------------------------------------------------------------------------
+    ; Alloc block of memory instead of realloc memory for each frame addition
+    ;--------------------------------------------------------------------------
+;    Invoke MUIGetIntProperty, hControl, @AnimationFramesArray
+;    .IF eax == NULL
+;        mov eax, dwSpriteCount
+;        inc eax
+;        mov ebx, SIZEOF _MUI_ANIMATION_FRAME
+;        mul ebx
+;        Invoke GlobalAlloc, GMEM_FIXED or GMEM_ZEROINIT, eax
+;        .IF eax == NULL
+;            ret
+;        .ENDIF
+;        Invoke MUISetIntProperty, hControl, @AnimationFramesArray, eax
+;    .ELSE
+;        ; TODO - clear all existing images and free memory?
+;        ; alloc block of memory and continue?
+;    .ENDIF
+;    Invoke MUISetIntProperty, hControl, @AnimationTotalFrames, dwSpriteCount
+    
+    ;--------------------------------------------------------------------------
+    ; Cut each frame from spritesheet to hFrame and add to animation
+    ;--------------------------------------------------------------------------
+    IFDEF DEBUG32
+    PrintText 'MUISpinnerAddSpriteSheet start frame adding'
+    ENDIF
+    mov x, 0
+    mov y, 0    
+    mov eax, 0
+    mov nFrame, 0
+    .WHILE eax < dwSpriteCount
+        mov eax, dwImageType
+        .IF eax == MUIAIT_BMP || eax == MUIAIT_ICO
+            Invoke CreateCompatibleBitmap, hdc, FrameWidth, FrameHeight
+            mov hFrame, eax
+            Invoke SelectObject, hdcFrame, hFrame
+            mov hFrameOld, eax
+            Invoke BitBlt, hdcFrame, 0, 0, FrameWidth, FrameHeight, hdcSpriteSheet, x, y, SRCCOPY
+            
+            .IF dwFrameTimeType == MUIAFT_FULL
+                mov ebx, FrameTimeEntry
+                mov eax, [ebx].MUI_ANIMATION_FT_FULL.dwFrameTime
+                mov FrameTime, eax
+            .ELSE
+                mov FrameTime, 0
+            .ENDIF
+            
+            mov FrameStruct.dwFrameType, MUIAIT_BMP
+            mov eax, hFrame
+            mov FrameStruct.dwFrameImage, eax
+            mov eax, FrameTime
+            mov FrameStruct.dwFrameTime, eax
+            ;Invoke MUIAnimationSetFrameInfo, hControl, nFrame, Addr FrameStruct
+            Invoke MUIAnimationAddFrame, hControl, MUIAIT_BMP, Addr FrameStruct
+            Invoke SelectObject, hdcFrame, hFrameOld
+        .ELSEIF eax == MUIAIT_PNG
+            Invoke GdipCreateBitmapFromGraphics, FrameWidth, FrameHeight, pGraphics, Addr pFrame
+            Invoke GdipGetImageGraphicsContext, pFrame, Addr pGraphicsFrame
+            Invoke GdipSetPixelOffsetMode, pGraphicsFrame, PixelOffsetModeHighQuality
+            Invoke GdipSetPageUnit, pGraphicsFrame, UnitPixel
+            Invoke GdipSetSmoothingMode, pGraphicsFrame, SmoothingModeAntiAlias
+            Invoke GdipSetInterpolationMode, pGraphicsFrame, InterpolationModeHighQualityBicubic
+            Invoke GdipDrawImageRectRectI, pGraphicsFrame, hImageSpriteSheet, 0, 0, FrameWidth, FrameHeight, x, y, FrameWidth, FrameHeight, UnitPixel, NULL, NULL, NULL
+            
+            .IF dwFrameTimeType == MUIAFT_FULL
+                mov ebx, FrameTimeEntry
+                mov eax, [ebx].MUI_ANIMATION_FT_FULL.dwFrameTime
+                mov FrameTime, eax
+            .ELSE
+                mov FrameTime, 0
+            .ENDIF
+            
+            mov FrameStruct.dwFrameType, MUIAIT_PNG
+            mov eax, pFrame
+            mov FrameStruct.dwFrameImage, eax
+            mov eax, FrameTime
+            mov FrameStruct.dwFrameTime, eax
+            ;Invoke MUIAnimationSetFrameInfo, hControl, nFrame, Addr FrameStruct
+            Invoke MUIAnimationAddFrame, hControl, MUIAIT_PNG, Addr FrameStruct
+            .IF pGraphicsFrame != NULL
+                Invoke GdipDeleteGraphics, pGraphicsFrame
+            .ENDIF 
+        .ENDIF
+        
+        .IF dwFrameTimeType == MUIAFT_FULL
+            add FrameTimeEntry, SIZEOF MUI_ANIMATION_FT_FULL
+        .ENDIF
+        
+        mov eax, FrameWidth
+        add x, eax
+        inc nFrame
+        mov eax, nFrame
+    .ENDW
+
+    IFDEF DEBUG32
+    PrintText 'MUISpinnerAddSpriteSheet finish frame adding'
+    ENDIF
+
+    ;--------------------------------------------------------------------------
+    ; For compact frame times array set FrameID with FrameTime 
+    ;--------------------------------------------------------------------------
+    .IF dwFrameTimeType == MUIAFT_COMPACT
+        mov eax, 0
+        mov nFrameTimeCompact, 0
+        .WHILE eax < FrameTimeCount
+            mov ebx, FrameTimeEntry
+            mov eax, [ebx].MUI_ANIMATION_FT_COMPACT.dwFrameID
+            mov FrameID, eax
+            mov eax, [ebx].MUI_ANIMATION_FT_COMPACT.dwFrameTime
+            mov FrameTime, eax
+            
+            Invoke MUIAnimationSetFrameTime, hControl, FrameID, FrameTime
+            
+            add FrameTimeEntry, SIZEOF MUI_ANIMATION_FT_COMPACT
+            inc nFrameTimeCompact
+            mov eax, nFrameTimeCompact
+        .ENDW
+    .ENDIF
+
+    ;--------------------------------------------------------------------------
+    ; Tidy up
+    ;--------------------------------------------------------------------------
+    mov eax, dwImageType
+    .IF eax == MUIAIT_BMP || eax == MUIAIT_ICO
+        Invoke SelectObject, hdcSpriteSheet, hImageSpriteSheetOld
+        Invoke DeleteObject, hImageSpriteSheetOld
+    .ELSEIF eax == MUIAIT_PNG
+        .IF pGraphicsFrame != NULL
+            Invoke GdipDeleteGraphics, pGraphicsFrame
+        .ENDIF
+        .IF pGraphics != NULL
+            Invoke GdipDeleteGraphics, pGraphics
+        .ENDIF
+    .ENDIF
+    
+    Invoke ReleaseDC, hControl, hdc
+    ;Invoke InvalidateRect, hControl, NULL, TRUE
+    mov eax, TRUE
+    ret
+MUIAnimationAddSpriteSheet ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -1896,6 +2209,58 @@ MUIAnimationLoadFrames PROC USES EBX EDX hControl:DWORD, dwImageType:DWORD, lpAr
     mov eax, TRUE
     ret
 MUIAnimationLoadFrames ENDP
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIAnimationLoadSpriteSheet
+;------------------------------------------------------------------------------
+MUIAnimationLoadSpriteSheet PROC hControl:DWORD, dwImageType:DWORD, idResSpriteSheet:DWORD, dwSpriteCount:DWORD, lpFrameTimes:DWORD, dwFrameTimeSize:DWORD, dwFrameTimeType:DWORD
+    LOCAL hinstance:DWORD
+    LOCAL hImage:DWORD
+    
+    IFDEF DEBUG32
+    ;PrintText 'MUIAnimationLoadSpriteSheet'
+    ENDIF
+    
+    .IF hControl == NULL || idResSpriteSheet == NULL || dwImageType == 0 || dwSpriteCount == 0 || lpFrameTimes == 0
+        xor eax, eax
+        ret
+    .ENDIF
+    
+    Invoke MUIGetExtProperty, hControl, @AnimationDllInstance
+    .IF eax == 0
+        Invoke GetModuleHandle, NULL
+    .ENDIF
+    mov hinstance, eax    
+    
+    mov eax, dwImageType
+    .IF eax == MUIAIT_BMP
+        Invoke LoadBitmap, hinstance, idResSpriteSheet
+    .ELSEIF eax == MUIAIT_ICO
+        Invoke LoadImage, hinstance, idResSpriteSheet, IMAGE_ICON, 0, 0, 0
+    .ELSEIF eax == MUIAIT_PNG
+        IFDEF MUI_USEGDIPLUS
+        Invoke _MUI_AnimationLoadPng, hinstance, idResSpriteSheet
+        ENDIF
+    .ELSE
+        xor eax, eax
+        ret
+    .ENDIF
+    .IF eax == NULL
+        xor eax, eax
+        ret
+    .ENDIF
+    mov hImage, eax
+
+    Invoke MUIAnimationAddSpriteSheet, hControl, dwImageType, hImage, dwSpriteCount, lpFrameTimes, dwFrameTimeSize, dwFrameTimeType
+    .IF eax == FALSE
+        xor eax, eax
+        ret
+    .ENDIF
+    
+    mov eax, TRUE
+    ret
+MUIAnimationLoadSpriteSheet ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -2018,11 +2383,17 @@ MUI_ALIGN
 ; advances frame index to next frame and updates timer to new frame's time
 ;------------------------------------------------------------------------------
 _MUI_AnimationNextFrame PROC hWin:DWORD
+    LOCAL FrameTime:DWORD
     
     .IF hWin == NULL
         xor eax, eax
         ret
     .ENDIF
+    
+    IFDEF DEBUG32
+    PrintText '_MUI_AnimationNextFrame'
+    ENDIF
+    
     
     ;Invoke MUIAnimationPause, hWin
     Invoke _MUI_AnimationTimerStop, hWin
@@ -2030,16 +2401,20 @@ _MUI_AnimationNextFrame PROC hWin:DWORD
     Invoke _MUI_AnimationNextFrameIndex, hWin
     .IF sdword ptr eax >= 0
         Invoke _MUI_AnimationNextFrameTime, hWin
+        mov FrameTime, eax
     .ELSE 
         ; no frames or end of animation, so stop
         Invoke MUIAnimationStop, hWin
         ret
     .ENDIF
-    
     Invoke InvalidateRect, hWin, NULL, TRUE
     Invoke UpdateWindow, hWin
     
-    Invoke _MUI_AnimationTimerStart, hWin
+    .IF FrameTime == -1
+        Invoke MUIAnimationPause, hWin
+    .ELSE
+        Invoke _MUI_AnimationTimerStart, hWin
+    .ENDIF
     ;Invoke MUIAnimationResume, hWin ; timer is restarted with new frame time set in _MUI_AnimationNextFrameTime
      
     mov eax, TRUE
@@ -2052,6 +2427,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 _MUI_AnimationTimerStart PROC hWin:DWORD
     LOCAL dwTimeInterval:DWORD
+    LOCAL fSpeedFactor:REAL4
     IFDEF ANIMATION_USE_TIMERQUEUE
     LOCAL hQueue:DWORD
     LOCAL hTimer:DWORD
@@ -2068,6 +2444,10 @@ _MUI_AnimationTimerStart PROC hWin:DWORD
         ret
     .ENDIF
 
+    Invoke MUIGetIntProperty, hWin, @AnimationSpeedFactor
+    mov fSpeedFactor, eax
+    
+
     Invoke MUIGetIntProperty, hWin, @AnimationFrameSpeed
     .IF eax == 0
         Invoke MUIGetIntProperty, hWin, @AnimationFrameTimeDefault
@@ -2075,7 +2455,33 @@ _MUI_AnimationTimerStart PROC hWin:DWORD
             mov eax, ANIMATION_FRAME_TIME_DEFAULT
         .ENDIF
     .ENDIF
-    mov dwTimeInterval, eax    
+    .IF eax == -1 ; if frame time is set to -1 = special pause animation, then resume with default min time
+        mov eax, ANIMATION_FRAME_TIME_MIN
+    .ENDIF
+    mov dwTimeInterval, eax
+    ;PrintDec dwTimeInterval
+    
+    .IF fSpeedFactor != 0
+        IFDEF DEBUG32
+        ;PrintDec fSpeedFactor
+        ;PrintText 'fSpeedFactor != 0'
+        ;PrintDec dwTimeInterval
+        ENDIF
+        finit
+        fild dwTimeInterval
+        fld fSpeedFactor
+        fdiv
+        fistp dwTimeInterval
+        IFDEF DEBUG32
+        ;PrintText 'new speed:'
+        ;PrintDec dwTimeInterval
+        ENDIF
+        .IF sdword ptr dwTimeInterval <= 0
+            mov dwTimeInterval, ANIMATION_FRAME_TIME_MIN
+        .ENDIF
+    .ENDIF
+    
+    ;PrintDec dwTimeInterval
 
     IFDEF ANIMATION_USE_TIMERQUEUE
         Invoke MUIGetIntProperty, hWin, @AnimationUseTimerQueue
@@ -2087,6 +2493,7 @@ _MUI_AnimationTimerStart PROC hWin:DWORD
             .IF hQueue != NULL ; re-use existing hQueue
                 Invoke ChangeTimerQueueTimer, hQueue, hTimer, dwTimeInterval, dwTimeInterval
                 .IF eax == 0 ; failed 
+                    ;PrintText 'Existing CreateTimerQueueTimer failed'
                     Invoke DeleteTimerQueueEx, hQueue, FALSE
                     Invoke MUISetIntProperty, hWin, @AnimationQueue, 0
                     Invoke MUISetIntProperty, hWin, @AnimationTimer, 0
@@ -2099,6 +2506,7 @@ _MUI_AnimationTimerStart PROC hWin:DWORD
                     mov hQueue, eax
                     Invoke CreateTimerQueueTimer, Addr hTimer, hQueue, Addr _MUI_AnimationTimerProc, hWin, dwTimeInterval, dwTimeInterval, 0
                     .IF eax == 0 ; failed, so fall back to WM_TIMER usage
+                        ;PrintText 'CreateTimerQueueTimer failed'
                         Invoke DeleteTimerQueueEx, hQueue, FALSE
                         Invoke MUISetIntProperty, hWin, @AnimationQueue, 0
                         Invoke MUISetIntProperty, hWin, @AnimationTimer, 0
@@ -2112,6 +2520,7 @@ _MUI_AnimationTimerStart PROC hWin:DWORD
                         Invoke MUISetIntProperty, hWin, @AnimationTimer, hTimer
                     .ENDIF
                 .ELSE ; failed, so fall back to WM_TIMER usage
+                    ;PrintText 'CreateTimerQueue failed'
                     Invoke MUISetIntProperty, hWin, @AnimationUseTimerQueue, FALSE
                     Invoke SetTimer, hWin, hWin, dwTimeInterval, NULL
                 .ENDIF
