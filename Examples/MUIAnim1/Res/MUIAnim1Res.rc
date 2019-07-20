@@ -1,0 +1,5 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUIAnim1.xml"
+100						ICON      DISCARDABLE "Images/ModernUI.ico"
+200						RCDATA    DISCARDABLE "Images/Facebook-click-bait 02-horz-cropped.jpg"
+201						RCDATA    DISCARDABLE "Images/onoff 2-horz.png"

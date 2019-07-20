@@ -1,0 +1,4 @@
+#include "Res/MUIAnim1Mnu.rc"
+#include "Res/MUIAnim1Ver.rc"
+#include "Res/MUIAnim1Dlg.rc"
+#include "Res/MUIAnim1Res.rc"
