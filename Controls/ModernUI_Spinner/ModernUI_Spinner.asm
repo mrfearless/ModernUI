@@ -527,12 +527,18 @@ _MUI_SpinnerCleanup PROC USES EBX hWin:DWORD
                 mov eax, ImageType
                 .IF eax == MUISPIT_BMP
                     ;PrintText 'Deleteing bitmap'
-                    Invoke DeleteObject, hImage
+                    .IF hImage != NULL
+                        Invoke DeleteObject, hImage
+                    .ENDIF
                 .ELSEIF eax == MUISPIT_ICO
-                    Invoke DestroyIcon, hImage
+                    .IF hImage != NULL
+                        Invoke DestroyIcon, hImage
+                    .ENDIF
                 .ELSEIF eax == MUISPIT_PNG
                     IFDEF MUI_USEGDIPLUS
-                    Invoke GdipDisposeImage, hImage
+                    .IF hImage != NULL
+                        Invoke GdipDisposeImage, hImage
+                    .ENDIF
                     ENDIF
                 .ENDIF
             .ENDIF
