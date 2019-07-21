@@ -41,31 +41,31 @@
 ;------------------------------------------------------------------------------
 ; ModernUI_TrayMenu Prototypes
 ;------------------------------------------------------------------------------
-MUITrayMenuRegister         PROTO                                                                ; Use 'ModernUI_TrayMenu' as class in RadASM custom class control
-MUITrayMenuCreate           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD         ; hWndParent, hTrayMenuIcon, lpszTooltip, dwMenuType, dwMenu, dwOptions, hWndExtra
-MUITrayMenuSetProperty      PROTO :DWORD, :DWORD, :DWORD                                         ; hModernUI_TrayMenu, dwProperty, dwPropertyValue
-MUITrayMenuGetProperty      PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayMenu, dwProperty
-MUITrayMenuAssignMenu       PROTO :DWORD, :DWORD, :DWORD                                         ; hModernUI_TrayMenu, dwMenuType, dwMenu
+MUITrayMenuRegister         PROTO                                                   ; Use 'ModernUI_TrayMenu' as class in RadASM custom class control
+MUITrayMenuCreate           PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD  ; hWndParent, hTrayMenuIcon, lpszTooltip, dwMenuType, dwMenu, dwOptions, hWndExtra
+MUITrayMenuSetProperty      PROTO :DWORD,:DWORD,:DWORD                              ; hModernUI_TrayMenu, dwProperty, dwPropertyValue
+MUITrayMenuGetProperty      PROTO :DWORD,:DWORD                                     ; hModernUI_TrayMenu, dwProperty
+MUITrayMenuAssignMenu       PROTO :DWORD,:DWORD,:DWORD                              ; hModernUI_TrayMenu, dwMenuType, dwMenu
 
 ; Tray Menu Item Functions
-MUITrayMenuSetTrayIcon      PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayMenu, hTrayIcon
-MUITrayMenuSetTooltipText   PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayMenu, lpszTooltip
-MUITrayMenuEnableMenuItem   PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayMenu, MenuItemID
-MUITrayMenuDisableMenuItem  PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayMenu, MenuItemID
-MUITrayMenuChangeMenuItemState PROTO :DWORD, :DWORD, :DWORD                                      ; hModernUI_TrayMenu, MenuItemID, MenuItemState
-MUITrayMenuSetMenuItemText  PROTO :DWORD, :DWORD, :DWORD                                         ; hModernUI_TrayMenu, MenuItemID, lpszMenuItemText
-MUITrayMenuHideTrayIcon     PROTO :DWORD                                                         ; hModernUI_TrayMenu
-MUITrayMenuShowTrayIcon     PROTO :DWORD                                                         ; hModernUI_TrayMenu
-MUITrayMenuShowNotification PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                         ; hModernUI_TrayMenu, lpszNotificationMessage, lpszNotificationTitle, dwTimeout, dwStyle
-MUITrayMenuSetTrayIconText  PROTO :DWORD, :DWORD, :DWORD, :DWORD                                 ; hModernUI_TrayMenu, lpszText, lpszFont, dwTextColorRGB
+MUITrayMenuSetTrayIcon      PROTO :DWORD,:DWORD                                     ; hModernUI_TrayMenu, hTrayIcon
+MUITrayMenuSetTooltipText   PROTO :DWORD,:DWORD                                     ; hModernUI_TrayMenu, lpszTooltip
+MUITrayMenuEnableMenuItem   PROTO :DWORD,:DWORD                                     ; hModernUI_TrayMenu, MenuItemID
+MUITrayMenuDisableMenuItem  PROTO :DWORD,:DWORD                                     ; hModernUI_TrayMenu, MenuItemID
+MUITrayMenuChangeMenuItemState PROTO :DWORD,:DWORD,:DWORD                           ; hModernUI_TrayMenu, MenuItemID, MenuItemState
+MUITrayMenuSetMenuItemText  PROTO :DWORD,:DWORD,:DWORD                              ; hModernUI_TrayMenu, MenuItemID, lpszMenuItemText
+MUITrayMenuHideTrayIcon     PROTO :DWORD                                            ; hModernUI_TrayMenu
+MUITrayMenuShowTrayIcon     PROTO :DWORD                                            ; hModernUI_TrayMenu
+MUITrayMenuShowNotification PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD                ; hModernUI_TrayMenu, lpszNotificationMessage, lpszNotificationTitle, dwTimeout, dwStyle
+MUITrayMenuSetTrayIconText  PROTO :DWORD,:DWORD,:DWORD,:DWORD                       ; hModernUI_TrayMenu, lpszText, hFontIconText, dwTextColorRGB
 
 ; Tray Icon Functions (standalone - no menu)
-MUITrayIconCreate           PROTO :DWORD, :DWORD, :DWORD, :DWORD                                 ; hWndParent, dwTrayIconResID, hTrayIcon, lpszTooltip - Returns in eax hModernUI_TrayIcon
-MUITrayIconDestroy          PROTO :DWORD                                                         ; hModernUI_TrayIcon
-MUITrayIconSetTrayIcon      PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayIcon, hTrayIcon
-MUITrayIconSetTooltipText   PROTO :DWORD, :DWORD                                                 ; hModernUI_TrayIcon, lpszTooltip
-MUITrayIconShowNotification PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                         ; hModernUI_TrayIcon, lpszNotificationMessage, lpszNotificationTitle, dwTimeout, dwStyle
-MUITrayIconSetTrayIconText  PROTO :DWORD, :DWORD, :DWORD, :DWORD                                 ; hModernUI_TrayIcon, lpszText, lpszFont, dwTextColorRGB
+MUITrayIconCreate           PROTO :DWORD,:DWORD,:DWORD,:DWORD                       ; hWndParent, dwTrayIconResID, hTrayIcon, lpszTooltip - Returns in eax hModernUI_TrayIcon
+MUITrayIconDestroy          PROTO :DWORD                                            ; hModernUI_TrayIcon
+MUITrayIconSetTrayIcon      PROTO :DWORD,:DWORD                                     ; hModernUI_TrayIcon, hTrayIcon
+MUITrayIconSetTooltipText   PROTO :DWORD,:DWORD                                     ; hModernUI_TrayIcon, lpszTooltip
+MUITrayIconShowNotification PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD                ; hModernUI_TrayIcon, lpszNotificationMessage, lpszNotificationTitle, dwTimeout, dwStyle
+MUITrayIconSetTrayIconText  PROTO :DWORD,:DWORD,:DWORD,:DWORD                       ; hModernUI_TrayIcon, lpszText, hFontIconText, dwTextColorRGB
 
 ;------------------------------------------------------------------------------
 ; ModernUI_TrayMenu Structures

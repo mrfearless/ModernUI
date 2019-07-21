@@ -1046,7 +1046,7 @@ MUI_ALIGN
 ; with this function)
 ; Returns in eax hIcon or NULL
 ;------------------------------------------------------------------------------
-MUITrayMenuSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWORD
+MUITrayMenuSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, hFontIconText:DWORD, dwTextColorRGB:DWORD
     LOCAL hTrayIcon:DWORD
 
     .IF hControl == NULL
@@ -1054,7 +1054,7 @@ MUITrayMenuSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, lpszFont:
         ret
     .ENDIF
     
-    Invoke _MUI_TM_IconText, lpszText, lpszFont, dwTextColorRGB
+    Invoke _MUI_TM_IconText, lpszText, hFontIconText, dwTextColorRGB
     mov hTrayIcon, eax
     
     .IF hTrayIcon == NULL
@@ -1575,7 +1575,7 @@ MUI_ALIGN
 ; with this function)
 ; Returns in eax hIcon or NULL
 ;------------------------------------------------------------------------------
-MUITrayIconSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWORD
+MUITrayIconSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, hFontIconText:DWORD, dwTextColorRGB:DWORD
     LOCAL hTrayIcon:DWORD
 
     .IF hControl == NULL
@@ -1583,7 +1583,7 @@ MUITrayIconSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, lpszFont:
         ret
     .ENDIF
     
-    Invoke _MUI_TM_IconText, lpszText, lpszFont, dwTextColorRGB
+    Invoke _MUI_TM_IconText, lpszText, hFontIconText, dwTextColorRGB
     mov hTrayIcon, eax
     
     .IF hTrayIcon == NULL
@@ -1849,7 +1849,7 @@ MUI_ALIGN
 ; Returns handle to an icon (cursor) in eax, use DestroyIcon to free this when 
 ; you have finished with it
 ;------------------------------------------------------------------------------
-_MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWORD
+_MUI_TM_IconText PROC PRIVATE lpszText:DWORD, hFontIconText:DWORD, dwTextColorRGB:DWORD
     ;// Creates a DC for use in multithreaded programs (works in single threaded as well)
     LOCAL hdc:HDC
     LOCAL hMemDC:HDC
@@ -1867,6 +1867,7 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     LOCAL hFont:DWORD
     LOCAL hFontOld:DWORD
     LOCAL SavedDC:DWORD
+    LOCAL dwFontHeight:DWORD
     
     Invoke lstrlen, lpszText
     mov lentext, eax
@@ -1896,12 +1897,11 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     Invoke FillRect, hMemDC, Addr cbox, hbrBkgnd
     Invoke DeleteObject, hbrBkgnd
 
-    .IF lpszFont == NULL
-        lea eax, szMUITrayMenuFont
+    .IF hFontIconText == NULL
+        Invoke CreateFont, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Addr szMUITrayMenuFont
     .ELSE
-        mov eax, lpszFont
+        mov eax, hFontIconText
     .ENDIF
-    Invoke CreateFont, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, eax ;CTEXT("Segoe UI")
     mov hFont, eax
     Invoke SelectObject, hMemDC, hFont
     mov hFontOld, eax
@@ -1923,6 +1923,8 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     Invoke BitBlt, hdcMem2, 0, 0, cbox.right, cbox.bottom, hMemDC, 0, 0, SRCCOPY
     
     ;// Clean up
+    Invoke SelectObject, hdcMem2, hbmMaskOld
+    Invoke DeleteObject, hbmMaskOld
     Invoke DeleteDC, hdcMem2
 
     mov ii.fIcon, TRUE
@@ -1938,19 +1940,20 @@ _MUI_TM_IconText PROC PRIVATE lpszText:DWORD, lpszFont:DWORD, dwTextColorRGB:DWO
     mov hAlphaCursor, eax
 
     ;// Clean up
-    
     Invoke SelectObject, hMemDC, hBitmapOld
     Invoke DeleteObject, hBitmapOld
     Invoke DeleteObject, hBitmap
     
     Invoke SelectObject, hMemDC, hFontOld
     Invoke DeleteObject, hFontOld
-    Invoke DeleteObject, hFont
+    .IF hFontIconText == NULL
+        Invoke DeleteObject, hFont
+    .ENDIF
     
-    Invoke SelectObject, hdcMem2, hbmMaskOld
-    Invoke DeleteObject, hbmMaskOld
+    ;Invoke SelectObject, hdcMem2, hbmMaskOld
+    ;Invoke DeleteObject, hbmMaskOld
     Invoke DeleteObject, hbmMask
-
+    
     Invoke DeleteDC, hMemDC
     Invoke DeleteDC, hdc
 
