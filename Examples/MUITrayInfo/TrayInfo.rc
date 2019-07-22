@@ -1,0 +1,4 @@
+#include "Res/TrayInfoMnu.rc"
+#include "Res/TrayInfoVer.rc"
+#include "Res/TrayInfoDlg.rc"
+#include "Res/TrayInfoRes.rc"

@@ -170,6 +170,8 @@ _MUI_TRAYMENU_PROPERTIES                ENDS
 .CONST
 WM_INITSUBCLASS                         EQU WM_USER + 99
 
+TRAYMENU_SUBCLASS_ID                    EQU 0A0B0C0D0h
+
 ; Internal properties
 @TrayMenuNID                            EQU 0
 @TrayMenuIconVisible                    EQU 4
@@ -509,19 +511,19 @@ _MUI_TrayMenuSetSubclass PROC hControl:DWORD
     ;PrintDec hParent
     ;PrintDec hControl
     
-    Invoke GetWindowSubclass, hParent, Addr _MUI_TrayMenuWindowSubClass_Proc, hControl, Addr hWndSubClass
+    Invoke GetWindowSubclass, hParent, Addr _MUI_TrayMenuWindowSubClass_Proc, TRAYMENU_SUBCLASS_ID, Addr hWndSubClass ;hControl
     .IF eax == TRUE
-        mov eax, hWndSubClass
-        .IF eax == hControl
+        ;PrintDec hWndSubClass
+        ;mov eax, hWndSubClass
+        ;.IF eax == hControl
             ;PrintText 'Subclass already installed'
             ; Subclass already installed
             ;Invoke RemoveWindowSubclass, hParent, Addr _MUI_TrayMenuWindowSubClass_Proc, hWin
             ;Invoke SetWindowSubclass, hParent, Addr _MUI_TrayMenuWindowSubClass_Proc, hWin, hWin
-        .ENDIF
+        ;.ENDIF
     .ELSE
-        ;PrintDec hWndSubClass
         ;PrintText 'installing Subclass'
-        Invoke SetWindowSubclass, hParent, Addr _MUI_TrayMenuWindowSubClass_Proc, hControl, hControl
+        Invoke SetWindowSubclass, hParent, Addr _MUI_TrayMenuWindowSubClass_Proc, TRAYMENU_SUBCLASS_ID, hControl ;hControl
         .IF eax == TRUE
             ;PrintText 'True'
         .ENDIF
@@ -1248,6 +1250,35 @@ MUITrayMenuShowNotification PROC PUBLIC USES EBX hControl:DWORD, lpszNotificatio
 MUITrayMenuShowNotification ENDP
 
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; Minimize to tray
+;------------------------------------------------------------------------------
+MUITrayMenuMinimizeToTray PROC hControl:DWORD
+    Invoke GetWindowLong, hControl, GWL_STYLE
+    AND eax, MUITMS_HIDEIFMIN
+    .IF eax == MUITMS_HIDEIFMIN         
+        Invoke _MUI_TM_MinimizeToTray, hControl, TRUE
+    .ELSE
+        Invoke _MUI_TM_MinimizeToTray, hControl, FALSE
+    .ENDIF
+    ret
+MUITrayMenuMinimizeToTray ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+MUITrayMenuRestoreFromTray PROC hControl:DWORD
+    Invoke _MUI_TM_RestoreFromTray, hControl, hControl
+    ret
+MUITrayMenuRestoreFromTray ENDP
+
+
+
+
+
 ;==============================================================================
 ; TRAY ICON Functions
 ;==============================================================================
@@ -1598,6 +1629,15 @@ MUITrayIconSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, hFontIcon
 MUITrayIconSetTrayIconText ENDP
 
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUITrayCreateIconText - Create Transparent Text Icon - use DestroyIcon to free
+;------------------------------------------------------------------------------
+MUITrayCreateIconText PROC lpszText:DWORD, hFontIconText:DWORD, dwTextColorRGB:DWORD
+    Invoke _MUI_TM_IconText, lpszText, hFontIconText, dwTextColorRGB
+    ret
+MUITrayCreateIconText ENDP
+
 
 ;==============================================================================
 ; Internal Functions
@@ -1756,7 +1796,7 @@ _MUI_TM_RestoreFromTray PROC PRIVATE hWin:DWORD, hControl:DWORD
         ;PrintText 'MUITMS_HWNDEXTRA'
         .IF hWndExtra != 0
             ;PrintText 'Show Window'
-            invoke ShowWindow, hWndExtra, SW_SHOW 
+            Invoke ShowWindow, hWndExtra, SW_SHOW 
         .ENDIF
     .ELSE
 
@@ -1768,7 +1808,7 @@ _MUI_TM_RestoreFromTray PROC PRIVATE hWin:DWORD, hControl:DWORD
                 invoke ShowWindow, hParent, SW_RESTORE
             
             .ELSEIF eax == SW_HIDE
-                invoke ShowWindow, hParent, SW_SHOW
+                Invoke ShowWindow, hParent, SW_SHOW
             
             .ENDIF
             Invoke SetForegroundWindow, hParent ; Focus main window
@@ -1777,15 +1817,15 @@ _MUI_TM_RestoreFromTray PROC PRIVATE hWin:DWORD, hControl:DWORD
     
         Invoke IsWindowVisible, hWin
         .IF eax == 0
-            invoke ShowWindow, hWin, SW_SHOW    
-            invoke ShowWindow, hWin, SW_SHOWNORMAL  
+            Invoke ShowWindow, hWin, SW_SHOW    
+            Invoke ShowWindow, hWin, SW_SHOWNORMAL  
             Invoke SetForegroundWindow, hWin ; Focus main window
             ret
         .ENDIF
         Invoke IsIconic, hWin
         .IF eax != 0
-            invoke ShowWindow, hWin, SW_SHOW    
-            invoke ShowWindow, hWin, SW_SHOWNORMAL  
+            Invoke ShowWindow, hWin, SW_SHOW    
+            Invoke ShowWindow, hWin, SW_SHOWNORMAL  
             Invoke SetForegroundWindow, hWin ; Focus main window
         .ENDIF
     .ENDIF
@@ -1801,7 +1841,7 @@ _MUI_TM_MinimizeToTray PROC PUBLIC hWin:DWORD, dwHideWindow:DWORD
     Invoke ShowWindow, hWin, SW_MINIMIZE
     
     .IF dwHideWindow == TRUE   
-        invoke ShowWindow, hWin, SW_HIDE ; Hide main window
+        Invoke ShowWindow, hWin, SW_HIDE ; Hide main window
     .ENDIF
     ret
 _MUI_TM_MinimizeToTray  ENDP

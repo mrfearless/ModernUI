@@ -1,0 +1,11 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "TrayInfo.xml"
+100						ICON      DISCARDABLE "Images/TrayInfo.ico"
+101						ICON      DISCARDABLE "Images/blank.ico"
+200						BITMAP    DISCARDABLE "Images/TrayMenu/16x16/app_show.bmp"
+201						BITMAP    DISCARDABLE "Images/TrayMenu/16x16/app_hide.bmp"
+202						BITMAP    DISCARDABLE "Images/TrayMenu/16x16/trayicons.bmp"
+203						BITMAP    DISCARDABLE "Images/TrayMenu/16x16/cpuload.bmp"
+204						BITMAP    DISCARDABLE "Images/TrayMenu/16x16/memload.bmp"
+205						BITMAP    DISCARDABLE "Images/TrayMenu/16x16/response.bmp"
+206						BITMAP    DISCARDABLE "Images/TrayMenu/16x16/exit.bmp"
