@@ -38,6 +38,7 @@ WndProc                 PROTO :DWORD,:DWORD,:DWORD,:DWORD
 ;-----------------------------------------------------------------------------------------
 
 ICO_MAIN                EQU 100
+BMP_BACKIMAGE           EQU 101
 
 BMP_SPIN1               EQU 201 ; "Images/FramesSpinners/squares-circle-grey 1.bmp"
 BMP_SPIN2               EQU 202 ; "Images/FramesSpinners/squares-circle-grey 2.bmp"
@@ -161,3 +162,4 @@ hSpinnerSprite1         DD ?
 hSpinnerSprite2         DD ?
 hSpinnerSprite3         DD ?
 hSpinnerSprite4         DD ?
+hBackImage              DD ?

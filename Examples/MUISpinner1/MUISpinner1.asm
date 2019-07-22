@@ -30,7 +30,10 @@ start:
     mov icc.dwICC, ICC_COOL_CLASSES or ICC_STANDARD_CLASSES or ICC_WIN95_CLASSES
     Invoke InitCommonControlsEx, offset icc
     
+    Invoke MUIGDIPlusStart
     Invoke WinMain, hInstance, NULL, CommandLine, SW_SHOWDEFAULT
+    Invoke MUIGDIPlusFinish
+    
     Invoke ExitProcess, eax
     ret
 
@@ -80,12 +83,12 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
     .IF eax == WM_INITDIALOG
         push hWin
         pop hWnd
-
+        
         ;-----------------------------------------------------------------------------
         ; ModernUI_CaptionBar
         ;-----------------------------------------------------------------------------
         Invoke MUIApplyToDialog, hWin, TRUE, TRUE
-        Invoke MUICaptionBarCreate, hWin, Addr AppName, 32, IDC_CAPTIONBAR, MUICS_LEFT or MUICS_REDCLOSEBUTTON
+        Invoke MUICaptionBarCreate, hWin, Addr AppName, 32, IDC_CAPTIONBAR, MUICS_NOMAXBUTTON or MUICS_LEFT or MUICS_REDCLOSEBUTTON;MUICS_LEFT or MUICS_REDCLOSEBUTTON
         mov hCaptionBar, eax
         Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBackColor, MUI_RGBCOLOR(27,161,226)
         Invoke MUICaptionBarSetProperty, hCaptionBar, @CaptionBarBtnTxtRollColor, MUI_RGBCOLOR(61,61,61)
@@ -287,7 +290,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ret
 
     .ELSEIF eax == WM_PAINT
-        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(240,240,240), MUI_RGBCOLOR(27,161,226)
+        Invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(240,240,240), MUI_RGBCOLOR(27,161,226)
         mov eax, 0
         ret
     ;---------------------------------------------------------------------------------

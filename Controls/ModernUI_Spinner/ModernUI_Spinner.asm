@@ -563,10 +563,10 @@ _MUI_SpinnerNextFrameIndex PROC USES EBX hWin:DWORD
     LOCAL NextFrame:DWORD
 
     Invoke MUIGetIntProperty, hWin, @SpinnerTotalFrames
-    mov TotalFrames, eax
     .IF eax == 0
         ret
     .ENDIF
+    mov TotalFrames, eax
     
     Invoke MUIGetIntProperty, hWin, @SpinnerFrameIndex
     inc eax
@@ -1720,7 +1720,7 @@ _MUI_SpinnerLoadPng PROC hinstance:DWORD, idResPng:DWORD
     Invoke GdipGetImageHeight, pBitmapFromStream, Addr dwImageHeight    
     Invoke GdipCreateBitmapFromScan0, dwImageWidth, dwImageHeight, 0, PixelFormat32bppARGB, 0, Addr pImage
     Invoke GdipGetImageGraphicsContext, pImage, Addr pGraphics
-    Invoke GdipDrawImage, pGraphics, pBitmapFromStream, 0, 0
+    Invoke GdipDrawImageI, pGraphics, pBitmapFromStream, 0, 0
     
     ; ------------------------------------------------------------------
     ; STEP 6: Free all used locks and resources
@@ -1761,44 +1761,6 @@ _MUI_SpinnerRotateCenterImage PROC hImage:DWORD, fAngle:REAL4
     LOCAL angle:REAL4
 
     ;---------------------------------------------------------------------------------
-    ; Check if angle is 0, if it is just clone image
-    ;---------------------------------------------------------------------------------
-;    finit           ; init fpu
-;    fld fAngle
-;    ftst            ; compare the value of ST(0) to +0.0
-;    fstsw ax        ; copy the Status Word containing the result to AX
-;    fwait           ; insure the previous instruction is completed
-;    sahf            ; transfer the condition codes to the CPU's flag register
-;    jz angle_is_0
-;    jmp angle_is_not_0
-;
-;angle_is_0:
-;    Invoke GdipCloneImage, hImage, Addr pBitmap
-;    mov eax, pBitmap
-;    ret
-;    
-;angle_is_not_0:
-
-    ;---------------------------------------------------------------------------------
-    ; Check if angle is 360, if it is just clone image
-    ;---------------------------------------------------------------------------------
-;    finit           ; init fpu
-;    fld fAngle
-;    fcom FP4(360.0) ; compare ST(0) with the value of the real4_var variable: 360.0
-;    fstsw ax        ; copy the Status Word containing the result to AX
-;    fwait           ; insure the previous instruction is completed
-;    sahf            ; transfer the condition codes to the CPU's flag register
-;    jz angle_is_360
-;    jmp angle_is_not_360
-;
-;angle_is_360:
-;    Invoke GdipCloneImage, hImage, Addr pBitmap
-;    mov eax, pBitmap
-;    ret
-;
-;angle_is_not_360:
-    
-    ;---------------------------------------------------------------------------------
     ; Create new image based on hImage and rotate this new image 
     ;---------------------------------------------------------------------------------
     mov pGraphics, 0
@@ -1834,7 +1796,7 @@ _MUI_SpinnerRotateCenterImage PROC hImage:DWORD, fAngle:REAL4
     
 angle_is_180:
     ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
-    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
+    Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
     Invoke GdipImageRotateFlip, pBitmap, Rotate180FlipNone
     jmp tidyup
 
@@ -1856,7 +1818,7 @@ angle_is_not_180:
     
 angle_is_90:
     ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
-    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
+    Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
     Invoke GdipImageRotateFlip, pBitmap, Rotate90FlipNone
     jmp tidyup
 
@@ -1878,7 +1840,7 @@ angle_is_not_90:
     
 angle_is_270:
     ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
-    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
+    Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
     Invoke GdipImageRotateFlip, pBitmap, Rotate270FlipNone
     jmp tidyup
 
@@ -1900,8 +1862,8 @@ angle_is_not_270:
     
 angle_is_360:
     ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
-    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
-    Invoke GdipImageRotateFlip, pBitmap, RotateNoneFlipNone
+    Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
+    ;Invoke GdipImageRotateFlip, pBitmap, RotateNoneFlipNone
     jmp tidyup
 
 angle_is_not_360:
@@ -1922,8 +1884,8 @@ angle_is_not_360:
     
 angle_is_0:
     ;Invoke GdipDrawImageRectRectI, pGraphicsBuffer, hImage, 0, 0, dwImageWidth, dwImageHeight, 0, 0, dwImageWidth, dwImageHeight, UnitPixel, NULL, NULL, NULL
-    Invoke GdipDrawImage, pGraphicsBuffer, hImage, 0, 0
-    Invoke GdipImageRotateFlip, pBitmap, RotateNoneFlipNone
+    Invoke GdipDrawImageI, pGraphicsBuffer, hImage, 0, 0
+    ;Invoke GdipImageRotateFlip, pBitmap, RotateNoneFlipNone
     jmp tidyup
 
 angle_is_not_0:
