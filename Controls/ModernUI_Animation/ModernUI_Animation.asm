@@ -852,6 +852,7 @@ _MUI_AnimationNotify PROC USES EBX hWin:DWORD, dwCode:DWORD
     ret
 _MUI_AnimationNotify endp
 
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_AnimationFrameData - gets a pointer to a frame's data
 ; if dwFrameIndex == -1 then gets the current frame's data
@@ -1219,6 +1220,7 @@ MUI_ALIGN
 ; MUIAnimationSpeed
 ;------------------------------------------------------------------------------
 MUIAnimationSetDefaultTime PROC hControl:DWORD, dwDefaultFrameTime:DWORD
+    mov eax, dwDefaultFrameTime
     .IF eax == 0 || eax == -1 || eax > 60000 ; 0, -1 or 60seconds
         mov eax, ANIMATION_FRAME_TIME_DEFAULT
     .ELSE
@@ -1681,7 +1683,7 @@ MUI_ALIGN
 ; MUIAnimationDeleteFrames - deletes all frames
 ; Returns TRUE if successful or FALSE otherwise
 ;------------------------------------------------------------------------------
-MUIAnimationDeleteFrames PROC hControl:DWORD
+MUIAnimationDeleteFrames PROC USES EBX hControl:DWORD
     LOCAL pAnimationFramesArray:DWORD
     LOCAL pCurrentFrame:DWORD
     LOCAL TotalFrames:DWORD
@@ -2673,7 +2675,7 @@ _MUI_AnimationLoadPng PROC hinstance:DWORD, idResPng:DWORD
     Invoke GdipGetImageHeight, pBitmapFromStream, Addr dwImageHeight    
     Invoke GdipCreateBitmapFromScan0, dwImageWidth, dwImageHeight, 0, PixelFormat32bppARGB, 0, Addr pImage
     Invoke GdipGetImageGraphicsContext, pImage, Addr pGraphics
-    Invoke GdipDrawImage, pGraphics, pBitmapFromStream, 0, 0
+    Invoke GdipDrawImageI, pGraphics, pBitmapFromStream, 0, 0
     
     ; ------------------------------------------------------------------
     ; STEP 6: Free all used locks and resources
