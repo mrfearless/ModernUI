@@ -240,6 +240,7 @@ MUIGDIStretchImage              PROTO hImage:MUIIMAGE, ImageHandleType:MUIIT, lp
 MUIGDIRotateCenterBitmap        PROTO hWin:MUIWND, hBitmap:HBITMAP, Angle:MUIVALUE, BackColor:MUICOLORRGB
 MUIGDIPaintFill                 PROTO hdc:HDC, lpFillRect:LPRECT, FillColor:MUICOLORRGB
 MUIGDIPaintFrame                PROTO hdc:HDC, lpFrameRect:LPRECT, FrameColor:MUICOLORRGB, FrameStyle:MUIPFS
+MUIGDIPaintBrush                PROTO hdc:HDC, lpBrushRect:LPRECT, hBrushBitmap:HBITMAP, dwBrushOrgX:LPMUIVALUE, dwBrushOrgY:LPMUIVALUE
 
 ; ModernUI GDIPlus Functions:
 MUIGDIPlusStart                 PROTO

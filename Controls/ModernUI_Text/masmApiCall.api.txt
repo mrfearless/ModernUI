@@ -11,3 +11,5 @@ MUITextCreate,hWndParent,lpszText,xpos,ypos,dwWidth,dwHeight,dwResourceID,dwStyl
 MUITextSetProperty,hModernUI_Text,dwProperty,dwPropertyValue
 MUITextGetProperty,hModernUI_Text,dwProperty
 MUITextSetBufferSize,hModernUI_Text,dwBufferSize
+MUITextSetBackBrush,hModernUI_Button,hBrush,dwBrushOrgX,dwBrushOrgY,dwBrushPos
+MUITextLoadBackBrush,hModernUI_Button,idResBitmap,dwBrushOrgX,dwBrushOrgY,dwBrushPos

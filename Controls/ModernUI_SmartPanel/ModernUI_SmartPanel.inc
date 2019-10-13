@@ -58,6 +58,10 @@ MUISmartPanelGetPanelParam      PROTO :DWORD,:DWORD                             
 
 MUISmartPanelNotifyCallback     PROTO :DWORD,:DWORD                                     ; hModernUI_SmartPanel, lpNMSmartPanelStruct
 
+MUISmartPanelSetBackBrush       PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD                ; hModernUI_SmartPanel, hBrush, dwBrushOrgX, dwBrushOrgY, dwBrushPos
+MUISmartPanelLoadBackBrush      PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD                ; hModernUI_SmartPanel, idResBitmap, dwBrushOrgX, dwBrushOrgY, dwBrushPos
+
+
 ;------------------------------------------------------------------------------
 ; ModernUI_SmartPanel Structures
 ;------------------------------------------------------------------------------
@@ -91,7 +95,7 @@ MUISPM_NEXTPANEL                EQU WM_USER+1757 ; wParam send notify msg to par
 MUISPM_PREVPANEL                EQU WM_USER+1756 ; wParam send notify msg to parent TRUE/FALSE. lparam = NULL, moves to previous panel. If at begining and wraparound is specified moves to last panel, otherwise stops here.
 MUISPM_GETTOTALPANELS           EQU WM_USER+1755 ; wParam & lparam = NULL, returns in eax total panels
 MUISPM_SETISDLGMSGVAR           EQU WM_USER+1754 ; Address of variable to hold current panel dialog handle for use with IsDialogMessage message loop calls
-MUISPM_GETPANELPARAM            EQU WM_USER+1753 ; wParam = panel index, lParam = custom user value to set
+MUISPM_GETPANELPARAM            EQU WM_USER+1753 ; wParam = panel index, lParam = NULL
 MUISPM_SETPANELPARAM            EQU WM_USER+1752 ; wParam = panel index, lParam = custom user value to set
 
 ;SmartPanel Notifications
@@ -121,7 +125,9 @@ MUISPS_DESIGN_INFO              EQU 1000h ; only used at design time to show tex
 @SmartPanelDllInstance          EQU 16  ; reserved for future use
 @SmartPanelParam                EQU 20  ; user custom data
 
-
+; SmartPanel Brush Position:
+MUISPBP_RELATIVE                EQU 0
+MUISPBP_ABSOLUTE                EQU 1
 
 
 

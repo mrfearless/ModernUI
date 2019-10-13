@@ -108,7 +108,7 @@ MUIPaintBackgroundImage PROC USES EBX hWin:MUIWND, BackColor:MUICOLORRGB, Border
             mov pt.y, eax
         
         .ELSEIF eax == MUIIL_BOTTOMLEFT
-            mov pt.x, 1
+            mov pt.x, 0 ; 1
             
             mov eax, rect.bottom
             mov ebx, ImageHeight
@@ -130,8 +130,8 @@ MUIPaintBackgroundImage PROC USES EBX hWin:MUIWND, BackColor:MUICOLORRGB, Border
             mov pt.y, eax        
         
         .ELSEIF eax == MUIIL_TOPLEFT
-            mov pt.x, 1
-            mov pt.y, 1
+            mov pt.x, 0 ; 1
+            mov pt.y, 0 ; 1
         
         .ELSEIF eax == MUIIL_TOPRIGHT
             mov eax, rect.right
@@ -141,7 +141,7 @@ MUIPaintBackgroundImage PROC USES EBX hWin:MUIWND, BackColor:MUICOLORRGB, Border
             mov pt.x, eax        
         
         .ELSEIF eax == MUIIL_TOPCENTER
-            mov pt.x, 1
+            mov pt.x, 0 ; 1
 
             mov eax, rect.bottom
             shr eax, 1

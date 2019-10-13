@@ -99,6 +99,7 @@ _MUI_TextWndProc                PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TextInit                   PROTO :DWORD
 _MUI_TextPaint                  PROTO :DWORD
 _MUI_TextPaintBackground        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_TextPaintBrush             PROTO :DWORD, :DWORD, :DWORD
 _MUI_TextPaintText              PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TextCheckMultiline         PROTO :DWORD, :DWORD
 _MUI_TextSetFontFamilySize      PROTO :DWORD, :DWORD
@@ -111,6 +112,9 @@ _MUI_TextCheckSetFont           PROTO :DWORD, :DWORD
 _MUI_TextUTF8Encode             PROTO :DWORD
 _MUI_TextUTF8Decode             PROTO :DWORD
 _MUI_TextUTF8Free               PROTO :DWORD
+
+_MUI_TextUpdateBrushOrg         PROTO :DWORD
+
 
 
 ;------------------------------------------------------------------------------
@@ -125,6 +129,7 @@ MUI_TEXT_PROPERTIES             STRUCT
     dwTextBackColor             DD ?
     dwTextBackColorAlt          DD ?
     dwTextBackColorDisabled     DD ?
+    dwTextDllInstance           DD ?
     dwTextCodeTextColor         DD ?
     dwTextCodeBackColor         DD ?
     dwTextQuoteTextColor        DD ?
@@ -162,6 +167,13 @@ _MUI_TEXT_PROPERTIES            STRUCT
     dwListStackIndex            DD ? ; Current index of list stack
     dwPtrFontSpecial            DD ? ; Array of fonts for DTE
     dwHyperLinkControl          DD ? ; handle of DTE HyperLink control
+    dwBrushBitmap               DD ?
+    dwBrush                     DD ?
+    dwBrushOrgX                 DD ?
+    dwBrushOrgY                 DD ?
+    dwBrushOrgOriginalX         DD ?
+    dwBrushOrgOriginalY         DD ?
+    dwBrushPos                  DD ?
 _MUI_TEXT_PROPERTIES            ENDS
 
 ; Extended Internal properties
@@ -219,6 +231,14 @@ MUI_TEXT_ALIGN_MASK             EQU 00000300h
 @TextListStackIndex             EQU 24 ; Current index of list stack
 @TextPtrFontSpecial             EQU 28 ; Array of fonts for DTE
 @TextHyperLinkControl           EQU 32 ; handle of DTE HyperLink control
+@TextBrushBitmap                EQU 36
+@TextBrush                      EQU 40
+@TextBrushOrgX                  EQU 44
+@TextBrushOrgY                  EQU 48
+@TextBrushOrgOriginalX          EQU 52
+@TextBrushOrgOriginalY          EQU 56
+@TextBrushPos                   EQU 60
+
 
 .DATA
 ;ALIGN 2
@@ -516,6 +536,18 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         mov eax, 0
         ret
 
+    .ELSEIF eax == WM_MOVE
+        Invoke GetWindowLong, hWin, 0
+        .IF eax != 0
+            Invoke MUIGetIntProperty, hWin, @TextBrush
+            .IF eax != 0
+                Invoke MUIGetIntProperty, hWin, @TextBrushPos
+                .IF eax == 0
+                    Invoke _MUI_TextUpdateBrushOrg, hWin
+                .ENDIF
+            .ENDIF
+        .ENDIF
+
     .ELSEIF eax== WM_SETCURSOR
         Invoke GetWindowLong, hWin, GWL_STYLE
         and eax, MUITS_HAND
@@ -771,12 +803,11 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
     LOCAL rect:RECT
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
-    LOCAL hbmMem:DWORD
-    LOCAL hBitmap:DWORD
-    LOCAL hOldBitmap:DWORD
+    LOCAL hBufferBitmap:DWORD 
     LOCAL EnabledState:DWORD
     LOCAL MouseOver:DWORD
     LOCAL BackColor:DWORD
+    LOCAL hBackBrush:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
@@ -805,18 +836,15 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
     mov MouseOver, eax
     Invoke MUIGetExtProperty, hWin, @TextBackColor
     mov BackColor, eax
+    Invoke MUIGetIntProperty, hWin, @TextBrush
+    mov hBackBrush, eax  
     
     .IF BackColor != -1 ; Not Transparent, background color is specified
 
         ;----------------------------------------------------------
         ; Setup Double Buffering
         ;----------------------------------------------------------
-        Invoke CreateCompatibleDC, hdc
-        mov hdcMem, eax
-        Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-        mov hbmMem, eax
-        Invoke SelectObject, hdcMem, hbmMem
-        mov hOldBitmap, eax
+        Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap
     
         ;----------------------------------------------------------
         ; Background
@@ -834,23 +862,49 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
         Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
     
         ;----------------------------------------------------------
-        ; Cleanup
+        ; Finish Double Buffering & Cleanup
         ;----------------------------------------------------------
-        .IF hOldBitmap != 0
-            Invoke SelectObject, hdcMem, hOldBitmap
-            Invoke DeleteObject, hOldBitmap
-        .ENDIF
-        Invoke SelectObject, hdcMem, hbmMem
-        Invoke DeleteObject, hbmMem
-        Invoke DeleteDC, hdcMem
+        Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0
 
     .ELSE ; Text on Transparent Background
-        ;PrintText 'Text on Transparent Background'
-        ;----------------------------------------------------------
-        ; Text
-        ;----------------------------------------------------------    
-        Invoke _MUI_TextPaintText, hWin, hdc, Addr rect, EnabledState, MouseOver
     
+        .IF hBackBrush == 0
+        
+            ;PrintText 'Text on Transparent Background'
+            ;------------------------------------------------------
+            ; Text
+            ;------------------------------------------------------    
+            Invoke _MUI_TextPaintText, hWin, hdc, Addr rect, EnabledState, MouseOver
+        
+        .ELSE
+            
+            ;------------------------------------------------------
+            ; Setup Double Buffering
+            ;------------------------------------------------------
+            Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap
+            
+            ;------------------------------------------------------
+            ; Paint background brush
+            ;------------------------------------------------------
+            Invoke _MUI_TextPaintBrush, hWin, hdcMem, Addr rect
+            
+            ;------------------------------------------------------
+            ; Text
+            ;------------------------------------------------------
+            Invoke _MUI_TextPaintText, hWin, hdcMem, Addr rect, EnabledState, MouseOver
+
+            ;------------------------------------------------------
+            ; BitBlt from hdcMem back to hdc
+            ;------------------------------------------------------
+            Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+        
+            ;------------------------------------------------------
+            ; Finish Double Buffering & Cleanup
+            ;------------------------------------------------------
+            Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0
+
+        .ENDIF
+        
     .ENDIF
      
     Invoke EndPaint, hWin, Addr ps
@@ -885,25 +939,55 @@ _MUI_TextPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnab
     .IF BackColor == -1 ; transparent
         ret
     .ENDIF
-
-    Invoke GetStockObject, DC_BRUSH
-    mov hBrush, eax
-    Invoke SelectObject, hdc, eax
-    mov hOldBrush, eax
-    Invoke SetDCBrushColor, hdc, BackColor
-    Invoke FillRect, hdc, lpRect, hBrush
-
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdc, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF      
+    
+    Invoke MUIGDIPaintFill, hdc, lpRect, BackColor
+    
+;    
+;    Invoke GetStockObject, DC_BRUSH
+;    mov hBrush, eax
+;    Invoke SelectObject, hdc, eax
+;    mov hOldBrush, eax
+;    Invoke SetDCBrushColor, hdc, BackColor
+;    Invoke FillRect, hdc, lpRect, hBrush
+;
+;    .IF hOldBrush != 0
+;        Invoke SelectObject, hdc, hOldBrush
+;        Invoke DeleteObject, hOldBrush
+;    .ENDIF     
+;    .IF hBrush != 0
+;        Invoke DeleteObject, hBrush
+;    .ENDIF      
     
     ret
-
 _MUI_TextPaintBackground ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_TextPaintBrush
+;------------------------------------------------------------------------------
+_MUI_TextPaintBrush PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD
+    LOCAL hBackBrush:DWORD
+    LOCAL hOldBrush:DWORD
+    LOCAL dwXOrg:DWORD
+    LOCAL dwYOrg:DWORD
+    LOCAL rect:RECT
+    
+    Invoke MUIGetIntProperty, hWin, @TextBrush
+    .IF eax == 0
+        ret
+    .ENDIF
+    mov hBackBrush, eax
+
+    Invoke MUIGetIntProperty, hWin, @TextBrushOrgX
+    mov dwXOrg, eax
+    Invoke MUIGetIntProperty, hWin, @TextBrushOrgY
+    mov dwYOrg, eax
+
+    Invoke MUIGDIPaintBrush, hdc, lpRect, hBackBrush, dwXOrg, dwYOrg
+
+    ret
+_MUI_TextPaintBrush ENDP
 
 
 MUI_ALIGN
@@ -1471,6 +1555,30 @@ _MUI_TextSetFontTableHandle ENDP
 
 MUI_ALIGN
 ;-------------------------------------------------------------------------------------
+; Check if font set via MUITextSetProperty is acutally a font, if it isnt return FALSE
+;-------------------------------------------------------------------------------------
+_MUI_TextCheckSetFont PROC hWin:DWORD, hFont:DWORD
+    LOCAL lfnt:LOGFONT 
+    
+    .IF hWin == 0 || hFont == 0
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
+    .IF eax == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    mov eax, TRUE
+    ret
+
+_MUI_TextCheckSetFont ENDP
+
+
+MUI_ALIGN
+;-------------------------------------------------------------------------------------
 ; Convert wide Unicode String to an UTF8 string
 ;-------------------------------------------------------------------------------------
 _MUI_TextUTF8Encode PROC lpString:DWORD
@@ -1552,6 +1660,43 @@ _MUI_TextUTF8Free ENDP
 
 
 MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_TextUpdateBrushOrg - Updates brush org for relative brush after a 
+; control has moved
+;------------------------------------------------------------------------------
+_MUI_TextUpdateBrushOrg PROC hWin:DWORD
+    LOCAL rect:RECT
+    LOCAL x:DWORD
+    LOCAL y:DWORD
+    LOCAL dwBrushOrgX:DWORD
+    LOCAL dwBrushOrgY:DWORD
+    
+    Invoke MUIGetIntProperty, hWin, @TextBrushOrgOriginalX
+    mov dwBrushOrgX, eax
+
+    Invoke MUIGetIntProperty, hWin, @TextBrushOrgOriginalY
+    mov dwBrushOrgY, eax
+    
+    Invoke MUIGetParentRelativeWindowRect, hWin, Addr rect
+        
+    mov eax, rect.left
+    sub eax, dwBrushOrgX
+    neg eax
+    mov x, eax
+        
+    mov eax, rect.top
+    sub eax, dwBrushOrgY
+    neg eax
+    mov y, eax
+
+    Invoke MUISetIntProperty, hWin, @TextBrushOrgX, x
+    Invoke MUISetIntProperty, hWin, @TextBrushOrgY, y
+    Invoke InvalidateRect, hWin, NULL, FALSE
+    ret
+_MUI_TextUpdateBrushOrg ENDP
+
+
+MUI_ALIGN
 ;-------------------------------------------------------------------------------------
 ; Sets internal buffer size for text - useful if you know ahead of time what size
 ; buffer should be - as in you know the text length expected.
@@ -1584,27 +1729,93 @@ MUITextSetBufferSize ENDP
 
 
 MUI_ALIGN
-;-------------------------------------------------------------------------------------
-; Check if font set via MUITextSetProperty is acutally a font, if it isnt return FALSE
-;-------------------------------------------------------------------------------------
-_MUI_TextCheckSetFont PROC hWin:DWORD, hFont:DWORD
-    LOCAL lfnt:LOGFONT 
+;------------------------------------------------------------------------------
+; MUITextSetBackBrush - Set a background brush for text - used for text
+; that have @TextBackColor set to -1 for transparency type effect.
+; dwBrushPos: 0 = brush position is relative to control's position, and adjusted
+; by x and y (typically 0,0 tho) - if brush image is set to parent's 0,0 then 
+; control will capture and paint the part of the brush that is relative to it's 
+; background position. Otherwise if dwBrushPos = 1 then its an absolute position 
+; in a brush/bitmap
+;
+; If dwBrushPos is relative, then sizing/moving will readjust the brush offset
+; to use for background
+;------------------------------------------------------------------------------
+MUITextSetBackBrush PROC hControl:DWORD, hBrush:DWORD, dwBrushOrgX:DWORD, dwBrushOrgY:DWORD, dwBrushPos:DWORD
+    LOCAL rect:RECT
+    LOCAL x:DWORD
+    LOCAL y:DWORD
     
-    .IF hWin == 0 || hFont == 0
-        mov eax, FALSE
-        ret
+    mov eax, dwBrushPos
+    .IF eax == 0 ; brush position is relative to control's position, and adjusted by x and y 
+        Invoke MUIGetParentRelativeWindowRect, hControl, Addr rect
+        
+        mov eax, rect.left
+        sub eax, dwBrushOrgX
+        neg eax
+        mov x, eax
+        
+        mov eax, rect.top
+        sub eax, dwBrushOrgY
+        neg eax
+        mov y, eax
+        
+    .ELSE ; brush position is absolute, but adjusted by x and y as specified
+        
+        mov eax, dwBrushOrgX
+        neg eax
+        mov x, eax
+        
+        mov eax, dwBrushOrgY
+        neg eax
+        mov y, eax
+        
     .ENDIF
     
-    Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
-    .IF eax == NULL
-        mov eax, FALSE
-        ret
-    .ENDIF
-    
-    mov eax, TRUE
+    Invoke MUISetIntProperty, hControl, @TextBrush, hBrush
+    Invoke MUISetIntProperty, hControl, @TextBrushOrgOriginalX, dwBrushOrgX
+    Invoke MUISetIntProperty, hControl, @TextBrushOrgOriginalY, dwBrushOrgY
+    Invoke MUISetIntProperty, hControl, @TextBrushOrgX, x
+    Invoke MUISetIntProperty, hControl, @TextBrushOrgY, y
+    Invoke MUISetIntProperty, hControl, @TextBrushPos, dwBrushPos
+    Invoke InvalidateRect, hControl, NULL, FALSE
     ret
+MUITextSetBackBrush ENDP
 
-_MUI_TextCheckSetFont ENDP
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUITextLoadBackBrush
+;------------------------------------------------------------------------------
+MUITextLoadBackBrush PROC hControl:DWORD, idResBitmap:DWORD, dwBrushOrgX:DWORD, dwBrushOrgY:DWORD, dwBrushPos:DWORD
+    LOCAL hinstance:DWORD
+    LOCAL hBrushBitmap:DWORD
+    LOCAL hBrush:DWORD
+    
+    .IF idResBitmap == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    Invoke MUIGetExtProperty, hControl, @TextDllInstance
+    .IF eax == 0
+        Invoke GetModuleHandle, NULL
+    .ENDIF
+    mov hinstance, eax
+    
+    Invoke LoadBitmap, hinstance, idResBitmap
+    mov hBrushBitmap, eax
+    Invoke MUISetIntProperty, hControl, @TextBrushBitmap, hBrushBitmap
+    
+    Invoke CreatePatternBrush, hBrushBitmap
+    mov hBrush, eax
+    
+    Invoke MUITextSetBackBrush, hControl, hBrush, dwBrushOrgX, dwBrushOrgY, dwBrushPos
+    
+    ret
+MUITextLoadBackBrush ENDP
+
+
 
 IFDEF MUI_DRAWTEXTEXT
 include ModernUI_DrawTextEXT.asm

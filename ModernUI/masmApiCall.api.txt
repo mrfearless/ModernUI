@@ -29,6 +29,7 @@ MUIGDIStretchBitmap,hBitmap,lpBoundsRect,lpBitmapWidth,lpBitmapHeight,lpBitmapX,
 MUIGDIRotateCenterBitmap,hWin,hBitmap,Angle,BackColor
 MUIGDIPaintFill,hdc,lpFillRect,FillColor
 MUIGDIPaintFrame,hdc,lpFrameRect,FrameColor,FrameStyle
+MUIGDIPaintBrush,hdc,lpBrushRect,hBrushBitmap,dwBrushOrgX,dwBrushOrgY
 MUILoadBitmapFromResource,hWin,InstanceProperty,Property,idBmpRes
 MUILoadIconFromResource,hWin,InstanceProperty,Property,idIcoRes
 MUIGDIPlusStart

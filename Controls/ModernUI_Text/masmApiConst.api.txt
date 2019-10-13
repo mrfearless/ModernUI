@@ -7,6 +7,8 @@
 ;
 ;------------------------------------------------------------------------------
 8MUITextCreate,MUITS_7PT,MUITS_8PT,MUITS_9PT,MUITS_10PT,MUITS_11PT,MUITS_12PT,MUITS_13PT,MUITS_14PT,MUITS_15PT,MUITS_16PT,MUITS_18PT,MUITS_20PT,MUITS_22PT,MUITS_24PT,MUITS_28PT,MUITS_32PT,MUITS_FONT_SEGOE,MUITS_FONT_TAHOMA,MUITS_FONT_SANS,MUITS_FONT_ARIAL,MUITS_FONT_TIMES,MUITS_FONT_COURIER,MUITS_FONT_VERDANA,MUITS_FONT_NORMAL,MUITS_FONT_BOLD,MUITS_FONT_ITALIC,MUITS_FONT_UNDERLINE,MUITS_ALIGN_LEFT,MUITS_ALIGN_RIGHT,MUITS_ALIGN_CENTER,MUITS_ALIGN_JUSTIFY,MUITS_SINGLELINE,MUITS_HAND,MUITS_LORUMIPSUM,MUITS_FONT_DIALOG,MUITS_UTF8,MUITS_HTMLCODE,MUITS_BBCODE
-2MUITextSetProperty,@TextFont,@TextColor,@TextColorAlt,@TextColorDisabled,@TextBackColor,@TextBackColorAlt,@TextBackColorDisabled
-2MUITextGetProperty,@TextFont,@TextColor,@TextColorAlt,@TextColorDisabled,@TextBackColor,@TextBackColorAlt,@TextBackColorDisabled
+2MUITextSetProperty,@TextFont,@TextColor,@TextColorAlt,@TextColorDisabled,@TextBackColor,@TextBackColorAlt,@TextBackColorDisabled,@TextDllInstance
+2MUITextGetProperty,@TextFont,@TextColor,@TextColorAlt,@TextColorDisabled,@TextBackColor,@TextBackColorAlt,@TextBackColorDisabled,@TextDllInstance
 3MUITextSetProperty,MUI_RGBCOLOR
+5MUITextSetBackBrush,MUITBP_RELATIVE,MUITBP_ABSOLUTE
+5MUITextLoadBackBrush,MUITBP_RELATIVE,MUITBP_ABSOLUTE

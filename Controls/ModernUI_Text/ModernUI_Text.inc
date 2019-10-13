@@ -45,9 +45,8 @@ MUITextSetProperty      PROTO :DWORD, :DWORD, :DWORD                            
 MUITextGetProperty      PROTO :DWORD, :DWORD                                                    ; hModernUI_Text, dwProperty
 MUITextSetBufferSize    PROTO :DWORD, :DWORD                                                    ; hModernUI_Text, dwBufferSize
 
-;------------------------------------------------------------------------------
-; ModernUI_Text Structures
-;------------------------------------------------------------------------------
+MUITextSetBackBrush     PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                            ; hModernUI_Text, hBrush, dwBrushOrgX, dwBrushOrgY, dwBrushPos
+MUITextLoadBackBrush    PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                            ; hModernUI_Text, idResBitmap, dwBrushOrgX, dwBrushOrgY, dwBrushPos
 
 
 .CONST
@@ -117,20 +116,25 @@ MUITS_BBCODE            EQU (MUITS_LORUMIPSUM or MUITS_ALIGN_JUSTIFY or MUITS_FO
 @TextBackColor          EQU 16      ; COLORREF, -1 = transparent
 @TextBackColorAlt       EQU 20      ; COLORREF
 @TextBackColorDisabled  EQU 24      ; COLORREF
+@TextDllInstance        EQU 28      ; DWORD
+
+; Text Brush Position:
+MUITBP_RELATIVE         EQU 0
+MUITBP_ABSOLUTE         EQU 1
 
 ;------------------------------------------------------------------------------
 ; ModernUI_DrawTextEXT Properties: Use MUITextSetPropertyEx / MUITextGetPropertyEx
 ;------------------------------------------------------------------------------
 @TextExtFont            EQU 0       ; hFont
-@TextExtCodeTextColor   EQU 28      ; COLORREF
-@TextExtCodeBackColor   EQU 32      ; COLORREF
-@TextExtQuoteTextColor  EQU 36      ; COLORREF
-@TextExtQuoteBackColor  EQU 40      ; COLORREF
-@TextExtLinkTextColor   EQU 44      ; COLORREF
-@TextExtLinkUnderline   EQU 48      ; DWORD. Text Link Style
-@TextExtHelpTextColor   EQU 52      ; COLORREF
-@TextExtHelpUnderline   EQU 56      ; DWORD. Text Help Style
-@TextExtHorzRuleColor   EQU 60      ; COLORREF
+@TextExtCodeTextColor   EQU 32      ; COLORREF
+@TextExtCodeBackColor   EQU 36      ; COLORREF
+@TextExtQuoteTextColor  EQU 40      ; COLORREF
+@TextExtQuoteBackColor  EQU 44      ; COLORREF
+@TextExtLinkTextColor   EQU 48      ; COLORREF
+@TextExtLinkUnderline   EQU 52      ; DWORD. Text Link Style
+@TextExtHelpTextColor   EQU 56      ; COLORREF
+@TextExtHelpUnderline   EQU 60      ; DWORD. Text Help Style
+@TextExtHorzRuleColor   EQU 64      ; COLORREF
 
 
 ; TextExt Link Style:

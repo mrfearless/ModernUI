@@ -22,3 +22,5 @@ MUIButtonNotifySetFont,hModernUI_Button,hFont,bRedraw
 MUIButtonNotify,hModernUI_Button,bNotify
 MUIButtonNoteSetText,hModernUI_Button,lpszNoteText,bRedraw
 MUIButtonNoteSetFont,hModernUI_Button,hFont,bRedraw
+MUIButtonSetBackBrush,hModernUI_Button,hBrush,dwBrushOrgX,dwBrushOrgY,dwBrushPos
+MUIButtonLoadBackBrush,hModernUI_Button,idResBitmap,dwBrushOrgX,dwBrushOrgY,dwBrushPos

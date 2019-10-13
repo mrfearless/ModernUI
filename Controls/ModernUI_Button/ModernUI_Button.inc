@@ -62,6 +62,9 @@ MUIButtonNoteSetFont            PROTO :DWORD, :DWORD, :DWORD                    
 
 MUIButtonSetAllProperties       PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Button, lpMUI_BUTTON_PROPERTIES structure, SIZEOF MUI_BUTTON_PROPERTIES
 
+MUIButtonSetBackBrush           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                            ; hModernUI_Button, hBrush, dwBrushOrgX, dwBrushOrgY, dwBrushPos
+MUIButtonLoadBackBrush          PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD                            ; hModernUI_Button, idResBitmap, dwBrushOrgX, dwBrushOrgY, dwBrushPos
+
 ;------------------------------------------------------------------------------
 ; ModernUI_Button Structures
 ;------------------------------------------------------------------------------
@@ -241,6 +244,10 @@ MUIBPS_TOP                      EQU 2
 MUIBPS_BOTTOM                   EQU 4
 MUIBPS_RIGHT                    EQU 8
 MUIBPS_ALL                      EQU MUIBPS_LEFT + MUIBPS_TOP + MUIBPS_BOTTOM + MUIBPS_RIGHT
+
+; Button Brush Position:
+MUIBBP_RELATIVE                 EQU 0
+MUIBBP_ABSOLUTE                 EQU 1
 
 
 .DATA

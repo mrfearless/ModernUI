@@ -90,6 +90,7 @@ _MUI_ButtonCleanup                          PROTO :DWORD
 _MUI_ButtonSetColors                        PROTO :DWORD, :DWORD
 
 _MUI_ButtonPaint                            PROTO :DWORD
+_MUI_ButtonPaintBrush                       PROTO :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintBackground                  PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintAccent                      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_ButtonPaintText                        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -114,10 +115,14 @@ _MUI_ButtonPngReleaseIStream                PROTO :DWORD
 ENDIF
 _MUI_ButtonSetPropertyEx                    PROTO :DWORD, :DWORD, :DWORD
 
+
+_MUI_ButtonUpdateBrushOrg                   PROTO :DWORD
+
+
 ;------------------------------------------------------------------------------
 ; Structures for internal use
 ;------------------------------------------------------------------------------
-; External public properties
+; External properties
 IFNDEF MUI_BUTTON_PROPERTIES
 MUI_BUTTON_PROPERTIES                       STRUCT
     dwTextFont                              DD ?
@@ -207,6 +212,14 @@ _MUI_BUTTON_PROPERTIES                      STRUCT
     dwNoteYposition                         DD ?
     dwButtonRecalcPositions                 DD ? ; set to TRUE in init and when properties change and/or wm_size, wm_settext, wm_setfont ? not sure if to implement or just calc on each wm_paint call
     dwDPI                                   DD ?
+    dwBackBufferBitmap                      DD ?
+    dwBrushBitmap                           DD ?
+    dwBrush                                 DD ?
+    dwBrushOrgX                             DD ?
+    dwBrushOrgY                             DD ?
+    dwBrushOrgOriginalX                     DD ?
+    dwBrushOrgOriginalY                     DD ?
+    dwBrushPos                              DD ?
 _MUI_BUTTON_PROPERTIES                      ENDS
 
 IFDEF MUI_USEGDIPLUS
@@ -273,8 +286,15 @@ MUI_BUTTON_FOCUSRECT_OFFSET                 EQU -2 ; change this to higher negat
 @ButtonNoteYposition                        EQU 112
 @ButtonRecalcPositions                      EQU 116
 @ButtonDPI                                  EQU 120
-
-; External public properties
+@ButtonBackBufferBitmap                     EQU 124
+@ButtonBrushBitmap                          EQU 128
+@ButtonBrush                                EQU 132
+@ButtonBrushOrgX                            EQU 136
+@ButtonBrushOrgY                            EQU 140
+@ButtonBrushOrgOriginalX                    EQU 144
+@ButtonBrushOrgOriginalY                    EQU 148
+@ButtonBrushPos                             EQU 152
+; External properties
 
 
 .DATA
@@ -299,7 +319,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Set property for ModernUI_Button control
 ;------------------------------------------------------------------------------
-MUIButtonSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUIButtonSetProperty PROC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUIButtonSetProperty ENDP
@@ -309,7 +329,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Get property for ModernUI_Button control
 ;------------------------------------------------------------------------------
-MUIButtonGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
+MUIButtonGetProperty PROC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUIButtonGetProperty ENDP
@@ -356,7 +376,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonCreate - Returns handle in eax of newly created control
 ;------------------------------------------------------------------------------
-MUIButtonCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+MUIButtonCreate PROC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
     LOCAL hControl:DWORD
@@ -414,7 +434,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonWndProc - Main processing window for our control
 ;------------------------------------------------------------------------------
-_MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
+_MUI_ButtonWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL hParent:DWORD
     LOCAL rect:RECT
@@ -455,6 +475,28 @@ _MUI_ButtonWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         Invoke _MUI_ButtonPaint, hWin
         mov eax, 0
         ret
+
+;    .ELSEIF eax == WM_SIZE
+;        Invoke GetWindowLong, hWin, 0
+;        .IF eax != 0 ; grab parent background
+;            Invoke MUIGetIntProperty, hWin, @ButtonBackBufferBitmap
+;            .IF eax == 0
+;                Invoke _MUI_ButtonGetBackgroundBitmap, hWin
+;                Invoke MUISetIntProperty, hWin, @ButtonBackBufferBitmap, eax
+;            .ENDIF
+;        .ENDIF
+
+    .ELSEIF eax == WM_MOVE
+        Invoke GetWindowLong, hWin, 0
+        .IF eax != 0
+            Invoke MUIGetIntProperty, hWin, @ButtonBrush
+            .IF eax != 0
+                Invoke MUIGetIntProperty, hWin, @ButtonBrushPos
+                .IF eax == 0
+                    Invoke _MUI_ButtonUpdateBrushOrg, hWin
+                .ENDIF
+            .ENDIF
+        .ENDIF
 
     .ELSEIF eax== WM_SETCURSOR
         Invoke GetWindowLong, hWin, GWL_STYLE
@@ -729,7 +771,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonInit - set initial default values
 ;------------------------------------------------------------------------------
-_MUI_ButtonInit PROC PRIVATE hWin:DWORD
+_MUI_ButtonInit PROC hWin:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
     LOCAL hFont:DWORD
@@ -802,7 +844,6 @@ _MUI_ButtonInit PROC PRIVATE hWin:DWORD
     Invoke MUISetExtProperty, hWin, @ButtonNoteTextFont, hMUIButtonNoteFont
 
     ret
-
 _MUI_ButtonInit ENDP
 
 
@@ -810,7 +851,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonCleanup - cleanup a few things before control is destroyed
 ;------------------------------------------------------------------------------
-_MUI_ButtonCleanup PROC PRIVATE hWin:DWORD
+_MUI_ButtonCleanup PROC hWin:DWORD
     LOCAL ImageType:DWORD
     LOCAL hIStreamImage:DWORD
     LOCAL hIStreamImageAlt:DWORD
@@ -966,6 +1007,11 @@ _MUI_ButtonCleanup PROC PRIVATE hWin:DWORD
         .ENDIF
     .ENDIF
     
+    Invoke MUIGetIntProperty, hWin, @ButtonBrushBitmap
+    .IF eax != 0
+        Invoke DeleteObject, eax
+    .ENDIF
+    
     IFDEF DEBUG32
     PrintText '_MUI_ButtonCleanup::Notify Image Handles cleared'
     ENDIF
@@ -979,7 +1025,7 @@ MUI_ALIGN
 ; _MUI_ButtonSetColors - Set colors on init or syscolorchange if MUIBS_THEME 
 ; style used.
 ;------------------------------------------------------------------------------
-_MUI_ButtonSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
+_MUI_ButtonSetColors PROC hWin:DWORD, bInit:DWORD
 
     Invoke GetWindowLong, hWin, GWL_STYLE
     and eax, MUIBS_THEME
@@ -1077,7 +1123,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonButtonDown - Mouse button down or keyboard down from vk_space
 ;------------------------------------------------------------------------------
-_MUI_ButtonButtonDown PROC PRIVATE hWin:DWORD
+_MUI_ButtonButtonDown PROC hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL rect:RECT    
 
@@ -1121,7 +1167,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonButtonUp - Mouse button up or keyboard up from vk_space
 ;------------------------------------------------------------------------------
-_MUI_ButtonButtonUp PROC PRIVATE hWin:DWORD
+_MUI_ButtonButtonUp PROC hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL wID:DWORD
     LOCAL rect:RECT
@@ -1173,7 +1219,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonPaint
 ;------------------------------------------------------------------------------
-_MUI_ButtonPaint PROC PRIVATE hWin:DWORD
+_MUI_ButtonPaint PROC hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
     LOCAL hdc:HDC
@@ -1185,11 +1231,12 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     LOCAL MouseOver:DWORD
     LOCAL SelectedState:DWORD
     LOCAL BackColor:DWORD
+    LOCAL hBackBrush:DWORD
     LOCAL FocusedState:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
-
+    
     ;----------------------------------------------------------
     ; Get some property values
     ;---------------------------------------------------------- 
@@ -1202,6 +1249,8 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
     mov SelectedState, eax
     Invoke MUIGetIntProperty, hWin, @ButtonFocusedState
     mov FocusedState, eax
+    Invoke MUIGetIntProperty, hWin, @ButtonBrush
+    mov hBackBrush, eax
 
     .IF EnabledState == TRUE
         .IF SelectedState == FALSE
@@ -1247,7 +1296,7 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
         ;----------------------------------------------------------
         ; calc positions for text and images
         ;----------------------------------------------------------    
-        Invoke _MUI_ButtonCalcPositions, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
+        ;Invoke _MUI_ButtonCalcPositions, hWin, hdc, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
     
         ;----------------------------------------------------------
         ; Images
@@ -1287,32 +1336,37 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
         Invoke DeleteDC, hdcMem
 
     .ELSE ; Transparent background
-        
-;        Invoke GetParent, hWin
-;        mov hParent, eax
-;        Invoke GetWindowRect, hWin, Addr rectWin;
-;        Invoke ScreenToClient, hParent, Addr rectWin; // Convert to the parent's co-ordinates
-;        ;Invoke GetClipBox, parDc, Addr rectWin        
-;        
-;        Invoke RedrawWindow, hParent, Addr rectWin, 0, RDW_UPDATENOW
-;        
+    
         ;----------------------------------------------------------
         ; Setup Double Buffering
         ;----------------------------------------------------------
         Invoke CreateCompatibleDC, hdc
         mov hdcMem, eax
-
-        Invoke MUIGetParentBackgroundBitmap, hWin
-        mov hbmMem, eax
         
-        Invoke SelectObject, hdcMem, hbmMem
-        mov hOldBitmap, eax
-
+        .IF hBackBrush != 0
+            Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
+            mov hbmMem, eax
+        .ELSE
+            Invoke MUIGetParentBackgroundBitmap, hWin
+            mov hbmMem, eax
+        .ENDIF
+            Invoke SelectObject, hdcMem, hbmMem
+            mov hOldBitmap, eax
+        ;.ELSE
+        ;    mov hbmMem, 0
+        ;    mov hOldBitmap, 0
+        ;.ENDIF
+        
+        ;----------------------------------------------------------
+        ; Brush
+        ;----------------------------------------------------------
+        Invoke _MUI_ButtonPaintBrush, hWin, hdcMem, Addr rect
+    
         ;----------------------------------------------------------
         ; Accent
         ;----------------------------------------------------------
         Invoke _MUI_ButtonPaintAccent, hWin, hdcMem, Addr rect, EnabledState, MouseOver, SelectedState
-
+    
         ;----------------------------------------------------------
         ; Images
         ;----------------------------------------------------------
@@ -1337,7 +1391,6 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
         ; BitBlt from hdcMem back to hdc
         ;----------------------------------------------------------
         Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
-
         
         ;----------------------------------------------------------
         ; Cleanup
@@ -1346,8 +1399,10 @@ _MUI_ButtonPaint PROC PRIVATE hWin:DWORD
             Invoke SelectObject, hdcMem, hOldBitmap
             Invoke DeleteObject, hOldBitmap
         .ENDIF
-        Invoke SelectObject, hdcMem, hbmMem
-        Invoke DeleteObject, hbmMem
+        .IF hbmMem != 0
+            Invoke SelectObject, hdcMem, hbmMem
+            Invoke DeleteObject, hbmMem
+        .ENDIF
         Invoke DeleteDC, hdcMem
 
     .ENDIF
@@ -1362,7 +1417,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintBackground
 ;------------------------------------------------------------------------------
-_MUI_ButtonPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBrush:DWORD
     LOCAL hOldBrush:DWORD
@@ -1389,31 +1444,60 @@ _MUI_ButtonPaintBackground PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEn
     .ENDIF
     mov BackColor, eax
     
-    Invoke GetStockObject, DC_BRUSH
-    mov hBrush, eax
-    Invoke SelectObject, hdc, eax
-    mov hOldBrush, eax
-    Invoke SetDCBrushColor, hdc, BackColor
-    Invoke FillRect, hdc, lpRect, hBrush
-    
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdc, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF      
+    Invoke MUIGDIPaintFill, hdc, lpRect, BackColor
     
     ret
-
 _MUI_ButtonPaintBackground ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_ButtonPaintBrush
+;------------------------------------------------------------------------------
+_MUI_ButtonPaintBrush PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD
+    LOCAL hBackBrush:DWORD
+    LOCAL hOldBrush:DWORD
+    LOCAL dwXOrg:DWORD
+    LOCAL dwYOrg:DWORD
+    LOCAL rect:RECT
+    
+    Invoke MUIGetIntProperty, hWin, @ButtonBrush
+    .IF eax == 0
+        ret
+    .ENDIF
+    mov hBackBrush, eax
+
+    Invoke MUIGetIntProperty, hWin, @ButtonBrushOrgX
+    mov dwXOrg, eax
+    Invoke MUIGetIntProperty, hWin, @ButtonBrushOrgY
+    mov dwYOrg, eax
+    
+    ;Invoke CopyRect, Addr rect, lpRect
+    
+    Invoke MUIGDIPaintBrush, hdc, lpRect, hBackBrush, dwXOrg, dwYOrg
+
+;    Invoke CopyRect, Addr rect, lpRect
+;
+;    Invoke SelectObject, hdc, hBackBrush
+;    mov hOldBrush, eax
+;    ;Invoke SetBrushOrgEx, hdc, 0, 0, 0; //Set the brush origin (relative placement)
+;    Invoke SetBrushOrgEx, hdc, dwXOrg, dwYOrg, 0; //Set the brush origin (relative placement)     
+;    Invoke FillRect, hdc, Addr rect, hBackBrush
+;    Invoke SetBrushOrgEx, hdc, 0, 0, 0; //Set the brush origin (relative placement)
+;    .IF hOldBrush != 0
+;        Invoke SelectObject, hdc, hOldBrush
+;        Invoke DeleteObject, hOldBrush
+;    .ENDIF
+
+    ret
+_MUI_ButtonPaintBrush ENDP
 
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintAccent
 ;------------------------------------------------------------------------------
-_MUI_ButtonPaintAccent PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintAccent PROC USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL AccentColor:DWORD
     LOCAL AccentStyle:DWORD
     LOCAL hBrush:DWORD
@@ -1642,7 +1726,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonCalcPositions - calculate x, y positions of images, text etc
 ;------------------------------------------------------------------------------
-_MUI_ButtonCalcPositions PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonCalcPositions PROC USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL dwStyle:DWORD
     LOCAL hImage:DWORD
     LOCAL ImageType:DWORD
@@ -1875,7 +1959,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintText
 ;------------------------------------------------------------------------------
-_MUI_ButtonPaintText PROC PRIVATE USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintText PROC USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
     LOCAL dwStyle:DWORD
@@ -2228,7 +2312,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintImages
 ;------------------------------------------------------------------------------
-_MUI_ButtonPaintImages PROC PRIVATE USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintImages PROC USES EBX hWin:DWORD, hdcMain:DWORD, hdcDest:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL dwStyle:DWORD
     LOCAL ImageType:DWORD
     LOCAL hImage:DWORD
@@ -2486,7 +2570,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintBorder
 ;------------------------------------------------------------------------------
-_MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
+_MUI_ButtonPaintBorder PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BorderColor:DWORD
     LOCAL BorderStyle:DWORD
     LOCAL hBrush:DWORD
@@ -2515,77 +2599,11 @@ _MUI_ButtonPaintBorder PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnable
     .ENDIF
     mov BorderColor, eax
     
-    .IF BorderColor != -1
-        Invoke MUIGetExtProperty, hWin, @ButtonBorderStyle
-        mov BorderStyle, eax
+    Invoke MUIGetExtProperty, hWin, @ButtonBorderStyle
+    mov BorderStyle, eax
+    
+    Invoke MUIGDIPaintFrame, hdc, lpRect, BorderColor, BorderStyle
 
-        .IF BorderStyle != MUIBBS_NONE
-            mov eax, BorderStyle
-            and eax, MUIBBS_ALL
-            .IF eax == MUIBBS_ALL
-                Invoke GetStockObject, DC_BRUSH
-                mov hBrush, eax
-                Invoke SelectObject, hdc, eax
-                mov hOldBrush, eax
-                Invoke SetDCBrushColor, hdc, BorderColor
-                Invoke FrameRect, hdc, lpRect, hBrush
-                
-                .IF hOldBrush != 0
-                    Invoke SelectObject, hdc, hOldBrush
-                    Invoke DeleteObject, hOldBrush
-                .ENDIF     
-                .IF hBrush != 0
-                    Invoke DeleteObject, hBrush
-                .ENDIF                
-                
-            .ELSE
-                Invoke CreatePen, PS_SOLID, 1, BorderColor
-                mov hPen, eax
-                Invoke SelectObject, hdc, hPen
-                mov hOldPen, eax 
-                ;Invoke InflateRect, Addr rect, -1, 0
-                
-                Invoke CopyRect, Addr rect, lpRect
-                
-                mov eax, BorderStyle
-                and eax, MUIBBS_TOP
-                .IF eax == MUIBBS_TOP
-                    Invoke MoveToEx, hdc, rect.left, rect.top, Addr pt
-                    Invoke LineTo, hdc, rect.right, rect.top
-                .ENDIF
-                mov eax, BorderStyle
-                and eax, MUIBBS_RIGHT
-                .IF eax == MUIBBS_RIGHT
-                    dec rect.right                
-                    Invoke MoveToEx, hdc, rect.right, rect.top, Addr pt
-                    Invoke LineTo, hdc, rect.right, rect.bottom
-                    inc rect.right
-                .ENDIF
-                mov eax, BorderStyle
-                and eax, MUIBBS_BOTTOM
-                .IF eax == MUIBBS_BOTTOM
-                    dec rect.bottom
-                    Invoke MoveToEx, hdc, rect.left, rect.bottom, Addr pt
-                    Invoke LineTo, hdc, rect.right, rect.bottom
-                    inc rect.bottom
-                .ENDIF
-                mov eax, BorderStyle
-                and eax, MUIBBS_LEFT
-                .IF eax == MUIBBS_LEFT
-                    Invoke MoveToEx, hdc, rect.left, rect.top, Addr pt
-                    Invoke LineTo, hdc, rect.left, rect.bottom
-                .ENDIF
-                .IF hOldPen != 0
-                    Invoke SelectObject, hdc, hOldPen
-                    Invoke DeleteObject, hOldPen
-                .ENDIF
-                .IF hPen != 0
-                    Invoke DeleteObject, hPen
-                .ENDIF
-
-            .ENDIF
-        .ENDIF
-    .ENDIF
     ret
 _MUI_ButtonPaintBorder ENDP
 
@@ -2594,7 +2612,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonPaintFocusRect
 ;------------------------------------------------------------------------------
-_MUI_ButtonPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFocusedState:DWORD
+_MUI_ButtonPaintFocusRect PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFocusedState:DWORD
     ;LOCAL hPen:DWORD
     ;LOCAL hOldPen:DWORD
     LOCAL rect:RECT
@@ -2661,7 +2679,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_ButtonSetPropertyEx
 ;------------------------------------------------------------------------------
-_MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+_MUI_ButtonSetPropertyEx PROC USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     
     mov eax, dwProperty
     .IF eax == @ButtonTextFont || eax == @ButtonNoteTextFont || eax == @ButtonNotifyTextFont
@@ -2896,8 +2914,45 @@ _MUI_ButtonSetPropertyEx PROC PRIVATE USES EBX hWin:DWORD, dwProperty:DWORD, dwP
 _MUI_ButtonSetPropertyEx ENDP
 
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_ButtonUpdateBrushOrg - Updates brush org for relative brush after a 
+; control has moved
+;------------------------------------------------------------------------------
+_MUI_ButtonUpdateBrushOrg PROC hWin:DWORD
+    LOCAL rect:RECT
+    LOCAL x:DWORD
+    LOCAL y:DWORD
+    LOCAL dwBrushOrgX:DWORD
+    LOCAL dwBrushOrgY:DWORD
+    
+    Invoke MUIGetIntProperty, hWin, @ButtonBrushOrgOriginalX
+    mov dwBrushOrgX, eax
+
+    Invoke MUIGetIntProperty, hWin, @ButtonBrushOrgOriginalY
+    mov dwBrushOrgY, eax
+    
+    Invoke MUIGetParentRelativeWindowRect, hWin, Addr rect
+        
+    mov eax, rect.left
+    sub eax, dwBrushOrgX
+    neg eax
+    mov x, eax
+        
+    mov eax, rect.top
+    sub eax, dwBrushOrgY
+    neg eax
+    mov y, eax
+
+    Invoke MUISetIntProperty, hWin, @ButtonBrushOrgX, x
+    Invoke MUISetIntProperty, hWin, @ButtonBrushOrgY, y
+    Invoke InvalidateRect, hWin, NULL, FALSE
+    ret
+_MUI_ButtonUpdateBrushOrg ENDP
+
+
 ;-------------------------------------------------------------------------------------------------------------------------------
-; Other PUBLIC function wrappers - most equate to same as custom messages
+; Other function wrappers - most equate to same as custom messages
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2905,7 +2960,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonGetState
 ;------------------------------------------------------------------------------
-MUIButtonGetState PROC PUBLIC hControl:DWORD
+MUIButtonGetState PROC hControl:DWORD
     Invoke SendMessage, hControl, MUIBM_GETSTATE, 0, 0
     ret
 MUIButtonGetState ENDP
@@ -2915,7 +2970,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonSetState
 ;------------------------------------------------------------------------------
-MUIButtonSetState PROC PUBLIC hControl:DWORD, bState:DWORD
+MUIButtonSetState PROC hControl:DWORD, bState:DWORD
     Invoke SendMessage, hControl, MUIBM_SETSTATE, bState, 0
     ret
 MUIButtonSetState ENDP
@@ -2926,7 +2981,7 @@ MUI_ALIGN
 ; MUIButtonLoadImages - Loads images from resource ids and stores the handles 
 ; in the appropriate property.
 ;------------------------------------------------------------------------------
-MUIButtonLoadImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD, dwResIDImageAlt:DWORD, dwResIDImageSel:DWORD, dwResIDImageSelAlt:DWORD, dwResIDImageDisabled:DWORD
+MUIButtonLoadImages PROC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD, dwResIDImageAlt:DWORD, dwResIDImageSel:DWORD, dwResIDImageSelAlt:DWORD, dwResIDImageDisabled:DWORD
 
     .IF dwImageType == 0
         ret
@@ -3009,7 +3064,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonSetImages - Sets the property handles for image types
 ;------------------------------------------------------------------------------
-MUIButtonSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, hImageAlt:DWORD, hImageSel:DWORD, hImageSelAlt:DWORD, hImageDisabled:DWORD
+MUIButtonSetImages PROC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, hImageAlt:DWORD, hImageSel:DWORD, hImageSelAlt:DWORD, hImageDisabled:DWORD
 
     .IF dwImageType == 0
         ret
@@ -3048,7 +3103,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonNotifySetText
 ;------------------------------------------------------------------------------
-MUIButtonNotifySetText PROC PUBLIC hControl:DWORD, lpszNotifyText:DWORD, bRedraw:DWORD
+MUIButtonNotifySetText PROC hControl:DWORD, lpszNotifyText:DWORD, bRedraw:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFYSETTEXT, lpszNotifyText, bRedraw
     ret
 MUIButtonNotifySetText ENDP
@@ -3058,7 +3113,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonNotifyLoadImage
 ;------------------------------------------------------------------------------
-MUIButtonNotifyLoadImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDNotifyImage:DWORD
+MUIButtonNotifyLoadImage PROC hControl:DWORD, dwImageType:DWORD, dwResIDNotifyImage:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFYLOADIMAGE, dwImageType, dwResIDNotifyImage
     ret
 MUIButtonNotifyLoadImage ENDP
@@ -3068,7 +3123,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonNotifySetImage
 ;------------------------------------------------------------------------------
-MUIButtonNotifySetImage PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hNotifyImage:DWORD
+MUIButtonNotifySetImage PROC hControl:DWORD, dwImageType:DWORD, hNotifyImage:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFYSETIMAGE, dwImageType, hNotifyImage
     ret
 MUIButtonNotifySetImage ENDP
@@ -3078,7 +3133,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonNotifySetFont
 ;------------------------------------------------------------------------------
-MUIButtonNotifySetFont PROC PUBLIC hControl:DWORD, hFont:DWORD, bRedraw:DWORD
+MUIButtonNotifySetFont PROC hControl:DWORD, hFont:DWORD, bRedraw:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFYSETFONT, hFont, bRedraw
     ret
 MUIButtonNotifySetFont ENDP
@@ -3088,7 +3143,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonNotify
 ;------------------------------------------------------------------------------
-MUIButtonNotify PROC PUBLIC hControl:DWORD, bNotify:DWORD
+MUIButtonNotify PROC hControl:DWORD, bNotify:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTIFY, bNotify, 0 
     ret
 MUIButtonNotify ENDP
@@ -3098,7 +3153,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonNoteSetText
 ;------------------------------------------------------------------------------
-MUIButtonNoteSetText PROC PUBLIC hControl:DWORD, lpszNoteText:DWORD, bRedraw:DWORD
+MUIButtonNoteSetText PROC hControl:DWORD, lpszNoteText:DWORD, bRedraw:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTESETTEXT, lpszNoteText, bRedraw
     ret
 MUIButtonNoteSetText ENDP
@@ -3108,7 +3163,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUIButtonNoteSetFont
 ;------------------------------------------------------------------------------
-MUIButtonNoteSetFont PROC PUBLIC hControl:DWORD, hFont:DWORD, bRedraw:DWORD
+MUIButtonNoteSetFont PROC hControl:DWORD, hFont:DWORD, bRedraw:DWORD
     Invoke SendMessage, hControl, MUIBM_NOTESETFONT, hFont, bRedraw
     ret
 MUIButtonNoteSetFont ENDP
@@ -3119,7 +3174,7 @@ MUI_ALIGN
 ; MUIButtonSetAllProperties - Set all properties at once from long poiner to a 
 ; MUI_BUTTON_PROPERTIES structure.
 ;------------------------------------------------------------------------------
-MUIButtonSetAllProperties PROC PUBLIC USES EBX ECX hControl:DWORD, lpMUIBUTTONPROPERTIES:DWORD, dwSizeMUIBP:DWORD
+MUIButtonSetAllProperties PROC USES EBX ECX hControl:DWORD, lpMUIBUTTONPROPERTIES:DWORD, dwSizeMUIBP:DWORD
     LOCAL lpdwExternalProperties:DWORD
     
     Invoke GetWindowLong, hControl, MUI_EXTERNAL_PROPERTIES ; 4
@@ -3383,10 +3438,98 @@ MUIButtonSetAllProperties ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
+; MUIButtonSetBackBrush - Set a background brush for button - used for buttons
+; that have @ButtonBackColor set to -1 for transparency type effect.
+; dwBrushPos: 0 = brush position is relative to control's position, and adjusted
+; by x and y (typically 0,0 tho) - if brush image is set to parent's 0,0 then 
+; control will capture and paint the part of the brush that is relative to it's 
+; background position. Otherwise if dwBrushPos = 1 then its an absolute position 
+; in a brush/bitmap
+;
+; If dwBrushPos is relative, then sizing/moving will readjust the brush offset
+; to use for background
+;------------------------------------------------------------------------------
+MUIButtonSetBackBrush PROC hControl:DWORD, hBrush:DWORD, dwBrushOrgX:DWORD, dwBrushOrgY:DWORD, dwBrushPos:DWORD
+    LOCAL rect:RECT
+    LOCAL x:DWORD
+    LOCAL y:DWORD
+    
+    mov eax, dwBrushPos
+    .IF eax == 0 ; brush position is relative to control's position, and adjusted by x and y 
+        Invoke MUIGetParentRelativeWindowRect, hControl, Addr rect
+        
+        mov eax, rect.left
+        sub eax, dwBrushOrgX
+        neg eax
+        mov x, eax
+        
+        mov eax, rect.top
+        sub eax, dwBrushOrgY
+        neg eax
+        mov y, eax
+        
+    .ELSE ; brush position is absolute, but adjusted by x and y as specified
+        
+        mov eax, dwBrushOrgX
+        neg eax
+        mov x, eax
+        
+        mov eax, dwBrushOrgY
+        neg eax
+        mov y, eax
+        
+    .ENDIF
+    
+    Invoke MUISetIntProperty, hControl, @ButtonBrush, hBrush
+    Invoke MUISetIntProperty, hControl, @ButtonBrushOrgOriginalX, dwBrushOrgX
+    Invoke MUISetIntProperty, hControl, @ButtonBrushOrgOriginalY, dwBrushOrgY
+    Invoke MUISetIntProperty, hControl, @ButtonBrushOrgX, x
+    Invoke MUISetIntProperty, hControl, @ButtonBrushOrgY, y
+    Invoke MUISetIntProperty, hControl, @ButtonBrushPos, dwBrushPos
+    Invoke InvalidateRect, hControl, NULL, FALSE
+    ret
+MUIButtonSetBackBrush ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUIButtonLoadBackBrush
+;------------------------------------------------------------------------------
+MUIButtonLoadBackBrush PROC hControl:DWORD, idResBitmap:DWORD, dwBrushOrgX:DWORD, dwBrushOrgY:DWORD, dwBrushPos:DWORD
+    LOCAL hinstance:DWORD
+    LOCAL hBrushBitmap:DWORD
+    LOCAL hBrush:DWORD
+    
+    .IF idResBitmap == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    Invoke MUIGetExtProperty, hControl, @ButtonDllInstance
+    .IF eax == 0
+        Invoke GetModuleHandle, NULL
+    .ENDIF
+    mov hinstance, eax
+    
+    Invoke LoadBitmap, hinstance, idResBitmap
+    mov hBrushBitmap, eax
+    Invoke MUISetIntProperty, hControl, @ButtonBrushBitmap, hBrushBitmap
+    
+    Invoke CreatePatternBrush, hBrushBitmap
+    mov hBrush, eax
+    
+    Invoke MUIButtonSetBackBrush, hControl, hBrush, dwBrushOrgX, dwBrushOrgY, dwBrushPos
+    
+    ret
+MUIButtonLoadBackBrush ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_ButtonLoadIcon - if succesful, loads specified bitmap resource into the 
 ; specified external property and returns TRUE in eax, otherwise FALSE.
 ;------------------------------------------------------------------------------
-_MUI_ButtonLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
+_MUI_ButtonLoadBitmap PROC hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
     LOCAL hinstance:DWORD
     LOCAL dwStyle:DWORD
     LOCAL bKeepImages:DWORD
@@ -3432,7 +3575,7 @@ MUI_ALIGN
 ; _MUI_ButtonLoadIcon - if succesful, loads specified icon resource into the 
 ; specified external property and returns TRUE in eax, otherwise FALSE.
 ;------------------------------------------------------------------------------
-_MUI_ButtonLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
+_MUI_ButtonLoadIcon PROC hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     LOCAL hinstance:DWORD
     LOCAL dwStyle:DWORD
     LOCAL bKeepImages:DWORD
@@ -3491,7 +3634,7 @@ _MUI_ButtonLoadIcon ENDP
 ;------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
 MUI_ALIGN
-_MUI_ButtonLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
+_MUI_ButtonLoadPng PROC hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     local rcRes:HRSRC
     local hResData:HRSRC
     local pResData:HANDLE

@@ -43,15 +43,15 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-;DEBUG32 EQU 1
-;
-;IFDEF DEBUG32
-;    PRESERVEXMMREGS equ 1
-;    includelib M:\Masm32\lib\Debug32.lib
-;    DBG32LIB equ 1
-;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-;    include M:\Masm32\include\debug32.inc
-;ENDIF
+DEBUG32 EQU 1
+
+IFDEF DEBUG32
+    PRESERVEXMMREGS equ 1
+    includelib M:\Masm32\lib\Debug32.lib
+    DBG32LIB equ 1
+    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+    include M:\Masm32\include\debug32.inc
+ENDIF
 
 include windows.inc
 include user32.inc
@@ -83,6 +83,8 @@ _MUI_SmartPanelSlidePanelsRight PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_SP_ResizePanels            PROTO :DWORD
 _MUI_SP_DialogSubClassProc      PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_SP_DialogPaintBackground   PROTO :DWORD, :DWORD
+_MUI_SP_DialogPaintBrush        PROTO :DWORD, :DWORD
+_MUI_SP_DialogUpdateBrushOrg    PROTO :DWORD
 
 ;------------------------------------------------------------------------------
 ; Structures for internal use
@@ -108,6 +110,13 @@ _MUI_SMARTPANEL_PROPERTIES      STRUCT
     hBitmap                     DD ?
     uIdSubclassCounter          DD ?
     dwNotifyData                DD ?  ; DWORD. Pointer to NM_MUISMARTPANEL notification structure data
+    dwBrushBitmap               DD ?
+    dwBrush                     DD ?
+    dwBrushOrgX                 DD ?
+    dwBrushOrgY                 DD ?
+    dwBrushOrgOriginalX         DD ?
+    dwBrushOrgOriginalY         DD ?
+    dwBrushPos                  DD ?   
 _MUI_SMARTPANEL_PROPERTIES      ENDS
 
 IFNDEF MUISP_ITEM               ; SmartPanel Notification Item / Panel information
@@ -149,7 +158,13 @@ SlideVFast                      EQU 3
 @SmartPanelBitmap               EQU 24
 @SPSubclassCounter              EQU 28
 @SmartPanelNotifyData           EQU 32
-
+@SmartPanelBrushBitmap          EQU 36
+@SmartPanelBrush                EQU 40
+@SmartPanelBrushOrgX            EQU 44
+@SmartPanelBrushOrgY            EQU 48
+@SmartPanelBrushOrgOriginalX    EQU 52
+@SmartPanelBrushOrgOriginalY    EQU 56
+@SmartPanelBrushPos             EQU 60
 
 
 .DATA
@@ -572,32 +587,56 @@ _MUI_SP_DialogSubClassProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lP
         ret
 
     .ELSEIF eax == WM_ERASEBKGND
-        Invoke MUIGetExtProperty, dwRefData, @SmartPanelPanelsColor
-        .IF eax == -1
-            Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
-            ret
+        Invoke MUIGetIntProperty, dwRefData, @SmartPanelBrush
+        .IF eax == 0    
+            Invoke MUIGetExtProperty, dwRefData, @SmartPanelPanelsColor
+            .IF eax == -1
+                Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
+                ret
+            .ELSE
+                mov eax, 1
+                ret
+            .ENDIF
         .ELSE
             mov eax, 1
             ret
         .ENDIF
 
     .ELSEIF eax == WM_PAINT
-        Invoke MUIGetExtProperty, dwRefData, @SmartPanelPanelsColor
-        .IF eax == -1
-            Invoke DefSubclassProc, hWin, uMsg, wParam, lParam         
-            ret
+        Invoke MUIGetIntProperty, dwRefData, @SmartPanelBrush
+        .IF eax == 0  
+            Invoke MUIGetExtProperty, dwRefData, @SmartPanelPanelsColor
+            .IF eax == -1
+                Invoke DefSubclassProc, hWin, uMsg, wParam, lParam         
+                ret
+            .ELSE
+                mov dwBackColor, eax
+                Invoke _MUI_SP_DialogPaintBackground, hWin, dwBackColor
+                ret
+            .ENDIF
         .ELSE
-            mov dwBackColor, eax
-            Invoke _MUI_SP_DialogPaintBackground, hWin, dwBackColor
+            Invoke _MUI_SP_DialogPaintBrush, hWin, dwRefData
             ret
-        .ENDIF    
-
+        .ENDIF
+        
+    .ELSEIF eax == WM_MOVE
+        Invoke GetWindowLong, dwRefData, 0
+        .IF eax != 0
+            Invoke MUIGetIntProperty, dwRefData, @SmartPanelBrush
+            .IF eax != 0
+                Invoke MUIGetIntProperty, dwRefData, @SmartPanelBrushPos
+                .IF eax == 0
+                    Invoke _MUI_SP_DialogUpdateBrushOrg, hWin
+                .ENDIF
+            .ENDIF
+        .ENDIF
+        Invoke DefSubclassProc, hWin, uMsg, wParam, lParam         
+        ret
+        
     .ELSE
         Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
     .ENDIF
-
     ret    
-
 _MUI_SP_DialogSubClassProc ENDP
 
 MUI_ALIGN
@@ -609,38 +648,20 @@ _MUI_SP_DialogPaintBackground PROC hWin:DWORD, dwBackColor:DWORD
     LOCAL rect:RECT
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
-    LOCAL hbmMem:DWORD
-    LOCAL hOldBitmap:DWORD
-    LOCAL hBrush:DWORD
-    LOCAL hOldBrush:DWORD    
+    LOCAL hBufferBitmap:DWORD 
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
-    
-    ;----------------------------------------------------------
-    ; Get some property values
-    ;---------------------------------------------------------- 
-    Invoke GetClientRect, hWin, Addr rect
 
     ;----------------------------------------------------------
     ; Setup Double Buffering
     ;----------------------------------------------------------
-    Invoke CreateCompatibleDC, hdc
-    mov hdcMem, eax
-    Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-    mov hbmMem, eax
-    Invoke SelectObject, hdcMem, hbmMem
-    mov hOldBitmap, eax
-
+    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap
+    
     ;----------------------------------------------------------
-    ; Fill background
+    ; Paint background
     ;----------------------------------------------------------
-    Invoke GetStockObject, DC_BRUSH
-    mov hBrush, eax
-    Invoke SelectObject, hdcMem, eax
-    mov hOldBrush, eax
-    Invoke SetDCBrushColor, hdcMem, dwBackColor
-    Invoke FillRect, hdcMem, Addr rect, hBrush
+    Invoke MUIGDIPaintFill, hdcMem, Addr rect, dwBackColor
 
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
@@ -648,28 +669,117 @@ _MUI_SP_DialogPaintBackground PROC hWin:DWORD, dwBackColor:DWORD
     Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
 
     ;----------------------------------------------------------
-    ; Cleanup
-    ;----------------------------------------------------------
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdcMem, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF
-    .IF hOldBitmap != 0
-        Invoke SelectObject, hdcMem, hOldBitmap
-        Invoke DeleteObject, hOldBitmap
-    .ENDIF
-    Invoke SelectObject, hdcMem, hbmMem
-    Invoke DeleteObject, hbmMem
-    Invoke DeleteDC, hdcMem
+    ; Finish Double Buffering & Cleanup
+    ;----------------------------------------------------------    
+    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0    
+
+    Invoke EndPaint, hWin, Addr ps
     
+    ret
+_MUI_SP_DialogPaintBackground ENDP
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_SP_DialogPaintBrush
+;------------------------------------------------------------------------------
+_MUI_SP_DialogPaintBrush PROC hWin:DWORD, hControl:DWORD
+    LOCAL ps:PAINTSTRUCT 
+    LOCAL rect:RECT
+    LOCAL hdc:HDC
+    LOCAL hdcMem:HDC
+    LOCAL hBufferBitmap:DWORD
+    LOCAL hBackBrush:DWORD
+    LOCAL hOldBrush:DWORD
+    LOCAL dwXOrg:DWORD
+    LOCAL dwYOrg:DWORD
+
+    Invoke MUIGetIntProperty, hControl, @SmartPanelBrush
+    .IF eax == 0
+        ret
+    .ENDIF
+    mov hBackBrush, eax
+
+    Invoke BeginPaint, hWin, Addr ps
+    mov hdc, eax
+
+    ;----------------------------------------------------------
+    ; Setup Double Buffering
+    ;----------------------------------------------------------
+    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap
+
+    ;----------------------------------------------------------
+    ; Get some property values
+    ;---------------------------------------------------------- 
+    Invoke MUIGetIntProperty, hControl, @SmartPanelBrushOrgX
+    mov dwXOrg, eax
+    Invoke MUIGetIntProperty, hControl, @SmartPanelBrushOrgY
+    mov dwYOrg, eax
+
+    ;----------------------------------------------------------
+    ; Paint background
+    ;----------------------------------------------------------
+    Invoke SelectObject, hdcMem, hBackBrush
+    mov hOldBrush, eax
+    ;Invoke SetBrushOrgEx, hdc, 0, 0, 0; //Set the brush origin (relative placement)
+    Invoke SetBrushOrgEx, hdcMem, dwXOrg, dwYOrg, 0; //Set the brush origin (relative placement)     
+    Invoke FillRect, hdcMem, Addr rect, hBackBrush
+    Invoke SetBrushOrgEx, hdcMem, 0, 0, 0; //Set the brush origin (relative placement)
+    .IF hOldBrush != 0
+        Invoke SelectObject, hdc, hOldBrush
+        Invoke DeleteObject, hOldBrush
+    .ENDIF
+
+    ;----------------------------------------------------------
+    ; BitBlt from hdcMem back to hdc
+    ;----------------------------------------------------------
+    Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
+
+    ;----------------------------------------------------------
+    ; Finish Double Buffering & Cleanup
+    ;----------------------------------------------------------    
+    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0    
+
     Invoke EndPaint, hWin, Addr ps
 
     ret
+_MUI_SP_DialogPaintBrush ENDP
 
-_MUI_SP_DialogPaintBackground ENDP
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_SP_DialogUpdateBrushOrg - Updates brush org for relative brush after a 
+; control has moved
+;------------------------------------------------------------------------------
+_MUI_SP_DialogUpdateBrushOrg PROC hWin:DWORD
+    LOCAL rect:RECT
+    LOCAL x:DWORD
+    LOCAL y:DWORD
+    LOCAL dwBrushOrgX:DWORD
+    LOCAL dwBrushOrgY:DWORD
+    
+    Invoke MUIGetIntProperty, hWin, @SmartPanelBrushOrgOriginalX
+    mov dwBrushOrgX, eax
+
+    Invoke MUIGetIntProperty, hWin, @SmartPanelBrushOrgOriginalY
+    mov dwBrushOrgY, eax
+    
+    Invoke MUIGetParentRelativeWindowRect, hWin, Addr rect
+        
+    mov eax, rect.left
+    sub eax, dwBrushOrgX
+    neg eax
+    mov x, eax
+        
+    mov eax, rect.top
+    sub eax, dwBrushOrgY
+    neg eax
+    mov y, eax
+
+    Invoke MUISetIntProperty, hWin, @SmartPanelBrushOrgX, x
+    Invoke MUISetIntProperty, hWin, @SmartPanelBrushOrgY, y
+    Invoke InvalidateRect, hWin, NULL, FALSE
+    ret
+_MUI_SP_DialogUpdateBrushOrg ENDP
+
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -1524,7 +1634,90 @@ _MUI_SP_ResizePanels PROC USES EBX hWin:DWORD
 
 _MUI_SP_ResizePanels ENDP
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUISmartPanelSetBackBrush - Set a background brush for panels for transparency
+; type effect. dwBrushPos: 0 = brush position is relative to panels's position, 
+; and adjusted by x and y (typically 0,0 tho) - if brush image is set to 
+; parent's 0,0 then panel will capture and paint the part of the brush that is 
+; relative to it's background position. Otherwise if dwBrushPos = 1 then its an 
+; absolute position in a brush/bitmap
+;
+; If dwBrushPos is relative, then sizing/moving will readjust the brush offset
+; to use for background
+;------------------------------------------------------------------------------
+MUISmartPanelSetBackBrush PROC hControl:DWORD, hBrush:DWORD, dwBrushOrgX:DWORD, dwBrushOrgY:DWORD, dwBrushPos:DWORD
+    LOCAL rect:RECT
+    LOCAL x:DWORD
+    LOCAL y:DWORD
+    
+    mov eax, dwBrushPos
+    .IF eax == 0 ; brush position is relative to control's position, and adjusted by x and y 
+        Invoke MUIGetParentRelativeWindowRect, hControl, Addr rect
+        
+        mov eax, rect.left
+        sub eax, dwBrushOrgX
+        neg eax
+        mov x, eax
+        
+        mov eax, rect.top
+        sub eax, dwBrushOrgY
+        neg eax
+        mov y, eax
+        
+    .ELSE ; brush position is absolute, but adjusted by x and y as specified
+        
+        mov eax, dwBrushOrgX
+        neg eax
+        mov x, eax
+        
+        mov eax, dwBrushOrgY
+        neg eax
+        mov y, eax
+        
+    .ENDIF
+    
+    Invoke MUISetIntProperty, hControl, @SmartPanelBrush, hBrush
+    Invoke MUISetIntProperty, hControl, @SmartPanelBrushOrgOriginalX, dwBrushOrgX
+    Invoke MUISetIntProperty, hControl, @SmartPanelBrushOrgOriginalY, dwBrushOrgY
+    Invoke MUISetIntProperty, hControl, @SmartPanelBrushOrgX, x
+    Invoke MUISetIntProperty, hControl, @SmartPanelBrushOrgY, y
+    Invoke MUISetIntProperty, hControl, @SmartPanelBrushPos, dwBrushPos
+    Invoke InvalidateRect, hControl, NULL, FALSE
+    ret
+MUISmartPanelSetBackBrush ENDP
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; MUISmartPanelLoadBackBrush
+;------------------------------------------------------------------------------
+MUISmartPanelLoadBackBrush PROC hControl:DWORD, idResBitmap:DWORD, dwBrushOrgX:DWORD, dwBrushOrgY:DWORD, dwBrushPos:DWORD
+    LOCAL hinstance:DWORD
+    LOCAL hBrushBitmap:DWORD
+    LOCAL hBrush:DWORD
+    
+    .IF idResBitmap == NULL
+        mov eax, FALSE
+        ret
+    .ENDIF
+    
+    Invoke MUIGetExtProperty, hControl, @SmartPanelDllInstance
+    .IF eax == 0
+        Invoke GetModuleHandle, NULL
+    .ENDIF
+    mov hinstance, eax
+    
+    Invoke LoadBitmap, hinstance, idResBitmap
+    mov hBrushBitmap, eax
+    Invoke MUISetIntProperty, hControl, @SmartPanelBrushBitmap, hBrushBitmap
+    
+    Invoke CreatePatternBrush, hBrushBitmap
+    mov hBrush, eax
+    
+    Invoke MUISmartPanelSetBackBrush, hControl, hBrush, dwBrushOrgX, dwBrushOrgY, dwBrushPos
+    
+    ret
+MUISmartPanelLoadBackBrush ENDP
 
 
 

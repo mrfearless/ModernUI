@@ -55,6 +55,9 @@ MUIGDIPaintFrame PROC hdc:HDC, lpFrameRect:LPRECT, FrameColor:MUICOLORRGB, Frame
     LOCAL pt:POINT
 
     .IF FrameColor != -1
+    
+        Invoke CopyRect, Addr rect, lpFrameRect
+        
         .IF FrameStyle != MUIPFS_NONE
             mov eax, FrameStyle
             and eax, MUIPFS_ALL
@@ -67,7 +70,7 @@ MUIGDIPaintFrame PROC hdc:HDC, lpFrameRect:LPRECT, FrameColor:MUICOLORRGB, Frame
                 Invoke SelectObject, hdc, eax
                 mov hBrushOld, eax
                 Invoke SetDCBrushColor, hdc, FrameColor
-                Invoke FrameRect, hdc, lpFrameRect, hBrush
+                Invoke FrameRect, hdc, Addr rect, hBrush
                 .IF hBrushOld != 0
                     Invoke SelectObject, hdc, hBrushOld
                     Invoke DeleteObject, hBrushOld
@@ -83,7 +86,7 @@ MUIGDIPaintFrame PROC hdc:HDC, lpFrameRect:LPRECT, FrameColor:MUICOLORRGB, Frame
                 mov hPen, eax
                 Invoke SelectObject, hdc, hPen
                 mov hPenOld, eax 
-                Invoke CopyRect, Addr rect, lpFrameRect
+
                 mov eax, FrameStyle
                 and eax, MUIPFS_TOP
                 .IF eax == MUIPFS_TOP
