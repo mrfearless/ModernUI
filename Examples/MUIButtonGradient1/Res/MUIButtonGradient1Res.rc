@@ -1,0 +1,5 @@
+#define MANIFEST 						24
+1						MANIFEST  DISCARDABLE "MUIButtonGradient1.xml"
+100						ICON      DISCARDABLE "Images/ModernUI.ico"
+201						ICON      DISCARDABLE "Images/system_monitor.ico"
+202						ICON      DISCARDABLE "Images/system_monitor_grey.ico"

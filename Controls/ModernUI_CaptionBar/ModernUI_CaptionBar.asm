@@ -610,6 +610,7 @@ _MUI_CaptionBarWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM
             .ELSE
                 Invoke GetWindowLong, hWin, GWL_STYLE
                 and eax, (-1 xor MUICS_NOBORDER) ; we have border color so set no border style off as we want pos 1,1
+                ;or eax, WS_BORDER
             .ENDIF
             Invoke SetWindowLong, hWin, GWL_STYLE, eax
             Invoke _MUI_CaptionBarReposition, hWin
@@ -687,10 +688,25 @@ _MUI_CaptionBarParentSubClassProc PROC PRIVATE hWin:HWND, uMsg:UINT, wParam:WPAR
         .ELSE
             ;PrintText 'Parent WM_PAINT'
             mov BackColor, eax
+            Invoke MUIPaintBackground, hWin, BackColor, -1;eax
             Invoke MUIGetExtProperty, dwRefData, @CaptionBarWindowBorderColor
-            Invoke MUIPaintBackground, hWin, BackColor, eax
+            .IF eax != -1
+                Invoke MUIPaintBorder, hWin, eax
+            .ENDIF
             ret
         .ENDIF
+    
+    .ELSEIF eax == WM_NCPAINT
+        
+        Invoke MUIGetExtProperty, dwRefData, @CaptionBarWindowBorderColor
+        .IF eax != -1
+            Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
+            Invoke MUIPaintBorder, hWin, eax
+        .ELSE
+            Invoke DefSubclassProc, hWin, uMsg, wParam, lParam
+        .ENDIF
+        ;mov eax, 0
+        ret
     
 ;    .ELSEIF eax == WM_NCHITTEST
 ;        mov eax, HTTRANSPARENT
@@ -1681,7 +1697,7 @@ _MUI_CaptionBarReposition PROC PRIVATE hWin:DWORD
     ; have to move this caption bar first, so that child controls can be moved inside of the new width (cant use defer on this window)
     .IF wp.showCmd == SW_SHOWNORMAL
         .IF bBorder == TRUE
-            sub dwClientWidth, 2
+            sub dwClientWidth, 1
             mov eax, 1
         .ELSE
             mov eax, 0
@@ -1689,7 +1705,7 @@ _MUI_CaptionBarReposition PROC PRIVATE hWin:DWORD
         Invoke SetWindowPos, hWin, NULL, eax, eax, dwClientWidth, dwCaptionHeight, SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOREDRAW or SWP_NOACTIVATE or SWP_NOSENDCHANGING
     .ELSE
         .IF bBorder == TRUE
-            sub dwClientWidth, 2
+            sub dwClientWidth, 1
             mov eax, 1
         .ELSE
             mov eax, 0

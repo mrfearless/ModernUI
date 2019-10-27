@@ -136,6 +136,11 @@ MUI_BUTTON_PROPERTIES                       STRUCT
     dwBackColorSel                          DD ? 
     dwBackColorSelAlt                       DD ? 
     dwBackColorDisabled                     DD ? 
+    dwBackColorTo                           DD ? ; Colorref, Gradient color to, -1 = not using gradients
+    dwBackColorAltTo                        DD ? ; Colorref, Gradient color to, -1 = not using gradients
+    dwBackColorSelTo                        DD ? ; Colorref, Gradient color to, -1 = not using gradients
+    dwBackColorSelAltTo                     DD ? ; Colorref, Gradient color to, -1 = not using gradients
+    dwBackColorDisabledTo                   DD ? ; Colorref, Gradient color to, -1 = not using gradients
     dwBorderColor                           DD ? 
     dwBorderColorAlt                        DD ? 
     dwBorderColorSel                        DD ? 
@@ -1096,6 +1101,12 @@ _MUI_ButtonSetColors PROC hWin:DWORD, bInit:DWORD
             Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAlt, MUI_RGBCOLOR(221,221,221)
             Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabled, MUI_RGBCOLOR(192,192,192)
             
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorTo, -1
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorAltTo, -1
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorSelTo, -1
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAltTo, -1
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabledTo, -1
+            
             Invoke MUISetExtProperty, hWin, @ButtonBorderStyle, MUIBBS_ALL
             Invoke MUISetExtProperty, hWin, @ButtonBorderColor, MUI_RGBCOLOR(204,204,204)
             Invoke MUISetExtProperty, hWin, @ButtonBorderColorAlt, MUI_RGBCOLOR(27,161,226);MUI_RGBCOLOR(120,183,203)
@@ -1419,6 +1430,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 _MUI_ButtonPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BackColor:DWORD
+    LOCAL BackColorTo:DWORD
     LOCAL hBrush:DWORD
     LOCAL hOldBrush:DWORD
     
@@ -1444,7 +1456,30 @@ _MUI_ButtonPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledSta
     .ENDIF
     mov BackColor, eax
     
-    Invoke MUIGDIPaintFill, hdc, lpRect, BackColor
+    .IF bEnabledState == TRUE
+        .IF bSelectedState == FALSE
+            .IF bMouseOver == FALSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorTo      ; Normal back color
+            .ELSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorAltTo   ; Mouse over back color
+            .ENDIF
+        .ELSE
+            .IF bMouseOver == FALSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelTo   ; Selected back color
+            .ELSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelAltTo; Selected mouse over color 
+            .ENDIF
+        .ENDIF
+    .ELSE
+        Invoke MUIGetExtProperty, hWin, @ButtonBackColorDisabledTo      ; Disabled back color
+    .ENDIF
+    mov BackColorTo, eax
+    
+    .IF BackColorTo == -1
+        Invoke MUIGDIPaintFill, hdc, lpRect, BackColor
+    .ELSE
+        Invoke MUIGDIPaintGradient, hdc, lpRect, BackColor, BackColorTo, MUIPGS_VERT
+    .ENDIF
     
     ret
 _MUI_ButtonPaintBackground ENDP
@@ -1962,6 +1997,7 @@ MUI_ALIGN
 _MUI_ButtonPaintText PROC USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
+    LOCAL BackColorTo:DWORD
     LOCAL dwStyle:DWORD
     LOCAL dwTextStyle:DWORD
     LOCAL hFont:DWORD
@@ -2007,6 +2043,25 @@ _MUI_ButtonPaintText PROC USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabled
         Invoke MUIGetExtProperty, hWin, @ButtonBackColor                ; fallback to default Normal back color
     .ENDIF    
     mov BackColor, eax    
+    
+    .IF bEnabledState == TRUE
+        .IF bSelectedState == FALSE
+            .IF bMouseOver == FALSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorTo      ; Normal back color
+            .ELSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorAltTo   ; Mouse over back color
+            .ENDIF
+        .ELSE
+            .IF bMouseOver == FALSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelTo   ; Selected back color
+            .ELSE
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelAltTo; Selected mouse over color 
+            .ENDIF
+        .ENDIF
+    .ELSE
+        Invoke MUIGetExtProperty, hWin, @ButtonBackColorDisabledTo      ; Disabled back color
+    .ENDIF
+    mov BackColorTo, eax
     
     Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
@@ -2150,9 +2205,14 @@ _MUI_ButtonPaintText PROC USES EBX hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabled
     mov hOldBrush, eax
     Invoke SetDCBrushColor, hdc, BackColor
     
-    .IF BackColor != -1 ; not transparent
-        Invoke SetBkMode, hdc, OPAQUE
-        Invoke SetBkColor, hdc, BackColor
+    mov eax, BackColor
+    .IF eax != -1 ; not transparent
+        .IF BackColorTo == -1 || eax == BackColorTo
+            Invoke SetBkMode, hdc, OPAQUE
+            Invoke SetBkColor, hdc, BackColor
+        .ELSE
+            Invoke SetBkMode, hdc, TRANSPARENT
+        .ENDIF
     .ELSE 
         Invoke SetBkMode, hdc, TRANSPARENT
     .ENDIF
@@ -2758,6 +2818,34 @@ _MUI_ButtonSetPropertyEx PROC USES EBX hWin:DWORD, dwProperty:DWORD, dwPropertyV
             .ENDIF
         .ENDIF
 
+    .ELSEIF eax == @ButtonBackColorTo
+    
+        .IF dwPropertyValue == -1 ; set all other related properties to same value
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorAltTo, dwPropertyValue
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorSelTo, dwPropertyValue
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAltTo, dwPropertyValue
+            Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabledTo, dwPropertyValue
+        .ELSE
+            Invoke MUIGetExtProperty, hWin, @ButtonBackColorAltTo
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonBackColorAltTo, dwPropertyValue
+            .ENDIF
+            Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelTo
+            .IF eax == 0
+                Invoke MUISetExtProperty, hWin, @ButtonBackColorSelTo, dwPropertyValue
+            .ENDIF
+            ; except this, if sel has a color, then use this for selalt if it has a value
+            Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelAltTo
+            .IF eax == 0
+                Invoke MUIGetExtProperty, hWin, @ButtonBackColorSelTo
+                .IF eax == 0
+                    Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAltTo, dwPropertyValue
+                .ELSE
+                    Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAltTo, eax
+                .ENDIF
+            .ENDIF
+        .ENDIF
+
     .ELSEIF eax == @ButtonBorderColor
     
         .IF dwPropertyValue == -1 ; set all other related properties to same value
@@ -3219,6 +3307,17 @@ MUIButtonSetAllProperties PROC USES EBX ECX hControl:DWORD, lpMUIBUTTONPROPERTIE
     mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorDisabled
     mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorDisabled, eax    
     
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorTo
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorTo, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorAltTo
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorAltTo, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorSelTo
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorSelTo, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorSelAltTo
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorSelAltTo, eax
+    mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBackColorDisabledTo
+    mov [ecx].MUI_BUTTON_PROPERTIES.dwBackColorDisabledTo, eax    
+    
     mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBorderColor
     mov [ecx].MUI_BUTTON_PROPERTIES.dwBorderColor, eax
     mov eax, [ebx].MUI_BUTTON_PROPERTIES.dwBorderColorAlt
@@ -3349,6 +3448,28 @@ MUIButtonSetAllProperties PROC USES EBX ECX hControl:DWORD, lpMUIBUTTONPROPERTIE
     .IF eax == 0
         Invoke MUIGetExtProperty, hControl, @ButtonBackColor
         Invoke MUISetExtProperty, hControl, @ButtonBackColorDisabled, eax
+    .ENDIF
+
+    ; check default values: back colors to
+    Invoke MUIGetExtProperty, hControl, @ButtonBackColorAltTo
+    .IF eax == 0
+        Invoke MUIGetExtProperty, hControl, @ButtonBackColorTo
+        Invoke MUISetExtProperty, hControl, @ButtonBackColorAltTo, eax
+    .ENDIF
+    Invoke MUIGetExtProperty, hControl, @ButtonBackColorSelTo
+    .IF eax == 0
+        Invoke MUIGetExtProperty, hControl, @ButtonBackColorTo
+        Invoke MUISetExtProperty, hControl, @ButtonBackColorSelTo, eax
+    .ENDIF
+    Invoke MUIGetExtProperty, hControl, @ButtonBackColorSelAltTo
+    .IF eax == 0
+        Invoke MUIGetExtProperty, hControl, @ButtonBackColorSelTo
+        Invoke MUISetExtProperty, hControl, @ButtonBackColorSelAltTo, eax
+    .ENDIF
+    Invoke MUIGetExtProperty, hControl, @ButtonBackColorDisabledTo
+    .IF eax == 0
+        Invoke MUIGetExtProperty, hControl, @ButtonBackColorTo
+        Invoke MUISetExtProperty, hControl, @ButtonBackColorDisabledTo, eax
     .ENDIF
 
     ; check default values: border colors

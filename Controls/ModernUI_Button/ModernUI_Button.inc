@@ -81,6 +81,11 @@ MUI_BUTTON_PROPERTIES           STRUCT
     dwBackColorSel              DD ?       ; Colorref
     dwBackColorSelAlt           DD ?       ; Colorref
     dwBackColorDisabled         DD ?       ; Colorref
+    dwBackColorTo               DD ?       ; Colorref, Gradient color to, -1 = not using gradients
+    dwBackColorAltTo            DD ?       ; Colorref, Gradient color to, -1 = not using gradients
+    dwBackColorSelTo            DD ?       ; Colorref, Gradient color to, -1 = not using gradients
+    dwBackColorSelAltTo         DD ?       ; Colorref, Gradient color to, -1 = not using gradients
+    dwBackColorDisabledTo       DD ?       ; Colorref, Gradient color to, -1 = not using gradients
     dwBorderColor               DD ?       ; Colorref
     dwBorderColorAlt            DD ?       ; Colorref
     dwBorderColorSel            DD ?       ; Colorref
@@ -173,46 +178,51 @@ MUIBS_THEME                     EQU 8000h   ; Use default windows theme colors a
 @ButtonBackColorSel             EQU 32      ; Colorref
 @ButtonBackColorSelAlt          EQU 36      ; Colorref
 @ButtonBackColorDisabled        EQU 40      ; Colorref
-@ButtonBorderColor              EQU 44      ; Colorref, -1 = transparent
-@ButtonBorderColorAlt           EQU 48      ; Colorref
-@ButtonBorderColorSel           EQU 52      ; Colorref
-@ButtonBorderColorSelAlt        EQU 56      ; Colorref
-@ButtonBorderColorDisabled      EQU 60      ; Colorref
-@ButtonBorderStyle              EQU 64      ; Button Border Styles - Either MUIBBS_NONE, MUIBBS_ALL or a combination of MUIBBS_LEFT, MUIBBS_TOP, MUIBBS_BOTTOM, MUIBBS_RIGHT
-@ButtonAccentColor              EQU 68      ; Colorref, -1 = transparent
-@ButtonAccentColorAlt           EQU 72      ; Colorref
-@ButtonAccentColorSel           EQU 76      ; Colorref
-@ButtonAccentColorSelAlt        EQU 80      ; Colorref
-@ButtonAccentStyle              EQU 84      ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
-@ButtonAccentStyleAlt           EQU 88      ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
-@ButtonAccentStyleSel           EQU 92      ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
-@ButtonAccentStyleSelAlt        EQU 96      ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
-@ButtonImageType                EQU 100     ; Button Image Types - One of the following: MUIBIT_NONE, MUIBIT_BMP, MUIBIT_ICO or MUIBIT_PNG
-@ButtonImage                    EQU 104     ; hImage
-@ButtonImageAlt                 EQU 108     ; hImage
-@ButtonImageSel                 EQU 112     ; hImage
-@ButtonImageSelAlt              EQU 116     ; hImage
-@ButtonImageDisabled            EQU 120     ; hImage
-@ButtonRightImage               EQU 124     ; hImage - Right side image
-@ButtonRightImageAlt            EQU 128     ; hImage - Right side image
-@ButtonRightImageSel            EQU 132     ; hImage - Right side image
-@ButtonRightImageSelAlt         EQU 136     ; hImage - Right side image
-@ButtonRightImageDisabled       EQU 140     ; hImage - Right side image
-@ButtonNotifyTextFont           EQU 144     ; hFont
-@ButtonNotifyTextColor          EQU 148     ; Colorref
-@ButtonNotifyBackColor          EQU 152     ; Colorref
-@ButtonNotifyRound              EQU 156     ; dwPixels - Roundrect x,y value
-@ButtonNotifyImageType          EQU 160     ; Button Image Types - One of the following: MUIBIT_NONE, MUIBIT_BMP, MUIBIT_ICO or MUIBIT_PNG
-@ButtonNotifyImage              EQU 164     ; hImage
-@ButtonNoteTextFont             EQU 168     ; hFont
-@ButtonNoteTextColor            EQU 172     ; Colorref
-@ButtonNoteTextColorDisabled    EQU 176     ; Colorref
-@ButtonPaddingLeftIndent        EQU 180     ; dwPixels - No of pixels to indent images + text (or just text if no images). Defaults to 0 when control is created
-@ButtonPaddingGeneral           EQU 184     ; dwPixels - No of pixels of padding to apply based on @ButtonPaddingStyle: Defaults to 4px when control is created.
-@ButtonPaddingStyle             EQU 188     ; Button Padding Style - Where to apply @ButtonPaddingGeneral: defaults to MUIBPS_ALL when control is created
-@ButtonPaddingTextImage         EQU 192     ; dwPixels - No of pixels between left images and text. Defaults to 8 when control is created
-@ButtonDllInstance              EQU 196     ; Set to hInstance of dll before calling MUIButtonLoadImages or MUIButtonNotifyLoadImage if used within a dll
-@ButtonParam                    EQU 200     ; Custom user data
+@ButtonBackColorTo              EQU 44      ; Colorref, Gradient color to, -1 = not using gradients
+@ButtonBackColorAltTo           EQU 48      ; Colorref, Gradient color to, -1 = not using gradients
+@ButtonBackColorSelTo           EQU 52      ; Colorref, Gradient color to, -1 = not using gradients
+@ButtonBackColorSelAltTo        EQU 56      ; Colorref, Gradient color to, -1 = not using gradients
+@ButtonBackColorDisabledTo      EQU 60      ; Colorref, Gradient color to, -1 = not using gradients
+@ButtonBorderColor              EQU 64      ; Colorref, -1 = transparent
+@ButtonBorderColorAlt           EQU 68      ; Colorref
+@ButtonBorderColorSel           EQU 72      ; Colorref
+@ButtonBorderColorSelAlt        EQU 76      ; Colorref
+@ButtonBorderColorDisabled      EQU 80      ; Colorref
+@ButtonBorderStyle              EQU 84      ; Button Border Styles - Either MUIBBS_NONE, MUIBBS_ALL or a combination of MUIBBS_LEFT, MUIBBS_TOP, MUIBBS_BOTTOM, MUIBBS_RIGHT
+@ButtonAccentColor              EQU 88      ; Colorref, -1 = transparent
+@ButtonAccentColorAlt           EQU 92      ; Colorref
+@ButtonAccentColorSel           EQU 96      ; Colorref
+@ButtonAccentColorSelAlt        EQU 100     ; Colorref
+@ButtonAccentStyle              EQU 104     ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
+@ButtonAccentStyleAlt           EQU 108     ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
+@ButtonAccentStyleSel           EQU 112     ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
+@ButtonAccentStyleSelAlt        EQU 116     ; Button Accent Styles - Either MUIBAS_NONE, MUIBAS_ALL or a combination of MUIBAS_LEFT, MUIBAS_TOP, MUIBAS_BOTTOM, MUIBAS_RIGHT
+@ButtonImageType                EQU 120     ; Button Image Types - One of the following: MUIBIT_NONE, MUIBIT_BMP, MUIBIT_ICO or MUIBIT_PNG
+@ButtonImage                    EQU 124     ; hImage
+@ButtonImageAlt                 EQU 128     ; hImage
+@ButtonImageSel                 EQU 132     ; hImage
+@ButtonImageSelAlt              EQU 136     ; hImage
+@ButtonImageDisabled            EQU 140     ; hImage
+@ButtonRightImage               EQU 144     ; hImage - Right side image
+@ButtonRightImageAlt            EQU 148     ; hImage - Right side image
+@ButtonRightImageSel            EQU 152     ; hImage - Right side image
+@ButtonRightImageSelAlt         EQU 156     ; hImage - Right side image
+@ButtonRightImageDisabled       EQU 160     ; hImage - Right side image
+@ButtonNotifyTextFont           EQU 164     ; hFont
+@ButtonNotifyTextColor          EQU 168     ; Colorref
+@ButtonNotifyBackColor          EQU 172     ; Colorref
+@ButtonNotifyRound              EQU 176     ; dwPixels - Roundrect x,y value
+@ButtonNotifyImageType          EQU 180     ; Button Image Types - One of the following: MUIBIT_NONE, MUIBIT_BMP, MUIBIT_ICO or MUIBIT_PNG
+@ButtonNotifyImage              EQU 184     ; hImage
+@ButtonNoteTextFont             EQU 188     ; hFont
+@ButtonNoteTextColor            EQU 192     ; Colorref
+@ButtonNoteTextColorDisabled    EQU 196     ; Colorref
+@ButtonPaddingLeftIndent        EQU 200     ; dwPixels - No of pixels to indent images + text (or just text if no images). Defaults to 0 when control is created
+@ButtonPaddingGeneral           EQU 204     ; dwPixels - No of pixels of padding to apply based on @ButtonPaddingStyle: Defaults to 4px when control is created.
+@ButtonPaddingStyle             EQU 208     ; Button Padding Style - Where to apply @ButtonPaddingGeneral: defaults to MUIBPS_ALL when control is created
+@ButtonPaddingTextImage         EQU 212     ; dwPixels - No of pixels between left images and text. Defaults to 8 when control is created
+@ButtonDllInstance              EQU 216     ; Set to hInstance of dll before calling MUIButtonLoadImages or MUIButtonNotifyLoadImage if used within a dll
+@ButtonParam                    EQU 220     ; Custom user data
 
 ; Button Border Styles
 MUIBBS_NONE                     EQU 0
@@ -256,6 +266,7 @@ MUIBBP_ABSOLUTE                 EQU 1
 MUI_BUTTON_DEFAULT_THEME        DD 0                                                    ; Font 
                                 DD 0333333h, 0333333h, 0333333h, 0333333h, 0CCCCCCh     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0FFFFFFh, 0DDDDDDh, 0FFFFFFh, 0DDDDDDh, 0C0C0C0h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0CCCCCCh, 0CCCCCCh, 0E2A11Bh, 0E2A11Bh, 0CCCCCCh     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_ALL                                           ; BorderStyle
                                 DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -273,6 +284,7 @@ MUI_BUTTON_LIGHT_THEME          TEXTEQU <MUI_BUTTON_DEFAULT_THEME>
 MUI_BUTTON_DARK_THEME           DD 0                                                    ; Font 
                                 DD 0333333h, 0333333h, 0333333h, 0333333h, 0CCCCCCh     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0FFFFFFh, 0DDDDDDh, 0FFFFFFh, 0DDDDDDh, 0C0C0C0h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0CCCCCCh, 0CCCCCCh, 0E2A11Bh, 0E2A11Bh, 0CCCCCCh     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_ALL                                           ; BorderStyle
                                 DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -288,6 +300,7 @@ MUI_BUTTON_DARK_THEME           DD 0                                            
 MUI_CHECKBOX_LIGHT_THEME        DD 0                                                    ; Font 
                                 DD 0333333h, 0B97A29h, 0333333h, 0B97A29h, 0333333h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0F0F0F0h, 0F0F0F0h, 0F0F0F0h, 0F0F0F0h, 0F0F0F0h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0, 0, 0, 0, 0                                        ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_NONE                                          ; BorderStyle
                                 DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -303,6 +316,7 @@ MUI_CHECKBOX_LIGHT_THEME        DD 0                                            
 MUI_CHECKBOX_DARK_THEME         DD 0                                                    ; Font 
                                 DD 0F0F0F0h, 0F0F0F0h, 0F0F0F0h, 0F0F0F0h, 0F0F0F0h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0333333h, 0333333h, 0333333h, 0333333h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0, 0, 0, 0, 0                                        ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_NONE                                          ; BorderStyle
                                 DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -318,6 +332,7 @@ MUI_CHECKBOX_DARK_THEME         DD 0                                            
 MUI_MENUITEM_LIGHT_THEME        DD 0                                                    ; Font 
                                 DD 0333333h, 03D3D3Dh, 0474747h, 0474747h, 0333333h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0B9B9B9h, 0C3C3C3h, 0FFFFFFh, 0FFFFFFh, 0676767h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0696969h, 0696969h, 0696969h, 0696969h, 0696969h     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_BOTTOM + MUIBBS_TOP                           ; BorderStyle
                                 DD 0000000h, 0917947h, 0C19539h, 0C19539h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -333,6 +348,7 @@ MUI_MENUITEM_LIGHT_THEME        DD 0                                            
 MUI_MENUITEM_DARK_THEME         DD 0                                                    ; Font 
                                 DD 0B9B9B9h, 0C3C3C3h, 0FFFFFFh, 0FFFFFFh, 0676767h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0333333h, 03D3D3Dh, 0474747h, 0474747h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0696969h, 0696969h, 0696969h, 0696969h, 0696969h     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_BOTTOM + MUIBBS_TOP                           ; BorderStyle
                                 DD 0000000h, 0917947h, 0C19539h, 0C19539h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -348,6 +364,7 @@ MUI_MENUITEM_DARK_THEME         DD 0                                            
 MUI_MENUITEM_DARK_THEME_BLANK   DD 0                                                    ; Font 
                                 DD 0B9B9B9h, 0B9B9B9h, 0B9B9B9h, 0B9B9B9h, 0676767h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0333333h, 0333333h, 0333333h, 0333333h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0696969h, 0696969h, 0696969h, 0696969h, 0696969h     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_BOTTOM + MUIBBS_TOP                           ; BorderStyle
                                 DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -364,6 +381,7 @@ MUI_MENUITEM_DARK_THEME_BLANK   DD 0                                            
 MUI_MENUITEM_DARK_THEME_2       DD 0                                                    ; Font 
                                 DD 0B9B9B9h, 0C3C3C3h, 0FFFFFFh, 0FFFFFFh, 0676767h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0333333h, 03D3D3Dh, 0474747h, 0474747h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0000000h, 0000000h, 0000000h, 0000000h, 0000000h     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_BOTTOM + MUIBBS_TOP                           ; BorderStyle
                                 DD 0000000h, 0917947h, 0C19539h, 0C19539h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -379,6 +397,7 @@ MUI_MENUITEM_DARK_THEME_2       DD 0                                            
 MUI_MENUITEM_DARK_THEME_BLANK_2 DD 0                                                    ; Font 
                                 DD 0B9B9B9h, 0B9B9B9h, 0B9B9B9h, 0B9B9B9h, 0676767h     ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0333333h, 0333333h, 0333333h, 0333333h, 0333333h     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0000000h, 0000000h, 0000000h, 0000000h, 0000000h     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_BOTTOM + MUIBBS_TOP                           ; BorderStyle
                                 DD 0000000h, 0000000h, 0000000h, 0000000h               ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt
@@ -398,6 +417,7 @@ MUI_TEXT_DOS_PROMPT             TEXTEQU <MUI_MENUITEM_DARK_THEME_BLANK_2>
 MUI_BUTTON_TEAMSPEAK            DD 0                                                    ; Font 
                                 DD 0, 0, 0, 0, 05C5C5Ch                                 ; TextColor, TextColorAlt, TxtColorSelected, TxtColorSelectedAlt, TxtColorDisabled   
                                 DD 0FFFFFFh, 0FFFAF5h, 0FFECDCh, 0FDE4D0h, 08C8C8Ch     ; BackColor, BackColorAlt, BackColorSelected, BackColorSelectedAlt, BackColorDisabled
+                                DD -1, -1, -1, -1, -1                                   ; BackColorTo, BackColorAltTo, BackColorSelectedTo, BackColorSelectedAltTo, BackColorDisabledTo
                                 DD 0FFFFFFh, 0FCD7B9h, 0DDAC84h, 0CEA27Dh, 08C8C8Ch     ; BorderColor, BorderColorAlt, BorderColorSelected, BorderColorSelectedAlt, BorderColorDisabled
                                 DD MUIBBS_ALL                                           ; BorderStyle
                                 DD 0, 0, 0, 0                                           ; AccentColor, AccentColorAlt, AccentColorSel, AccentColorSelAlt

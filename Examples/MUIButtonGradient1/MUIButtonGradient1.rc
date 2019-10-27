@@ -1,0 +1,3 @@
+#include "Res/MUIButtonGradient1Ver.rc"
+#include "Res/MUIButtonGradient1Dlg.rc"
+#include "Res/MUIButtonGradient1Res.rc"
