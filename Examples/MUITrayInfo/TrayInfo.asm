@@ -160,7 +160,7 @@ WndProc PROC hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
         .ELSEIF eax == IDC_CHECKCPU ; ModernUI_Checkbox
             Invoke MUICheckboxGetState, hChkCPU
             .IF eax == FALSE
-              mov g_IconCPU, ICONS_CPU_HIDE
+                mov g_IconCPU, ICONS_CPU_HIDE
                 Invoke KillTimer, hWin, TIMER_CPU
                 Invoke MUITrayMenuHideTrayIcon, hMUITMCPU
             .ELSE
@@ -213,6 +213,7 @@ WndProc PROC hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
         .ENDIF
 
     .ELSEIF eax == WM_TIMER
+        ;PrintText 'WM_TIMER'
         mov eax, wParam
         .IF eax == TIMER_CPU ; poll for cpu load and update of tray icon
             Invoke CPULoad
@@ -289,11 +290,15 @@ InitTimers PROC hWin:DWORD
         Invoke MUICheckboxSetState, hChkMEM, TRUE
     .ENDIF
     
+    ;PrintText 'InitTimers'
+    
     ; Assign a 0% icon to each tray icon to begin with before polling takes over
     Invoke MUITrayMenuSetTrayIconText, hMUITMCPU, Addr szZeroPercent, hFontCPU, MUI_RGBCOLOR(96,207,137)
     mov hIconCPU, eax ; save returned icon handle for later
     Invoke MUITrayMenuSetTrayIconText, hMUITMMEM, Addr szZeroPercent, hFontMEM, MUI_RGBCOLOR(96,176,207)
     mov hIconMEM, eax ; save returned icon handle for later
+    
+    ;PrintText 'InitTimers::MUITrayMenuSetTrayIconText'
     
     ; Get g_ResponseCPU and g_ResponseMEM values
     ; Could fetch these from an ini file for user to keep settings persistant
@@ -346,6 +351,8 @@ CPULoad PROC
     
     .IF hIconCPU != 0
         Invoke DestroyIcon, hIconCPU ; delete existing icon otherwise gdi leak
+    .ELSE
+        ;PrintText 'hIconCPU == 0'
     .ENDIF
     
     ; Create a tray icon based on our percent text and assign it to our existing TrayMenu
@@ -465,6 +472,8 @@ GetMemoryLoad PROC
 
     .IF hIconMEM != 0
         Invoke DestroyIcon, hIconMEM ; delete existing icon otherwise gdi leak
+    .ELSE
+        ;PrintText 'hIconMEM == 0'
     .ENDIF
 
     ; Create a tray icon based on our percent text and assign it to our existing TrayMenu
