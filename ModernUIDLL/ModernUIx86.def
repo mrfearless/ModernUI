@@ -69,6 +69,9 @@ EXPORTS
 	MUIGDIRotateCenterBitmap
     MUIGDIPaintFill
     MUIGDIPaintFrame
+    MUIGDIPaintBrush
+    MUIGDIPaintGradient
+    MUIGDICreateBitmapMask
 	; ModernUI GDIPlus Functions:
 	MUIGDIPlusStart
 	MUIGDIPlusFinish
@@ -84,6 +87,7 @@ EXPORTS
 	; ModernUI Painting & Color Functions:
 	MUIPaintBackground
 	MUIPaintBackgroundImage
+	MUIPaintBorder
 	MUIGetParentBackgroundColor
 	MUIGetParentBackgroundBitmap
 	; ModernUI Window/Dialog Functions:

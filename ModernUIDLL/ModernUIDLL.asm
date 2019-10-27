@@ -72,42 +72,65 @@ Include .\..\ModernUI\ModernUI.inc
 ;--------------------------------------
 ; ModernUI Library Files
 ;--------------------------------------
+; Base
 Include .\..\ModernUI\_ModernUI_Base.asm
-Include .\..\ModernUI\_ModernUI_GDIDoubleBuffer.asm
-Include .\..\ModernUI\_ModernUI_GDIPlus.asm
-Include .\..\ModernUI\_ModernUI_GDIPlusDoubleBuffer.asm
-Include .\..\ModernUI\_ModernUI_Memory.asm
+
+; DPI
 Include .\..\ModernUI\ModernUI_DPI.asm
-Include .\..\ModernUI\MUIAllocStructureMemory.asm
-Include .\..\ModernUI\MUIApplyToDialog.asm
-Include .\..\ModernUI\MUICenterWindow.asm
-Include .\..\ModernUI\MUICreateBitmapFromMemory.asm
-Include .\..\ModernUI\MUICreateCursorFromMemory.asm
-Include .\..\ModernUI\MUICreateIconFromMemory.asm
+
+; Font
+Include .\..\ModernUI\MUIPointSizeToLogicalUnit.asm
+
+; GDI
+Include .\..\ModernUI\_ModernUI_GDIDoubleBuffer.asm
 Include .\..\ModernUI\MUIGDIBlend.asm
 Include .\..\ModernUI\MUIGDIBlendBitmaps.asm
+Include .\..\ModernUI\MUIGDICreateBitmapMask.asm
 Include .\..\ModernUI\MUIGDIPaintFill.asm
 Include .\..\ModernUI\MUIGDIPaintFrame.asm
+Include .\..\ModernUI\MUIGDIPaintBrush.asm
+Include .\..\ModernUI\MUIGDIPaintGradient.asm
+Include .\..\ModernUI\MUIGDIRotateBitmap.asm
+Include .\..\ModernUI\MUIGDIStretchBitmap.asm
+Include .\..\ModernUI\MUIGDIStretchImage.asm
+
+; GDIPlus
+Include .\..\ModernUI\_ModernUI_GDIPlus.asm
+Include .\..\ModernUI\_ModernUI_GDIPlusDoubleBuffer.asm
 Include .\..\ModernUI\MUIGDIPlusPaintFill.asm
 Include .\..\ModernUI\MUIGDIPlusPaintFrame.asm
 Include .\..\ModernUI\MUIGDIPlusRectToGdipRect.asm
 Include .\..\ModernUI\MUIGDIPlusRotateCenterImage.asm
-Include .\..\ModernUI\MUIGDIRotateBitmap.asm
-Include .\..\ModernUI\MUIGDIStretchBitmap.asm
-Include .\..\ModernUI\MUIGDIStretchImage.asm
+Include .\..\ModernUI\MUILoadPngFromResource.asm
+
+; Image
+Include .\..\ModernUI\MUICreateBitmapFromMemory.asm
+Include .\..\ModernUI\MUICreateCursorFromMemory.asm
+Include .\..\ModernUI\MUICreateIconFromMemory.asm
 Include .\..\ModernUI\MUIGetImageSize.asm
 Include .\..\ModernUI\MUIGetImageSizeEx.asm
-Include .\..\ModernUI\MUIGetParentBackgroundBitmap.asm
-Include .\..\ModernUI\MUIGetParentBackgroundColor.asm
-Include .\..\ModernUI\MUIGetParentRelativeWindowRect.asm
 Include .\..\ModernUI\MUILoadBitmapFromResource.asm
 Include .\..\ModernUI\MUILoadIconFromResource.asm
 Include .\..\ModernUI\MUILoadImageFromResource.asm
-Include .\..\ModernUI\MUILoadPngFromResource.asm
-Include .\..\ModernUI\MUILoadRegionFromResource.asm
+
+; Memory
+Include .\..\ModernUI\_ModernUI_Memory.asm
+Include .\..\ModernUI\MUIAllocStructureMemory.asm
+
+; Painting
+Include .\..\ModernUI\MUIGetParentBackgroundBitmap.asm
+Include .\..\ModernUI\MUIGetParentBackgroundColor.asm
 Include .\..\ModernUI\MUIPaintBackground.asm
 Include .\..\ModernUI\MUIPaintBackgroundImage.asm
-Include .\..\ModernUI\MUIPointSizeToLogicalUnit.asm
+Include .\..\ModernUI\MUIPaintBorder.asm
+
+; Window
+Include .\..\ModernUI\MUIApplyToDialog.asm
+Include .\..\ModernUI\MUICenterWindow.asm
+Include .\..\ModernUI\MUIGetParentRelativeWindowRect.asm
+
+;Region
+Include .\..\ModernUI\MUILoadRegionFromResource.asm
 Include .\..\ModernUI\MUISetRegionFromResource.asm
 
 ;--------------------------------------

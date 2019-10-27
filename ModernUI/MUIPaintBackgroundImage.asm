@@ -80,7 +80,7 @@ MUIPaintBackgroundImage PROC USES EBX hWin:MUIWND, BackColor:MUICOLORRGB, Border
     ;----------------------------------------------------------
     ; Paint Border
     ;----------------------------------------------------------
-    .IF BorderColor != 0
+    .IF BorderColor != -1
         Invoke MUIGDIPaintFrame, hdcMem, Addr rect, BorderColor, MUIPFS_ALL
     .ENDIF
     

@@ -30,6 +30,8 @@ MUIGDIRotateCenterBitmap,hWin,hBitmap,Angle,BackColor
 MUIGDIPaintFill,hdc,lpFillRect,FillColor
 MUIGDIPaintFrame,hdc,lpFrameRect,FrameColor,FrameStyle
 MUIGDIPaintBrush,hdc,lpBrushRect,hBrushBitmap,dwBrushOrgX,dwBrushOrgY
+MUIGDIPaintGradient,hdc,lpGradientRect,GradientColorFrom,GradientColorTo,HorzVertGradient
+MUIGDICreateBitmapMask,hBitmap,TransparentColor
 MUILoadBitmapFromResource,hWin,InstanceProperty,Property,idBmpRes
 MUILoadIconFromResource,hWin,InstanceProperty,Property,idIcoRes
 MUIGDIPlusStart
@@ -57,6 +59,7 @@ MUILoadJpgFromResource,hWin,InstanceProperty,Property,idPngRes
 MUIGDIPRectToGdipRect,lpRect,lpGdipRect
 MUIPaintBackground,hDialogWindow,BackColor,BorderColor
 MUIPaintBackgroundImage,hDialogWindow,BackColor,BorderColor,hImage,ImageHandleType,ImageLocation
+MUIPaintBorder,hWin,BorderColor
 MUIGetParentBackgroundColor,hWin
 MUIGetParentBackgroundBitmap,hWin
 MUIApplyToDialog,hDialogWindow,bDropShadow,bClipping

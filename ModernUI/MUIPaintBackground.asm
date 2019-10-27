@@ -36,9 +36,9 @@ ENDIF
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
-; Paint the background of the main window specified color
-; optional provide BorderColor for border. If BorderColor = 0, no border is
-; drawn. If you require black for border, use 1, or MUI_RGBCOLOR(1,1,1)
+; Paints the background of the main window a specified color
+; optional provide BorderColor for border. If BorderColor = -1, no border is
+; drawn.
 ;
 ; If you are using this on a window/dialog that does not use the 
 ; ModernUI_CaptionBar control AND window/dialog is resizable, you should place 
@@ -75,7 +75,7 @@ MUIPaintBackground PROC hWin:MUIWND, BackColor:MUICOLORRGB, BorderColor:MUICOLOR
     ;----------------------------------------------------------
     ; Paint Border
     ;----------------------------------------------------------
-    .IF BorderColor != 0
+    .IF BorderColor != -1
         Invoke MUIGDIPaintFrame, hdcMem, Addr rect, BorderColor, MUIPFS_ALL
     .ENDIF
     

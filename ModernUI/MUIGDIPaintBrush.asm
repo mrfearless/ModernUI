@@ -38,7 +38,7 @@ MUI_ALIGN
 ; dwBrushOrgX is x adjustment to start painting from in the source brush bitmap
 ; dwBrushOrgY is y adjustment to start painting from in the source brush bitmap
 ;------------------------------------------------------------------------------
-MUIGDIPaintBrush PROC hdc:HDC, lpBrushRect:LPRECT, hBrushBitmap:HBITMAP, dwBrushOrgX:LPMUIVALUE, dwBrushOrgY:LPMUIVALUE
+MUIGDIPaintBrush PROC hdc:HDC, lpBrushRect:LPRECT, hBrushBitmap:HBITMAP, dwBrushOrgX:MUIVALUE, dwBrushOrgY:MUIVALUE
     LOCAL hBrushOld:DWORD
     LOCAL rect:RECT
     
