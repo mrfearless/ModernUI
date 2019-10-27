@@ -45,15 +45,15 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-;DEBUG32 EQU 1
-;
-;IFDEF DEBUG32
-;    PRESERVEXMMREGS equ 1
-;    includelib M:\Masm32\lib\Debug32.lib
-;    DBG32LIB equ 1
-;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-;    include M:\Masm32\include\debug32.inc
-;ENDIF
+DEBUG32 EQU 1
+
+IFDEF DEBUG32
+    PRESERVEXMMREGS equ 1
+    includelib M:\Masm32\lib\Debug32.lib
+    DBG32LIB equ 1
+    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+    include M:\Masm32\include\debug32.inc
+ENDIF
 
 include windows.inc
 include user32.inc
@@ -139,7 +139,7 @@ _MUI_TM_AddIconAndTooltip               PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TM_ShowTrayMenu                    PROTO :DWORD, :DWORD
 _MUI_TM_RestoreFromTray                 PROTO :DWORD, :DWORD
 _MUI_TM_MinimizeToTray                  PROTO :DWORD, :DWORD
-_MUI_TM_IconText                        PROTO :DWORD, :DWORD, :DWORD
+_MUI_TM_IconText                        PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_TM_HideNotification                PROTO :DWORD
 
 
@@ -907,23 +907,26 @@ MUI_ALIGN
 MUITrayMenuSetTrayIcon PROC PUBLIC USES EBX hControl:DWORD, hTrayIcon:DWORD
     LOCAL NID:DWORD
     LOCAL lpszTooltip:DWORD
+    LOCAL bNew:DWORD
 
     .IF hControl == NULL
         mov eax, FALSE
         ret
     .ENDIF
     
+    mov bNew, FALSE
+    
     Invoke MUIGetIntProperty, hControl, @TrayMenuNID
     mov NID, eax
     .IF NID == NULL
         Invoke GlobalAlloc, GMEM_FIXED+GMEM_ZEROINIT, SIZEOF NOTIFYICONDATA
         .IF eax == NULL
-            mov eax, FALSE ; if we cant alloc mem, we return false and control isnt created.
+            mov eax, FALSE ; if we cant alloc mem, we return false
             ret
         .ENDIF
         mov NID, eax
-        
-        Invoke MUISetIntProperty, hControl, @TrayMenuNID, NID       
+        Invoke MUISetIntProperty, hControl, @TrayMenuNID, NID
+        mov bNew, TRUE       
     .ENDIF
     
     Invoke MUIGetExtProperty, hControl, @TrayMenuTooltipText
@@ -962,15 +965,41 @@ MUITrayMenuSetTrayIcon PROC PUBLIC USES EBX hControl:DWORD, hTrayIcon:DWORD
         mov eax,  NIF_ICON + NIF_MESSAGE
         mov [ebx].NOTIFYICONDATA.uFlags, eax    
     .ENDIF
-    invoke Shell_NotifyIcon, NIM_MODIFY, NID ; Send msg to show icon in tray
+    
+    .IF bNew == TRUE
+        Invoke Shell_NotifyIcon, NIM_ADD, NID ; Send msg to show icon in tray
+    .ELSE
+        Invoke Shell_NotifyIcon, NIM_MODIFY, NID ; Send msg to show icon in tray
+    .ENDIF
     .IF eax != 0
         Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, TRUE
         mov eax, TRUE
     .ELSE
-        Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
-        Invoke GlobalFree, NID
-        Invoke MUISetIntProperty, hControl, @TrayMenuNID, 0
-        mov eax, FALSE
+        IFDEF DEBUG32
+        PrintText 'MUITrayMenuSetTrayIcon::Shell_NotifyIcon error'
+        PrintDec bNew
+        Invoke GetLastError
+        PrintDec eax
+        ENDIF
+        
+        .IF bNew == FALSE ; after trying to MODIFY NID and failed, we try DELETE and ADD NID
+            Invoke Shell_NotifyIcon, NIM_DELETE, NID ; Remove tray icon
+            Invoke Shell_NotifyIcon, NIM_ADD, NID ; Send msg to show icon in tray
+            .IF eax != 0
+                Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, TRUE
+                mov eax, TRUE
+            .ELSE ; tried DELETE and ADD NID, but failed
+                Invoke GlobalFree, NID
+                Invoke MUISetIntProperty, hControl, @TrayMenuNID, 0
+                Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
+                mov eax, FALSE
+            .ENDIF
+        .ELSE ; else tried to ADD NID and failed, so clear NID
+            Invoke GlobalFree, NID
+            Invoke MUISetIntProperty, hControl, @TrayMenuNID, 0
+            Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
+            mov eax, FALSE            
+        .ENDIF
     .ENDIF
     ret
 MUITrayMenuSetTrayIcon endp
@@ -984,17 +1013,26 @@ MUI_ALIGN
 MUITrayMenuSetTooltipText PROC PUBLIC USES EBX hControl:DWORD, lpszTooltip:DWORD
     LOCAL NID:DWORD
     LOCAL hTrayIcon:DWORD
+    LOCAL bNew:DWORD
 
     .IF hControl == NULL
         mov eax, FALSE
         ret
     .ENDIF
     
+    mov bNew, FALSE
+    
     Invoke MUIGetIntProperty, hControl, @TrayMenuNID
     mov NID, eax
     .IF NID == NULL
-        mov eax, FALSE
-        ret
+        Invoke GlobalAlloc, GMEM_FIXED+GMEM_ZEROINIT, SIZEOF NOTIFYICONDATA
+        .IF eax == NULL
+            mov eax, FALSE ; if we cant alloc mem, we return false
+            ret
+        .ENDIF
+        mov NID, eax
+        Invoke MUISetIntProperty, hControl, @TrayMenuNID, NID
+        mov bNew, TRUE
     .ENDIF
     
     Invoke MUIGetExtProperty, hControl, @TrayMenuIcon
@@ -1030,11 +1068,41 @@ MUITrayMenuSetTooltipText PROC PUBLIC USES EBX hControl:DWORD, lpszTooltip:DWORD
         mov eax,  NIF_ICON + NIF_MESSAGE
         mov [ebx].NOTIFYICONDATA.uFlags, eax    
     .ENDIF
-    invoke Shell_NotifyIcon, NIM_MODIFY, NID ; Send msg to show icon in tray
+    
+    .IF bNew == TRUE
+        Invoke Shell_NotifyIcon, NIM_ADD, NID ; Send msg to show icon in tray
+    .ELSE
+        Invoke Shell_NotifyIcon, NIM_MODIFY, NID ; Send msg to show icon in tray
+    .ENDIF
     .IF eax != 0
+        Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, TRUE
         mov eax, TRUE
     .ELSE
-        mov eax, FALSE
+        IFDEF DEBUG32
+        PrintText 'MUITrayMenuSetTooltipText::Shell_NotifyIcon error'
+        PrintDec bNew
+        Invoke GetLastError
+        PrintDec eax
+        ENDIF
+        
+        .IF bNew == FALSE ; after trying to MODIFY NID and failed, we try DELETE and ADD NID
+            Invoke Shell_NotifyIcon, NIM_DELETE, NID ; Remove tray icon
+            Invoke Shell_NotifyIcon, NIM_ADD, NID ; Send msg to show icon in tray
+            .IF eax != 0
+                Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, TRUE
+                mov eax, TRUE
+            .ELSE ; tried DELETE and ADD NID, but failed
+                Invoke GlobalFree, NID
+                Invoke MUISetIntProperty, hControl, @TrayMenuNID, 0
+                Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
+                mov eax, FALSE
+            .ENDIF
+        .ELSE ; else tried to ADD NID and failed, so clear NID
+            Invoke GlobalFree, NID
+            Invoke MUISetIntProperty, hControl, @TrayMenuNID, 0
+            Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
+            mov eax, FALSE            
+        .ENDIF
     .ENDIF
     ret
 
@@ -1056,7 +1124,7 @@ MUITrayMenuSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, hFontIcon
         ret
     .ENDIF
     
-    Invoke _MUI_TM_IconText, lpszText, hFontIconText, dwTextColorRGB
+    Invoke _MUI_TM_IconText, lpszText, hFontIconText, MUI_RGBCOLOR(0,0,0), dwTextColorRGB 
     mov hTrayIcon, eax
     
     .IF hTrayIcon == NULL
@@ -1354,7 +1422,7 @@ MUITrayIconCreate PROC PUBLIC USES EBX hWndParent:DWORD, dwTrayIconResID:DWORD, 
     .ENDIF
     
     ;PrintText 'Shell_NotifyIcon'
-    invoke Shell_NotifyIcon, NIM_ADD, NID ; Send msg to show icon in tray
+    Invoke Shell_NotifyIcon, NIM_ADD, NID ; Send msg to show icon in tray
     .IF eax != 0
         mov eax, NID
     .ELSE
@@ -1614,7 +1682,7 @@ MUITrayIconSetTrayIconText PROC PUBLIC hControl:DWORD, lpszText:DWORD, hFontIcon
         ret
     .ENDIF
     
-    Invoke _MUI_TM_IconText, lpszText, hFontIconText, dwTextColorRGB
+    Invoke _MUI_TM_IconText, lpszText, hFontIconText, MUI_RGBCOLOR(0,0,0), dwTextColorRGB 
     mov hTrayIcon, eax
     
     .IF hTrayIcon == NULL
@@ -1634,7 +1702,8 @@ MUI_ALIGN
 ; MUITrayCreateIconText - Create Transparent Text Icon - use DestroyIcon to free
 ;------------------------------------------------------------------------------
 MUITrayCreateIconText PROC lpszText:DWORD, hFontIconText:DWORD, dwTextColorRGB:DWORD
-    Invoke _MUI_TM_IconText, lpszText, hFontIconText, dwTextColorRGB
+    Invoke _MUI_TM_IconText, lpszText, hFontIconText, MUI_RGBCOLOR(0,0,0), dwTextColorRGB 
+    ;Invoke _MUI_TM_IconText, lpszText, hFontIconText, dwTextColorRGB
     ret
 MUITrayCreateIconText ENDP
 
@@ -1715,9 +1784,14 @@ _MUI_TM_AddIconAndTooltip PROC PRIVATE USES EBX hControl:DWORD, hWndParent:DWORD
     .ENDIF
     ;PrintText 'Shell_NotifyIcon'
     
-    invoke Shell_NotifyIcon, NIM_ADD, NID ; Send msg to show icon in tray
+    Invoke Shell_NotifyIcon, NIM_ADD, NID ; Send msg to show icon in tray
     .IF eax != 0
         Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, TRUE
+;        ; NOTIFYICON_VERSION_4 is prefered
+;        mov ebx, NID
+;        mov eax, NOTIFYICON_VERSION_4
+;        mov [ebx].NOTIFYICONDATA.uVersion, eax
+;        Invoke Shell_NotifyIcon, NIM_SETVERSION, NID
         mov eax, TRUE
     .ELSE
         Invoke MUISetIntProperty, hControl, @TrayMenuIconVisible, FALSE
@@ -1889,136 +1963,102 @@ MUI_ALIGN
 ; Returns handle to an icon (cursor) in eax, use DestroyIcon to free this when 
 ; you have finished with it
 ;------------------------------------------------------------------------------
-_MUI_TM_IconText PROC PRIVATE lpszText:DWORD, hFontIconText:DWORD, dwTextColorRGB:DWORD
-    ;// Creates a DC for use in multithreaded programs (works in single threaded as well)
-    LOCAL hdc:HDC
-    LOCAL hMemDC:HDC
-    LOCAL hdcMem2:HDC
-    LOCAL hBitmap:DWORD
-    LOCAL hBitmapOld:DWORD    
-    LOCAL hbmMask:DWORD
-    LOCAL hbmMaskOld:DWORD
-    LOCAL hAphaCursor:HICON
-    LOCAL cbox:RECT
-    LOCAL hbrBkgnd:HBRUSH
-    LOCAL lentext:DWORD
-    LOCAL ii:ICONINFO
-    LOCAL hAlphaCursor:DWORD
-    LOCAL hFont:DWORD
-    LOCAL hFontOld:DWORD
-    LOCAL SavedDC:DWORD
-    LOCAL dwFontHeight:DWORD
-    
-    Invoke lstrlen, lpszText
-    mov lentext, eax
-    
-    ;// Only safe way I could find to make a DC for multithreading
-    Invoke CreateDC, Addr szMUITrayIconDisplayDC, NULL,NULL,NULL
-    mov hdc, eax
-
-    ;// Makes it easier to center the text
+_MUI_TM_IconText PROC lpszText:DWORD, hFontText:DWORD, clrTransparent:DWORD, clrText:DWORD
+	LOCAL hdc:HDC
+	LOCAL hdcMem:HDC
+	LOCAL hBitmapColor:HBITMAP
+	LOCAL hBitmapColorOld:HBITMAP
+	LOCAL hBitmapMask:HBITMAP
+	LOCAL hBrushTransparent:HBRUSH
+	LOCAL hFontTextOld:DWORD
+	LOCAL dwWidth:DWORD
+	LOCAL dwHeight:DWORD
+	LOCAL LenText:DWORD
+	LOCAL hAlphaIcon:DWORD
+	LOCAL cbox:RECT
+	LOCAL ii:ICONINFO
+	
+	mov hAlphaIcon, NULL
+	mov dwWidth, 16
+	mov dwHeight, 16
     mov cbox.left, 0
     mov cbox.top, 0
     mov cbox.right, 16
     mov cbox.bottom, 16
+    mov hBitmapColor, 0
+    mov hBitmapColorOld, 0
+    mov hBitmapMask, 0
+
+	Invoke GetDC, NULL
+	mov hdc, eax
+	
+	Invoke CreateCompatibleDC, hdc
+	mov hdcMem, eax
     
-    ;// Create the text bitmap.
-    Invoke CreateCompatibleBitmap, hdc, cbox.right, cbox.bottom
-    mov hBitmap, eax
-    Invoke CreateCompatibleDC, hdc
-    mov hMemDC, eax
+    ; Create color bitmap
+	Invoke CreateCompatibleBitmap, hdc, dwWidth, dwHeight
+	mov hBitmapColor, eax
+	Invoke SelectObject, hdcMem, hBitmapColor
+	mov hBitmapColorOld, eax
+	
+	; Fill background of color bitmap with color that will be transparent
+    Invoke CreateSolidBrush, clrTransparent
+    mov hBrushTransparent, eax
+    Invoke FillRect, hdcMem, Addr cbox, hBrushTransparent
+    Invoke DeleteObject, hBrushTransparent
+	
+	; Use font if specified
+	.IF hFontText != NULL
+	    Invoke SelectObject, hdcMem, hFontText
+        mov hFontTextOld, eax
+    .ENDIF	
+	
+	; Draw text of icon
+	Invoke SetTextColor, hdcMem, clrText ;RGB(97,172,235)
+	Invoke SetBkMode, hdcMem, TRANSPARENT
+	Invoke lstrlen, lpszText
+	mov LenText, eax
+	Invoke DrawText, hdcMem, lpszText, LenText, Addr cbox, DT_SINGLELINE or DT_VCENTER or DT_CENTER
+	
+	; Create mask bitmap
+	Invoke SelectObject, hdcMem, hBitmapColorOld ; make sure hBitmap is not in a dc when we create mask
+	Invoke MUIGDICreateBitmapMask, hBitmapColor, clrTransparent
+	mov hBitmapMask, eax
 
-    Invoke SelectObject, hMemDC, hBitmap
-    mov hBitmapOld, eax
-
-    ;// Draw the text bitmap
-    Invoke CreateSolidBrush, MUI_RGBCOLOR(72,72,72) ;RGBCOLOR(0,0,0) 
-    mov hbrBkgnd, eax
-    Invoke FillRect, hMemDC, Addr cbox, hbrBkgnd
-    Invoke DeleteObject, hbrBkgnd
-
-    .IF hFontIconText == NULL
-        Invoke CreateFont, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Addr szMUITrayMenuFont
-    .ELSE
-        mov eax, hFontIconText
-    .ENDIF
-    mov hFont, eax
-    Invoke SelectObject, hMemDC, hFont
-    mov hFontOld, eax
-
-    Invoke SetBkColor, hMemDC, MUI_RGBCOLOR(72,72,72) ;RGBCOLOR(0,0,0)
-    Invoke SetTextColor, hMemDC, dwTextColorRGB ;RGBCOLOR(118,198,238) ;RGBCOLOR(255,255,255)
-    Invoke DrawText, hMemDC, lpszText, lentext, Addr cbox, DT_SINGLELINE or DT_VCENTER or DT_CENTER
-    
-    ;// Create monochrome (1 bit) mask bitmap.
-    Invoke CreateBitmap, cbox.right, cbox.bottom, 1, 1, NULL
-    mov hbmMask, eax
-    Invoke CreateCompatibleDC, 0
-    mov hdcMem2, eax
-    Invoke SelectObject, hdcMem2, hbmMask
-    mov hbmMaskOld, eax
-
-    ;// Draw transparent color and create the mask
-    Invoke SetBkColor, hMemDC, MUI_RGBCOLOR(72,72,72) ;RGBCOLOR(0,0,0)
-    Invoke BitBlt, hdcMem2, 0, 0, cbox.right, cbox.bottom, hMemDC, 0, 0, SRCCOPY
-    
-    ;// Clean up
-    Invoke SelectObject, hdcMem2, hbmMaskOld
-    Invoke DeleteObject, hbmMaskOld
-    Invoke DeleteDC, hdcMem2
-
-    mov ii.fIcon, TRUE
-    mov ii.xHotspot, 0
-    mov ii.yHotspot, 0
-    mov eax, hbmMask
-    mov ii.hbmMask, eax
-    mov eax, hBitmap
-    mov ii.hbmColor, eax
-
-    ;// Create the icon with transparent background
+    ; Create transparent icon from color and mask bitmaps
+	mov ii.fIcon, TRUE
+	mov ii.xHotspot, 0
+	mov ii.yHotspot, 0
+	mov eax, hBitmapMask
+	mov ii.hbmMask, eax
+	mov eax, hBitmapColor
+	mov ii.hbmColor, eax
     Invoke CreateIconIndirect, Addr ii
-    mov hAlphaCursor, eax
-
-    ;// Clean up
-    Invoke SelectObject, hMemDC, hBitmapOld
-    Invoke DeleteObject, hBitmapOld
-    Invoke DeleteObject, hBitmap
+	mov hAlphaIcon, eax
     
-    Invoke SelectObject, hMemDC, hFontOld
-    Invoke DeleteObject, hFontOld
-    .IF hFontIconText == NULL
-        Invoke DeleteObject, hFont
+    ; Cleanup
+	.IF hFontText != NULL
+	    Invoke SelectObject, hdcMem, hFontTextOld
+        Invoke DeleteObject, hFontTextOld
+    .ENDIF	    
+    
+    .IF hBitmapColorOld != 0
+        Invoke SelectObject, hdcMem, hBitmapColorOld
+	    Invoke DeleteObject, hBitmapColorOld
+	    Invoke DeleteObject, hBitmapColor
+	.ENDIF
+    
+    .IF hBitmapMask != 0
+        Invoke DeleteObject, hBitmapMask
     .ENDIF
     
-    ;Invoke SelectObject, hdcMem2, hbmMaskOld
-    ;Invoke DeleteObject, hbmMaskOld
-    Invoke DeleteObject, hbmMask
-    
-    Invoke DeleteDC, hMemDC
-    Invoke DeleteDC, hdc
-
-    mov eax, hAlphaCursor
+	Invoke DeleteDC, hdcMem
+	Invoke ReleaseDC, NULL, hdc	
+	
+    ;mov ebx, hBitmapMask
+    mov eax, hAlphaIcon
     ret
-
 _MUI_TM_IconText ENDP
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
