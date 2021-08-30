@@ -174,6 +174,16 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         .ELSEIF eax == IDM_HELP_ABOUT
             Invoke ShellAbout,hWin,addr AppName,addr AboutMsg,NULL
             
+        .ELSEIF eax == IDC_CHECKBOX3
+            .IF bDark == TRUE
+                mov bDark, FALSE
+                Invoke MUICheckboxSetTheme, hChk3, FALSE, TRUE
+            .ELSE
+                mov bDark, TRUE
+                Invoke MUICheckboxSetTheme, hChk3, TRUE, TRUE
+            .ENDIF
+            
+            
         .ENDIF
 
     .ELSEIF eax == WM_CLOSE

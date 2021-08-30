@@ -85,6 +85,7 @@ szRadio2Text            DB 'Radio option 2 - disabled but set',0
 szRadio3Text            DB 'Radio option 3',0
 szRadio4Text            DB 'Radio option 4',0
 
+bDark                   DD TRUE
 
 .DATA?
 ;-----------------------------------------------------------------------------------------
