@@ -289,6 +289,7 @@ MUIGetParentBackgroundBitmap    PROTO hWin:MUIWND
 MUIApplyToDialog                PROTO hWin:MUIWND, bDropShadow:BOOL, bClipping:BOOL
 MUICenterWindow                 PROTO hWndChild:MUIWND, hWndParent:MUIWND
 MUIGetParentRelativeWindowRect  PROTO hWin:MUIWND, lpRectControl:LPRECT
+MUIChangeScreenResolution       PROTO ScreenWidth:MUIVALUE, ScreenHeight:MUIVALUE, bitsPerPixel:MUIVALUE
 
 ; ModernUI Region Functions:
 MUILoadRegionFromResource       PROTO hInst:HINSTANCE, idRgnRes:RESID, lpRegionData:POINTER, lpSizeRegionData:LPMUIVALUE 

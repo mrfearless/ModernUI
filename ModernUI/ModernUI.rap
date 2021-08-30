@@ -54,6 +54,7 @@ Debug=0
 45=MUIGDICreateBitmapMask.asm
 46=MUIPaintBorder.asm
 47=MUIGDIPaintGradient.asm
+48=MUIChangeResolution.asm
 [MakeFiles]
 0=ModernUI.rap
 1=ModernUI.rc
@@ -141,13 +142,14 @@ Group=Misc,Modules,..Painting,..Base,..Region,..DPI,..Image,..Font,..Window,..Me
 45=12
 46=3
 47=12
+48=9
 [AutoLoad]
-AutoLoad=2,17,46,38,37,47,31,26
+AutoLoad=2,37,15,48,16,22,14,4,31,34,11,10
 [Size]
 5=0,0,0,0,1934
 4=0,0,0,0,4668
 3=0,0,0,0,8469
-2=0,0,0,0,13934
+2=0,0,0,0,13483
 1=0,0,0,0,4238
 6=0,0,0,0,509
 13=0,0,0,0,10132
@@ -157,13 +159,13 @@ AutoLoad=2,17,46,38,37,47,31,26
 10=0,0,0,0,845
 7=0,0,0,0,1032
 8=0,0,0,0,1410
-14=0,0,0,0,1368
+14=0,0,0,0,464
 18=0,0,0,0,2301
 17=0,0,0,0,1684
 19=0,0,0,0,1278
 20=0,0,0,0,1905
-16=0,0,0,0,5105
-15=0,0,0,0,2640
+16=0,0,0,0,792
+15=0,0,0,0,2187
 21=0,0,0,0,11303
 22=0,0,0,0,664
 23=0,0,1248,579,7939
@@ -180,7 +182,7 @@ AutoLoad=2,17,46,38,37,47,31,26
 34=0,0,0,0,1309
 36=0,0,0,0,853
 35=0,0,0,0,3219
-37=0,0,0,0,924
+37=0,0,0,0,1107
 38=0,0,0,0,1773
 39=0,0,0,0,967
 40=0,0,0,0,1809
@@ -191,6 +193,7 @@ AutoLoad=2,17,46,38,37,47,31,26
 45=0,0,0,0,0
 46=0,0,0,0,508
 47=0,0,0,0,0
+48=0,0,0,0,484
 [RADebugBP]
 1=
 2=
@@ -235,6 +238,7 @@ AutoLoad=2,17,46,38,37,47,31,26
 45=
 46=
 47=
+48=
 [VersionControl]
 Settings=1278
 Milestones=129
@@ -245,7 +249,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=27
+MilestoneOnDateDate=5
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=16
@@ -269,7 +273,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=332331919
+PTimer=334163418
 [Collapse]
 2=30
 1=
@@ -318,6 +322,7 @@ PTimer=332331919
 45=
 46=
 47=
+48=
 [GroupExpand]
 GroupExpand=1,1,1,1,1,1,1,1,1,1,1,1,1,0
 [BookMark]
