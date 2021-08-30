@@ -1,0 +1,11 @@
+;------------------------------------------------------------------------------
+; ModernUI_ProgressBar Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+2MUIProgressBarSetProperty,@ProgressBarTextColor,@ProgressBarTextFont,@ProgressBarBackColor,@ProgressBarProgressColor,@ProgressBarBorderColor,@ProgressBarPercent,@ProgressBarMin,@ProgressBarMax,@ProgressBarStep
+2MUIProgressBarGetProperty,@ProgressBarTextColor,@ProgressBarTextFont,@ProgressBarBackColor,@ProgressBarProgressColor,@ProgressBarBorderColor,@ProgressBarPercent,@ProgressBarMin,@ProgressBarMax,@ProgressBarStep
+3MUIProgressBarSetProperty,MUI_RGBCOLOR
