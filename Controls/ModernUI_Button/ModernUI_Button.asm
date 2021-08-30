@@ -386,8 +386,8 @@ MUIButtonCreate PROC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, c
     LOCAL hinstance:DWORD
     LOCAL hControl:DWORD
     LOCAL dwNewStyle:DWORD
-    LOCAL DPIRect:RECT
-    LOCAL bScaled:DWORD
+    ;LOCAL DPIRect:RECT
+    ;LOCAL bScaled:DWORD
 
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
@@ -403,32 +403,32 @@ MUIButtonCreate PROC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, c
     .ENDIF
     
     ; DPI Scale position and size
-    mov eax, xpos
-    mov DPIRect.left, eax
-    mov eax, ypos
-    mov DPIRect.top, eax
-    mov eax, controlwidth
-    mov DPIRect.right, eax
-    mov eax, controlheight
-    mov DPIRect.bottom, eax
-    Invoke MUIDPIScaleRect, Addr DPIRect ; eax returns TRUE if scaling was done/required
-    mov bScaled, eax
+;    mov eax, xpos
+;    mov DPIRect.left, eax
+;    mov eax, ypos
+;    mov DPIRect.top, eax
+;    mov eax, controlwidth
+;    mov DPIRect.right, eax
+;    mov eax, controlheight
+;    mov DPIRect.bottom, eax
+;    Invoke MUIDPIScaleRect, Addr DPIRect ; eax returns TRUE if scaling was done/required
+;    mov bScaled, eax
     ;PrintDec bScaled
     
-    Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, DPIRect.left, DPIRect.top, DPIRect.right, DPIRect.bottom, hWndParent, dwResourceID, hinstance, NULL
-    ;Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
+    ;Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, DPIRect.left, DPIRect.top, DPIRect.right, DPIRect.bottom, hWndParent, dwResourceID, hinstance, NULL
+    Invoke CreateWindowEx, NULL, Addr szMUIButtonClass, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
     mov hControl, eax
     .IF eax != NULL
         ;PrintDec hControl
-        .IF bScaled == TRUE
-            ;PrintText 'scalefont'
-            Invoke SendMessage, hControl, WM_GETFONT, 0, 0
-            Invoke MUIDPIScaleFont, eax
-            .IF eax != 0
-                Invoke SendMessage, hControl, WM_SETFONT, eax, TRUE
-            .ENDIF
-            Invoke MUISetIntProperty, hControl, @ButtonDPI, TRUE
-        .ENDIF
+;        .IF bScaled == TRUE
+;            ;PrintText 'scalefont'
+;            Invoke SendMessage, hControl, WM_GETFONT, 0, 0
+;            Invoke MUIDPIScaleFont, eax
+;            .IF eax != 0
+;                Invoke SendMessage, hControl, WM_SETFONT, eax, TRUE
+;            .ENDIF
+;            Invoke MUISetIntProperty, hControl, @ButtonDPI, TRUE
+;        .ENDIF
     .ENDIF
     mov eax, hControl
     ret
@@ -625,23 +625,23 @@ _MUI_ButtonWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPA
         ret
     
     
-    .ELSEIF eax == WM_DPICHANGED ; 0x02E0
-        Invoke MUIGetIntProperty,  hWin, @ButtonDPI
-        .IF eax == TRUE
-            Invoke CopyRect, Addr rect, lParam
-            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOZORDER
-            
-            Invoke SendMessage, hWin, WM_GETFONT, 0, 0
-            Invoke MUIDPIScaleFont, eax
-            .IF eax != 0
-                Invoke SendMessage, hWin, WM_SETFONT, eax, TRUE
-            .ENDIF
-            
-            ; todo, adjust and store scaled value for accent width, text indent for x, y and image ident for x, y and padding between text and image
-            
-        .ENDIF
-        mov eax, 0
-        ret
+;    .ELSEIF eax == WM_DPICHANGED ; 0x02E0
+;        Invoke MUIGetIntProperty,  hWin, @ButtonDPI
+;        .IF eax == TRUE
+;            Invoke CopyRect, Addr rect, lParam
+;            Invoke SetWindowPos, hWin, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOZORDER
+;            
+;            Invoke SendMessage, hWin, WM_GETFONT, 0, 0
+;            Invoke MUIDPIScaleFont, eax
+;            .IF eax != 0
+;                Invoke SendMessage, hWin, WM_SETFONT, eax, TRUE
+;            .ENDIF
+;            
+;            ; todo, adjust and store scaled value for accent width, text indent for x, y and image ident for x, y and padding between text and image
+;            
+;        .ENDIF
+;        mov eax, 0
+;        ret
     
     ; todo - weird issue, focus on one button, click and hold, tab to next button - tab order reverses like as if shift-tab was pressed.
     
