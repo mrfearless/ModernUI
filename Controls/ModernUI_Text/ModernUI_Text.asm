@@ -568,23 +568,27 @@ _MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lPar
         Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
 
    .ELSEIF eax == WM_MOUSEMOVE
-        Invoke MUIGetIntProperty, hWin, @TextEnabledState
-        .IF eax == TRUE   
-            Invoke MUISetIntProperty, hWin, @TextMouseOver, TRUE
-            .IF eax != TRUE
-                ;Invoke ShowWindow, hWin, SW_HIDE
-                Invoke InvalidateRect, hWin, NULL, TRUE
-                ;Invoke ShowWindow, hWin, SW_SHOW
-                mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
-                mov TE.dwFlags, TME_LEAVE
-                mov eax, hWin
-                mov TE.hwndTrack, eax
-                mov TE.dwHoverTime, NULL
-                Invoke TrackMouseEvent, Addr TE
+        Invoke GetWindowLong, hWin, GWL_STYLE
+        and eax, MUITS_HAND
+        .IF eax == MUITS_HAND   
+            Invoke MUIGetIntProperty, hWin, @TextEnabledState
+            .IF eax == TRUE   
+                Invoke MUISetIntProperty, hWin, @TextMouseOver, TRUE
+                .IF eax != TRUE
+                    ;Invoke ShowWindow, hWin, SW_HIDE
+                    Invoke InvalidateRect, hWin, NULL, TRUE
+                    ;Invoke ShowWindow, hWin, SW_SHOW
+                    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
+                    mov TE.dwFlags, TME_LEAVE
+                    mov eax, hWin
+                    mov TE.hwndTrack, eax
+                    mov TE.dwHoverTime, NULL
+                    Invoke TrackMouseEvent, Addr TE
+                .ENDIF
             .ENDIF
+            Invoke GetParent, hWin
+            Invoke PostMessage, eax, WM_MOUSEMOVE, wParam, lParam ; pass mousemove to parent
         .ENDIF
-        Invoke GetParent, hWin
-        Invoke PostMessage, eax, WM_MOUSEMOVE, wParam, lParam ; pass mousemove to parent             
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @TextMouseOver, FALSE
@@ -788,6 +792,15 @@ _MUI_TextInit PROC USES EBX hWin:DWORD
         Invoke MUISetIntProperty, hWin, @TextPtrFontSpecial, eax        
     .ENDIF
     ENDIF
+
+    mov eax, dwStyle
+    and eax, MUITS_HAND
+    .IF eax != MUITS_HAND
+        Invoke GetWindowLong, hWin, GWL_EXSTYLE	
+        mov dwStyle, eax
+        or eax, WS_EX_TRANSPARENT
+        Invoke SetWindowLong, hWin, GWL_EXSTYLE, dwStyle
+    .ENDIF  
 
     ret
 
