@@ -90,6 +90,7 @@ _MUI_CheckboxWndProc                    PROTO :DWORD, :DWORD, :DWORD, :DWORD
 _MUI_CheckboxInit                       PROTO :DWORD
 _MUI_CheckboxCleanup                    PROTO :DWORD
 _MUI_CheckboxSetColors                  PROTO :DWORD, :DWORD
+_MUI_SetTheme                           PROTO :DWORD, :DWORD, :DWORD
 _MUI_CheckboxPaint                      PROTO :DWORD
 
 _MUI_CheckboxPaintBackground            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD
@@ -244,7 +245,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Set property for ModernUI_Checkbox control
 ;------------------------------------------------------------------------------
-MUICheckboxSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUICheckboxSetProperty PROC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUICheckboxSetProperty ENDP
@@ -254,7 +255,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Get property for ModernUI_Checkbox control
 ;------------------------------------------------------------------------------
-MUICheckboxGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
+MUICheckboxGetProperty PROC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUICheckboxGetProperty ENDP
@@ -266,7 +267,7 @@ MUI_ALIGN
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_Checkbox
 ;------------------------------------------------------------------------------
-MUICheckboxRegister PROC PUBLIC
+MUICheckboxRegister PROC 
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
     
@@ -302,7 +303,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUICheckboxCreate - Returns handle in eax of newly created control
 ;------------------------------------------------------------------------------
-MUICheckboxCreate PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+MUICheckboxCreate PROC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
     LOCAL hControl:DWORD
@@ -337,7 +338,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_CheckboxWndProc - Main processing window for our control
 ;------------------------------------------------------------------------------
-_MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
+_MUI_CheckboxWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL hParent:DWORD
     LOCAL rect:RECT
@@ -517,7 +518,11 @@ _MUI_CheckboxWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, 
         Invoke MUISetIntProperty, hWin, @CheckboxSelectedState, wParam
         Invoke InvalidateRect, hWin, NULL, TRUE
         ret
-        
+    
+    .ELSEIF eax == MUICM_SETTHEME ; wParam = TRUE for dark theme, FALSE for light theme, lParam = TRUE for redraw now
+        Invoke _MUI_SetTheme, hWin, wParam, lParam
+        ret
+    
     .ENDIF
     
     Invoke DefWindowProc, hWin, uMsg, wParam, lParam
@@ -530,7 +535,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_CheckboxInit - set initial default values
 ;------------------------------------------------------------------------------
-_MUI_CheckboxInit PROC PRIVATE hWin:DWORD
+_MUI_CheckboxInit PROC hWin:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
     LOCAL hFont:DWORD
@@ -730,7 +735,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_CheckboxCleanup - cleanup a few things before control is destroyed
 ;------------------------------------------------------------------------------
-_MUI_CheckboxCleanup PROC PRIVATE hWin:DWORD
+_MUI_CheckboxCleanup PROC hWin:DWORD
     LOCAL ImageType:DWORD
     LOCAL hIStreamImage:DWORD
     LOCAL hIStreamImageAlt:DWORD
@@ -884,7 +889,7 @@ MUI_ALIGN
 ; _MUI_CheckboxSetColors - Set colors on init or syscolorchange if MUIBS_THEME 
 ; style used
 ;------------------------------------------------------------------------------
-_MUI_CheckboxSetColors PROC PRIVATE hWin:DWORD, bInit:DWORD
+_MUI_CheckboxSetColors PROC hWin:DWORD, bInit:DWORD
     LOCAL dwStyle:DWORD
     
     Invoke GetWindowLong, hWin, GWL_STYLE
@@ -943,9 +948,185 @@ _MUI_CheckboxSetColors ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
+; _MUI_SetTheme - Set Theme. bTheme = TRUE for dark theme, FALSE for light theme
+;------------------------------------------------------------------------------
+_MUI_SetTheme PROC PROC hWin:DWORD, bTheme:DWORD, bRedraw:DWORD
+    LOCAL dwStyle:DWORD
+    
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    mov dwStyle, eax
+
+    mov eax, dwStyle
+    and eax, MUICBS_RADIO
+    .IF eax == MUICBS_RADIO
+    
+        ; Default radio icons
+        .IF bTheme == TRUE ; Radio icons: light color icons for dark background
+            .IF hDefault_icoMUIRadioEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioEmptyL, 0
+                mov hDefault_icoMUIRadioEmptyL, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioAltEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioAltEmptyL, 0
+                mov hDefault_icoMUIRadioAltEmptyL, eax
+            .ENDIF               
+            .IF hDefault_icoMUIRadioTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioTickL, 0
+                mov hDefault_icoMUIRadioTickL, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioAltTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioAltTickL, 0
+                mov hDefault_icoMUIRadioAltTickL, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioDisabledEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledEmptyL, 0
+                mov hDefault_icoMUIRadioDisabledEmptyL, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioDisabledTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledTickL, 0
+                mov hDefault_icoMUIRadioDisabledTickL, eax
+            .ENDIF    
+            Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUIRadioEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUIRadioAltEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUIRadioTickL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUIRadioAltTickL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUIRadioDisabledEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUIRadioDisabledTickL
+        
+        .ELSE ; bTheme == FALSE ; Radio icons: dark color icons for light background
+        
+            .IF hDefault_icoMUIRadioEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioEmptyD, 0
+                mov hDefault_icoMUIRadioEmptyD, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioAltEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioAltEmptyD, 0
+                mov hDefault_icoMUIRadioAltEmptyD, eax
+            .ENDIF               
+            .IF hDefault_icoMUIRadioTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioTickD, 0
+                mov hDefault_icoMUIRadioTickD, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioAltTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioAltTickD, 0
+                mov hDefault_icoMUIRadioAltTickD, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioDisabledEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledEmptyD, 0
+                mov hDefault_icoMUIRadioDisabledEmptyD, eax
+            .ENDIF
+            .IF hDefault_icoMUIRadioDisabledTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUIRadioDisabledTickD, 0
+                mov hDefault_icoMUIRadioDisabledTickD, eax
+            .ENDIF    
+            Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUIRadioEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUIRadioAltEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUIRadioTickD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUIRadioAltTickD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUIRadioDisabledEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUIRadioDisabledTickD
+        .ENDIF
+        
+    .ELSE ; eax == MUICBS_CHECK
+    
+        ; Default check icons
+        .IF bTheme == TRUE ; Check icons: light color icons for dark background
+            .IF hDefault_icoMUICheckboxEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxEmptyL, 0
+                mov hDefault_icoMUICheckboxEmptyL, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxAltEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxAltEmptyL, 0
+                mov hDefault_icoMUICheckboxAltEmptyL, eax
+            .ENDIF             
+            .IF hDefault_icoMUICheckboxTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxTickL, 0
+                mov hDefault_icoMUICheckboxTickL, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxAltTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxAltTickL, 0
+                mov hDefault_icoMUICheckboxAltTickL, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxDisabledEmptyL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledEmptyL, 0
+                mov hDefault_icoMUICheckboxDisabledEmptyL, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxDisabledTickL == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledTickL, 0
+                mov hDefault_icoMUICheckboxDisabledTickL, eax
+            .ENDIF
+            Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUICheckboxEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUICheckboxAltEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUICheckboxTickL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUICheckboxAltTickL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUICheckboxDisabledEmptyL
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUICheckboxDisabledTickL
+            
+        .ELSE ; bTheme == FALSE ; Check icons: dark color icons for light background
+        
+            .IF hDefault_icoMUICheckboxEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxEmptyD, 0
+                mov hDefault_icoMUICheckboxEmptyD, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxAltEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxAltEmptyD, 0
+                mov hDefault_icoMUICheckboxAltEmptyD, eax
+            .ENDIF             
+            .IF hDefault_icoMUICheckboxTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxTickD, 0
+                mov hDefault_icoMUICheckboxTickD, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxAltTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxAltTickD, 0
+                mov hDefault_icoMUICheckboxAltTickD, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxDisabledEmptyD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledEmptyD, 0
+                mov hDefault_icoMUICheckboxDisabledEmptyD, eax
+            .ENDIF
+            .IF hDefault_icoMUICheckboxDisabledTickD == 0
+                Invoke MUICreateIconFromMemory, Addr icoMUICheckboxDisabledTickD, 0
+                mov hDefault_icoMUICheckboxDisabledTickD, eax
+            .ENDIF
+            Invoke MUISetExtProperty, hWin, @CheckboxImage, hDefault_icoMUICheckboxEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageAlt, hDefault_icoMUICheckboxAltEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSel, hDefault_icoMUICheckboxTickD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageSelAlt, hDefault_icoMUICheckboxAltTickD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabled, hDefault_icoMUICheckboxDisabledEmptyD
+            Invoke MUISetExtProperty, hWin, @CheckboxImageDisabledSel, hDefault_icoMUICheckboxDisabledTickD
+        .ENDIF
+    .ENDIF    
+    
+    ; Set actual style flag based on bTheme
+    .IF bTheme == TRUE
+        mov eax, dwStyle
+        and eax, MUICBS_THEMEDARK
+        .IF eax != MUICBS_THEMEDARK
+            or dwStyle, MUICBS_THEMEDARK
+            Invoke SetWindowLong, hWin, GWL_STYLE, dwStyle
+        .ENDIF
+    .ELSE    
+        mov eax, dwStyle
+        and eax, MUICBS_THEMEDARK
+        .IF eax == MUICBS_THEMEDARK
+            and dwStyle,(-1 xor MUICBS_THEMEDARK)
+            Invoke SetWindowLong, hWin, GWL_STYLE, dwStyle
+        .ENDIF
+    .ENDIF
+    
+    .IF bRedraw == TRUE
+        Invoke InvalidateRect, hWin, NULL, TRUE
+    .ENDIF
+    
+    ret
+_MUI_SetTheme ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxButtonDown - Mouse button down or keyboard down from vk_space
 ;------------------------------------------------------------------------------
-_MUI_CheckboxButtonDown PROC PRIVATE hWin:DWORD
+_MUI_CheckboxButtonDown PROC hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL rect:RECT    
 
@@ -969,7 +1150,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_CheckboxButtonUp - Mouse button up or keyboard up from vk_space
 ;------------------------------------------------------------------------------
-_MUI_CheckboxButtonUp PROC PRIVATE hWin:DWORD
+_MUI_CheckboxButtonUp PROC hWin:DWORD
     LOCAL hParent:DWORD
     LOCAL wID:DWORD
     LOCAL rect:RECT
@@ -1000,7 +1181,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_CheckboxPaint
 ;------------------------------------------------------------------------------
-_MUI_CheckboxPaint PROC PRIVATE hWin:DWORD
+_MUI_CheckboxPaint PROC hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
     LOCAL hdc:HDC
@@ -1469,7 +1650,7 @@ MUI_ALIGN
 ; MUICheckboxLoadImages - Loads images from resource ids and stores the handles
 ; in the appropriate property.
 ;------------------------------------------------------------------------------
-MUICheckboxLoadImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD, dwResIDImageAlt:DWORD, dwResIDImageSel:DWORD, dwResIDImageSelAlt:DWORD, dwResIDImageDisabled:DWORD, dwResIDImageDisabledSel:DWORD
+MUICheckboxLoadImages PROC hControl:DWORD, dwImageType:DWORD, dwResIDImage:DWORD, dwResIDImageAlt:DWORD, dwResIDImageSel:DWORD, dwResIDImageSelAlt:DWORD, dwResIDImageDisabled:DWORD, dwResIDImageDisabledSel:DWORD
 
     .IF dwImageType == 0
         ret
@@ -1565,7 +1746,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUICheckboxSetImages - Sets the property handles for image types
 ;------------------------------------------------------------------------------
-MUICheckboxSetImages PROC PUBLIC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, hImageAlt:DWORD, hImageSel:DWORD, hImageSelAlt:DWORD, hImageDisabled:DWORD, hImageDisabledSel:DWORD
+MUICheckboxSetImages PROC hControl:DWORD, dwImageType:DWORD, hImage:DWORD, hImageAlt:DWORD, hImageSel:DWORD, hImageSelAlt:DWORD, hImageDisabled:DWORD, hImageDisabledSel:DWORD
 
     .IF dwImageType == 0
         ret
@@ -1608,7 +1789,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUICheckboxGetState
 ;------------------------------------------------------------------------------
-MUICheckboxGetState PROC PUBLIC hControl:DWORD
+MUICheckboxGetState PROC hControl:DWORD
     Invoke SendMessage, hControl, MUICM_GETSTATE, 0, 0
     ret
 MUICheckboxGetState ENDP
@@ -1618,7 +1799,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUICheckboxSetState
 ;------------------------------------------------------------------------------
-MUICheckboxSetState PROC PUBLIC hControl:DWORD, bState:DWORD
+MUICheckboxSetState PROC hControl:DWORD, bState:DWORD
     Invoke SendMessage, hControl, MUICM_SETSTATE, bState, 0
     ret
 MUICheckboxSetState ENDP
@@ -1626,10 +1807,20 @@ MUICheckboxSetState ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
+; MUICheckboxSetTheme
+;------------------------------------------------------------------------------
+MUICheckboxSetTheme PROC hControl:DWORD, bTheme:DWORD, bRedraw:DWORD
+    Invoke SendMessage, hControl, MUICM_SETTHEME, bTheme, bRedraw
+    ret
+MUICheckboxSetTheme ENDP
+
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
 ; _MUI_CheckboxLoadBitmap - if succesful, loads specified bitmap resource into 
 ; the specified external property and returns TRUE in eax, otherwise FALSE.
 ;------------------------------------------------------------------------------
-_MUI_CheckboxLoadBitmap PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
+_MUI_CheckboxLoadBitmap PROC hWin:DWORD, dwProperty:DWORD, idResBitmap:DWORD
     LOCAL hinstance:DWORD
 
     .IF idResBitmap == NULL
@@ -1657,7 +1848,7 @@ MUI_ALIGN
 ; _MUI_CheckboxLoadIcon - if succesful, loads specified icon resource into the 
 ; specified external property and returns TRUE in eax, otherwise FALSE.
 ;------------------------------------------------------------------------------
-_MUI_CheckboxLoadIcon PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
+_MUI_CheckboxLoadIcon PROC hWin:DWORD, dwProperty:DWORD, idResIcon:DWORD
     LOCAL hinstance:DWORD
 
     .IF idResIcon == NULL
@@ -1693,7 +1884,7 @@ _MUI_CheckboxLoadIcon ENDP
 ;------------------------------------------------------------------------------
 IFDEF MUI_USEGDIPLUS
 MUI_ALIGN
-_MUI_CheckboxLoadPng PROC PRIVATE hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
+_MUI_CheckboxLoadPng PROC hWin:DWORD, dwProperty:DWORD, idResPng:DWORD
     local rcRes:HRSRC
     local hResData:HRSRC
     local pResData:HANDLE

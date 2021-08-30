@@ -47,6 +47,7 @@ MUICheckboxSetProperty          PROTO :DWORD, :DWORD, :DWORD                    
 MUICheckboxGetProperty          PROTO :DWORD, :DWORD                                                    ; hModernUI_Checkbox, dwProperty
 MUICheckboxGetState             PROTO :DWORD                                                            ; hModernUI_Checkbox
 MUICheckboxSetState             PROTO :DWORD, :DWORD                                                    ; hModernUI_Checkbox, bState
+MUICheckboxSetTheme             PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_Checkbox, bTheme, bRedraw
 
 MUICheckboxLoadImages           PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hModernUI_Checkbox, dwImageType, dwResIDImage, dwResIDImageAlt, dwResIDImageSel, dwResIDImageSelAlt, dwResIDImageDisabled, dwResIDImageDisabledSel
 MUICheckboxSetImages            PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hModernUI_Checkbox, dwImageType, hImage, hImageAlt, hImageSel, hImageSelAlt, hImageDisabled, hImageDisabledSel
@@ -85,6 +86,7 @@ ENDIF
 ; ModernUI_Checkbox Messages
 MUICM_GETSTATE                  EQU WM_USER + 1779 ; wParam = NULL, lParam = NULL. EAX contains state (TRUE/FALSE)
 MUICM_SETSTATE                  EQU WM_USER + 1778 ; wParam = TRUE/FALSE, lParam = NULL
+MUICM_SETTHEME                  EQU WM_USER + 1777 ; wParam = TRUE for dark theme, FALSE for light theme, lParam = TRUE for redraw now
 
 ; ModernUI_Checkbox Styles
 MUICBS_CHECK                     EQU 00h     ;

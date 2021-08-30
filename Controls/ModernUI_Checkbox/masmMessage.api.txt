@@ -6,3 +6,6 @@
 ; Paste this text at the end of \Radasm\Masm\masmMessage.api to add to Radasm
 ;
 ;------------------------------------------------------------------------------
+MUICM_GETSTATE                  EQU WM_USER + 1779 ; wParam = NULL, lParam = NULL. EAX contains state (TRUE/FALSE)
+MUICM_SETSTATE                  EQU WM_USER + 1778 ; wParam = TRUE/FALSE, lParam = NULL
+MUICM_SETTHEME                  EQU WM_USER + 1777 ; wParam = TRUE for dark theme, FALSE for light theme, lParam = TRUE for redraw now
