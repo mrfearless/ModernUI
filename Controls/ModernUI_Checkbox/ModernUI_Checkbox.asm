@@ -1273,26 +1273,11 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 _MUI_CheckboxPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BackColor:DWORD
-    LOCAL hBrush:DWORD
-    LOCAL hOldBrush:DWORD
     
     Invoke MUIGetExtProperty, hWin, @CheckboxBackColor
     mov BackColor, eax
 
-    Invoke GetStockObject, DC_BRUSH
-    mov hBrush, eax
-    Invoke SelectObject, hdc, eax
-    mov hOldBrush, eax
-    Invoke SetDCBrushColor, hdc, BackColor
-    Invoke FillRect, hdc, lpRect, hBrush
-    
-    .IF hOldBrush != 0
-        Invoke SelectObject, hdc, hOldBrush
-        Invoke DeleteObject, hOldBrush
-    .ENDIF     
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF      
+    Invoke MUIGDIPaintFill, hdc, lpRect, BackColor
     
     ret
 
@@ -1567,6 +1552,12 @@ _MUI_CheckboxPaintFocusRect PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bF
     Invoke GetWindowLong, hWin, GWL_STYLE
     and eax, MUICBS_NOFOCUSRECT
     .IF eax == MUICBS_NOFOCUSRECT
+        ret
+    .ENDIF
+
+    Invoke GetWindowLong, hWin, GWL_STYLE
+    and eax, WS_TABSTOP
+    .IF eax != WS_TABSTOP
         ret
     .ENDIF
 
