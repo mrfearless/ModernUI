@@ -816,6 +816,17 @@ _MUI_ButtonInit PROC hWin:DWORD
     Invoke MUISetExtProperty, hWin, @ButtonPaddingGeneral, 4d
     Invoke MUISetExtProperty, hWin, @ButtonPaddingStyle, MUIBPS_ALL
     Invoke MUISetExtProperty, hWin, @ButtonPaddingTextImage, 8    
+
+    Invoke MUISetExtProperty, hWin, @ButtonBackColorTo, -1
+    Invoke MUISetExtProperty, hWin, @ButtonBackColorAltTo, -1
+    Invoke MUISetExtProperty, hWin, @ButtonBackColorSelTo, -1
+    Invoke MUISetExtProperty, hWin, @ButtonBackColorSelAltTo, -1
+    Invoke MUISetExtProperty, hWin, @ButtonBackColorDisabledTo, -1
+    
+    Invoke MUISetExtProperty, hWin, @ButtonAccentColor, -1
+    Invoke MUISetExtProperty, hWin, @ButtonAccentColorAlt, -1
+    Invoke MUISetExtProperty, hWin, @ButtonAccentColorSel, -1
+    Invoke MUISetExtProperty, hWin, @ButtonAccentColorSelAlt, -1
     
     Invoke MUISetExtProperty, hWin, @ButtonDllInstance, 0
     
@@ -1431,8 +1442,6 @@ MUI_ALIGN
 _MUI_ButtonPaintBackground PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledState:DWORD, bMouseOver:DWORD, bSelectedState:DWORD
     LOCAL BackColor:DWORD
     LOCAL BackColorTo:DWORD
-    LOCAL hBrush:DWORD
-    LOCAL hOldBrush:DWORD
     
     .IF bEnabledState == TRUE
         .IF bSelectedState == FALSE
@@ -2695,7 +2704,7 @@ _MUI_ButtonPaintFocusRect PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, bFocusedStat
     and eax, WS_TABSTOP
     .IF eax != WS_TABSTOP
         ret
-    .ENDIF    
+    .ENDIF
 
     Invoke CopyRect, Addr rect, lpRect
     Invoke InflateRect, Addr rect, MUI_BUTTON_FOCUSRECT_OFFSET, MUI_BUTTON_FOCUSRECT_OFFSET

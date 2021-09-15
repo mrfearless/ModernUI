@@ -76,7 +76,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=30
+MilestoneOnDateDate=15
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=30
@@ -100,9 +100,9 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=417600120
+PTimer=419071088
 [Collapse]
-1=21504064,,1006649598,,17358848,131072,,131072,10240,8456,34816,3160064
+1=4726848,,1006649598,,581632,131072,,131072,16787456,8456,,1063424
 2=
 3=
 4=
@@ -110,8 +110,8 @@ PTimer=417600120
 6=
 7=
 [Size]
-1=0,0,0,0,24683
-2=0,0,0,0,37465
+1=0,0,0,0,112437
+2=0,0,0,0,36986
 3=0,0,0,0,1323
 4=0,0,0,0,3372
 5=0,0,0,0,8385
@@ -133,13 +133,13 @@ GroupExpand=1,1,0
 [BreakPoint]
 0=
 [Find]
-1="@ButtonDPI"
-2="PUBLIC "
-3="PRIVATE "
-4="MUI_BUTTON_DEFAULT_THEME"
-5="TextExtent"
-6=";"
-7="@"
-8="EQU "
-9="EQU"
-10=";-------------------------------------------------------------------------------------"
+1="@ButtonBrush"
+2="@ButtonDPI"
+3="PUBLIC "
+4="PRIVATE "
+5="MUI_BUTTON_DEFAULT_THEME"
+6="TextExtent"
+7=";"
+8="@"
+9="EQU "
+10="EQU"
