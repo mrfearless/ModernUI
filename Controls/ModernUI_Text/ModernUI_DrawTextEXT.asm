@@ -4,8 +4,6 @@
 ;
 ; Copyright (c) 2019 by fearless
 ;
-; All Rights Reserved
-;
 ; http://github.com/mrfearless/ModernUI
 ;
 ;

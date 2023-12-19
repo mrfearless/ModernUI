@@ -42,12 +42,14 @@ Menu=0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 [Accel]
 [VerInf]
 [Group]
-Group=Distribuition,Modules,Assembly,Resources,Misc
-1=3
-2=3
-3=5
-4=1
+Group=Assembly,Misc
+1=1
+2=1
+3=2
+4=2
 5=2
+6=2
+7=2
 [*ENDDEF*]
 [*BEGINTXT*]
 LibTemplate.asm
@@ -55,11 +57,9 @@ LibTemplate.asm
 ;
 ; ModernUI Control - [*PROJECTNAME*]
 ;
-; Copyright (c) 2018 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
-;
-; http://www.LetTheLight.in
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
@@ -119,154 +119,187 @@ includelib gdi32.lib
 include ModernUI.inc
 includelib ModernUI.lib
 
-include [*PROJECTNAME*].inc
+IFDEF MUI_USEGDIPLUS
+ECHO MUI_USEGDIPLUS
+include gdiplus.inc
+include ole32.inc
+includelib gdiplus.lib
+includelib ole32.lib
+ELSE
+ECHO MUI_DONTUSEGDIPLUS
+ENDIF
+
+include ModernUI_[*PROJECTNAME*].inc
 
 ;------------------------------------------------------------------------------
 ; Prototypes for internal use
 ;------------------------------------------------------------------------------
-_MUI_[*PROJECTNAME*]WndProc					PROTO :DWORD, :DWORD, :DWORD, :DWORD
-_MUI_[*PROJECTNAME*]Init					PROTO :DWORD
-_MUI_[*PROJECTNAME*]Paint					PROTO :DWORD
+_MUI_[*PROJECTNAME*]WndProc                 PROTO :DWORD, :DWORD, :DWORD, :DWORD
+_MUI_[*PROJECTNAME*]Init                    PROTO :DWORD
+_MUI_[*PROJECTNAME*]Cleanup                 PROTO :DWORD
+_MUI_[*PROJECTNAME*]Paint                   PROTO :DWORD
 
 
 ;------------------------------------------------------------------------------
 ; Structures for internal use
 ;------------------------------------------------------------------------------
 ; External public properties
-MUI_[*PROJECTNAME*]_PROPERTIES				STRUCT
-	dwTextColor							DD ?
-	dwTextFont							DD ?
-	dwBackColor							DD ?
-MUI_[*PROJECTNAME*]_PROPERTIES				ENDS
+MUI_[*PROJECTNAME*]_PROPERTIES              STRUCT
+    dwTextColor                         DD ?
+    dwTextFont                          DD ?
+    dwBackColor                         DD ?
+    dwBorderColor                       DD ?
+MUI_[*PROJECTNAME*]_PROPERTIES              ENDS
 
 ; Internal properties
-_MUI_[*PROJECTNAME*]_PROPERTIES				STRUCT
-	dwEnabledState						DD ?
-	dwMouseOver							DD ?
-_MUI_[*PROJECTNAME*]_PROPERTIES				ENDS
+_MUI_[*PROJECTNAME*]_PROPERTIES             STRUCT
+    dwEnabledState                      DD ?
+    dwMouseOver                         DD ?
+_MUI_[*PROJECTNAME*]_PROPERTIES             ENDS
 
 
 .CONST
 ; Internal properties
-@[*PROJECTNAME*]EnabledState				EQU 0
-@[*PROJECTNAME*]MouseOver					EQU 4
+@[*PROJECTNAME*]EnabledState                EQU 0
+@[*PROJECTNAME*]MouseOver                   EQU 4
 
 ; External public properties
 
 
 .DATA
-szMUI[*PROJECTNAME*]Class					DB 'ModernUI[*PROJECTNAME*]',0 	; Class name for creating our [*PROJECTNAME*] control
-szMUI[*PROJECTNAME*]Font                    DB 'Segoe UI',0             	; Font used for [*PROJECTNAME*] text
-hMUI[*PROJECTNAME*]Font                     DD 0                        	; Handle to [*PROJECTNAME*] font (segoe ui)
+szMUI[*PROJECTNAME*]Class                   DB 'ModernUI_[*PROJECTNAME*]',0     ; Class name for creating our [*PROJECTNAME*] control
+szMUI[*PROJECTNAME*]Font                    DB 'Segoe UI',0                 ; Font used for [*PROJECTNAME*] text
+hMUI[*PROJECTNAME*]Font                     DD 0                            ; Handle to [*PROJECTNAME*] font (segoe ui)
 
 
 .CODE
+
+
+MUI_ALIGN
 ;------------------------------------------------------------------------------
-; Set property for [*PROJECTNAME*] control
+; Set property for ModernUI_[*PROJECTNAME*] control
 ;------------------------------------------------------------------------------
-MUI[*PROJECTNAME*]SetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUI[*PROJECTNAME*]SetProperty PROC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUI[*PROJECTNAME*]SetProperty ENDP
 
-
+MUI_ALIGN
 ;------------------------------------------------------------------------------
-; Get property for [*PROJECTNAME*] control
+; Get property for ModernUI_[*PROJECTNAME*] control
 ;------------------------------------------------------------------------------
-MUI[*PROJECTNAME*]GetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
+MUI[*PROJECTNAME*]GetProperty PROC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUI[*PROJECTNAME*]GetProperty ENDP
 
-
+MUI_ALIGN
 ;------------------------------------------------------------------------------
-; MUI[*PROJECTNAME*]Register - Registers the [*PROJECTNAME*] control
+; MUI[*PROJECTNAME*]Register - Registers the ModernUI_[*PROJECTNAME*] control
 ; can be used at start of program for use with RadASM custom control
-; Custom control class must be set as [*PROJECTNAME*]
+; Custom control class must be set as ModernUI_[*PROJECTNAME*]
 ;------------------------------------------------------------------------------
-MUI[*PROJECTNAME*]Register PROC PUBLIC
+MUI[*PROJECTNAME*]Register PROC
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
-
-    invoke GetClassInfoEx,hinstance,addr szMUI[*PROJECTNAME*]Class, Addr wc 
+    
+    mov wc.cbSize, SIZEOF WNDCLASSEX
+    
+    invoke GetClassInfoEx, hinstance, Addr szMUI[*PROJECTNAME*]Class, Addr wc 
     .IF eax == 0 ; if class not already registered do so
-        mov wc.cbSize,sizeof WNDCLASSEX
+        mov wc.cbSize, SIZEOF WNDCLASSEX
         lea eax, szMUI[*PROJECTNAME*]Class
-    	mov wc.lpszClassName, eax
-    	mov eax, hinstance
+        mov wc.lpszClassName, eax
+        mov eax, hinstance
         mov wc.hInstance, eax
-    	mov wc.lpfnWndProc, OFFSET _MUI_[*PROJECTNAME*]WndProc
-    	Invoke LoadCursor, NULL, IDC_ARROW
-    	mov wc.hCursor, eax
-    	mov wc.hIcon, 0
-    	mov wc.hIconSm, 0
-    	mov wc.lpszMenuName, NULL
-    	mov wc.hbrBackground, NULL
-    	mov wc.style, NULL
+        lea eax, _MUI_[*PROJECTNAME*]WndProc
+        mov wc.lpfnWndProc, eax ; OFFSET _MUI_[*PROJECTNAME*]WndProc
+        Invoke LoadCursor, NULL, IDC_ARROW
+        mov wc.hCursor, eax
+        mov wc.hIcon, 0
+        mov wc.hIconSm, 0
+        mov wc.lpszMenuName, NULL
+        mov wc.hbrBackground, NULL
+        mov wc.style, NULL
         mov wc.cbClsExtra, 0
-    	mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
-    	Invoke RegisterClassEx, addr wc
+        mov wc.cbWndExtra, 8 ; cbWndExtra +0 = dword ptr to internal properties memory block, cbWndExtra +4 = dword ptr to external properties memory block
+        Invoke RegisterClassEx, Addr wc
     .ENDIF  
     ret
-
 MUI[*PROJECTNAME*]Register ENDP
 
-
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUI[*PROJECTNAME*]Create - Returns handle in eax of newly created control
 ;------------------------------------------------------------------------------
-MUI[*PROJECTNAME*]Create PROC PRIVATE hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+MUI[*PROJECTNAME*]Create PROC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
-	LOCAL hControl:DWORD
-	
+    LOCAL hControl:DWORD
+    LOCAL dwNewStyle:DWORD
+    
     Invoke GetModuleHandle, NULL
     mov hinstance, eax
 
-	Invoke MUI[*PROJECTNAME*]Register
-	
+    Invoke MUI[*PROJECTNAME*]Register
+    
     ; Modify styles appropriately - for visual controls no CS_HREDRAW CS_VREDRAW (causes flickering)
-	; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
-	
-    Invoke CreateWindowEx, NULL, Addr szMUI[*PROJECTNAME*]Class, lpszText, WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
-	mov hControl, eax
-	.IF eax != NULL
-		
-	.ENDIF
-	mov eax, hControl
+    ; probably need WS_CHILD, WS_VISIBLE. Needs WS_CLIPCHILDREN. Non visual prob dont need any of these.
+    
+    mov eax, dwStyle
+    mov dwNewStyle, eax
+    and eax, WS_CHILD or WS_CLIPCHILDREN
+    .IF eax != WS_CHILD or WS_CLIPCHILDREN
+        or dwNewStyle, WS_CHILD or WS_CLIPCHILDREN
+    .ENDIF  
+    
+    Invoke CreateWindowEx, NULL, Addr szMUI[*PROJECTNAME*]Class, lpszText, dwNewStyle, xpos, ypos, controlwidth, controlheight, hWndParent, dwResourceID, hinstance, NULL
+    mov hControl, eax
+    .IF eax != NULL
+        
+    .ENDIF
+    mov eax, hControl
     ret
 MUI[*PROJECTNAME*]Create ENDP
 
-
-
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_[*PROJECTNAME*]WndProc - Main processing window for our control
 ;------------------------------------------------------------------------------
-_MUI_[*PROJECTNAME*]WndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
+_MUI_[*PROJECTNAME*]WndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL wp:WINDOWPLACEMENT
     
     mov eax,uMsg
     .IF eax == WM_NCCREATE
         mov ebx, lParam
-		; sets text of our control, delete if not required.
-        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName	
+        ; sets text of our control, delete if not required.
+        Invoke SetWindowText, hWin, (CREATESTRUCT PTR [ebx]).lpszName   
         mov eax, TRUE
         ret
 
     .ELSEIF eax == WM_CREATE
-		Invoke MUIAllocMemProperties, hWin, 0, SIZEOF _MUI_[*PROJECTNAME*]_PROPERTIES ; internal properties
-		Invoke MUIAllocMemProperties, hWin, 4, SIZEOF MUI_[*PROJECTNAME*]_PROPERTIES ; external properties
-		Invoke _MUI_[*PROJECTNAME*]Init, hWin
-		mov eax, 0
-		ret    
+        Invoke MUIAllocMemProperties, hWin, MUI_INTERNAL_PROPERTIES, SIZEOF _MUI_[*PROJECTNAME*]_PROPERTIES ; internal properties
+        Invoke MUIAllocMemProperties, hWin, MUI_EXTERNAL_PROPERTIES, SIZEOF MUI_[*PROJECTNAME*]_PROPERTIES ; external properties
+        IFDEF MUI_USEGDIPLUS
+        Invoke MUIGDIPlusStart ; for png resources if used
+        ENDIF
+        Invoke _MUI_[*PROJECTNAME*]Init, hWin
+        mov eax, 0
+        ret    
 
     .ELSEIF eax == WM_NCDESTROY
-        Invoke MUIFreeMemProperties, hWin, 0
-		Invoke MUIFreeMemProperties, hWin, 4
+        Invoke _MUI_[*PROJECTNAME*]Cleanup, hWin
+        Invoke MUIFreeMemProperties, hWin, MUI_INTERNAL_PROPERTIES
+        Invoke MUIFreeMemProperties, hWin, MUI_EXTERNAL_PROPERTIES
+        IFDEF MUI_USEGDIPLUS
+        Invoke MUIGDIPlusFinish
+        ENDIF
+        mov eax, 0
+        ret    
         
     .ELSEIF eax == WM_ERASEBKGND
         mov eax, 1
@@ -278,200 +311,164 @@ _MUI_[*PROJECTNAME*]WndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:W
         ret
 
     .ELSEIF eax == WM_LBUTTONUP
-		; simulates click on our control, delete if not required.
-		Invoke GetDlgCtrlID, hWin
-		mov ebx,eax
-		Invoke GetParent, hWin
-		Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
+        ; simulates click on our control, delete if not required.
+        Invoke GetDlgCtrlID, hWin
+        mov ebx,eax
+        Invoke GetParent, hWin
+        Invoke PostMessage, eax, WM_COMMAND, ebx, hWin
 
    .ELSEIF eax == WM_MOUSEMOVE
         Invoke MUIGetIntProperty, hWin, @[*PROJECTNAME*]EnabledState
         .IF eax == TRUE   
-    		Invoke MUISetIntProperty, hWin, @[*PROJECTNAME*]MouseOver , TRUE
-    		.IF eax != TRUE
-    		    Invoke InvalidateRect, hWin, NULL, TRUE
-    		    mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
-    		    mov TE.dwFlags, TME_LEAVE
-    		    mov eax, hWin
-    		    mov TE.hwndTrack, eax
-    		    mov TE.dwHoverTime, NULL
-    		    Invoke TrackMouseEvent, Addr TE
-    		.ENDIF
+            Invoke MUISetIntProperty, hWin, @[*PROJECTNAME*]MouseOver , TRUE
+            .IF eax != TRUE
+                Invoke InvalidateRect, hWin, NULL, TRUE
+                mov TE.cbSize, SIZEOF TRACKMOUSEEVENT
+                mov TE.dwFlags, TME_LEAVE
+                mov eax, hWin
+                mov TE.hwndTrack, eax
+                mov TE.dwHoverTime, NULL
+                Invoke TrackMouseEvent, Addr TE
+            .ENDIF
         .ENDIF
 
     .ELSEIF eax == WM_MOUSELEAVE
         Invoke MUISetIntProperty, hWin, @[*PROJECTNAME*]MouseOver , FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke LoadCursor, NULL, IDC_ARROW
+        Invoke SetCursor, eax
 
     .ELSEIF eax == WM_KILLFOCUS
         Invoke MUISetIntProperty, hWin, @[*PROJECTNAME*]MouseOver , FALSE
-		Invoke InvalidateRect, hWin, NULL, TRUE
-		Invoke LoadCursor, NULL, IDC_ARROW
-		Invoke SetCursor, eax
-	
-	; custom messages start here
-	
-	.ELSEIF eax == MUI_GETPROPERTY
-		Invoke MUIGetExtProperty, hWin, wParam
-		ret
-		
-	.ELSEIF eax == MUI_SETPROPERTY	
-		Invoke MUISetExtProperty, hWin, wParam, lParam
-		ret
-		
+        Invoke InvalidateRect, hWin, NULL, TRUE
+        Invoke LoadCursor, NULL, IDC_ARROW
+        Invoke SetCursor, eax
+    
+    ; custom messages start here
+    
+    .ELSEIF eax == MUI_GETPROPERTY
+        Invoke MUIGetExtProperty, hWin, wParam
+        ret
+        
+    .ELSEIF eax == MUI_SETPROPERTY  
+        Invoke MUISetExtProperty, hWin, wParam, lParam
+        ret
+        
     .ENDIF
     
     Invoke DefWindowProc, hWin, uMsg, wParam, lParam
     ret
-
 _MUI_[*PROJECTNAME*]WndProc ENDP
 
-
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_[*PROJECTNAME*]Init - set initial default values
 ;------------------------------------------------------------------------------
-_MUI_[*PROJECTNAME*]Init PROC PRIVATE hControl:DWORD
+_MUI_[*PROJECTNAME*]Init PROC hWin:DWORD
     LOCAL ncm:NONCLIENTMETRICS
     LOCAL lfnt:LOGFONT
     LOCAL hFont:DWORD
     LOCAL hParent:DWORD
     LOCAL dwStyle:DWORD
     
-    Invoke GetParent, hControl
+    Invoke GetParent, hWin
     mov hParent, eax
     
     ; get style and check it is our default at least
-    Invoke GetWindowLong, hControl, GWL_STYLE
+    Invoke GetWindowLong, hWin, GWL_STYLE
     mov dwStyle, eax
     and eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
     .IF eax != WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov eax, dwStyle
         or eax, WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN
         mov dwStyle, eax
-        Invoke SetWindowLong, hControl, GWL_STYLE, dwStyle
+        Invoke SetWindowLong, hWin, GWL_STYLE, dwStyle
     .ENDIF
     ;PrintDec dwStyle
     
     ; Set default initial external property values     
-    Invoke MUISetExtProperty, hControl, @[*PROJECTNAME*]TextColor, MUI_RGBCOLOR(255,255,255)
-    Invoke MUISetExtProperty, hControl, @[*PROJECTNAME*]BackColor, MUI_RGBCOLOR(21,133,181)
+    Invoke MUISetExtProperty, hWin, @[*PROJECTNAME*]TextColor, MUI_RGBCOLOR(255,255,255)
+    Invoke MUISetExtProperty, hWin, @[*PROJECTNAME*]BackColor, MUI_RGBCOLOR(21,133,181)
     
     .IF hMUI[*PROJECTNAME*]Font == 0
-    	mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
-    	Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
-    	Invoke CreateFontIndirect, Addr ncm.lfMessageFont
-    	mov hFont, eax
-	    Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
-	    mov lfnt.lfHeight, -12d
-	    mov lfnt.lfWeight, FW_BOLD
-	    Invoke CreateFontIndirect, Addr lfnt
+        mov ncm.cbSize, SIZEOF NONCLIENTMETRICS
+        Invoke SystemParametersInfo, SPI_GETNONCLIENTMETRICS, SIZEOF NONCLIENTMETRICS, Addr ncm, 0
+        Invoke CreateFontIndirect, Addr ncm.lfMessageFont
+        mov hFont, eax
+        Invoke GetObject, hFont, SIZEOF lfnt, Addr lfnt
+        mov lfnt.lfHeight, -12d
+        mov lfnt.lfWeight, FW_BOLD
+        Invoke CreateFontIndirect, Addr lfnt
         mov hMUI[*PROJECTNAME*]Font, eax
         Invoke DeleteObject, hFont
     .ENDIF
-    Invoke MUISetExtProperty, hControl, @[*PROJECTNAME*]TextFont, hMUI[*PROJECTNAME*]Font
+    Invoke MUISetExtProperty, hWin, @[*PROJECTNAME*]TextFont, hMUI[*PROJECTNAME*]Font
 
     ret
-
 _MUI_[*PROJECTNAME*]Init ENDP
 
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; _MUI_[*PROJECTNAME*]Cleanup - cleanup
+;------------------------------------------------------------------------------
+_MUI_[*PROJECTNAME*]Cleanup PROC hWin:DWORD
 
+    ret
+_MUI_[*PROJECTNAME*]Cleanup ENDP
+
+MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_[*PROJECTNAME*]Paint
 ;------------------------------------------------------------------------------
-_MUI_[*PROJECTNAME*]Paint PROC PRIVATE hWin:DWORD
+_MUI_[*PROJECTNAME*]Paint PROC hWin:DWORD
     LOCAL ps:PAINTSTRUCT 
     LOCAL rect:RECT
-    LOCAL pt:POINT
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
-    LOCAL hbmMem:DWORD
-    LOCAL hBitmap:DWORD
-    LOCAL hOldBitmap:DWORD
-    LOCAL hBrush:DWORD
-    LOCAL hPen:DWORD
-    LOCAL hOldBrush:DWORD
-    LOCAL hOldPen:DWORD
-    LOCAL hFont:DWORD
-    LOCAL hOldFont:DWORD
-    LOCAL MouseOver:DWORD
-    LOCAL TextColor:DWORD
+    LOCAL hBufferBitmap:DWORD
     LOCAL BackColor:DWORD
-    LOCAL hParent:DWORD
-	LOCAL dwStyle:DWORD
+    LOCAL BorderColor:DWORD
 
     Invoke BeginPaint, hWin, Addr ps
     mov hdc, eax
-    
+
+    ;----------------------------------------------------------
+    ; Get some property values
+    ;---------------------------------------------------------- 
+    Invoke MUIGetExtProperty, hWin, @[*PROJECTNAME*]BackColor
+    mov BackColor, eax
+    Invoke MUIGetExtProperty, hWin, @[*PROJECTNAME*]BorderColor
+    mov BorderColor, eax
+
     ;----------------------------------------------------------
     ; Setup Double Buffering
     ;----------------------------------------------------------
-    Invoke GetClientRect, hWin, Addr rect
-	Invoke CreateCompatibleDC, hdc
-	mov hdcMem, eax
-	Invoke CreateCompatibleBitmap, hdc, rect.right, rect.bottom
-	mov hbmMem, eax
-	Invoke SelectObject, hdcMem, hbmMem
-	mov hOldBitmap, eax
-	
-	;----------------------------------------------------------
-	; Get some property values
-	;----------------------------------------------------------	
-	; Use Invoke _MUIGetProperty, hWin, 4, @Property 
-	; to get property required: text, back, border colors etc
-	; save them to local vars for processing later in function
-    Invoke GetWindowLong, hWin, GWL_STYLE
-    mov dwStyle, eax
+    Invoke MUIGDIDoubleBufferStart, hWin, hdc, Addr hdcMem, Addr rect, Addr hBufferBitmap
 
-	Invoke MUIGetIntProperty, hWin, @[*PROJECTNAME*]MouseOver
-    mov MouseOver, eax
-    Invoke MUIGetExtProperty, hWin, @[*PROJECTNAME*]TextColor        ; normal text color
-    mov TextColor, eax
-    Invoke MUIGetExtProperty, hWin, @[*PROJECTNAME*]BackColor        ; normal back color
-    mov BackColor, eax
-    Invoke MUIGetExtProperty, hWin, @[*PROJECTNAME*]TextFont        
-    mov hFont, eax	
-	
-	;----------------------------------------------------------
-	; Fill background
-	;----------------------------------------------------------
-    Invoke SetBkMode, hdcMem, OPAQUE
-    Invoke SetBkColor, hdcMem, BackColor
-    Invoke GetStockObject, DC_BRUSH
-    mov hBrush, eax
-    Invoke SelectObject, hdcMem, eax
-    Invoke SetDCBrushColor, hdcMem, BackColor
-    Invoke FillRect, hdcMem, Addr rect, hBrush
+    ;----------------------------------------------------------
+    ; Paint background
+    ;----------------------------------------------------------
+    Invoke MUIGDIPaintFill, hdcMem, Addr rect, BackColor
+    
+    ;----------------------------------------------------------
+    ; Paint
+    ;----------------------------------------------------------
 
+
+    ;----------------------------------------------------------
+    ; Paint Border
+    ;----------------------------------------------------------
+    Invoke MUIGDIPaintFrame, hdcMem, Addr rect, BorderColor, MUIPFS_ALL
+    
     ;----------------------------------------------------------
     ; BitBlt from hdcMem back to hdc
     ;----------------------------------------------------------
     Invoke BitBlt, hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY
 
     ;----------------------------------------------------------
-    ; Cleanup
-    ;----------------------------------------------------------
-    Invoke DeleteDC, hdcMem
-    Invoke DeleteObject, hbmMem
-    .IF hOldBitmap != 0
-        Invoke DeleteObject, hOldBitmap
-    .ENDIF		
-    .IF hOldFont != 0
-        Invoke DeleteObject, hOldFont
-    .ENDIF
-    .IF hOldPen != 0
-        Invoke DeleteObject, hOldPen
-    .ENDIF
-    .IF hOldBrush != 0
-        Invoke DeleteObject, hOldBrush
-    .ENDIF        
-    .IF hPen != 0
-        Invoke DeleteObject, hPen
-    .ENDIF
-    .IF hBrush != 0
-        Invoke DeleteObject, hBrush
-    .ENDIF
+    ; Finish Double Buffering & Cleanup
+    ;----------------------------------------------------------    
+    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0    
     
     Invoke EndPaint, hWin, Addr ps
 
@@ -498,7 +495,7 @@ _MUI_[*PROJECTNAME*]Paint ENDP
 
 
 
-END
+MODERNUI_LIBEND
 [*ENDTXT*]
 [*BEGINTXT*]
 LibTemplate.inc
@@ -506,11 +503,9 @@ LibTemplate.inc
 ;
 ; ModernUI Control - [*PROJECTNAME*]
 ;
-; Copyright (c) 2018 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
-;
-; http://www.LetTheLight.in
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
@@ -543,33 +538,33 @@ LibTemplate.inc
 ;==============================================================================
 
 ;------------------------------------------------------------------------------
-; [*PROJECTNAME*] Prototypes
+; ModernUI_[*PROJECTNAME*] Prototypes
 ;------------------------------------------------------------------------------
-MUI[*PROJECTNAME*]Register		PROTO																	; Use '[*PROJECTNAME*]' as class in RadASM custom class control
-MUI[*PROJECTNAME*]Create		PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD	; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
-MUI[*PROJECTNAME*]SetProperty	PROTO :DWORD, :DWORD, :DWORD											; h[*PROJECTNAME*], dwProperty, dwPropertyValue
-MUI[*PROJECTNAME*]GetProperty	PROTO :DWORD, :DWORD													; h[*PROJECTNAME*], dwProperty
+MUI[*PROJECTNAME*]Register      PROTO                                                                   ; Use 'ModernUI_[*PROJECTNAME*]' as class in RadASM custom class control
+MUI[*PROJECTNAME*]Create        PROTO :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD, :DWORD    ; hWndParent, lpszText, xpos, ypos, dwWidth, dwHeight, dwResourceID, dwStyle
+MUI[*PROJECTNAME*]SetProperty   PROTO :DWORD, :DWORD, :DWORD                                            ; hModernUI_[*PROJECTNAME*], dwProperty, dwPropertyValue
+MUI[*PROJECTNAME*]GetProperty   PROTO :DWORD, :DWORD                                                    ; hModernUI_[*PROJECTNAME*], dwProperty
 
 ;------------------------------------------------------------------------------
-; [*PROJECTNAME*] Structures
+; ModernUI_[*PROJECTNAME*] Structures
 ;------------------------------------------------------------------------------
 
 
 .CONST
 ;------------------------------------------------------------------------------
-; [*PROJECTNAME*] Constants
+; ModernUI_[*PROJECTNAME*] Constants
 ;------------------------------------------------------------------------------
 
-; [*PROJECTNAME*] Styles
+; ModernUI_[*PROJECTNAME*] Styles
 
 
 ;------------------------------------------------------------------------------
-; [*PROJECTNAME*] Properties: Use with MUI[*PROJECTNAME*]SetProperty / MUI[*PROJECTNAME*]GetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
+; ModernUI_[*PROJECTNAME*] Properties: Use with MUI[*PROJECTNAME*]SetProperty / MUI[*PROJECTNAME*]GetProperty or MUI_SETPROPERTY / MUI_GETPROPERTY msgs
 ;------------------------------------------------------------------------------
-@[*PROJECTNAME*]TextColor        EQU 0   ; Text color for caption text and system buttons (min/max/restore/close)
-@[*PROJECTNAME*]TextFont	        EQU 4   ; Font for caption text
-@[*PROJECTNAME*]BackColor        EQU 8   ; Background color of caption and system buttons
-
+@[*PROJECTNAME*]TextColor        EQU 0   ; Text color of control
+@[*PROJECTNAME*]TextFont         EQU 4   ; Font for control
+@[*PROJECTNAME*]BackColor        EQU 8   ; Background color of control
+@[*PROJECTNAME*]BorderColor      EQU 12  ; Border color of control
 
 
 
@@ -583,74 +578,7 @@ MUI[*PROJECTNAME*]GetProperty	PROTO :DWORD, :DWORD													; h[*PROJECTNAME*
 
 [*ENDTXT*]
 [*BEGINTXT*]
-Notes.txt
-=========================================================================================
-[*PROJECTNAME*] Notes
-=========================================================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+LibTemplate.h
 
 
 
@@ -663,78 +591,60 @@ Notes.txt
 
 [*ENDTXT*]
 [*BEGINTXT*]
-Distribution\Readme.txt
-=========================================================================================
-
- README & LICENSE
-
- ModernUI Control [*PROJECTNAME*]
-
-; Copyright (c) 2016 by fearless
-;
-; All Rights Reserved
-;
-; http://www.LetTheLight.in
+masmApiCall.api.txt
+;------------------------------------------------------------------------------
+; ModernUI_[*PROJECTNAME*] Control
 ;
 ; http://github.com/mrfearless/ModernUI
-
- This software is provided 'as-is', without any express or implied warranty. In no
- event will the author be held liable for any damages arising from the use of this
- software.
-
- Permission is granted to anyone to use this software for any non-commercial program.
- If you use the library in an application, an acknowledgement in the application or
- documentation is appreciated but not required. 
-
- You are allowed to make modifications to the source code, but you must leave the
- original copyright notices intact and not misrepresent the origin of the software.
- It is not allowed to claim you wrote the original software. Modified files must have
- a clear notice that the files are modified, and not in the original state. This includes
- the name of the person(s) who modified the code. 
-
- If you want to distribute or redistribute any portion of this package, you will need
- to include the full package in it's original state, including this license and all
- the copyrights. 
-
- While distributing this package (in it's original state) is allowed, it is not allowed
- to charge anything for this. You may not sell or include the package in any commercial
- package without having permission of the author. Neither is it allowed to redistribute
- any of the package's components with commercial applications.
- 
- Special thanks to:
+;
+; Paste this text at the end of \Radasm\Masm\masmApiCall.api to add to Radasm
+;
+;------------------------------------------------------------------------------
 
 
 
-=========================================================================================
-
-
- ----------------------------------------------------------------------------------------
- OVERVIEW
- ----------------------------------------------------------------------------------------
-
-
-
- ----------------------------------------------------------------------------------------
- HISTORY
- ----------------------------------------------------------------------------------------
- 
- v1.0.0.0 
- --------
- Release    - First release
-
-
- ----------------------------------------------------------------------------------------
- HOW TO USE
- ----------------------------------------------------------------------------------------
+[*ENDTXT*]
+[*BEGINTXT*]
+masmApiConst.api.txt
+;------------------------------------------------------------------------------
+; ModernUI_[*PROJECTNAME*] Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiConst.api to add to Radasm
+;
+;------------------------------------------------------------------------------
 
 
 
- ----------------------------------------------------------------------------------------
- NOTES
- ---------------------------------------------------------------------------------------- 
+[*ENDTXT*]
+[*BEGINTXT*]
+masmApiStruct.api.txt
+;------------------------------------------------------------------------------
+; ModernUI_[*PROJECTNAME*] Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmApiStruct.api to add to Radasm
+;
+;------------------------------------------------------------------------------
 
- 
-=========================================================================================
+
+
+[*ENDTXT*]
+[*BEGINTXT*]
+masmMessage.api.txt
+;------------------------------------------------------------------------------
+; ModernUI_[*PROJECTNAME*] Control
+;
+; http://github.com/mrfearless/ModernUI
+;
+; Paste this text at the end of \Radasm\Masm\masmMessage.api to add to Radasm
+;
+;------------------------------------------------------------------------------
+
+
+
 [*ENDTXT*]
 [*ENDPRO*]
 [*BEGINTXT*]
@@ -775,14 +685,14 @@ echo.Finished
 Help\Lib Help\!SkinSubFolder!\Default\Default.skn
 <?xml version="1.0"?>
 <sqwebskin version="1.2">
-	<summary>
-		<skinname>Default</skinname>
-		<defaulttab>Contents</defaulttab>
-		<font>font-family:Arial font-size:8pt font-weight:normal font-style:normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal</font>
-		<color></color>
-	</summary>
-	<panesummary>
-		<![CDATA[
+    <summary>
+        <skinname>Default</skinname>
+        <defaulttab>Contents</defaulttab>
+        <font>font-family:Arial font-size:8pt font-weight:normal font-style:normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal</font>
+        <color></color>
+    </summary>
+    <panesummary>
+        <![CDATA[
 <frameset rows="32,*" >
 <frame name="Custom Toolbar Pane" noresize="yes" scrolling="no" id="3" />
 <frameset cols="220,*" frameborder="1" borderspace="0" >
@@ -794,257 +704,257 @@ Help\Lib Help\!SkinSubFolder!\Default\Default.skn
 </frameset>
 </frameset>
 ]]>
-	</panesummary>
-	<frameset rows="32,*">
-		<frame name="Custom Toolbar Pane" noresize="yes" scrolling="no" id="3"/>
-		<frameset cols="220,*" frameborder="1" borderspace="0">
-			<frameset rows="24,*">
-				<frame name="MiniBar Pane" marginwidth="-1" scrolling="no" id="6"/>
-				<frame name="Navigation Pane" id="2"/>
-			</frameset>
-			<frame name="Topic Pane" frameborder="1" borderspace="1" bordercolor="Gray" marginwidth="-1" marginheight="-1" id="4"/>
-		</frameset>
-	</frameset>
-	<pane name="Custom Toolbar Pane">
-		<image></image>
-		<color>background:#99ccff</color>
-		<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
-		<btnselected>
-			<color>background:#639ace</color>
-			<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:White</font>
-		</btnselected>
-		<alignment>left</alignment>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-content" id="1">
-			<name>Contents</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-index" id="2">
-			<name>Index</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-search" id="3">
-			<name>Search</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-glossary" id="4">
-			<name>Glossary</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-websearch" id="5">
-			<name>WebSearch</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-		<toolbaritem mode="Form Mode" type="built-in-form" id="6">
-			<name>Search Input</name>
-			<image></image>
-			<color></color>
-			<textbox width="20"/>
-			<title>
-				<text></text>
-			</title>
-			<button mode="default graphic mode">
-			</button>
-		</toolbaritem>
-		<toolbaritem mode="Logo Mode" type="built-in-logo" id="7">
-			<name>About</name>
-			<image></image>
-			<author>Macromedia</author>
-			<email></email>
-			<description></description>
-			<companyinformation>
-				<image></image>
-				<name>Macromedia</name>
-				<copyright>Copyright &#169; 1992 - 2004, eHelp Corporation</copyright>
-				<homepage>http://www.ehelp.com</homepage>
-			</companyinformation>
-			<titleinformation>
-				<image></image>
-			</titleinformation>
-		</toolbaritem>
-	</pane>
-	<pane name="MiniBar Pane">
-		<image></image>
-		<color>background:#99ccff</color>
-		<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
-		<btnselected>
-			<color>background:#639ace</color>
-			<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:White</font>
-		</btnselected>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-previous" id="8">
-			<name>Previous</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-next" id="9">
-			<name>Next</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-synctoc" id="10">
-			<name>Sync TOC</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-		<toolbaritem mode="BtnWithIcon Mode" type="built-in-hide" id="11">
-			<name>Hide</name>
-			<text>::??DefaultWebSkinText??::</text>
-			<color></color>
-			<image></image>
-			<icontype>default</icontype>
-			<selected>
-				<color></color>
-				<image></image>
-				<icontype>default</icontype>
-			</selected>
-			<style>100</style>
-		</toolbaritem>
-	</pane>
-	<pane name="Navigation Pane">
-		<image></image>
-		<color></color>
-		<label>
-			<image></image>
-			<color></color>
-		</label>
-		<subpane name="Contents">
-			<image></image>
-			<color>background:White alink:Silver hover-color:Navy</color>
-			<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
-		</subpane>
-		<subpane name="Index">
-			<image></image>
-			<color>background:White alink:Silver hover-color:Navy</color>
-			<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
-			<inputbox>
-				<image></image>
-				<color>background:White</color>
-				<textbox width="0"/>
-				<title>
-					<text>::??DefaultWebSkinText??::</text>
-					<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Navy</font>
-				</title>
-				<button mode="none">
-				</button>
-			</inputbox>
-		</subpane>
-		<subpane name="Search">
-			<image></image>
-			<color>background:White alink:Silver hover-color:Navy</color>
-			<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
-			<inputbox>
-				<image></image>
-				<color>background:White</color>
-				<textbox width="0"/>
-				<title>
-					<text>::??DefaultWebSkinText??::</text>
-					<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Navy</font>
-				</title>
-				<button mode="default graphic mode">
-				</button>
-			</inputbox>
-		</subpane>
-		<subpane name="Glossary">
-			<image></image>
-			<color>background:White alink:Silver hover-color:Navy</color>
-			<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
-			<definitiontext>
-				<text>::??DefaultWebSkinText??::</text>
-				<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Navy</font>
-				<color>background:White</color>
-				<image></image>
-			</definitiontext>
-			<definition>
-				<text>::??DefaultWebSkinText??::</text>
-				<color></color>
-				<image></image>
-			</definition>
-			<termtext>
-				<text>::??DefaultWebSkinText??::</text>
-				<font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Navy</font>
-				<color>background:White</color>
-				<image></image>
-			</termtext>
-			<term>
-				<text>::??DefaultWebSkinText??::</text>
-				<color></color>
-				<image></image>
-			</term>
-		</subpane>
-	</pane>
-	<pane name="Topic Pane">
-		<in-topic-navbar>
-			<alignment>none</alignment>
-		</in-topic-navbar>
-	</pane>
+    </panesummary>
+    <frameset rows="32,*">
+        <frame name="Custom Toolbar Pane" noresize="yes" scrolling="no" id="3"/>
+        <frameset cols="220,*" frameborder="1" borderspace="0">
+            <frameset rows="24,*">
+                <frame name="MiniBar Pane" marginwidth="-1" scrolling="no" id="6"/>
+                <frame name="Navigation Pane" id="2"/>
+            </frameset>
+            <frame name="Topic Pane" frameborder="1" borderspace="1" bordercolor="Gray" marginwidth="-1" marginheight="-1" id="4"/>
+        </frameset>
+    </frameset>
+    <pane name="Custom Toolbar Pane">
+        <image></image>
+        <color>background:#99ccff</color>
+        <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
+        <btnselected>
+            <color>background:#639ace</color>
+            <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:White</font>
+        </btnselected>
+        <alignment>left</alignment>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-content" id="1">
+            <name>Contents</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-index" id="2">
+            <name>Index</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-search" id="3">
+            <name>Search</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-glossary" id="4">
+            <name>Glossary</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-websearch" id="5">
+            <name>WebSearch</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+        <toolbaritem mode="Form Mode" type="built-in-form" id="6">
+            <name>Search Input</name>
+            <image></image>
+            <color></color>
+            <textbox width="20"/>
+            <title>
+                <text></text>
+            </title>
+            <button mode="default graphic mode">
+            </button>
+        </toolbaritem>
+        <toolbaritem mode="Logo Mode" type="built-in-logo" id="7">
+            <name>About</name>
+            <image></image>
+            <author>Macromedia</author>
+            <email></email>
+            <description></description>
+            <companyinformation>
+                <image></image>
+                <name>Macromedia</name>
+                <copyright>Copyright &#169; 1992 - 2004, eHelp Corporation</copyright>
+                <homepage>http://www.ehelp.com</homepage>
+            </companyinformation>
+            <titleinformation>
+                <image></image>
+            </titleinformation>
+        </toolbaritem>
+    </pane>
+    <pane name="MiniBar Pane">
+        <image></image>
+        <color>background:#99ccff</color>
+        <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
+        <btnselected>
+            <color>background:#639ace</color>
+            <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:White</font>
+        </btnselected>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-previous" id="8">
+            <name>Previous</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-next" id="9">
+            <name>Next</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-synctoc" id="10">
+            <name>Sync TOC</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+        <toolbaritem mode="BtnWithIcon Mode" type="built-in-hide" id="11">
+            <name>Hide</name>
+            <text>::??DefaultWebSkinText??::</text>
+            <color></color>
+            <image></image>
+            <icontype>default</icontype>
+            <selected>
+                <color></color>
+                <image></image>
+                <icontype>default</icontype>
+            </selected>
+            <style>100</style>
+        </toolbaritem>
+    </pane>
+    <pane name="Navigation Pane">
+        <image></image>
+        <color></color>
+        <label>
+            <image></image>
+            <color></color>
+        </label>
+        <subpane name="Contents">
+            <image></image>
+            <color>background:White alink:Silver hover-color:Navy</color>
+            <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
+        </subpane>
+        <subpane name="Index">
+            <image></image>
+            <color>background:White alink:Silver hover-color:Navy</color>
+            <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
+            <inputbox>
+                <image></image>
+                <color>background:White</color>
+                <textbox width="0"/>
+                <title>
+                    <text>::??DefaultWebSkinText??::</text>
+                    <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Navy</font>
+                </title>
+                <button mode="none">
+                </button>
+            </inputbox>
+        </subpane>
+        <subpane name="Search">
+            <image></image>
+            <color>background:White alink:Silver hover-color:Navy</color>
+            <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
+            <inputbox>
+                <image></image>
+                <color>background:White</color>
+                <textbox width="0"/>
+                <title>
+                    <text>::??DefaultWebSkinText??::</text>
+                    <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Navy</font>
+                </title>
+                <button mode="default graphic mode">
+                </button>
+            </inputbox>
+        </subpane>
+        <subpane name="Glossary">
+            <image></image>
+            <color>background:White alink:Silver hover-color:Navy</color>
+            <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Black</font>
+            <definitiontext>
+                <text>::??DefaultWebSkinText??::</text>
+                <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Navy</font>
+                <color>background:White</color>
+                <image></image>
+            </definitiontext>
+            <definition>
+                <text>::??DefaultWebSkinText??::</text>
+                <color></color>
+                <image></image>
+            </definition>
+            <termtext>
+                <text>::??DefaultWebSkinText??::</text>
+                <font>font-family:Tahoma font-size:8pt font-weight:Normal font-style:Normal text-decoration:none font-sizeadjust:none font-stretch:normal font-variant:normal font-color:Navy</font>
+                <color>background:White</color>
+                <image></image>
+            </termtext>
+            <term>
+                <text>::??DefaultWebSkinText??::</text>
+                <color></color>
+                <image></image>
+            </term>
+        </subpane>
+    </pane>
+    <pane name="Topic Pane">
+        <in-topic-navbar>
+            <alignment>none</alignment>
+        </in-topic-navbar>
+    </pane>
 </sqwebskin>
 [*ENDTXT*]
 [*BEGINBIN*]
@@ -1094,281 +1004,281 @@ Help\Lib Help\Code Function.htt
 <body>
 
 <div placeholder
-	id=header
-	style="width: 100%; position: relative;">
+    id=header
+    style="width: 100%; position: relative;">
  <p style="text-align: center;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;
-			color: #808080;
-			border-bottom-color: #808080;
-			border-bottom-style: Solid;
-			border-bottom-width: 1px;"
-	align=center>[*PROJECTNAME*] Library</p>
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;
+            color: #808080;
+            border-bottom-color: #808080;
+            border-bottom-style: Solid;
+            border-bottom-width: 1px;"
+    align=center>[*PROJECTNAME*] Library</p>
 </div>
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;"><!--kadov_tag{{<variable name=title
-															x-format=default
-															x-value="Code Function">}}-->Code 
+            margin-top: 6px;
+            margin-bottom: 6px;"><!--kadov_tag{{<variable name=title
+                                                            x-format=default
+                                                            x-value="Code Function">}}-->Code 
  Function<!--kadov_tag{{</variable>}}--></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Function Overview</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Function Overview</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;">Syntax</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;">Syntax</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;">Parameters</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;">Parameters</p>
 
 <!--(Table)=========================================================-->
 <table x-use-null-cells
-		style="x-cell-content-align: top;
-				margin-left: 40px;
-				left: 0px;
-				top: 225px;
-				width: 91%;
-				border-spacing: 0px;
-				border-spacing: 0px;"
-		cellspacing=0
-		width=91%>
+        style="x-cell-content-align: top;
+                margin-left: 40px;
+                left: 0px;
+                top: 225px;
+                width: 91%;
+                border-spacing: 0px;
+                border-spacing: 0px;"
+        cellspacing=0
+        width=91%>
 <col style="width: 25.862%;">
 <col style="width: 74.138%;">
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 25.862%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-color: #ffffff;
-			border-left-style: Solid;
-			border-top-style: Solid;
-			border-top-color: #ffffff;
-			border-right-color: #ffffff;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			border-bottom-width: 2px;
-			border-right-width: 2px;
-			border-left-width: 2px;
-			border-top-width: 2px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=25.862%>
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-color: #ffffff;
+            border-left-style: Solid;
+            border-top-style: Solid;
+            border-top-color: #ffffff;
+            border-right-color: #ffffff;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            border-bottom-width: 2px;
+            border-right-width: 2px;
+            border-left-width: 2px;
+            border-top-width: 2px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=25.862%>
 <p style="font-family: 'Courier New', monospace; font-size: 10pt;">&nbsp;</td>
 <td style="width: 74.138%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-top-style: Solid;
-			border-top-color: #ffffff;
-			border-right-color: #ffffff;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			border-bottom-width: 2px;
-			border-top-width: 2px;
-			border-right-width: 2px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=74.138%>
+            padding-right: 10px;
+            padding-left: 10px;
+            border-top-style: Solid;
+            border-top-color: #ffffff;
+            border-right-color: #ffffff;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            border-bottom-width: 2px;
+            border-top-width: 2px;
+            border-right-width: 2px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=74.138%>
 <p style="font-family: Verdana, sans-serif; font-size: 10pt;">&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 25.862%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-color: #ffffff;
-			border-left-style: Solid;
-			border-right-color: #ffffff;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			border-right-width: 2px;
-			border-left-width: 2px;
-			border-bottom-width: 2px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=25.862%>
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-color: #ffffff;
+            border-left-style: Solid;
+            border-right-color: #ffffff;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            border-right-width: 2px;
+            border-left-width: 2px;
+            border-bottom-width: 2px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=25.862%>
 <p style="font-family: 'Courier New', monospace;
-			font-size: 10pt;
-			font-weight: bold;">&nbsp;</td>
+            font-size: 10pt;
+            font-weight: bold;">&nbsp;</td>
 <td style="width: 74.138%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-color: #ffffff;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			border-bottom-width: 2px;
-			border-right-width: 2px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=74.138%>
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-color: #ffffff;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            border-bottom-width: 2px;
+            border-right-width: 2px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=74.138%>
 <p style="font-family: Verdana, sans-serif; font-size: 10pt;">&nbsp;</td></tr>
 </table>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;">Details</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;">Details</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;">Return Values</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;">Return Values</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;">Notes</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;">Notes</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;"><span>See Also</span></p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;"><span>See Also</span></p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-left: 40px;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-left: 40px;">&nbsp;</p>
 
 <div placeholder
-	id=footer
-	style="width: 100%; position: relative;">
+    id=footer
+    style="width: 100%; position: relative;">
  <p style="text-align: center;
-			font-family: Verdana, sans-serif;
-			font-size: 8pt;
-			color: #808080;
-			border-top-style: Solid;
-			border-top-color: #808080;
-			border-top-width: 1px;"
-	align=center>www.LetTheLight.in - fearless 2014</p>
+            font-family: Verdana, sans-serif;
+            font-size: 8pt;
+            color: #808080;
+            border-top-style: Solid;
+            border-top-color: #808080;
+            border-top-width: 1px;"
+    align=center>www.LetTheLight.in - fearless 2014</p>
 </div>
 </body>
 
@@ -1383,168 +1293,168 @@ Help\Lib Help\default.css
 /*=(===============================================================)*/
 
 BODY {
-	font-family: Arial;
-	background-color: #ffffff;
+    font-family: Arial;
+    background-color: #ffffff;
 }
 
 H1 {
-	font-weight: bold;
-	font-size: 16pt;
+    font-weight: bold;
+    font-size: 16pt;
 }
 
 /*=(Generated Code)=================================================*/
 /*=(WARNING: DO NOT EDIT OR DELETE THIS SECTION!)===================*/
 /*begin!kadov{{=====================================================*/ 
 LI.kadov-H1 {
-	font-weight: bold;
-	font-size: 16pt;
+    font-weight: bold;
+    font-size: 16pt;
 }
 /*}}end!kadov=======================================================*/ 
 
 
 
 H2 {
-	font-weight: bold;
-	font-size: 18.0pt;
+    font-weight: bold;
+    font-size: 18.0pt;
 }
 
 /*=(Generated Code)=================================================*/
 /*=(WARNING: DO NOT EDIT OR DELETE THIS SECTION!)===================*/
 /*begin!kadov{{=====================================================*/ 
 LI.kadov-H2 {
-	font-weight: bold;
-	font-size: 18.0pt;
+    font-weight: bold;
+    font-size: 18.0pt;
 }
 /*}}end!kadov=======================================================*/ 
 
 
 
 H3 {
-	font-weight: bold;
-	font-size: 14.0pt;
+    font-weight: bold;
+    font-size: 14.0pt;
 }
 
 /*=(Generated Code)=================================================*/
 /*=(WARNING: DO NOT EDIT OR DELETE THIS SECTION!)===================*/
 /*begin!kadov{{=====================================================*/ 
 LI.kadov-H3 {
-	font-weight: bold;
-	font-size: 14.0pt;
+    font-weight: bold;
+    font-size: 14.0pt;
 }
 /*}}end!kadov=======================================================*/ 
 
 
 
 H4 {
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 /*=(Generated Code)=================================================*/
 /*=(WARNING: DO NOT EDIT OR DELETE THIS SECTION!)===================*/
 /*begin!kadov{{=====================================================*/ 
 LI.kadov-H4 {
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 /*}}end!kadov=======================================================*/ 
 
 
 
 H5 {
-	font-weight: bold;
-	font-size: 10.0pt;
+    font-weight: bold;
+    font-size: 10.0pt;
 }
 
 /*=(Generated Code)=================================================*/
 /*=(WARNING: DO NOT EDIT OR DELETE THIS SECTION!)===================*/
 /*begin!kadov{{=====================================================*/ 
 LI.kadov-H5 {
-	font-weight: bold;
-	font-size: 10.0pt;
+    font-weight: bold;
+    font-size: 10.0pt;
 }
 /*}}end!kadov=======================================================*/ 
 
 
 
 H6 {
-	font-weight: bold;
-	font-size: 8.0pt;
+    font-weight: bold;
+    font-size: 8.0pt;
 }
 
 /*=(Generated Code)=================================================*/
 /*=(WARNING: DO NOT EDIT OR DELETE THIS SECTION!)===================*/
 /*begin!kadov{{=====================================================*/ 
 LI.kadov-H6 {
-	font-weight: bold;
-	font-size: 8.0pt;
+    font-weight: bold;
+    font-size: 8.0pt;
 }
 /*}}end!kadov=======================================================*/ 
 
 
 
 P {
-	font-size: 12.0pt;
-	margin-top: 0pt;
-	margin-bottom: 0pt;
+    font-size: 12.0pt;
+    margin-top: 0pt;
+    margin-bottom: 0pt;
 }
 
 /*=(Generated Code)=================================================*/
 /*=(WARNING: DO NOT EDIT OR DELETE THIS SECTION!)===================*/
 /*begin!kadov{{=====================================================*/ 
 LI.kadov-P {
-	font-size: 12.0pt;
+    font-size: 12.0pt;
 }
 /*}}end!kadov=======================================================*/ 
 
 
 
 A.expandspot {
-	color: #008000;
-	cursor: hand;
-	font-style: italic;
-	x-text-underline: off;
-	x-text-overline: off;
-	x-text-line-through: off;
-	/*begin!kadov{{*/ text-decoration: none none none; /*}}end!kadov*/ 
+    color: #008000;
+    cursor: hand;
+    font-style: italic;
+    x-text-underline: off;
+    x-text-overline: off;
+    x-text-line-through: off;
+    /*begin!kadov{{*/ text-decoration: none none none; /*}}end!kadov*/ 
 }
 
 SPAN.expandtext {
-	font-style: italic;
-	font-weight: normal;
-	color: #ff0000;
+    font-style: italic;
+    font-weight: normal;
+    color: #ff0000;
 }
 
 A.dropspot {
-	cursor: hand;
-	color: #008000;
-	font-style: italic;
-	x-text-underline: off;
-	x-text-overline: off;
-	x-text-line-through: off;
-	/*begin!kadov{{*/ text-decoration: none none none; /*}}end!kadov*/ 
+    cursor: hand;
+    color: #008000;
+    font-style: italic;
+    x-text-underline: off;
+    x-text-overline: off;
+    x-text-line-through: off;
+    /*begin!kadov{{*/ text-decoration: none none none; /*}}end!kadov*/ 
 }
 
 A.glossterm {
-	color: #800000;
-	cursor: hand;
-	font-style: italic;
-	x-text-underline: off;
-	x-text-overline: off;
-	x-text-line-through: off;
-	/*begin!kadov{{*/ text-decoration: none none none; /*}}end!kadov*/ 
+    color: #800000;
+    cursor: hand;
+    font-style: italic;
+    x-text-underline: off;
+    x-text-overline: off;
+    x-text-line-through: off;
+    /*begin!kadov{{*/ text-decoration: none none none; /*}}end!kadov*/ 
 }
 
 SPAN.glosstext {
-	font-style: italic;
-	font-weight: normal;
-	color: #0000ff;
+    font-style: italic;
+    font-weight: normal;
+    color: #0000ff;
 }
 
 OL,
 UL {
-	margin-top: 0px;
-	margin-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
 
@@ -1591,63 +1501,63 @@ Help\Lib Help\Default.htt
 <body>
 
 <div placeholder
-	id=header
-	style="width: 100%; position: relative;">
+    id=header
+    style="width: 100%; position: relative;">
  <p style="text-align: center;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;
-			color: #808080;
-			border-bottom-style: Solid;
-			border-bottom-color: #808080;
-			border-bottom-width: 1px;"
-	align=center>[*PROJECTNAME*] Library</p>
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;
+            color: #808080;
+            border-bottom-style: Solid;
+            border-bottom-color: #808080;
+            border-bottom-width: 1px;"
+    align=center>[*PROJECTNAME*] Library</p>
 </div>
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;"><!--kadov_tag{{<variable name=title
-															x-format=default
-															x-value=Default>}}-->Default<!--kadov_tag{{</variable>}}--></h1>
+            margin-top: 6px;
+            margin-bottom: 6px;"><!--kadov_tag{{<variable name=title
+                                                            x-format=default
+                                                            x-value=Default>}}-->Default<!--kadov_tag{{</variable>}}--></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">This is placeholder text for your template. 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">This is placeholder text for your template. 
  To add content to the body, replace this text. To add a header or footer, 
  click the <b>Header</b> or <b>Footer</b> button on the toolbar.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">The heading in this template is a special 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">The heading in this template is a special 
  field for topic titles, so generally you do not need to edit it.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">For information about applying templates 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">For information about applying templates 
  to topics, press <b>F1</b>.</p>
 
 <div placeholder
-	id=footer
-	style="width: 100%; position: relative;">
+    id=footer
+    style="width: 100%; position: relative;">
  <p style="text-align: center;
-			font-family: Verdana, sans-serif;
-			font-size: 8pt;
-			color: #808080;
-			border-top-style: Solid;
-			border-top-color: #808080;
-			border-top-width: 1px;"
-	align=center>www.LetTheLight.in - fearless 2014</p>
+            font-family: Verdana, sans-serif;
+            font-size: 8pt;
+            color: #808080;
+            border-top-style: Solid;
+            border-top-color: #808080;
+            border-top-width: 1px;"
+    align=center>www.LetTheLight.in - fearless 2014</p>
 </div>
 </body>
 
@@ -1689,192 +1599,192 @@ var HH_ActiveX = true;
 
 //Begin to support previous generic parameters
 //Get the information about the browser.
-var gstrBsAgent 	= navigator.userAgent.toLowerCase();
-var gnBsVer	   		= parseInt(navigator.appVersion);
+var gstrBsAgent     = navigator.userAgent.toLowerCase();
+var gnBsVer         = parseInt(navigator.appVersion);
 
-var gbBsOpera		= (gstrBsAgent.indexOf('opera') != -1);
-var gbBsKonqueror	= (gstrBsAgent.indexOf('konqueror') != -1);
-var gbBsSafari		= (gstrBsAgent.indexOf('safari') != -1);
-var gbBsIE  		= (gstrBsAgent.indexOf('msie') != -1) && !gbBsOpera && !gbBsKonqueror && !gbBsSafari;
-var gbBsNS  		= (gstrBsAgent.indexOf('mozilla') != -1) && ((gstrBsAgent.indexOf('spoofer') == -1) && (gstrBsAgent.indexOf('compatible') == -1)) && !gbBsOpera && !gbBsKonqueror && !gbBsSafari;
+var gbBsOpera       = (gstrBsAgent.indexOf('opera') != -1);
+var gbBsKonqueror   = (gstrBsAgent.indexOf('konqueror') != -1);
+var gbBsSafari      = (gstrBsAgent.indexOf('safari') != -1);
+var gbBsIE          = (gstrBsAgent.indexOf('msie') != -1) && !gbBsOpera && !gbBsKonqueror && !gbBsSafari;
+var gbBsNS          = (gstrBsAgent.indexOf('mozilla') != -1) && ((gstrBsAgent.indexOf('spoofer') == -1) && (gstrBsAgent.indexOf('compatible') == -1)) && !gbBsOpera && !gbBsKonqueror && !gbBsSafari;
 
-var gbBsMac			= (gstrBsAgent.indexOf('mac') != -1);
-var gbBsWindows		= ((gstrBsAgent.indexOf('win') != -1) || (gstrBsAgent.indexOf('16bit') != -1));
-var gbBsSunOS		= (gstrBsAgent.indexOf("sunos") != -1);
+var gbBsMac         = (gstrBsAgent.indexOf('mac') != -1);
+var gbBsWindows     = ((gstrBsAgent.indexOf('win') != -1) || (gstrBsAgent.indexOf('16bit') != -1));
+var gbBsSunOS       = (gstrBsAgent.indexOf("sunos") != -1);
 
-var gbBsIE3Before 	= ((gbBsIE) && (gnBsVer <= 2));
-var gbBsNS3Before 	= ((gbBsNS) && (gnBsVer <= 3));
+var gbBsIE3Before   = ((gbBsIE) && (gnBsVer <= 2));
+var gbBsNS3Before   = ((gbBsNS) && (gnBsVer <= 3));
 
-var gbBsNS2			= ((gbBsNS) && (gnBsVer <= 2));
-var gbBsNS3			= ((gbBsNS) && (gnBsVer == 3));
-var gbBsIE300301	= ((gbBsIE) && (gnBsVer == 2) && ((gstrBsAgent.indexOf("3.00") != -1)||(gstrBsAgent.indexOf("3.0a") != -1)||(gstrBsAgent.indexOf("3.0b")!=-1)||(gstrBsAgent.indexOf("3.01")!=-1)));
-var gbBsIE302		= ((gbBsIE) && (gnBsVer == 2) && (gstrBsAgent.indexOf("3.02") != -1));
+var gbBsNS2         = ((gbBsNS) && (gnBsVer <= 2));
+var gbBsNS3         = ((gbBsNS) && (gnBsVer == 3));
+var gbBsIE300301    = ((gbBsIE) && (gnBsVer == 2) && ((gstrBsAgent.indexOf("3.00") != -1)||(gstrBsAgent.indexOf("3.0a") != -1)||(gstrBsAgent.indexOf("3.0b")!=-1)||(gstrBsAgent.indexOf("3.01")!=-1)));
+var gbBsIE302       = ((gbBsIE) && (gnBsVer == 2) && (gstrBsAgent.indexOf("3.02") != -1));
 
-var gbBsNS4			= ((gbBsNS) && (gnBsVer >= 4));
-var gbBsNS6			= ((gbBsNS) && (gnBsVer >= 5));
-var	gbBsNS7			= false;
+var gbBsNS4         = ((gbBsNS) && (gnBsVer >= 4));
+var gbBsNS6         = ((gbBsNS) && (gnBsVer >= 5));
+var gbBsNS7         = false;
 
-var gbBsIE4			= ((gbBsIE) && (gnBsVer >= 4));
-var gbBsIE5			= false;
-var gbBsIE55		= false;
+var gbBsIE4         = ((gbBsIE) && (gnBsVer >= 4));
+var gbBsIE5         = false;
+var gbBsIE55        = false;
 
-var gbBsOpera6		= false;
-var gbBsOpera7		= false;
+var gbBsOpera6      = false;
+var gbBsOpera7      = false;
 
-var gbBsKonqueror3	= false;
+var gbBsKonqueror3  = false;
 
 
 
 gbBsIE = (navigator.appName.indexOf("Microsoft") != -1) && !gbBsOpera && !gbBsKonqueror && !gbBsSafari;;
 if (gbBsIE)
 {
-	if (parseInt(navigator.appVersion) >= 4) {
-		gbBsIE4 = true;
-		if (gbBsIE4) {
-			var nPos = gstrBsAgent.indexOf("msie");
-			var strIEversion = gstrBsAgent.substring(nPos + 5);
-			var nVersion =  parseFloat(strIEversion);
-			if (nVersion >= 5)
-				gbBsIE5 = true;
-			if (nVersion >= 5.5)
-				gbBsIE55 = true;
-		}
-	}
+    if (parseInt(navigator.appVersion) >= 4) {
+        gbBsIE4 = true;
+        if (gbBsIE4) {
+            var nPos = gstrBsAgent.indexOf("msie");
+            var strIEversion = gstrBsAgent.substring(nPos + 5);
+            var nVersion =  parseFloat(strIEversion);
+            if (nVersion >= 5)
+                gbBsIE5 = true;
+            if (nVersion >= 5.5)
+                gbBsIE55 = true;
+        }
+    }
 }
 if (gbBsNS6)
 {
-	var nPos=gstrBsAgent.indexOf("gecko");
-	if(nPos!=-1)
-	{
-		var nPos2=gstrBsAgent.indexOf("/", nPos);
-		if(nPos2!=-1)
-		{
-			var nVersion=parseFloat(gstrBsAgent.substring(nPos2+1));
-			if (nVersion>=20020823)
-				gbBsNS7=true;
-		}
-	}	
+    var nPos=gstrBsAgent.indexOf("gecko");
+    if(nPos!=-1)
+    {
+        var nPos2=gstrBsAgent.indexOf("/", nPos);
+        if(nPos2!=-1)
+        {
+            var nVersion=parseFloat(gstrBsAgent.substring(nPos2+1));
+            if (nVersion>=20020823)
+                gbBsNS7=true;
+        }
+    }   
 }
 if (gbBsOpera)
 {
-	var nPos = gstrBsAgent.indexOf("opera");
-	if(nPos!=-1)
-	{
-		var nVersion = parseFloat(gstrBsAgent.substring(nPos+6));
-		if (nVersion >= 6)
-		{
-			gbBsOpera6=true;
-			if (nVersion >=7)
-				gbBsOpera7=true;	
-		}
-	}
+    var nPos = gstrBsAgent.indexOf("opera");
+    if(nPos!=-1)
+    {
+        var nVersion = parseFloat(gstrBsAgent.substring(nPos+6));
+        if (nVersion >= 6)
+        {
+            gbBsOpera6=true;
+            if (nVersion >=7)
+                gbBsOpera7=true;    
+        }
+    }
 }
 if (gbBsKonqueror)
 {
-	var nPos = gstrBsAgent.indexOf("konqueror");
-	if(nPos!=-1)
-	{
-		var nVersion = parseFloat(gstrBsAgent.substring(nPos+10));
-		if (nVersion >= 3)
-		{
-			gbBsKonqueror3=true;
-		}
-	}
+    var nPos = gstrBsAgent.indexOf("konqueror");
+    if(nPos!=-1)
+    {
+        var nVersion = parseFloat(gstrBsAgent.substring(nPos+10));
+        if (nVersion >= 3)
+        {
+            gbBsKonqueror3=true;
+        }
+    }
 }
 
 function insertAdjacentHTML(obj, where, htmlStr)
 {
-	if (gbBsIE || gbBsOpera7)
-	{
-		obj.insertAdjacentHTML(where, htmlStr);
-	}
-	else if (gbBsNS6 || gbBsSafari)
-	{
-		var r = obj.ownerDocument.createRange();
-		r.setStartBefore(obj);
-		var	parsedHTML = r.createContextualFragment(htmlStr);
-		
-		switch (where){
-		case 'beforeBegin':
-			obj.parentNode.insertBefore(parsedHTML,obj);
-			break;
-		case 'afterBegin':
-			obj.insertBefore(parsedHTML,obj.firstChild);
-			break;
-		case 'beforeEnd':
-			obj.appendChild(parsedHTML);
-			break;
-		case 'afterEnd':
-			if (obj.nextSibling){
-			obj.parentNode.insertBefore(parsedHTML,obj.nextSibling);
-			} else {
-			obj.parentNode.appendChild(parsedHTML);
-			}
-			break;
-		}
-	}
+    if (gbBsIE || gbBsOpera7)
+    {
+        obj.insertAdjacentHTML(where, htmlStr);
+    }
+    else if (gbBsNS6 || gbBsSafari)
+    {
+        var r = obj.ownerDocument.createRange();
+        r.setStartBefore(obj);
+        var parsedHTML = r.createContextualFragment(htmlStr);
+        
+        switch (where){
+        case 'beforeBegin':
+            obj.parentNode.insertBefore(parsedHTML,obj);
+            break;
+        case 'afterBegin':
+            obj.insertBefore(parsedHTML,obj.firstChild);
+            break;
+        case 'beforeEnd':
+            obj.appendChild(parsedHTML);
+            break;
+        case 'afterEnd':
+            if (obj.nextSibling){
+            obj.parentNode.insertBefore(parsedHTML,obj.nextSibling);
+            } else {
+            obj.parentNode.appendChild(parsedHTML);
+            }
+            break;
+        }
+    }
 }
 
 // Utilities functions.
 function BsscHasExtJs()
 {
-	if( gbBsIE3Before || gbBsNS3Before)
-		return false;
-	return true;
+    if( gbBsIE3Before || gbBsNS3Before)
+        return false;
+    return true;
 }
 
 // Register event handler
-var gBsOnLoads 			= new Array();	// An array holds all the onload event handler.
-var gBsOnClicks 		= new Array();	// An array holds all the onClick event handler.
-var gBsOnUnLoads 		= new Array();	// An array holds all the OnUnLoad event handler.
-var gBsOnMouseOvers 	= new Array();	// An array holds all the OnMouseOver event handler.
-var gBsOnMouseOuts 		= new Array();	// An array holds all the OnMouseOut event handler.
+var gBsOnLoads          = new Array();  // An array holds all the onload event handler.
+var gBsOnClicks         = new Array();  // An array holds all the onClick event handler.
+var gBsOnUnLoads        = new Array();  // An array holds all the OnUnLoad event handler.
+var gBsOnMouseOvers     = new Array();  // An array holds all the OnMouseOver event handler.
+var gBsOnMouseOuts      = new Array();  // An array holds all the OnMouseOut event handler.
 
 var gbOrignalOnMouseDown = null;
 
 function BsscRegisterOnLoad(funcHandler)
 {
-	var nLength = gBsOnLoads.length;
-	gBsOnLoads[nLength] = funcHandler;
+    var nLength = gBsOnLoads.length;
+    gBsOnLoads[nLength] = funcHandler;
 }
 
 function BsscRegisterOnClick(funcHandler)
 {
-	var nLength = gBsOnClicks.length;
-	gBsOnClicks[nLength] = funcHandler;
+    var nLength = gBsOnClicks.length;
+    gBsOnClicks[nLength] = funcHandler;
 }
 
 function BsscRegisterOnUnLoad(funcHandler)
 {
-	var nLength = gBsOnUnLoads.length;
-	gBsOnUnLoads[nLength] = funcHandler;
+    var nLength = gBsOnUnLoads.length;
+    gBsOnUnLoads[nLength] = funcHandler;
 }
 
 function BsscRegisterOnMouseOver(funcHandler)
 {
-	var nLength = gBsOnMouseOvers.length;
-	gBsOnMouseOvers[nLength] = funcHandler;
+    var nLength = gBsOnMouseOvers.length;
+    gBsOnMouseOvers[nLength] = funcHandler;
 }
 
 function BsscRegisterOnMouseOut(funcHandler)
 {
-	var nLength = gBsOnMouseOuts.length;
-	gBsOnMouseOuts[nLength] = funcHandler;
+    var nLength = gBsOnMouseOuts.length;
+    gBsOnMouseOuts[nLength] = funcHandler;
 }
 
 function BsGeneralOnLoad()
 {
-	if (!gbBsIE4 && !gbBsNS4)
-		return;
+    if (!gbBsIE4 && !gbBsNS4)
+        return;
 
-	// Make everything visible in navigator
-	if (gbBsNS4 && !gbBsNS6) {
-		// Make some special effects items visible
-		for (var iLayer = 0; iLayer < document.layers.length; iLayer++) {
-			document.layers[iLayer].visibility = "show";
-			document.layers[iLayer].left = 0;
-		}
-	}
+    // Make everything visible in navigator
+    if (gbBsNS4 && !gbBsNS6) {
+        // Make some special effects items visible
+        for (var iLayer = 0; iLayer < document.layers.length; iLayer++) {
+            document.layers[iLayer].visibility = "show";
+            document.layers[iLayer].left = 0;
+        }
+    }
 }
 
 // If resize the netscape browser, need to reload it.
@@ -1888,80 +1798,80 @@ function BsReDo()
 // The following functions are used by the html files.
 function BSSCOnLoad()
 {
-	if( !BsscHasExtJs() )
-		return;
-	for (var nElement = gBsOnLoads.length - 1; nElement >= 0; nElement--)
-		gBsOnLoads[nElement]();
+    if( !BsscHasExtJs() )
+        return;
+    for (var nElement = gBsOnLoads.length - 1; nElement >= 0; nElement--)
+        gBsOnLoads[nElement]();
 }
 
 function BSSCOnClick()
 {
-	if (!BsscHasExtJs()) return;
-		
-	for (var nElement = gBsOnClicks.length - 1; nElement >= 0; nElement--)
-		gBsOnClicks[nElement]();
+    if (!BsscHasExtJs()) return;
+        
+    for (var nElement = gBsOnClicks.length - 1; nElement >= 0; nElement--)
+        gBsOnClicks[nElement]();
 }
 
 function BSSCOnUnload()
 {
-	if (!BsscHasExtJs()) return;
-	for (var nElement = gBsOnUnLoads.length - 1; nElement >= 0; nElement--)
-		gBsOnUnLoads[nElement]();
+    if (!BsscHasExtJs()) return;
+    for (var nElement = gBsOnUnLoads.length - 1; nElement >= 0; nElement--)
+        gBsOnUnLoads[nElement]();
 }
 
 function BSSCOnMouseOver()
 {
-	if (!BsscHasExtJs()) return;
-	for (var nElement = gBsOnMouseOvers.length - 1; nElement >= 0; nElement--)
-		gBsOnMouseOvers[nElement]();
+    if (!BsscHasExtJs()) return;
+    for (var nElement = gBsOnMouseOvers.length - 1; nElement >= 0; nElement--)
+        gBsOnMouseOvers[nElement]();
 }
 
 function BSSCOnMouseOut()
 {
-	if (!BsscHasExtJs()) return;
-	for (var nElement = gBsOnMouseOuts.length - 1; nElement >= 0; nElement--)
-	{
-		gBsOnMouseOuts[nElement]();
-	}
+    if (!BsscHasExtJs()) return;
+    for (var nElement = gBsOnMouseOuts.length - 1; nElement >= 0; nElement--)
+    {
+        gBsOnMouseOuts[nElement]();
+    }
 }
 // End of invocation of the event handle functions.
 
 // Add the GereralOnLoad to the onload array.
 if (typeof(BsscRegisterOnLoad) != "undefined")
 {
-	BsscRegisterOnLoad(BsGeneralOnLoad);
+    BsscRegisterOnLoad(BsGeneralOnLoad);
 }
 if (gbBsNS4&&!gbBsNS6) {
-	origWidth = innerWidth;
-	origHeight = innerHeight;
-	onresize = BsReDo;
+    origWidth = innerWidth;
+    origHeight = innerHeight;
+    onresize = BsReDo;
 }
 //End to support previous generic parameters
 
 //Begin to support previous HHActiveX invoking
 function BsHHActivateComponents()
 {
-	if( HH_ActiveX && (HH_ChmFilename != "") && ((self == top) || (self == top.frames[0])))
-	{
-		var objBody = getElementsByTag(document,"BODY")[0];
-		if( typeof(objBody) == "object" )
-		{
-			insertAdjacentHTML(objBody, "beforeEnd", '<OBJECT ID="HHComponentActivator" CLASSID="CLSID:399CB6C4-7312-11D2-B4D9-00105A0422DF" width=0 height=0></OBJECT>');
-			if (HHComponentActivator.object)
-				HHComponentActivator.Activate(HH_ChmFilename, HH_WindowName, HH_GlossaryFont, HH_Glossary, HH_Avenue);
-		}
-	}
+    if( HH_ActiveX && (HH_ChmFilename != "") && ((self == top) || (self == top.frames[0])))
+    {
+        var objBody = getElementsByTag(document,"BODY")[0];
+        if( typeof(objBody) == "object" )
+        {
+            insertAdjacentHTML(objBody, "beforeEnd", '<OBJECT ID="HHComponentActivator" CLASSID="CLSID:399CB6C4-7312-11D2-B4D9-00105A0422DF" width=0 height=0></OBJECT>');
+            if (HHComponentActivator.object)
+                HHComponentActivator.Activate(HH_ChmFilename, HH_WindowName, HH_GlossaryFont, HH_Glossary, HH_Avenue);
+        }
+    }
 }
 
 function BsHHActivXOnLoad()
-{	
-	if( gbBsIE4 )
-		BsHHActivateComponents(); 
+{   
+    if( gbBsIE4 )
+        BsHHActivateComponents(); 
 }
 
 if( typeof(BsscRegisterOnLoad) != "undefined" )
 {
-	BsscRegisterOnLoad(BsHHActivXOnLoad);
+    BsscRegisterOnLoad(BsHHActivXOnLoad);
 }
 //End to support previous HHActiveX invoking
 
@@ -1981,473 +1891,473 @@ var gOlddocumentClick = null;
 var g_bIsPopupMenuInit = false;
 function _WritePopupMenuLayer()
 {
-	if (!g_bIsPopupMenuInit)
+    if (!g_bIsPopupMenuInit)
         {
-	  if (gbBsNS4&&!gbBsNS6) {
+      if (gbBsNS4&&!gbBsNS6) {
 //Do not try to write ininle styles for NS!  NS can not handle it and will not stop downloading the html page...
-	   	document.write("<DIV CLASS='WebHelpPopupMenu' ID='PopupMenu'></DIV>");
-	  } else{
-	  document.write("<DIV ID='PopupMenu' STYLE='position:absolute; left:0px; top:0px; z-index:4; visibility:hidden;'></DIV>");
-	  if (!(gbBsNS4&&!gbBsNS6)) {
-		document.write("<STYLE TYPE='text/css'>");
-		if (gbBsMac&&gbBsIE4) {
-			document.write(".PopupOver {font-family:'Arial'; color:white; background:navy; font-size:10pt; font-style:normal;font-weight:normal;text-decoration:none;}");
-			document.write(".PopupNotOver {font-family:'Arial'; color:black; background:#c0c0c0; font-size:10pt; font-style:normal;font-weight:normal;text-decoration:none;}");
-		} else {
-			document.write(".PopupOver {font-family:'Arial'; color:white; background:navy; font-size:8pt; font-style:normal;font-weight:normal;text-decoration:none;}");
-			document.write(".PopupNotOver {font-family:'Arial'; color:black; background:#c0c0c0; font-size:8pt; font-style:normal;font-weight:normal;text-decoration:none;}");
-		}
-		document.write("</STYLE>");
-	   }
+        document.write("<DIV CLASS='WebHelpPopupMenu' ID='PopupMenu'></DIV>");
+      } else{
+      document.write("<DIV ID='PopupMenu' STYLE='position:absolute; left:0px; top:0px; z-index:4; visibility:hidden;'></DIV>");
+      if (!(gbBsNS4&&!gbBsNS6)) {
+        document.write("<STYLE TYPE='text/css'>");
+        if (gbBsMac&&gbBsIE4) {
+            document.write(".PopupOver {font-family:'Arial'; color:white; background:navy; font-size:10pt; font-style:normal;font-weight:normal;text-decoration:none;}");
+            document.write(".PopupNotOver {font-family:'Arial'; color:black; background:#c0c0c0; font-size:10pt; font-style:normal;font-weight:normal;text-decoration:none;}");
+        } else {
+            document.write(".PopupOver {font-family:'Arial'; color:white; background:navy; font-size:8pt; font-style:normal;font-weight:normal;text-decoration:none;}");
+            document.write(".PopupNotOver {font-family:'Arial'; color:black; background:#c0c0c0; font-size:8pt; font-style:normal;font-weight:normal;text-decoration:none;}");
+        }
+        document.write("</STYLE>");
+       }
           }
-	  g_bIsPopupMenuInit = true;
-	}
+      g_bIsPopupMenuInit = true;
+    }
 }
 
 //Seek for the bsscright frame 
 function _SeekFrameByName( cRoot, strName )
 {
-	if( cRoot == null )	return null;
-	if( cRoot.frames == null )	return null;
-	if( cRoot.frames[strName] != null )	return cRoot.frames[strName];
-	for (var i=0; i<cRoot.frames.length; i++)
-	{
-		var cObj = null;
-		if (!gbBsNS6) 
-			cObj = _SeekFrameByName( cRoot.frames(i).document, strName );
-		else
-			cObj = _SeekFrameByName( cRoot.frames[i], strName );
-		if( cObj != null )		return cObj;
-	};
-	return null;
+    if( cRoot == null ) return null;
+    if( cRoot.frames == null )  return null;
+    if( cRoot.frames[strName] != null ) return cRoot.frames[strName];
+    for (var i=0; i<cRoot.frames.length; i++)
+    {
+        var cObj = null;
+        if (!gbBsNS6) 
+            cObj = _SeekFrameByName( cRoot.frames(i).document, strName );
+        else
+            cObj = _SeekFrameByName( cRoot.frames[i], strName );
+        if( cObj != null )      return cObj;
+    };
+    return null;
 }
 function _GetFrameByName( cRoot, strName )
 {
-	if( cRoot == null )	return null;
-	var cRet = _SeekFrameByName(cRoot, strName);
-	if( cRet != null )	return cRet;
-	if (cRoot.parent != cRoot)
-		return _GetFrameByName( cRoot.parent, strName );
-	else
-		return null;
+    if( cRoot == null ) return null;
+    var cRet = _SeekFrameByName(cRoot, strName);
+    if( cRet != null )  return cRet;
+    if (cRoot.parent != cRoot)
+        return _GetFrameByName( cRoot.parent, strName );
+    else
+        return null;
 }
 
 var gfn_arguments = null;
 function _PopupMenu_Invoke(fn_arguments)
 {
-	gfn_arguments = fn_arguments;
-	if (gbBsOpera6&&gbBsMac)
-	{
-		var wndOldPopupLinks= window.open(document.location.href, "popuplinks");
-		wndOldPopupLinks.close();
-		setTimeout("_PopupMenu_Invoke_2();",100);
-	}
-	else
-	{
-		_PopupMenu_Invoke_2();
-	}
+    gfn_arguments = fn_arguments;
+    if (gbBsOpera6&&gbBsMac)
+    {
+        var wndOldPopupLinks= window.open(document.location.href, "popuplinks");
+        wndOldPopupLinks.close();
+        setTimeout("_PopupMenu_Invoke_2();",100);
+    }
+    else
+    {
+        _PopupMenu_Invoke_2();
+    }
 }
 
 function _PopupMenu_Invoke_2()
 {
-	var fn_arguments = gfn_arguments;
-	gfn_arguments = null;
-	
-	// Make sure we have reasonable arguments
-	var argLen = fn_arguments.length;
-	if (argLen < 3) {
-		return false;
-	}
+    var fn_arguments = gfn_arguments;
+    gfn_arguments = null;
+    
+    // Make sure we have reasonable arguments
+    var argLen = fn_arguments.length;
+    if (argLen < 3) {
+        return false;
+    }
 
-	// Check to see if we only have one target
-	var strTarget = "";
-	var targetDoc = null;
-	if (fn_arguments[1] == '') {
-		if (BSSCPopup_IsPopup()) {
-			targetDoc = parent;
-			strTarget = "TARGET= _parent";
-		}
-		else
-			targetDoc = window.document;
-	} else {
-		targetDoc = _GetFrameByName( parent, fn_arguments[1] );
+    // Check to see if we only have one target
+    var strTarget = "";
+    var targetDoc = null;
+    if (fn_arguments[1] == '') {
+        if (BSSCPopup_IsPopup()) {
+            targetDoc = parent;
+            strTarget = "TARGET= _parent";
+        }
+        else
+            targetDoc = window.document;
+    } else {
+        targetDoc = _GetFrameByName( parent, fn_arguments[1] );
 
-		strTarget = "TARGET='" + fn_arguments[1] + "'";
-	}
+        strTarget = "TARGET='" + fn_arguments[1] + "'";
+    }
 
-	if ((!gbBsIE4 && !gbBsNS4 && !gbBsOpera7 && !gbBsKonqueror3 &&!gbBsSafari) || ((gbBsMac) && (gbBsIE4) && (window.event.srcElement.tagName == "AREA"))) {
-	
-		var argLen 	= fn_arguments.length;
+    if ((!gbBsIE4 && !gbBsNS4 && !gbBsOpera7 && !gbBsKonqueror3 &&!gbBsSafari) || ((gbBsMac) && (gbBsIE4) && (window.event.srcElement.tagName == "AREA"))) {
+    
+        var argLen  = fn_arguments.length;
 
-		// Create the window that the hyperlinks will go into
-		var nHeight = argLen * 15;
-		var nWidth = 400;
-		var strParam = "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=auto";
-		strParam += ",height=" + nHeight + ",width=200";
-		strParam += ",resizable";
+        // Create the window that the hyperlinks will go into
+        var nHeight = argLen * 15;
+        var nWidth = 400;
+        var strParam = "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=auto";
+        strParam += ",height=" + nHeight + ",width=200";
+        strParam += ",resizable";
 
-		var wndTemp=null;
-		// Create a temporary window first to ensure the real popup comes up on top
-		if (!gbBsOpera)
-			wndTemp = window.open("", "temp", strParam);
+        var wndTemp=null;
+        // Create a temporary window first to ensure the real popup comes up on top
+        if (!gbBsOpera)
+            wndTemp = window.open("", "temp", strParam);
 
-		// Create the real popup window
-		var wndPopupLinks=null;
-		if (gbBsOpera&&gbBsMac)
-		{
-			wndTemp = window.open(document.location.href, "temp", strParam);
-			wndPopupLinks= window.open(document.location.href, "popuplinks", strParam);
-		}
-		else
-			wndPopupLinks= window.open("", "popuplinks", strParam);
-		wndPopupLinks.document.open("text/html");
+        // Create the real popup window
+        var wndPopupLinks=null;
+        if (gbBsOpera&&gbBsMac)
+        {
+            wndTemp = window.open(document.location.href, "temp", strParam);
+            wndPopupLinks= window.open(document.location.href, "popuplinks", strParam);
+        }
+        else
+            wndPopupLinks= window.open("", "popuplinks", strParam);
+        wndPopupLinks.document.open("text/html");
 
-		// Close the temporary
-		if (wndTemp)
-			wndTemp.close();
+        // Close the temporary
+        if (wndTemp)
+            wndTemp.close();
 
-		var sHTML="<html><head></head>";
-		sHTML+="<body onBlur=\'self.focus();\'>";
-		var strParaLine = "";
-		for (var i = 0; i < (argLen - 2) / 2; i++) {
-			strParaLine = "";
-			strParaLine += "<a href=\"javascript:";
-			if (gbBsIE) {
-				strParaLine += "onBlur=null; ";
-			}
-			strParaLine += "opener.location=\'";
-			strParaLine += fn_arguments[2 * i + 3];
-			strParaLine += "\';close();\"";
-			strParaLine += strTarget;
+        var sHTML="<html><head></head>";
+        sHTML+="<body onBlur=\'self.focus();\'>";
+        var strParaLine = "";
+        for (var i = 0; i < (argLen - 2) / 2; i++) {
+            strParaLine = "";
+            strParaLine += "<a href=\"javascript:";
+            if (gbBsIE) {
+                strParaLine += "onBlur=null; ";
+            }
+            strParaLine += "opener.location=\'";
+            strParaLine += fn_arguments[2 * i + 3];
+            strParaLine += "\';close();\"";
+            strParaLine += strTarget;
 
-			strParaLine += ">";
-			strParaLine += fn_arguments[2 * i + 2];
-			strParaLine += "</a>";
-			strParaLine += "<br>";
-			sHTML+=strParaLine;
-		}
-		sHTML+="</body></html>";
-		wndPopupLinks.document.write(sHTML);
-		wndPopupLinks.document.close();
-		window.gbInPopupMenu = true;
-		if (!gbBsIE) {
-			wndPopupLinks.focus();
-		}
-		return false;
-	}
+            strParaLine += ">";
+            strParaLine += fn_arguments[2 * i + 2];
+            strParaLine += "</a>";
+            strParaLine += "<br>";
+            sHTML+=strParaLine;
+        }
+        sHTML+="</body></html>";
+        wndPopupLinks.document.write(sHTML);
+        wndPopupLinks.document.close();
+        window.gbInPopupMenu = true;
+        if (!gbBsIE) {
+            wndPopupLinks.focus();
+        }
+        return false;
+    }
 
-	if (((argLen < 5) && ((isNaN(fn_arguments[2])) || (gbPopupMenuTopicList == null))) ||
-		((argLen < 4) && ((!isNaN(fn_arguments[2])) && (gbPopupMenuTopicList != null)))) {
-		// Get the place that we will be putting the topic into
-		var strURL = "";
-		if (isNaN(fn_arguments[2]) ||  (gbPopupMenuTopicList == null)) {
-			strURL = fn_arguments[3];
-		}
-		else 	{
-			strURL = gbPopupMenuTopicList[fn_arguments[2]].strURL;
-		}
+    if (((argLen < 5) && ((isNaN(fn_arguments[2])) || (gbPopupMenuTopicList == null))) ||
+        ((argLen < 4) && ((!isNaN(fn_arguments[2])) && (gbPopupMenuTopicList != null)))) {
+        // Get the place that we will be putting the topic into
+        var strURL = "";
+        if (isNaN(fn_arguments[2]) ||  (gbPopupMenuTopicList == null)) {
+            strURL = fn_arguments[3];
+        }
+        else    {
+            strURL = gbPopupMenuTopicList[fn_arguments[2]].strURL;
+        }
 
-		if (targetDoc != null) {
-			targetDoc.location.href = strURL;
-		}
-		else {
-			if (fn_arguments[1] != null && typeof(fn_arguments[1]) != "undefined")
-				window.open(strURL, fn_arguments[1]);
-			else
-				window.open(strURL);
-		}		
-		window.gbInPopupMenu = true;
-		return false;
-	}
-	
-	var strMenu = "";
-	if (gbBsNS4&&!gbBsNS6) {
-		strMenu = '<TABLE BORDER="1" CELLSPACING=0 CELLPADDING=3 BGCOLOR="#c0c0c0">';
-	} else {
-		strMenu = '<TABLE STYLE="border:2px outset white;" CELLSPACING=0';
-		if (gbBsMac) {
-			strMenu += ' CELLPADDING=4';
-		} else {
-			strMenu += ' CELLPADDING=2';
-		}	
-		strMenu += ' BGCOLOR=#c0c0c0>';
-	}
-	// Add each of the items
-	var i = 2;
-	while (i <= argLen - 1) {
-		strMenu += '<TR><TD><NOBR>'
-		// If the destination is a number then look it up in the topic list
-		if (isNaN(fn_arguments[i]) ||  (gbPopupMenuTopicList == null)) {
-			strMenu += '<DIV STYLE="padding-left:3pt; padding-right:3pt;"><A HREF="' + fn_arguments[i + 1] + '"' + strTarget;
-		} else {
-			strMenu += '<DIV STYLE="padding-left:3pt; padding-right:3pt;"><A HREF="' + gbPopupMenuTopicList[fn_arguments[i]].strURL + '"' + strTarget;
-		}
-		strMenu += ' onclick="PopupMenu_HandleClick(event);"';
-		strMenu += ' onmouseover="PopupMenu_Over(event);"';
-		strMenu += ' onmouseout="PopupMenu_Out(event);"';
-		strMenu += '>';
-		if (isNaN(fn_arguments[i]) || (gbPopupMenuTopicList == null)) {
-			strMenu += '<SPAN CLASS="PopupNotOver">' + fn_arguments[i] + '</SPAN>';
-		} else {
-			strMenu += '<SPAN CLASS="PopupNotOver">' + gbPopupMenuTopicList[fn_arguments[i]].strTitle + '</SPAN>';
-		}
-		strMenu += '</A></DIV></NOBR></TD></TR>';
+        if (targetDoc != null) {
+            targetDoc.location.href = strURL;
+        }
+        else {
+            if (fn_arguments[1] != null && typeof(fn_arguments[1]) != "undefined")
+                window.open(strURL, fn_arguments[1]);
+            else
+                window.open(strURL);
+        }       
+        window.gbInPopupMenu = true;
+        return false;
+    }
+    
+    var strMenu = "";
+    if (gbBsNS4&&!gbBsNS6) {
+        strMenu = '<TABLE BORDER="1" CELLSPACING=0 CELLPADDING=3 BGCOLOR="#c0c0c0">';
+    } else {
+        strMenu = '<TABLE STYLE="border:2px outset white;" CELLSPACING=0';
+        if (gbBsMac) {
+            strMenu += ' CELLPADDING=4';
+        } else {
+            strMenu += ' CELLPADDING=2';
+        }   
+        strMenu += ' BGCOLOR=#c0c0c0>';
+    }
+    // Add each of the items
+    var i = 2;
+    while (i <= argLen - 1) {
+        strMenu += '<TR><TD><NOBR>'
+        // If the destination is a number then look it up in the topic list
+        if (isNaN(fn_arguments[i]) ||  (gbPopupMenuTopicList == null)) {
+            strMenu += '<DIV STYLE="padding-left:3pt; padding-right:3pt;"><A HREF="' + fn_arguments[i + 1] + '"' + strTarget;
+        } else {
+            strMenu += '<DIV STYLE="padding-left:3pt; padding-right:3pt;"><A HREF="' + gbPopupMenuTopicList[fn_arguments[i]].strURL + '"' + strTarget;
+        }
+        strMenu += ' onclick="PopupMenu_HandleClick(event);"';
+        strMenu += ' onmouseover="PopupMenu_Over(event);"';
+        strMenu += ' onmouseout="PopupMenu_Out(event);"';
+        strMenu += '>';
+        if (isNaN(fn_arguments[i]) || (gbPopupMenuTopicList == null)) {
+            strMenu += '<SPAN CLASS="PopupNotOver">' + fn_arguments[i] + '</SPAN>';
+        } else {
+            strMenu += '<SPAN CLASS="PopupNotOver">' + gbPopupMenuTopicList[fn_arguments[i]].strTitle + '</SPAN>';
+        }
+        strMenu += '</A></DIV></NOBR></TD></TR>';
 
-		if (isNaN(fn_arguments[i]) || (gbPopupMenuTopicList == null)) {
-			i += 2;
-		} else {
-			i += 1;
-		}
-	}
-	strMenu += "</TABLE>";
+        if (isNaN(fn_arguments[i]) || (gbPopupMenuTopicList == null)) {
+            i += 2;
+        } else {
+            i += 1;
+        }
+    }
+    strMenu += "</TABLE>";
 
-	if (gbBsMac) {
-	// totally hack. because ie5 in mac need something. </TABLE> is one of them. mac is mad.
-		strMenu +="<TABLE></TABLE>";
-	}
+    if (gbBsMac) {
+    // totally hack. because ie5 in mac need something. </TABLE> is one of them. mac is mad.
+        strMenu +="<TABLE></TABLE>";
+    }
 
-	var layerPopup = null;
-	var stylePopup = null;
-	var nEventX = 0;
-	var nEventY = 0;
-	var nWindowWidth = 0;
-	if (gbBsIE4 || gbBsOpera7) {
+    var layerPopup = null;
+    var stylePopup = null;
+    var nEventX = 0;
+    var nEventY = 0;
+    var nWindowWidth = 0;
+    if (gbBsIE4 || gbBsOpera7) {
 
-		layerPopup = getElement("PopupMenu");
-		layerPopup.innerHTML = strMenu;
-		stylePopup = layerPopup.style;
+        layerPopup = getElement("PopupMenu");
+        layerPopup.innerHTML = strMenu;
+        stylePopup = layerPopup.style;
 
-		_BSPSGetClientSize();
+        _BSPSGetClientSize();
 
-		// Get the position of the item causing the event (relative to its parent)
-		nEventX = window.event.clientX;
-		nEventY = window.event.clientY;
+        // Get the position of the item causing the event (relative to its parent)
+        nEventX = window.event.clientX;
+        nEventY = window.event.clientY;
 
-		if (nEventY + layerPopup.scrollHeight + 10 < gBsClientHeight) {
-			nEventY += document.body.scrollTop + 10;
-		} else {
-			nEventY = (document.body.scrollTop + gBsClientHeight) - layerPopup.scrollHeight - 20;
-		}
-		stylePopup.top = nEventY;
-		
-		var nPopupWidth = layerPopup.scrollWidth;
-		if (gbBsMac) {
-			nPopupWidth = 80; // we have no idea how to get the dynamic width of the popup.
-		}
-		if (nEventX + nPopupWidth + 20 > gBsClientWidth) {
-			if (gBsClientWidth - nPopupWidth < 5) {
-				stylePopup.left = 5;
-			} else {
-				stylePopup.left = gBsClientWidth - nPopupWidth - 5;
-			}
-		} else {
-			stylePopup.left = nEventX + document.body.scrollLeft + 20;
-		}
+        if (nEventY + layerPopup.scrollHeight + 10 < gBsClientHeight) {
+            nEventY += document.body.scrollTop + 10;
+        } else {
+            nEventY = (document.body.scrollTop + gBsClientHeight) - layerPopup.scrollHeight - 20;
+        }
+        stylePopup.top = nEventY;
+        
+        var nPopupWidth = layerPopup.scrollWidth;
+        if (gbBsMac) {
+            nPopupWidth = 80; // we have no idea how to get the dynamic width of the popup.
+        }
+        if (nEventX + nPopupWidth + 20 > gBsClientWidth) {
+            if (gBsClientWidth - nPopupWidth < 5) {
+                stylePopup.left = 5;
+            } else {
+                stylePopup.left = gBsClientWidth - nPopupWidth - 5;
+            }
+        } else {
+            stylePopup.left = nEventX + document.body.scrollLeft + 20;
+        }
 
-		stylePopup.visibility = "visible";
-		if (!gOlddocumentClick && document.onclick)
-			gOlddocumentClick = document.onclick;
-		document.onclick = PopupMenu_HandleClick;
+        stylePopup.visibility = "visible";
+        if (!gOlddocumentClick && document.onclick)
+            gOlddocumentClick = document.onclick;
+        document.onclick = PopupMenu_HandleClick;
 
-	} else if (gbBsNS6 || gbBsKonqueror3||gbBsSafari) {
-		layerPopup = getElement("PopupMenu");
-		layerPopup.style.visibility = "hidden";
-	
-		if (gbBsNS6)
-		{
-			var e = fn_arguments[0];
-			nEventX = e.pageX;
-			nEventY = e.pageY;
-		}
-		else
-		{
-			nEventX = window.event.clientX;
-			nEventY = window.event.clientY;
-		}
-		_BSPSGetClientSize();
-		layerPopup.innerHTML = strMenu;
+    } else if (gbBsNS6 || gbBsKonqueror3||gbBsSafari) {
+        layerPopup = getElement("PopupMenu");
+        layerPopup.style.visibility = "hidden";
+    
+        if (gbBsNS6)
+        {
+            var e = fn_arguments[0];
+            nEventX = e.pageX;
+            nEventY = e.pageY;
+        }
+        else
+        {
+            nEventX = window.event.clientX;
+            nEventY = window.event.clientY;
+        }
+        _BSPSGetClientSize();
+        layerPopup.innerHTML = strMenu;
 
-		if (nEventY + layerPopup.offsetHeight + 20  <  window.pageYOffset + gBsClientHeight) {
-			nEventY += 20;
-		} else {
-			nEventY = gBsClientHeight + window.pageYOffset - layerPopup.offsetHeight - 20;
-		}
+        if (nEventY + layerPopup.offsetHeight + 20  <  window.pageYOffset + gBsClientHeight) {
+            nEventY += 20;
+        } else {
+            nEventY = gBsClientHeight + window.pageYOffset - layerPopup.offsetHeight - 20;
+        }
 
-		if (nEventX + layerPopup.offsetWidth + 20 > gBsClientWidth + window.pageXOffset) {
-			if (gBsClientWidth + window.pageXOffset - layerPopup.offsetWidth < 20) {
-				nEventX = 5;
-			} else {
-				nEventX = gBsClientWidth + window.pageXOffset - layerPopup.offsetWidth - 20;
-			}
-		} else {
-			nEventX += 20;
-		}
-		layerPopup.style.top = nEventY;
-		layerPopup.style.left = nEventX;
-		// set again to avoid the stupid frash in netscape 6.
-		layerPopup.innerHTML = strMenu;
-		layerPopup.style.visibility = "visible";
-		//window.captureEvents(Event.MOUSEDOWN);
-		if (!gOlddocumentClick && document.onclick)
-			gOlddocumentClick = document.onclick;
-		window.onclick = PopupMenu_HandleClick;
-	}
-	else if (gbBsNS4) {
-		layerPopup = document.layers.PopupMenu;
-		layerPopup.visibility = "hide";
-		stylePopup = layerPopup.document;
-		stylePopup.write(strMenu);
-		stylePopup.close();
-		var e = fn_arguments[0];
-		nEventX = e.pageX;
-		nEventY = e.pageY;
-		_BSPSGetClientSize();
-		if (nEventY + layerPopup.clip.height + 20 < window.pageYOffset + gBsClientHeight) {
-			nEventY += 20;
-		} else {
-			nEventY = gBsClientHeight + window.pageYOffset- layerPopup.clip.height - 20;
-		}
-		layerPopup.top = nEventY;
+        if (nEventX + layerPopup.offsetWidth + 20 > gBsClientWidth + window.pageXOffset) {
+            if (gBsClientWidth + window.pageXOffset - layerPopup.offsetWidth < 20) {
+                nEventX = 5;
+            } else {
+                nEventX = gBsClientWidth + window.pageXOffset - layerPopup.offsetWidth - 20;
+            }
+        } else {
+            nEventX += 20;
+        }
+        layerPopup.style.top = nEventY;
+        layerPopup.style.left = nEventX;
+        // set again to avoid the stupid frash in netscape 6.
+        layerPopup.innerHTML = strMenu;
+        layerPopup.style.visibility = "visible";
+        //window.captureEvents(Event.MOUSEDOWN);
+        if (!gOlddocumentClick && document.onclick)
+            gOlddocumentClick = document.onclick;
+        window.onclick = PopupMenu_HandleClick;
+    }
+    else if (gbBsNS4) {
+        layerPopup = document.layers.PopupMenu;
+        layerPopup.visibility = "hide";
+        stylePopup = layerPopup.document;
+        stylePopup.write(strMenu);
+        stylePopup.close();
+        var e = fn_arguments[0];
+        nEventX = e.pageX;
+        nEventY = e.pageY;
+        _BSPSGetClientSize();
+        if (nEventY + layerPopup.clip.height + 20 < window.pageYOffset + gBsClientHeight) {
+            nEventY += 20;
+        } else {
+            nEventY = gBsClientHeight + window.pageYOffset- layerPopup.clip.height - 20;
+        }
+        layerPopup.top = nEventY;
 
-		if (nEventX + layerPopup.clip.width + 20 > gBsClientWidth + window.pageXOffset) {
-			if (gBsClientWidth + window.pageXOffset - layerPopup.clip.width < 20) {
-				nEventX = 5;
-			} else {
-				nEventX = gBsClientWidth + window.pageXOffset - layerPopup.clip.width - 20;
-			}
-		} else {
-			nEventX += 20;
-		}
+        if (nEventX + layerPopup.clip.width + 20 > gBsClientWidth + window.pageXOffset) {
+            if (gBsClientWidth + window.pageXOffset - layerPopup.clip.width < 20) {
+                nEventX = 5;
+            } else {
+                nEventX = gBsClientWidth + window.pageXOffset - layerPopup.clip.width - 20;
+            }
+        } else {
+            nEventX += 20;
+        }
 
-		layerPopup.left = nEventX;
+        layerPopup.left = nEventX;
 
-		layerPopup.visibility = "show";
+        layerPopup.visibility = "show";
 
-		window.captureEvents(Event.MOUSEDOWN);
-		if (!gOlddocumentClick && document.onmousedown)
-			gOlddocumentClick = document.onmousedown;
-		window.onmousedown = PopupMenu_HandleClick;
-	}
+        window.captureEvents(Event.MOUSEDOWN);
+        if (!gOlddocumentClick && document.onmousedown)
+            gOlddocumentClick = document.onmousedown;
+        window.onmousedown = PopupMenu_HandleClick;
+    }
 
-	window.gbInPopupMenu = true;
-	window.gbPopupMenuTimeoutExpired = false;
-	setTimeout("PopupMenu_Timeout();", 100);
-	return false;
+    window.gbInPopupMenu = true;
+    window.gbPopupMenuTimeoutExpired = false;
+    setTimeout("PopupMenu_Timeout();", 100);
+    return false;
 }
 
 function PopupMenu_Timeout()
 {
-	window.gbPopupMenuTimeoutExpired = true;
+    window.gbPopupMenuTimeoutExpired = true;
 }
 
 function PopupMenu_Over(e)
 {
     if (gbBsIE4||gbBsOpera7)
-		e.srcElement.className = "PopupOver";
+        e.srcElement.className = "PopupOver";
     else if (gbBsNS6)
-		e.target.parentNode.className = "PopupOver";
-	return;
+        e.target.parentNode.className = "PopupOver";
+    return;
 }
 
 function PopupMenu_Out(e)
 {
     if (gbBsIE4||gbBsOpera7)
-		e.srcElement.className = "PopupNotOver";
+        e.srcElement.className = "PopupNotOver";
     else if (gbBsNS6)
-		e.target.parentNode.className = "PopupNotOver";
-	return;
+        e.target.parentNode.className = "PopupNotOver";
+    return;
 }
 
 function PopupMenu_HandleClick(e)
 {
-	if (window.gbPopupMenuTimeoutExpired) {
-		window.gbInPopupMenu = false;
-		if (gbBsNS4 && !gbBsNS6) {
-			window.releaseEvents(Event.MOUSEDOWN);
-		}
+    if (window.gbPopupMenuTimeoutExpired) {
+        window.gbInPopupMenu = false;
+        if (gbBsNS4 && !gbBsNS6) {
+            window.releaseEvents(Event.MOUSEDOWN);
+        }
 
-		var layerPopup = null;
-		if (gbBsNS4&&!gbBsNS6) {
-			layerPopup = document.layers.PopupMenu;
-			layerPopup.visibility = "hide";
-		} else {
-			layerPopup = getElement("PopupMenu");
-			layerPopup.style.visibility = "hidden";
-		}
-	
-		if (gOlddocumentClick)
-		{
-			if (gbBsNS4 && !gbBsNS6)
-				document.onmousedown = gOlddocumentClick;
-			else
-				document.onclick = gOlddocumentClick;
-		}
-	}
-	return;
+        var layerPopup = null;
+        if (gbBsNS4&&!gbBsNS6) {
+            layerPopup = document.layers.PopupMenu;
+            layerPopup.visibility = "hide";
+        } else {
+            layerPopup = getElement("PopupMenu");
+            layerPopup.style.visibility = "hidden";
+        }
+    
+        if (gOlddocumentClick)
+        {
+            if (gbBsNS4 && !gbBsNS6)
+                document.onmousedown = gOlddocumentClick;
+            else
+                document.onclick = gOlddocumentClick;
+        }
+    }
+    return;
 }
 
 function BSSCPopup_ClickMac()
 {
-	if ((!DHTMLPopupSupport()) && (gbBsIE4 || gbBsOpera7))
-	{	
-		var bClickOnAnchor = false;
-		var el;
-		if ((window.event != null) &&
-		    (window.event.srcElement != null))
-		{
-		    el = window.event.srcElement;
-			while (el != null)
-			{
-				if ((el.tagName == "A") || (el.tagName == "AREA")) 	{
-					bClickOnAnchor = true;
-					break;
-				}
-				if (el.tagName == "BODY") {
-					break;
-				}
-				el = getParentNode(el);
-			}
-		}
-		if (BSSCPopup_IsPopup())
-		{
-			if (!bClickOnAnchor) {
-				parent.window.gPopupWindow = null;
-				self.close();
-			}
-		}
-		else
-		{
-			bClosePopupWindow = true;
-			if ((bClickOnAnchor) &&
-				(el.href) &&
-			    ((el.href.indexOf("javascript:BSSCPopup") != -1) || (el.href.indexOf("javascript:null") != -1) || (el.href.indexOf("javascript:void(0)") != -1)))
-			{
-				bClosePopupWindow = false;
-			}
-			if (bClosePopupWindow)
-			{
-				if (window.gPopupWindow != null && !window.gPopupWindow.closed )
-				{
-					window.gPopupWindow.close();
-				}
-			}
-		}
-	}
+    if ((!DHTMLPopupSupport()) && (gbBsIE4 || gbBsOpera7))
+    {   
+        var bClickOnAnchor = false;
+        var el;
+        if ((window.event != null) &&
+            (window.event.srcElement != null))
+        {
+            el = window.event.srcElement;
+            while (el != null)
+            {
+                if ((el.tagName == "A") || (el.tagName == "AREA"))  {
+                    bClickOnAnchor = true;
+                    break;
+                }
+                if (el.tagName == "BODY") {
+                    break;
+                }
+                el = getParentNode(el);
+            }
+        }
+        if (BSSCPopup_IsPopup())
+        {
+            if (!bClickOnAnchor) {
+                parent.window.gPopupWindow = null;
+                self.close();
+            }
+        }
+        else
+        {
+            bClosePopupWindow = true;
+            if ((bClickOnAnchor) &&
+                (el.href) &&
+                ((el.href.indexOf("javascript:BSSCPopup") != -1) || (el.href.indexOf("javascript:null") != -1) || (el.href.indexOf("javascript:void(0)") != -1)))
+            {
+                bClosePopupWindow = false;
+            }
+            if (bClosePopupWindow)
+            {
+                if (window.gPopupWindow != null && !window.gPopupWindow.closed )
+                {
+                    window.gPopupWindow.close();
+                }
+            }
+        }
+    }
 }
 
 function BsPopupOnClick()
 {
-	if (!gbBsIE4 && !gbBsOpera7)
-		return;
+    if (!gbBsIE4 && !gbBsOpera7)
+        return;
 
-	BSSCPopup_ClickMac();
+    BSSCPopup_ClickMac();
 }
 
 function _BSSCOnError(message)
 {
-	if(-1 != message.indexOf("denied") 
-		|| -1 != message.indexOf("Object required"))
-	 return true;
+    if(-1 != message.indexOf("denied") 
+        || -1 != message.indexOf("Object required"))
+     return true;
 }
 
 //End to support previous relative topics
@@ -2458,19 +2368,19 @@ function _BSSCOnError(message)
 //Begin to support previous popup functions
 
 //variables used to isolate the browser type
-var gBsStyVisShow	= null;
-var gBsStyVisHide	= null;
-var gBsClientWidth	= 640;
+var gBsStyVisShow   = null;
+var gBsStyVisHide   = null;
+var gBsClientWidth  = 640;
 var gBsClientHeight = 480;
 
 // here is the varible for judge popup windows size. these parameter is for IE5.0, it may need adjust for others.
-var gBRateH_W		= 0.618; // 1.618 Golden cut.
-var gBMaxXOfParent	= 0.8; 
-var gBMaxYOfParent	= 0.8;
+var gBRateH_W       = 0.618; // 1.618 Golden cut.
+var gBMaxXOfParent  = 0.8; 
+var gBMaxYOfParent  = 0.8;
 var gBscrollHeight   = 16;
 var gBscrollWidth   =  16;
-var gBpermitXDelta	= 3;
-var gBpermitYDelta	= 3;
+var gBpermitXDelta  = 3;
+var gBpermitYDelta  = 3;
 
 
 var arrayPopupURL = new Array();
@@ -2480,183 +2390,183 @@ var arrayDirty = new Array();
 
 function setAbsPopupURL(nIndex, strURL)
 {
-	arrayAbsPopupURL[nIndex] = strURL;
+    arrayAbsPopupURL[nIndex] = strURL;
 }
 
 function getAbsPopupURL(nIndex)
 {
-	if (nIndex == -1 || arrayAbsPopupURL.length <= nIndex) return null;
-	else 
-		return arrayAbsPopupURL[nIndex];
+    if (nIndex == -1 || arrayAbsPopupURL.length <= nIndex) return null;
+    else 
+        return arrayAbsPopupURL[nIndex];
 }
 
 function getPopupURL(nIndex)
 {
-	if (nIndex == -1 || arrayPopupURL.length <= nIndex) return null;
-	else 
-		return arrayPopupURL[nIndex];
+    if (nIndex == -1 || arrayPopupURL.length <= nIndex) return null;
+    else 
+        return arrayPopupURL[nIndex];
 }
 
 function getPopupID(nIndex)
 {
-	return gstrPopupID + nIndex;
+    return gstrPopupID + nIndex;
 }
 
 function getPopupShadowID(nIndex)
 {
-	return gstrPopupShadowID + nIndex;
+    return gstrPopupShadowID + nIndex;
 }
 
 function getPopupTopicID(nIndex)
 {
-	return gstrPopupTopicID + nIndex;
+    return gstrPopupTopicID + nIndex;
 }
 
 function getPopupIFrameID(nIndex)
 {
-	return gstrPopupIFrameID + nIndex;
+    return gstrPopupIFrameID + nIndex;
 }
 
 function getPopupIFrameName(nIndex)
 {
-	return gstrPopupIFrameName + nIndex;
+    return gstrPopupIFrameName + nIndex;
 }
 
 
 function getPopupTopicStyle(nIndex)
 {
-	return getElement(getPopupTopicID(nIndex)).style;
+    return getElement(getPopupTopicID(nIndex)).style;
 }
 
 function getPopupShadowStyle(nIndex)
 {
-	return getElement(getPopupShadowID(nIndex)).style;
+    return getElement(getPopupShadowID(nIndex)).style;
 }
 
 function getPopupIFrame(nIndex)
 {
-	if (gbBsNS6)
-		return eval("window.frames['" + getPopupIFrameName(nIndex) + "']");
-	else
-		return eval("document.frames['" + getPopupIFrameName(nIndex) + "']");
+    if (gbBsNS6)
+        return eval("window.frames['" + getPopupIFrameName(nIndex) + "']");
+    else
+        return eval("document.frames['" + getPopupIFrameName(nIndex) + "']");
 }
 
 function getPopupDivStyle(nIndex)
 {
-	return getElement(getPopupID(nIndex)).style;
+    return getElement(getPopupID(nIndex)).style;
 }
 
 function getPopupIFrameStyle(nIndex)
 {
-	return getElement(getPopupIFrameID(nIndex)).style;
+    return getElement(getPopupIFrameID(nIndex)).style;
 }
 
 
 function findDiv(strURL)
 {
-	for (var i = 0; i < arrayPopupURL.length; i ++ ) {
-		if (arrayPopupURL[i] == strURL) {
-			return i;
-		}
-	}
-	return -1;
+    for (var i = 0; i < arrayPopupURL.length; i ++ ) {
+        if (arrayPopupURL[i] == strURL) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 var gnToken = -1;
 function takeToken()
 {
-	gnToken ++;
-	if (gnToken > 10000) gnToken = 0;
-	return gnToken;
+    gnToken ++;
+    if (gnToken > 10000) gnToken = 0;
+    return gnToken;
 }
 
 function IsValidToken(nToken)
 {
-	return (gnToken == nToken);
+    return (gnToken == nToken);
 }
 
 function addDiv(strURL)
 {
-	for (var i = 0; i < arrayPopupURL.length; i ++) {
-		if (arrayPopupURL[i] == null) {
-			arrayPopupURL[i] = strURL;
-			return i;
-		}
-	}	
-	arrayPopupURL[i] = strURL;
-	arrayDirty[i] = true;
-	return i;
+    for (var i = 0; i < arrayPopupURL.length; i ++) {
+        if (arrayPopupURL[i] == null) {
+            arrayPopupURL[i] = strURL;
+            return i;
+        }
+    }   
+    arrayPopupURL[i] = strURL;
+    arrayDirty[i] = true;
+    return i;
 }
 
 function setDirty()
 {
-	for (var i = 0; i < arrayPopupURL.length; i ++ )
-		arrayDirty[i] = true;
+    for (var i = 0; i < arrayPopupURL.length; i ++ )
+        arrayDirty[i] = true;
 }
 
 function IsDirty(nIndex)
 {
-	if (nIndex == -1)
-		return true;
-	else 
-		if (arrayDirty.length > nIndex) 
-			return arrayDirty[nIndex];
-		else
-			return true;
+    if (nIndex == -1)
+        return true;
+    else 
+        if (arrayDirty.length > nIndex) 
+            return arrayDirty[nIndex];
+        else
+            return true;
 }
 
 function hideAll()
 {
-	for (var i = 0; i < arrayPopupURL.length; i ++ )
-	{
-		getPopupDivStyle(i).visibility = gBsStyVisHide;
-		getPopupIFrameStyle(i).visibility = gBsStyVisHide;
-	}
+    for (var i = 0; i < arrayPopupURL.length; i ++ )
+    {
+        getPopupDivStyle(i).visibility = gBsStyVisHide;
+        getPopupIFrameStyle(i).visibility = gBsStyVisHide;
+    }
 }
 
 function getCurrentPopupIFrame()
 {
-	for (var i = 0; i < arrayPopupURL.length; i ++)
-		if (getPopupDivStyle(i).visibility == gBsStyVisShow)
-			return getPopupIFrame(i);
-	return null;
+    for (var i = 0; i < arrayPopupURL.length; i ++)
+        if (getPopupDivStyle(i).visibility == gBsStyVisShow)
+            return getPopupIFrame(i);
+    return null;
 }
 
 function setClear(nIndex)
 {
-	if (nIndex != -1)
-		arrayDirty[nIndex] = false;
+    if (nIndex != -1)
+        arrayDirty[nIndex] = false;
 }
 
 function _BSSCCreatePopupDiv(strURL)
 {
-	var nIndex = findDiv(strURL);
-	if (nIndex == -1 ) {
-		nIndex = addDiv(strURL);
-		BsPopup_CreateDiv(nIndex);
-	}
-	else {
-		if (IsDirty(nIndex)) {
-			if("object" == typeof(getPopupIFrame(nIndex).document))
-				getPopupIFrame(nIndex).document.location.href = strURL;
-		}
-	}
-	return nIndex;
+    var nIndex = findDiv(strURL);
+    if (nIndex == -1 ) {
+        nIndex = addDiv(strURL);
+        BsPopup_CreateDiv(nIndex);
+    }
+    else {
+        if (IsDirty(nIndex)) {
+            if("object" == typeof(getPopupIFrame(nIndex).document))
+                getPopupIFrame(nIndex).document.location.href = strURL;
+        }
+    }
+    return nIndex;
 }
 
 //Here is the browser type 
 function _BSPSGetBrowserInfo()
 {
-	if (gbBsNS4&&!gbBsNS6)
-	{
-		gBsStyVisShow	= "show";
-		gBsStyVisHide	= "hide";
-	}
-	else
-	{
-		gBsStyVisShow	= "visible";
-		gBsStyVisHide	= "hidden";
-	}
+    if (gbBsNS4&&!gbBsNS6)
+    {
+        gBsStyVisShow   = "show";
+        gBsStyVisHide   = "hide";
+    }
+    else
+    {
+        gBsStyVisShow   = "visible";
+        gBsStyVisHide   = "hidden";
+    }
 }
 
 _BSPSGetBrowserInfo();
@@ -2664,16 +2574,16 @@ _BSPSGetBrowserInfo();
 //Get client size info
 function _BSPSGetClientSize()
 {
-	if (gbBsNS4||gbBsKonqueror3||gbBsSafari)
-	{
-		gBsClientWidth	= innerWidth;
-		gBsClientHeight = innerHeight;
-	}
-	else if (gbBsIE4 || gbBsOpera7)
-	{
-		gBsClientWidth	= document.body.clientWidth;
-		gBsClientHeight = document.body.clientHeight;
-	}
+    if (gbBsNS4||gbBsKonqueror3||gbBsSafari)
+    {
+        gBsClientWidth  = innerWidth;
+        gBsClientHeight = innerHeight;
+    }
+    else if (gbBsIE4 || gbBsOpera7)
+    {
+        gBsClientWidth  = document.body.clientWidth;
+        gBsClientHeight = document.body.clientHeight;
+    }
 }
 
 var gstrPopupID = 'BSSCPopup';
@@ -2695,731 +2605,731 @@ var gbPopupTimeoutExpired = false;
 
 function DHTMLPopupSupport()
 {
-	if (((gbBsIE4) && (!gbBsMac))||gbBsOpera7|| gbBsNS7) {
-		return true;
-	}
-	return false;
+    if (((gbBsIE4) && (!gbBsMac))||gbBsOpera7|| gbBsNS7) {
+        return true;
+    }
+    return false;
 }
 
 function BSSCPopup_IsPopup()
 {
-	if (DHTMLPopupSupport() && (this.name.indexOf(gstrPopupIFrameName) != -1)) {
-		return true;
-	} else if ((gbBsNS4 || gbBsIE4 || gbBsOpera7) && (this.name.indexOf(gstrPopupID) != -1)) {
-		return true;
-	} else {
-		return false;
-	}
+    if (DHTMLPopupSupport() && (this.name.indexOf(gstrPopupIFrameName) != -1)) {
+        return true;
+    } else if ((gbBsNS4 || gbBsIE4 || gbBsOpera7) && (this.name.indexOf(gstrPopupID) != -1)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 // If there is a hyperlink in a popup window, display the hyperlink in
 // the original window. (bsscright)
 if (BSSCPopup_IsPopup() && !gbBsIE4 && !gbBsOpera7) {
-	document.write("<base target=\"bsscright\">");
+    document.write("<base target=\"bsscright\">");
 }
 
 // Local functions.
 function BsPopup_CreateDiv(nIndex)
 {
-	if(!DHTMLPopupSupport())
-		return;
-	// DO NOT SET Width and height for the div, otherwize it will make IE4 popup do not work when view the topic alone.
-	var strPopupDiv = "<DIV ID='" + getPopupID(nIndex) + "' STYLE='position:absolute; top:-100; left:0; z-index:600; visibility:hidden;'>";
-	strPopupDiv += "<DIV ID='" + getPopupShadowID(nIndex) + "' STYLE=\"position:absolute;top:0; left:0;  background-color:#C0C0C0;\"></DIV>";
-	strPopupDiv += "<DIV ID='" + getPopupTopicID(nIndex) + "' STYLE=\"position:absolute;top:0; left:0;  background-color:#FFFFFF;border:1px #000000 outset;\">";
-	strPopupDiv += "<IFRAME title=\"Popup Window\" ID='" + getPopupIFrameID(nIndex) + "' name='" + getPopupIFrameName(nIndex) + "' src = '" + getPopupURL(nIndex) + "' frameborder=0 scrolling=auto></IFRAME>";
-	strPopupDiv += "</DIV></DIV>";
+    if(!DHTMLPopupSupport())
+        return;
+    // DO NOT SET Width and height for the div, otherwize it will make IE4 popup do not work when view the topic alone.
+    var strPopupDiv = "<DIV ID='" + getPopupID(nIndex) + "' STYLE='position:absolute; top:-100; left:0; z-index:600; visibility:hidden;'>";
+    strPopupDiv += "<DIV ID='" + getPopupShadowID(nIndex) + "' STYLE=\"position:absolute;top:0; left:0;  background-color:#C0C0C0;\"></DIV>";
+    strPopupDiv += "<DIV ID='" + getPopupTopicID(nIndex) + "' STYLE=\"position:absolute;top:0; left:0;  background-color:#FFFFFF;border:1px #000000 outset;\">";
+    strPopupDiv += "<IFRAME title=\"Popup Window\" ID='" + getPopupIFrameID(nIndex) + "' name='" + getPopupIFrameName(nIndex) + "' src = '" + getPopupURL(nIndex) + "' frameborder=0 scrolling=auto></IFRAME>";
+    strPopupDiv += "</DIV></DIV>";
 
-	var objBody = getElementsByTag(document, "BODY")[0];
-	if( typeof(objBody) != "object" )
-		return;
+    var objBody = getElementsByTag(document, "BODY")[0];
+    if( typeof(objBody) != "object" )
+        return;
 
-	insertAdjacentHTML(objBody, "beforeEnd", strPopupDiv);
+    insertAdjacentHTML(objBody, "beforeEnd", strPopupDiv);
 }
 
 function handleLoadNS()
 {
-	if (this.id)
-	{
-		var nIndex = parseInt(this.id.substring(gstrPopupIFrameID.length));
-		BSSCPopup_PostWork(nIndex);
-	}
+    if (this.id)
+    {
+        var nIndex = parseInt(this.id.substring(gstrPopupIFrameID.length));
+        BSSCPopup_PostWork(nIndex);
+    }
 }
 
 function BSSCPopup_PostWork(nIndex)
 {
-	getPopupDivStyle(nIndex).visibility = gBsStyVisShow;
-	getPopupIFrameStyle(nIndex).visibility =gBsStyVisShow;
+    getPopupDivStyle(nIndex).visibility = gBsStyVisShow;
+    getPopupIFrameStyle(nIndex).visibility =gBsStyVisShow;
 
-	setClear(nIndex);
-	window.gbPopupTimeoutExpired = true;
+    setClear(nIndex);
+    window.gbPopupTimeoutExpired = true;
 
-	BSSCPopup_ChangeTargettoParent(getPopupIFrame(nIndex).document);
-	if (gbBsNS6)
-		getPopupIFrame(nIndex).document.body.addEventListener("click",BSSCPopupClicked,false);
-	else
-		getPopupIFrame(nIndex).document.body.onclick = BSSCPopupClicked;
+    BSSCPopup_ChangeTargettoParent(getPopupIFrame(nIndex).document);
+    if (gbBsNS6)
+        getPopupIFrame(nIndex).document.body.addEventListener("click",BSSCPopupClicked,false);
+    else
+        getPopupIFrame(nIndex).document.body.onclick = BSSCPopupClicked;
 
-	if (!gbOrignalOnMouseDown && document.onmousedown)
-		gbOrignalOnMouseDown = document.onmousedown;
+    if (!gbOrignalOnMouseDown && document.onmousedown)
+        gbOrignalOnMouseDown = document.onmousedown;
 
-	if (gbBsNS6)
-		document.addEventListener("mousedown", BSSCPopupParentClicked,false);
-	else
-		document.onmousedown = BSSCPopupParentClicked;
+    if (gbBsNS6)
+        document.addEventListener("mousedown", BSSCPopupParentClicked,false);
+    else
+        document.onmousedown = BSSCPopupParentClicked;
 }
 
 function BSSCPopup_Timeout(nIndex, nToken)
 {
     if (!IsValidToken(nToken)) return;
 
-	if (gbBsNS6||((getPopupIFrame(nIndex).document.readyState == "complete") &&
-		(getPopupIFrame(nIndex).document.body != null))) {
-		BSSCPopup_PostWork(nIndex);
-	} else {
-		setTimeout("BSSCPopup_Timeout(" + nIndex + "," + nToken + ")", 100);
-	}
+    if (gbBsNS6||((getPopupIFrame(nIndex).document.readyState == "complete") &&
+        (getPopupIFrame(nIndex).document.body != null))) {
+        BSSCPopup_PostWork(nIndex);
+    } else {
+        setTimeout("BSSCPopup_Timeout(" + nIndex + "," + nToken + ")", 100);
+    }
 }
 
 // VH 08/10/00 
 // do not change target to parent if the href is using javascript
 function BSSCPopup_ChangeTargettoParent(tagsObject)
 {
-	var collA = getElementsByTag(tagsObject, "A");
-	BSSCPopup_ChangeTargettoParent2(collA);
+    var collA = getElementsByTag(tagsObject, "A");
+    BSSCPopup_ChangeTargettoParent2(collA);
 
-	var collIMG = getElementsByTag(tagsObject,"IMG");
-	BSSCPopup_ChangeTargettoParent2(collIMG);
+    var collIMG = getElementsByTag(tagsObject,"IMG");
+    BSSCPopup_ChangeTargettoParent2(collIMG);
 }
 
 function BSSCPopup_ChangeTargettoParent2(colls)
 {
-	if (colls != null)  {
-		for (var j = 0; j < colls.length; j ++ )
-		{
-			var strtemp = colls[j].href;
-			if (strtemp)
-			{
-				strtemp = strtemp.toLowerCase();
-				if (strtemp.indexOf("javascript:") == -1)
-				if (colls[j].target == "")
-					colls[j].target = "_parent";
-			}
-		}
-	}
+    if (colls != null)  {
+        for (var j = 0; j < colls.length; j ++ )
+        {
+            var strtemp = colls[j].href;
+            if (strtemp)
+            {
+                strtemp = strtemp.toLowerCase();
+                if (strtemp.indexOf("javascript:") == -1)
+                if (colls[j].target == "")
+                    colls[j].target = "_parent";
+            }
+        }
+    }
 }
 
 function BSPSPopupTopicWinHelp(strURL)
 {
-	_BSSCPopup(strURL);
-	return;
+    _BSSCPopup(strURL);
+    return;
 }
 
 function _BSSCPopup(strURL, width, height)
 {
-	var cuswidth = 0;
-	var cusheight = 0;
-	if ("undefined" != typeof(width) && "undefined" != typeof(height)) {
-		cuswidth = width;
-		cusheight= height;
-	}
-	
-	if (DHTMLPopupSupport()) {
-		var nToken = takeToken(); // take  token first.
-		var nIndex = _BSSCCreatePopupDiv(strURL);
-		window.gbPopupTimeoutExpired = false;
-		var ntWidth = gBsClientWidth;
-		var ntHeight = gBsClientHeight;
-		_BSPSGetClientSize();
-		if (ntWidth != gBsClientWidth || ntHeight != gBsClientHeight) {
-			setDirty();
-		}
+    var cuswidth = 0;
+    var cusheight = 0;
+    if ("undefined" != typeof(width) && "undefined" != typeof(height)) {
+        cuswidth = width;
+        cusheight= height;
+    }
+    
+    if (DHTMLPopupSupport()) {
+        var nToken = takeToken(); // take  token first.
+        var nIndex = _BSSCCreatePopupDiv(strURL);
+        window.gbPopupTimeoutExpired = false;
+        var ntWidth = gBsClientWidth;
+        var ntHeight = gBsClientHeight;
+        _BSPSGetClientSize();
+        if (ntWidth != gBsClientWidth || ntHeight != gBsClientHeight) {
+            setDirty();
+        }
 
-		if (IsDirty(nIndex)) {
-			if (gbBsMac) {
-				setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight  +")", 400);
-			} else {
-				setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight + ")", 100);
-			}
-		}
-		else {
-			MoveDivAndShow(nIndex ,nToken, cuswidth, cusheight);
-		}
-	} else {
-		_BSSCPopup2(strURL, cuswidth, cusheight);
-	}
-	return;
+        if (IsDirty(nIndex)) {
+            if (gbBsMac) {
+                setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight  +")", 400);
+            } else {
+                setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight + ")", 100);
+            }
+        }
+        else {
+            MoveDivAndShow(nIndex ,nToken, cuswidth, cusheight);
+        }
+    } else {
+        _BSSCPopup2(strURL, cuswidth, cusheight);
+    }
+    return;
 }
 
 if (gbBsIE55)
 {
-	var ehlpdhtm_fOldBefureUnload = window.onbeforeunload;
-	var gnBsUnload=0;
-	window.onbeforeunload = window_BUnload;
+    var ehlpdhtm_fOldBefureUnload = window.onbeforeunload;
+    var gnBsUnload=0;
+    window.onbeforeunload = window_BUnload;
 }
-	
+    
 function window_BUnload()
 {
-	gnBsUnload++;
-	if (gnBsUnload>1)
-		return;
-	for (var i = 0; i < arrayPopupURL.length; i ++)
-		removeThis(document.all(getPopupID(i)));
-	arrayPopupURL.length = 0;	
-	if (ehlpdhtm_fOldBefureUnload)
-		ehlpdhtm_fOldBefureUnload();
+    gnBsUnload++;
+    if (gnBsUnload>1)
+        return;
+    for (var i = 0; i < arrayPopupURL.length; i ++)
+        removeThis(document.all(getPopupID(i)));
+    arrayPopupURL.length = 0;   
+    if (ehlpdhtm_fOldBefureUnload)
+        ehlpdhtm_fOldBefureUnload();
 }
 
 function _BSSCPopup2(strURL, width, height)
 {
-	if (gbBsOpera6&&gbBsMac)
-	{
-		var wmTemp = window.open(document.location.href, gstrPopupSecondWindowName);
-		wmTemp.close();
-		setTimeout("_BSSCPopup3(\""+strURL+"\","+width+","+height+");",100);
-	}
-	else
-		_BSSCPopup3(strURL, width, height);
+    if (gbBsOpera6&&gbBsMac)
+    {
+        var wmTemp = window.open(document.location.href, gstrPopupSecondWindowName);
+        wmTemp.close();
+        setTimeout("_BSSCPopup3(\""+strURL+"\","+width+","+height+");",100);
+    }
+    else
+        _BSSCPopup3(strURL, width, height);
 }
-		
+        
 function _BSSCPopup3(strURL, width, height)
 {
-	if (window.name == gstrPopupSecondWindowName) {
-		window.location = strURL;
-	} else {
-		if (!gbBsMac || !gbBsNS4) {
-			BSSCHidePopupWindow();
-		}
-		var nX = 0;
-		var nY = 0;
-		var nHeight = 300;
-		var nWidth = 400;
-		if (width > 0 && height > 0) {
-			nHeight = height;
-			nWidth = width;
-		}
-		_BSPSGetClientSize();
+    if (window.name == gstrPopupSecondWindowName) {
+        window.location = strURL;
+    } else {
+        if (!gbBsMac || !gbBsNS4) {
+            BSSCHidePopupWindow();
+        }
+        var nX = 0;
+        var nY = 0;
+        var nHeight = 300;
+        var nWidth = 400;
+        if (width > 0 && height > 0) {
+            nHeight = height;
+            nWidth = width;
+        }
+        _BSPSGetClientSize();
 
-		nX = window.gnPopupScreenClickX;
-		nY = window.gnPopupScreenClickY;
+        nX = window.gnPopupScreenClickX;
+        nY = window.gnPopupScreenClickY;
 
-		if (nY + nHeight + 40 > screen.availHeight) {
-			nY = screen.availHeight - nHeight - 40;
-		}
-		if (nX + nWidth + 40 > screen.availWidth) {
-			nX = screen.availWidth - nWidth - 40;
-		}
+        if (nY + nHeight + 40 > screen.availHeight) {
+            nY = screen.availHeight - nHeight - 40;
+        }
+        if (nX + nWidth + 40 > screen.availWidth) {
+            nX = screen.availWidth - nWidth - 40;
+        }
 
-		// Launch a separate window
-		var strParam="titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=yes";
-		if (gbBsNS) {
-			if (gbBsNS6) {
-				strParam += ",Height=" + nHeight + ",Width=" + nWidth;
-				strParam += ",screenX=" + nX + ",screenY=" + nY;
-				strParam += ",dependent=yes";
-			}
-			else {
-				strParam += ",OuterHeight=" + nHeight + ",OuterWidth=" + nWidth;
-				strParam += ",screenX=" + nX + ",screenY=" + nY;
-				strParam += ",dependent=yes";
-			}
-		}
-		else {
-			strParam += ",height=" + nHeight + ",width=" + nWidth;
-			strParam += ",left=" + nX + ",top=" + nY;
-		}
-		if (gbBsSafari)
-		{
-			if (window.gPopupWindow)
-				window.gPopupWindow.close();		
-			window.gPopupWindow = window.open(strURL, "", strParam);
-			window.gPopupWindow.name = gstrPopupSecondWindowName;
-			window.gPopupWindow.moveTo(nX, nY);
-			widnow.gPopupWindow.document.location.reload();
-		}	
-		else
-		{
-			var wmTemp=null;
-			if (gbBsKonqueror3)
-			{
-				if (window.gPopupWindow)
-					window.gPopupWindow.close();
-			}
-			if (gbBsOpera&&gbBsMac)
-			{
-				wmTemp= window.open(document.location.href, "Temp", strParam);
-			}
-			window.gPopupWindow = window.open(strURL, gstrPopupSecondWindowName, strParam);
-			if (!gbBsIE)
-				window.gPopupWindow.focus();
-				
-			if (wmTemp)
-				wmTemp.close();
-		}
+        // Launch a separate window
+        var strParam="titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=yes";
+        if (gbBsNS) {
+            if (gbBsNS6) {
+                strParam += ",Height=" + nHeight + ",Width=" + nWidth;
+                strParam += ",screenX=" + nX + ",screenY=" + nY;
+                strParam += ",dependent=yes";
+            }
+            else {
+                strParam += ",OuterHeight=" + nHeight + ",OuterWidth=" + nWidth;
+                strParam += ",screenX=" + nX + ",screenY=" + nY;
+                strParam += ",dependent=yes";
+            }
+        }
+        else {
+            strParam += ",height=" + nHeight + ",width=" + nWidth;
+            strParam += ",left=" + nX + ",top=" + nY;
+        }
+        if (gbBsSafari)
+        {
+            if (window.gPopupWindow)
+                window.gPopupWindow.close();        
+            window.gPopupWindow = window.open(strURL, "", strParam);
+            window.gPopupWindow.name = gstrPopupSecondWindowName;
+            window.gPopupWindow.moveTo(nX, nY);
+            widnow.gPopupWindow.document.location.reload();
+        }   
+        else
+        {
+            var wmTemp=null;
+            if (gbBsKonqueror3)
+            {
+                if (window.gPopupWindow)
+                    window.gPopupWindow.close();
+            }
+            if (gbBsOpera&&gbBsMac)
+            {
+                wmTemp= window.open(document.location.href, "Temp", strParam);
+            }
+            window.gPopupWindow = window.open(strURL, gstrPopupSecondWindowName, strParam);
+            if (!gbBsIE)
+                window.gPopupWindow.focus();
+                
+            if (wmTemp)
+                wmTemp.close();
+        }
 
-		if (gbBsNS4)
-			setEventHandle();
-		else if (gbBsIE4 || gbBsOpera7||gbBsKonqueror3)
-			setTimeout("setPopupFocus();", 100);
-	}
-	return;
+        if (gbBsNS4)
+            setEventHandle();
+        else if (gbBsIE4 || gbBsOpera7||gbBsKonqueror3)
+            setTimeout("setPopupFocus();", 100);
+    }
+    return;
 }
 
 function setEventHandle()
 {
-	window.gPopupWindow.captureEvents(Event.CLICK | Event.BLUR);
-	window.gPopupWindow.onclick = NonIEPopup_HandleClick;
-	window.gPopupWindow.onblur = NonIEPopup_HandleBlur;
+    window.gPopupWindow.captureEvents(Event.CLICK | Event.BLUR);
+    window.gPopupWindow.onclick = NonIEPopup_HandleClick;
+    window.gPopupWindow.onblur = NonIEPopup_HandleBlur;
 }
 
 function setPopupFocus()
 {
-	window.gPopupWindow.focus();
+    window.gPopupWindow.focus();
 }
 
 function NonIEPopup_HandleBlur(e)
 {
-	window.gPopupWindow.focus();
+    window.gPopupWindow.focus();
 }
 
 function NonIEPopup_HandleClick(e)
 {
-	// Because navigator will give the event to the handler before the hyperlink, let's
-	// first route the event to see if we are clicking on a Popup menu in a popup.
-	document.routeEvent(e);
+    // Because navigator will give the event to the handler before the hyperlink, let's
+    // first route the event to see if we are clicking on a Popup menu in a popup.
+    document.routeEvent(e);
 
-	// If a popup menu is active then don't do anything with the click
-	if (window.gPopupWindow.gbInPopupMenu) {
-		window.gPopupWindow.captureEvents(Event.CLICK);
-		window.gPopupWindow.onclick = NonIEPopup_HandleClick;
-		return false;
-	}
+    // If a popup menu is active then don't do anything with the click
+    if (window.gPopupWindow.gbInPopupMenu) {
+        window.gPopupWindow.captureEvents(Event.CLICK);
+        window.gPopupWindow.onclick = NonIEPopup_HandleClick;
+        return false;
+    }
 
-	// Close the popup window
-	if(e.target.href)
-	{
-		if(e.target.href.indexOf("javascript:")==-1) 
-		{
-			if (e.target.target=="")
-				window.location.href = e.target.href;
-			else
-				window.open(e.target.href, e.target.target);
-			this.close();
-		}
-	} 
-	else
-		this.close();
-	return false;
+    // Close the popup window
+    if(e.target.href)
+    {
+        if(e.target.href.indexOf("javascript:")==-1) 
+        {
+            if (e.target.target=="")
+                window.location.href = e.target.href;
+            else
+                window.open(e.target.href, e.target.target);
+            this.close();
+        }
+    } 
+    else
+        this.close();
+    return false;
 }
 
 function BSSCPopup_AfterLoad(nIndex, nToken, cuswidth, cusheight)
-{	
-	if (!window.getPopupIFrame(nIndex).document) {
-		_BSSCPopup2(getPopupURL(nIndex), cuswidth, cusheight);
-		return;
-	}
-	
+{   
+    if (!window.getPopupIFrame(nIndex).document) {
+        _BSSCPopup2(getPopupURL(nIndex), cuswidth, cusheight);
+        return;
+    }
+    
     if (!IsValidToken(nToken)) return;
 
-	if (gbBsNS6)
-	{
-		setAbsPopupURL(nIndex, window.getPopupIFrame(nIndex).document.location.href); // change URL to abs url.
-		BSSCPopup_ResizeAfterLoad(nIndex, nToken, cuswidth, cusheight);
-		return;
-	}
-	
-	if ((window.getPopupIFrame(nIndex).document.readyState == "complete") &&
-		(window.getPopupIFrame(nIndex).document.body != null)) {
-			if (window.getPopupIFrame(nIndex).document.location.href.indexOf("about:blank") != -1) { // add this check. IE will use about:blank" as the default vaule for Iframe.
-				window.getPopupIFrame(nIndex).document.location = getPopupURL(nIndex);
-				setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight + ")", 200);
-			}
-			else
-				{
-					setAbsPopupURL(nIndex, window.getPopupIFrame(nIndex).document.location.href); // change URL to abs url.
-					BSSCPopup_ResizeAfterLoad(nIndex, nToken, cuswidth, cusheight);
-				}
-	} else {
-		setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight + ")", 200);
-	}
+    if (gbBsNS6)
+    {
+        setAbsPopupURL(nIndex, window.getPopupIFrame(nIndex).document.location.href); // change URL to abs url.
+        BSSCPopup_ResizeAfterLoad(nIndex, nToken, cuswidth, cusheight);
+        return;
+    }
+    
+    if ((window.getPopupIFrame(nIndex).document.readyState == "complete") &&
+        (window.getPopupIFrame(nIndex).document.body != null)) {
+            if (window.getPopupIFrame(nIndex).document.location.href.indexOf("about:blank") != -1) { // add this check. IE will use about:blank" as the default vaule for Iframe.
+                window.getPopupIFrame(nIndex).document.location = getPopupURL(nIndex);
+                setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight + ")", 200);
+            }
+            else
+                {
+                    setAbsPopupURL(nIndex, window.getPopupIFrame(nIndex).document.location.href); // change URL to abs url.
+                    BSSCPopup_ResizeAfterLoad(nIndex, nToken, cuswidth, cusheight);
+                }
+    } else {
+        setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight + ")", 200);
+    }
 }
 
 function BSSCPopup_ResizeAfterLoad(nIndex, nToken, cuswidth, cusheight)
 {
-	if (window.gbPopupTimeoutExpired) return;
+    if (window.gbPopupTimeoutExpired) return;
 
     if (!IsValidToken(nToken)) return;
 
-	getPopupDivStyle(nIndex).visibility = gBsStyVisHide;
-	getPopupIFrameStyle(nIndex).visibility = gBsStyVisHide;
+    getPopupDivStyle(nIndex).visibility = gBsStyVisHide;
+    getPopupIFrameStyle(nIndex).visibility = gBsStyVisHide;
 
-	// Determine the width and height for the window
-	_BSPSGetClientSize();
+    // Determine the width and height for the window
+    _BSPSGetClientSize();
 
-	var size = new BSSCSize(0, 0);
+    var size = new BSSCSize(0, 0);
 
-	if (cuswidth <= 0 || cusheight <= 0)
-		BSSCGetContentSize(window.getPopupIFrame(nIndex), size);
-	else {
-		size.x = cuswidth;
-		size.y = cusheight;
-	}
+    if (cuswidth <= 0 || cusheight <= 0)
+        BSSCGetContentSize(window.getPopupIFrame(nIndex), size);
+    else {
+        size.x = cuswidth;
+        size.y = cusheight;
+    }
 
-	// Determine the width and height for the window
-	var nWidth = size.x;
-	var nHeight = size.y;
+    // Determine the width and height for the window
+    var nWidth = size.x;
+    var nHeight = size.y;
 
-	// for small popup size, we should allow any size.
-	// The popup size should be ok if bigger than 0
-	if (nWidth < 0 || nHeight < 0) return; 	// there must be something terribly wrong.		
+    // for small popup size, we should allow any size.
+    // The popup size should be ok if bigger than 0
+    if (nWidth < 0 || nHeight < 0) return;  // there must be something terribly wrong.      
 
-	getPopupDivStyle(nIndex).width = nWidth;
-	getPopupDivStyle(nIndex).height = nHeight;
+    getPopupDivStyle(nIndex).width = nWidth;
+    getPopupDivStyle(nIndex).height = nHeight;
 
-	getPopupShadowStyle(nIndex).width = nWidth;
-	getPopupShadowStyle(nIndex).height = nHeight;
-	getPopupTopicStyle(nIndex).width = nWidth;
-	getPopupTopicStyle(nIndex).height = nHeight;
-	if (gbBsIE55)
-	{
-		getPopupShadowStyle(nIndex).width = nWidth + 2;
-		getPopupShadowStyle(nIndex).height = nHeight + 2;
-		getPopupTopicStyle(nIndex).width = nWidth + 2;
-		getPopupTopicStyle(nIndex).height = nHeight + 2;
-	}
+    getPopupShadowStyle(nIndex).width = nWidth;
+    getPopupShadowStyle(nIndex).height = nHeight;
+    getPopupTopicStyle(nIndex).width = nWidth;
+    getPopupTopicStyle(nIndex).height = nHeight;
+    if (gbBsIE55)
+    {
+        getPopupShadowStyle(nIndex).width = nWidth + 2;
+        getPopupShadowStyle(nIndex).height = nHeight + 2;
+        getPopupTopicStyle(nIndex).width = nWidth + 2;
+        getPopupTopicStyle(nIndex).height = nHeight + 2;
+    }
 
-	getPopupIFrameStyle(nIndex).width = nWidth;
-	getPopupIFrameStyle(nIndex).height = nHeight;
-	if (gbBsIE55 || gbBsNS6)
-	{
-		getPopupIFrameStyle(nIndex).top = 0;
-		getPopupIFrameStyle(nIndex).left = 0;
-	}
-	
-	var strURL = getPopupURL(nIndex);
-	if (strURL.indexOf("#") != -1&&gbBsNS6)
-		getPopupIFrame(nIndex).location.reload();
-	else if (strURL.indexOf("#") != -1||gbBsNS6)
-		getPopupIFrame(nIndex).location.href = strURL;  // reload again, this will fix the bookmark misunderstand in IE5.
-		
-	MoveDivAndShow(nIndex, nToken, cuswidth, cusheight);
+    getPopupIFrameStyle(nIndex).width = nWidth;
+    getPopupIFrameStyle(nIndex).height = nHeight;
+    if (gbBsIE55 || gbBsNS6)
+    {
+        getPopupIFrameStyle(nIndex).top = 0;
+        getPopupIFrameStyle(nIndex).left = 0;
+    }
+    
+    var strURL = getPopupURL(nIndex);
+    if (strURL.indexOf("#") != -1&&gbBsNS6)
+        getPopupIFrame(nIndex).location.reload();
+    else if (strURL.indexOf("#") != -1||gbBsNS6)
+        getPopupIFrame(nIndex).location.href = strURL;  // reload again, this will fix the bookmark misunderstand in IE5.
+        
+    MoveDivAndShow(nIndex, nToken, cuswidth, cusheight);
 }
 
 function getScrollLeft()
 {
-	if (document.body.scrollLeft)
-		return document.body.scrollLeft;
-	else if (window.pageXOffset)
-		return window.pageXOffset;
-	else
-		return 0;
+    if (document.body.scrollLeft)
+        return document.body.scrollLeft;
+    else if (window.pageXOffset)
+        return window.pageXOffset;
+    else
+        return 0;
 }
 
 function getScrollTop()
 {
-	if (document.body.scrollTop)
-		return document.body.scrollTop;
-	else if (window.pageYOffset)
-		return window.pageYOffset;
-	else
-		return 0;
+    if (document.body.scrollTop)
+        return document.body.scrollTop;
+    else if (window.pageYOffset)
+        return window.pageYOffset;
+    else
+        return 0;
 }
 
 
 function MoveDivAndShow(nIndex, nToken, cuswidth, cusheight)
 {
-	if (window.getPopupIFrame(nIndex).document.location.href != getAbsPopupURL(nIndex)) { // if redirect, reload again.
-			window.getPopupIFrame(nIndex).document.location = getPopupURL(nIndex);
-			setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight + ")", 200);
-			return;
-	}
+    if (window.getPopupIFrame(nIndex).document.location.href != getAbsPopupURL(nIndex)) { // if redirect, reload again.
+            window.getPopupIFrame(nIndex).document.location = getPopupURL(nIndex);
+            setTimeout("BSSCPopup_AfterLoad(" + nIndex + "," + nToken + "," + cuswidth + "," + cusheight + ")", 200);
+            return;
+    }
 
-	// Determine the position of the window
-	var nClickX = window.gnPopupClickX;
-	var nClickY = window.gnPopupClickY;
-	var nTop = 0;
-	var nLeft = 0;
+    // Determine the position of the window
+    var nClickX = window.gnPopupClickX;
+    var nClickY = window.gnPopupClickY;
+    var nTop = 0;
+    var nLeft = 0;
 
-	var nWidth = parseInt(getPopupDivStyle(nIndex).width);
-	var nHeight = parseInt(getPopupDivStyle(nIndex).height);
+    var nWidth = parseInt(getPopupDivStyle(nIndex).width);
+    var nHeight = parseInt(getPopupDivStyle(nIndex).height);
 
-	if (nClickY + nHeight + 20 < gBsClientHeight + getScrollTop()) {
-		nTop = nClickY + 10;
-	} else {
-		nTop = (getScrollTop() + gBsClientHeight) - nHeight - 20;
-	}
-	if (nClickX + nWidth < gBsClientWidth + getScrollLeft()) {
-		nLeft = nClickX;
-	} else {
-		nLeft = (getScrollLeft() + gBsClientWidth) - nWidth - 8;
-	}
+    if (nClickY + nHeight + 20 < gBsClientHeight + getScrollTop()) {
+        nTop = nClickY + 10;
+    } else {
+        nTop = (getScrollTop() + gBsClientHeight) - nHeight - 20;
+    }
+    if (nClickX + nWidth < gBsClientWidth + getScrollLeft()) {
+        nLeft = nClickX;
+    } else {
+        nLeft = (getScrollLeft() + gBsClientWidth) - nWidth - 8;
+    }
 
-	if (nTop < getScrollTop()) nTop  = getScrollTop() + 1;
-	if (nLeft< getScrollLeft())  nLeft = getScrollLeft() + 1;
+    if (nTop < getScrollTop()) nTop  = getScrollTop() + 1;
+    if (nLeft< getScrollLeft())  nLeft = getScrollLeft() + 1;
 
-	getPopupDivStyle(nIndex).left = nLeft;
-	getPopupDivStyle(nIndex).top = nTop;
+    getPopupDivStyle(nIndex).left = nLeft;
+    getPopupDivStyle(nIndex).top = nTop;
 
-	// Set the location of the background blocks
-	getPopupShadowStyle(nIndex).left = 6;
-	getPopupShadowStyle(nIndex).top = 6;
-	if (gbBsIE55)
-	{
-		getPopupShadowStyle(nIndex).left = 4;
-		getPopupShadowStyle(nIndex).top = 4;
-	}
+    // Set the location of the background blocks
+    getPopupShadowStyle(nIndex).left = 6;
+    getPopupShadowStyle(nIndex).top = 6;
+    if (gbBsIE55)
+    {
+        getPopupShadowStyle(nIndex).left = 4;
+        getPopupShadowStyle(nIndex).top = 4;
+    }
 
-	if (gbBsMac&&gbBsIE4) {
-		// Total hack on the iMac to get the IFrame to position properly
-		getPopupIFrameStyle(nIndex).pixelLeft = 100;
-		getPopupIFrameStyle(nIndex).pixelLeft = 0;
-		// Explicitly call BSSCOnLoad because the Mac doesn't seem to do it
-		getPopupIFrame(nIndex).window.BSSCOnLoad();
-	}
+    if (gbBsMac&&gbBsIE4) {
+        // Total hack on the iMac to get the IFrame to position properly
+        getPopupIFrameStyle(nIndex).pixelLeft = 100;
+        getPopupIFrameStyle(nIndex).pixelLeft = 0;
+        // Explicitly call BSSCOnLoad because the Mac doesn't seem to do it
+        getPopupIFrame(nIndex).window.BSSCOnLoad();
+    }
 
-	if (gbBsNS6&&IsDirty(nIndex))
-		getElement(getPopupIFrameID(nIndex)).addEventListener("load", handleLoadNS, false);
-	else
-		BSSCPopup_Timeout(nIndex , nToken );
-	return;
+    if (gbBsNS6&&IsDirty(nIndex))
+        getElement(getPopupIFrameID(nIndex)).addEventListener("load", handleLoadNS, false);
+    else
+        BSSCPopup_Timeout(nIndex , nToken );
+    return;
 }
 
-function	BSSCSize(x, y)
+function    BSSCSize(x, y)
 {
-	this.x = x;
-	this.y = y;
+    this.x = x;
+    this.y = y;
 }
 
 function BSSCGetContentSize(thisWindow, size)
 {
-	if (!gbBsIE4 && !gbBsOpera7 && !gbBsNS4)
-		return;
+    if (!gbBsIE4 && !gbBsOpera7 && !gbBsNS4)
+        return;
 
-	if ((gbBsMac&&gbBsIE4)||gbBsNS4||gbBsOpera7) {
-		size.x = 320;
-		size.y = 180;
-		return;
-	}
+    if ((gbBsMac&&gbBsIE4)||gbBsNS4||gbBsOpera7) {
+        size.x = 320;
+        size.y = 180;
+        return;
+    }
 
-	// Resize the width until it is wide enough to handle the content
-	// The trick is to start wide and determine when the scrollHeight changes
-	// because then we know a scrollbar is necessary. We can then go back
-	// to the next widest size (for no scrollbar)
+    // Resize the width until it is wide enough to handle the content
+    // The trick is to start wide and determine when the scrollHeight changes
+    // because then we know a scrollbar is necessary. We can then go back
+    // to the next widest size (for no scrollbar)
 
-	var ClientRate = gBsClientHeight / gBsClientWidth;
+    var ClientRate = gBsClientHeight / gBsClientWidth;
 
-	
-	var GoldenSize = new BSSCSize(0,0);
-	GoldenSize.x = gBsClientWidth * gBMaxXOfParent;
-	GoldenSize.y = gBsClientHeight *gBMaxYOfParent ;
+    
+    var GoldenSize = new BSSCSize(0,0);
+    GoldenSize.x = gBsClientWidth * gBMaxXOfParent;
+    GoldenSize.y = gBsClientHeight *gBMaxYOfParent ;
 
-	if (ClientRate > gBRateH_W) {
-		GoldenSize.y = GoldenSize.x * gBRateH_W;
-	}
-	else {
-		GoldenSize.x = GoldenSize.y / gBRateH_W;
-	}
+    if (ClientRate > gBRateH_W) {
+        GoldenSize.y = GoldenSize.x * gBRateH_W;
+    }
+    else {
+        GoldenSize.x = GoldenSize.y / gBRateH_W;
+    }
 
-	// Try to using parent specified max x.
-	var x = 0;
-	var maxgoldx = GoldenSize.x;
-	var maxx = gBsClientWidth * gBMaxXOfParent;
-	
-	// This double resize causes the document to re-render (and we need it to)
-	if (!gbBsIE5)
-		thisWindow.moveTo(10000,10000); // this is used to fix the flash on IE4.
-		
-	thisWindow.resizeTo(1, 1);
-	thisWindow.resizeTo(1, 1);
-	thisWindow.resizeTo(maxgoldx, thisWindow.document.body.scrollHeight + gBscrollHeight);
-	thisWindow.resizeTo(maxgoldx, thisWindow.document.body.scrollHeight + gBscrollHeight);
-		
-	var miny = thisWindow.document.body.scrollHeight + gBscrollHeight;
-	
-	if (miny > GoldenSize.y) // the popup does not fix in the parent wanted golden area. so try to expand itself as large as it can
-	{
-		thisWindow.resizeTo(maxx , thisWindow.document.body.scrollHeight + gBscrollHeight);
-		thisWindow.resizeTo(maxx , thisWindow.document.body.scrollHeight + gBscrollHeight);
-		
-		miny = 	thisWindow.document.body.scrollHeight + gBscrollHeight;
-		maxy = gBsClientHeight * gBMaxYOfParent;
-		
-		if (miny > maxy) { // the popup must have a scroll, OK let it be.
-			miny = maxy;
-			size.x = maxx;
-			size.y = maxy;
-			thisWindow.document.body.scroll = 'yes'; // At this time we do want to show scroll any more. so it will looks better a little.
-		}
-		else { // popup still can fit in the parent area by someway. now we choose the same h/w rate as parent.
-			size.y = miny;
-			
-			//  downsize from maxx , now I try to using binary divide.
-			x = maxx;
-			deltax = -maxx/2;
-			//j = 0;
-			while (true) {
-				x = x + deltax;
-				thisWindow.resizeTo(x, miny);
-				thisWindow.resizeTo(x, miny);
-				diffy = thisWindow.document.body.scrollHeight + gBscrollHeight - x * ClientRate;
-				if (diffy >  gBpermitYDelta ) // it is higher than wanted, so x need to be wide a little bitter
-					deltax = Math.abs(deltax) /2;
-				else if (diffy <  -gBpermitYDelta) // it is shorter than wanted, so x need to be narrow a little bitter
-					deltax = -Math.abs(deltax) /2;
-				else 
-					// the y is close enough to wanted.
-					break;
-				if (Math.abs(deltax) < gBpermitXDelta) // the next change is too slight and it can be ignore.
-					break;
-			}
-			size.x = thisWindow.document.body.scrollWidth; //+ gBscrollWidth;
-			size.y = thisWindow.document.body.scrollHeight;// + gBscrollHeight;	
-			thisWindow.document.body.scroll = 'no';
-		}
-	}
-	else {
-		if (thisWindow.document.body.scrollWidth > maxgoldx) {
-			size.x = maxx; 
-			size.y = miny;	
-			thisWindow.document.body.scroll = 'yes';
-		}
-		else {
-			//  downsize from maxgoldx , now I try to using binary divide.
-			x = maxgoldx;
-			deltax = -maxgoldx/2;
-			while (true) {
-				x = x + deltax;
-				thisWindow.resizeTo(x, miny);
-				thisWindow.resizeTo(x, miny);
-				diffy = thisWindow.document.body.scrollHeight + gBscrollHeight - x * gBRateH_W;
-				if (diffy >  gBpermitYDelta ) // it is higher than wanted, so x need to be wide a little bitter
-					deltax = Math.abs(deltax) /2;
-				else if (diffy <  -gBpermitYDelta) // it is shorter than wanted, so x need to be narrow a little bitter
-					deltax = -Math.abs(deltax) /2;
-				else 
-					// the y is close enough to wanted.
-					break;
-				if (Math.abs(deltax) < gBpermitXDelta) // the next change is too slight and it can be ignore.
-					break;
-			}
-			size.x = thisWindow.document.body.scrollWidth; //+ gBscrollWidth;
-			size.y = thisWindow.document.body.scrollHeight ;
-			thisWindow.document.body.scroll = 'no'; // At this time we do not want to show scroll any more. so it will looks better a little.
-			thisWindow.resizeTo(size.x, size.y);
-			if (thisWindow.document.body.scrollWidth > size.x)
-			{
-				size.x = thisWindow.document.body.scrollWidth;
-			}
-			if (thisWindow.document.body.scrollHeight > size.y)
-			{
-				size.y = thisWindow.document.body.scrollHeight;
-			}
-		}
-	}
-	thisWindow.resizeTo(size.x, size.y);
-	thisWindow.resizeTo(size.x, size.y);
-	return;
+    // Try to using parent specified max x.
+    var x = 0;
+    var maxgoldx = GoldenSize.x;
+    var maxx = gBsClientWidth * gBMaxXOfParent;
+    
+    // This double resize causes the document to re-render (and we need it to)
+    if (!gbBsIE5)
+        thisWindow.moveTo(10000,10000); // this is used to fix the flash on IE4.
+        
+    thisWindow.resizeTo(1, 1);
+    thisWindow.resizeTo(1, 1);
+    thisWindow.resizeTo(maxgoldx, thisWindow.document.body.scrollHeight + gBscrollHeight);
+    thisWindow.resizeTo(maxgoldx, thisWindow.document.body.scrollHeight + gBscrollHeight);
+        
+    var miny = thisWindow.document.body.scrollHeight + gBscrollHeight;
+    
+    if (miny > GoldenSize.y) // the popup does not fix in the parent wanted golden area. so try to expand itself as large as it can
+    {
+        thisWindow.resizeTo(maxx , thisWindow.document.body.scrollHeight + gBscrollHeight);
+        thisWindow.resizeTo(maxx , thisWindow.document.body.scrollHeight + gBscrollHeight);
+        
+        miny =  thisWindow.document.body.scrollHeight + gBscrollHeight;
+        maxy = gBsClientHeight * gBMaxYOfParent;
+        
+        if (miny > maxy) { // the popup must have a scroll, OK let it be.
+            miny = maxy;
+            size.x = maxx;
+            size.y = maxy;
+            thisWindow.document.body.scroll = 'yes'; // At this time we do want to show scroll any more. so it will looks better a little.
+        }
+        else { // popup still can fit in the parent area by someway. now we choose the same h/w rate as parent.
+            size.y = miny;
+            
+            //  downsize from maxx , now I try to using binary divide.
+            x = maxx;
+            deltax = -maxx/2;
+            //j = 0;
+            while (true) {
+                x = x + deltax;
+                thisWindow.resizeTo(x, miny);
+                thisWindow.resizeTo(x, miny);
+                diffy = thisWindow.document.body.scrollHeight + gBscrollHeight - x * ClientRate;
+                if (diffy >  gBpermitYDelta ) // it is higher than wanted, so x need to be wide a little bitter
+                    deltax = Math.abs(deltax) /2;
+                else if (diffy <  -gBpermitYDelta) // it is shorter than wanted, so x need to be narrow a little bitter
+                    deltax = -Math.abs(deltax) /2;
+                else 
+                    // the y is close enough to wanted.
+                    break;
+                if (Math.abs(deltax) < gBpermitXDelta) // the next change is too slight and it can be ignore.
+                    break;
+            }
+            size.x = thisWindow.document.body.scrollWidth; //+ gBscrollWidth;
+            size.y = thisWindow.document.body.scrollHeight;// + gBscrollHeight; 
+            thisWindow.document.body.scroll = 'no';
+        }
+    }
+    else {
+        if (thisWindow.document.body.scrollWidth > maxgoldx) {
+            size.x = maxx; 
+            size.y = miny;  
+            thisWindow.document.body.scroll = 'yes';
+        }
+        else {
+            //  downsize from maxgoldx , now I try to using binary divide.
+            x = maxgoldx;
+            deltax = -maxgoldx/2;
+            while (true) {
+                x = x + deltax;
+                thisWindow.resizeTo(x, miny);
+                thisWindow.resizeTo(x, miny);
+                diffy = thisWindow.document.body.scrollHeight + gBscrollHeight - x * gBRateH_W;
+                if (diffy >  gBpermitYDelta ) // it is higher than wanted, so x need to be wide a little bitter
+                    deltax = Math.abs(deltax) /2;
+                else if (diffy <  -gBpermitYDelta) // it is shorter than wanted, so x need to be narrow a little bitter
+                    deltax = -Math.abs(deltax) /2;
+                else 
+                    // the y is close enough to wanted.
+                    break;
+                if (Math.abs(deltax) < gBpermitXDelta) // the next change is too slight and it can be ignore.
+                    break;
+            }
+            size.x = thisWindow.document.body.scrollWidth; //+ gBscrollWidth;
+            size.y = thisWindow.document.body.scrollHeight ;
+            thisWindow.document.body.scroll = 'no'; // At this time we do not want to show scroll any more. so it will looks better a little.
+            thisWindow.resizeTo(size.x, size.y);
+            if (thisWindow.document.body.scrollWidth > size.x)
+            {
+                size.x = thisWindow.document.body.scrollWidth;
+            }
+            if (thisWindow.document.body.scrollHeight > size.y)
+            {
+                size.y = thisWindow.document.body.scrollHeight;
+            }
+        }
+    }
+    thisWindow.resizeTo(size.x, size.y);
+    thisWindow.resizeTo(size.x, size.y);
+    return;
 }
 
 function BSSCPopupParentClicked()
 {
-	if (!window.gbPopupTimeoutExpired) {
-		return false;
-	}
-	
-	document.onmousedown = gbOrignalOnMouseDown;
+    if (!window.gbPopupTimeoutExpired) {
+        return false;
+    }
+    
+    document.onmousedown = gbOrignalOnMouseDown;
 
-	// Simply hide the popup
-	hideAll();
+    // Simply hide the popup
+    hideAll();
 
-	window.gbPopupTimeoutExpired = false;
+    window.gbPopupTimeoutExpired = false;
 
-	return true;
+    return true;
 }
 
 function isInsideHyperLink(obj)
 {
-	if (obj&&obj!=getParentNode(obj))
-	{
-		if (obj.tagName=="A"||obj.tagName=="IMG")
-			return true;
-		else
-			return isInsideHyperLink(getParentNode(obj));
-	}
-	else
-		return false;
+    if (obj&&obj!=getParentNode(obj))
+    {
+        if (obj.tagName=="A"||obj.tagName=="IMG")
+            return true;
+        else
+            return isInsideHyperLink(getParentNode(obj));
+    }
+    else
+        return false;
 }
 
 function BSSCPopupClicked(e)
 {
-	if (!window.gbPopupTimeoutExpired) {
-		return false;
-	}
+    if (!window.gbPopupTimeoutExpired) {
+        return false;
+    }
 
-	var popupIFrame = getCurrentPopupIFrame();
-	if (popupIFrame == null) {
-		return true;
-	}
+    var popupIFrame = getCurrentPopupIFrame();
+    if (popupIFrame == null) {
+        return true;
+    }
 
-	if (gbBsIE4 && (!((popupIFrame.window.event != null) &&
-		(popupIFrame.window.event.srcElement != null) &&
-		isInsideHyperLink(popupIFrame.window.event.srcElement)))) {
-		document.onmousedown = gbOrignalOnMouseDown;
-		
-		// Simply hide the popup
-		hideAll();
-		window.gbPopupTimeoutExpired = false;
-		return true;
-	}
-	else if (gbBsNS6 && (!((e != null) &&
-			(e.target!= null) && isInsideHyperLink(e.target))))
-	{
-		document.addEventListener("mousedown", gbOrignalOnMouseDown,false);
-		// Simply hide the popup
-		hideAll();
-		window.gbPopupTimeoutExpired = false;
-		return true;		
-	}
+    if (gbBsIE4 && (!((popupIFrame.window.event != null) &&
+        (popupIFrame.window.event.srcElement != null) &&
+        isInsideHyperLink(popupIFrame.window.event.srcElement)))) {
+        document.onmousedown = gbOrignalOnMouseDown;
+        
+        // Simply hide the popup
+        hideAll();
+        window.gbPopupTimeoutExpired = false;
+        return true;
+    }
+    else if (gbBsNS6 && (!((e != null) &&
+            (e.target!= null) && isInsideHyperLink(e.target))))
+    {
+        document.addEventListener("mousedown", gbOrignalOnMouseDown,false);
+        // Simply hide the popup
+        hideAll();
+        window.gbPopupTimeoutExpired = false;
+        return true;        
+    }
 }
 
 //trace the mouse over's position for hotspot
 function  BSPSPopupOnMouseOver(event)
 {
-	if (gbBsIE4 || gbBsOpera7||gbBsKonqueror3) {
-		window.gnPopupClickX = event.clientX + getScrollLeft();
-		window.gnPopupClickY = event.clientY + getScrollTop();
-		window.gnPopupScreenClickX = event.screenX;
-		window.gnPopupScreenClickY = event.screenY;
-	} else if (gbBsSafari) {
-		window.gnPopupClickX = event.clientX + getScrollLeft();
-		window.gnPopupClickY = event.clientY + getScrollTop();
-		window.gnPopupScreenClickX = event.screenX + window.screenX;
-		window.gnPopupScreenClickY = event.screenY + window.screenY;
-	} else if (gbBsNS4) {
-		window.gnPopupClickX = event.pageX - window.pageXOffset;
-		window.gnPopupClickY = event.pageY - window.pageYOffset;
-		window.gnPopupScreenClickX = event.screenX - window.pageXOffset;
-		window.gnPopupScreenClickY = event.screenY - window.pageYOffset;
-	}
+    if (gbBsIE4 || gbBsOpera7||gbBsKonqueror3) {
+        window.gnPopupClickX = event.clientX + getScrollLeft();
+        window.gnPopupClickY = event.clientY + getScrollTop();
+        window.gnPopupScreenClickX = event.screenX;
+        window.gnPopupScreenClickY = event.screenY;
+    } else if (gbBsSafari) {
+        window.gnPopupClickX = event.clientX + getScrollLeft();
+        window.gnPopupClickY = event.clientY + getScrollTop();
+        window.gnPopupScreenClickX = event.screenX + window.screenX;
+        window.gnPopupScreenClickY = event.screenY + window.screenY;
+    } else if (gbBsNS4) {
+        window.gnPopupClickX = event.pageX - window.pageXOffset;
+        window.gnPopupClickY = event.pageY - window.pageYOffset;
+        window.gnPopupScreenClickX = event.screenX - window.pageXOffset;
+        window.gnPopupScreenClickY = event.screenY - window.pageYOffset;
+    }
 }
 
 function BSSCHidePopupWindow()
 {
-	if (window.gPopupWindow != null) {
-		if (gbBsNS4) {
-			if ((typeof window.gPopupWindow != "undefined") && (!window.gPopupWindow.closed)) {
-				window.gPopupWindow.close();
-				window.gPopupWindow = null;
-			}
-		}
-	}
-	return;
+    if (window.gPopupWindow != null) {
+        if (gbBsNS4) {
+            if ((typeof window.gPopupWindow != "undefined") && (!window.gPopupWindow.closed)) {
+                window.gPopupWindow.close();
+                window.gPopupWindow = null;
+            }
+        }
+    }
+    return;
 }
 
 // Add the PopupOnClick to the onclick array.
 if (typeof(BsscRegisterOnClick) != "undefined")
 {
-	BsscRegisterOnClick(BsPopupOnClick);
+    BsscRegisterOnClick(BsPopupOnClick);
 }
 //End to support previous popup functions
 
@@ -3429,36 +3339,36 @@ if (typeof(BsscRegisterOnClick) != "undefined")
 
 function BSSCCreatePopupDiv()
 {
-	return;
+    return;
 }
 
 function WritePopupMenuLayer()
 {
-	if (BsscHasExtJs()) {_WritePopupMenuLayer();}
+    if (BsscHasExtJs()) {_WritePopupMenuLayer();}
 }
 
 function BSSCPopup(strURL, width, height)
 {
-	var re = new RegExp("'", 'g');
-	strURL = strURL.replace(re, "%27");
+    var re = new RegExp("'", 'g');
+    strURL = strURL.replace(re, "%27");
 
-	if (BsscHasExtJs())	{ 
-		_BSSCPopup(strURL, width, height);
-	}else{
-		//Create a temporary window first to ensure the real popup comes up on top
-		var wndTemp = null;
-		if (!gbBsNS3) {
-			wndTemp = window.open("", "temp", "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=yes,height=3,width=4");
-		}
-		// Create the real popup window
-		var wndPopup = window.open(strURL, "BSSCPopup", "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=yes,height=300,width=400");
-		// Close the temporary
-		if (!gbBsNS3) {
-			wndTemp.close();
-		} else {
-			wndPopup.focus();
-		}
-	}
+    if (BsscHasExtJs()) { 
+        _BSSCPopup(strURL, width, height);
+    }else{
+        //Create a temporary window first to ensure the real popup comes up on top
+        var wndTemp = null;
+        if (!gbBsNS3) {
+            wndTemp = window.open("", "temp", "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=yes,height=3,width=4");
+        }
+        // Create the real popup window
+        var wndPopup = window.open(strURL, "BSSCPopup", "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=yes,height=300,width=400");
+        // Close the temporary
+        if (!gbBsNS3) {
+            wndTemp.close();
+        } else {
+            wndPopup.focus();
+        }
+    }
 }
 
 var gbWndTemp = null, gbWndPopupLinks = null;
@@ -3466,104 +3376,104 @@ var gbstrParaTotal = "";
 
 function PopupMenu_Invoke()
 {
-	if (typeof(wfRelatedTopic) == 'function' && typeof(IsFlashSupported) == 'function')
-	{
-		if (Number(gsSkinVersion) > 2 && IsFlashSupported())
-		{
-			return wfRelatedTopic(PopupMenu_Invoke.arguments);
-		}
-	}
-	if (BsscHasExtJs()) {
-		return _PopupMenu_Invoke(PopupMenu_Invoke.arguments);
-	}
-	if (gbBsNS3Before || gbBsIE3Before )	{
-		var argLen 	= PopupMenu_Invoke.arguments.length;
-		if (argLen < 5) {
-			window.document.location.href = PopupMenu_Invoke.arguments[3];
-			return false;
-		}
-		gbWndTemp = null;
-		gbWndPopupLinks = null;
-		gbstrParaTotal = "";
-		for (var i = 0; i < (argLen - 2) / 2; i++) {
-			var strParaLine = "";
-			if (gbBsNS2){
-				strParaLine += "<a href=\"";
-				strParaLine += PopupMenu_Invoke.arguments[2 * i + 3];
-				strParaLine += "\">"
-				strParaLine += PopupMenu_Invoke.arguments[2 * i + 2];
-				strParaLine += "</a>";
-			} else {
-				strParaLine += "<a href=\"javascript:";
-				strParaLine += "gotoUrl(\'";
-				strParaLine += PopupMenu_Invoke.arguments[2 * i + 3];
-				strParaLine += "\');\"";
-				if (PopupMenu_Invoke.arguments[1] != '') {
-					strParaLine += " TARGET='" + PopupMenu_Invoke.arguments[1] + "'";
-				}
-				strParaLine += ">";
-				strParaLine += PopupMenu_Invoke.arguments[2 * i + 2];
-				strParaLine += "</a>";
-			}
-			strParaLine += "<br>";
-			gbstrParaTotal += strParaLine;
-		}
-		var nHeight = argLen * 15;
-		var nWidth = 400;
-		var strParam = "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=auto";
-		strParam += ",height=" + nHeight + ",width=200,resizable";
-		
-		//Create a temporary window first to ensure the real popup comes up on top
-		//var wndTemp = null;
-		if (!gbBsNS3) {
-			gbWndTemp = window.open("", "temp", "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=yes,height=3,width=4");
-		} 
-		gbWndPopupLinks = window.open("", "popuplinks", strParam);
+    if (typeof(wfRelatedTopic) == 'function' && typeof(IsFlashSupported) == 'function')
+    {
+        if (Number(gsSkinVersion) > 2 && IsFlashSupported())
+        {
+            return wfRelatedTopic(PopupMenu_Invoke.arguments);
+        }
+    }
+    if (BsscHasExtJs()) {
+        return _PopupMenu_Invoke(PopupMenu_Invoke.arguments);
+    }
+    if (gbBsNS3Before || gbBsIE3Before )    {
+        var argLen  = PopupMenu_Invoke.arguments.length;
+        if (argLen < 5) {
+            window.document.location.href = PopupMenu_Invoke.arguments[3];
+            return false;
+        }
+        gbWndTemp = null;
+        gbWndPopupLinks = null;
+        gbstrParaTotal = "";
+        for (var i = 0; i < (argLen - 2) / 2; i++) {
+            var strParaLine = "";
+            if (gbBsNS2){
+                strParaLine += "<a href=\"";
+                strParaLine += PopupMenu_Invoke.arguments[2 * i + 3];
+                strParaLine += "\">"
+                strParaLine += PopupMenu_Invoke.arguments[2 * i + 2];
+                strParaLine += "</a>";
+            } else {
+                strParaLine += "<a href=\"javascript:";
+                strParaLine += "gotoUrl(\'";
+                strParaLine += PopupMenu_Invoke.arguments[2 * i + 3];
+                strParaLine += "\');\"";
+                if (PopupMenu_Invoke.arguments[1] != '') {
+                    strParaLine += " TARGET='" + PopupMenu_Invoke.arguments[1] + "'";
+                }
+                strParaLine += ">";
+                strParaLine += PopupMenu_Invoke.arguments[2 * i + 2];
+                strParaLine += "</a>";
+            }
+            strParaLine += "<br>";
+            gbstrParaTotal += strParaLine;
+        }
+        var nHeight = argLen * 15;
+        var nWidth = 400;
+        var strParam = "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=auto";
+        strParam += ",height=" + nHeight + ",width=200,resizable";
+        
+        //Create a temporary window first to ensure the real popup comes up on top
+        //var wndTemp = null;
+        if (!gbBsNS3) {
+            gbWndTemp = window.open("", "temp", "titlebar=no,toolbar=no,status=no,location=no,menubar=no,resizable=yes,scrollbars=yes,height=3,width=4");
+        } 
+        gbWndPopupLinks = window.open("", "popuplinks", strParam);
 
-		setTimeout("Wait_PopupMenuReady()", 100);
-	}
-	return true;
+        setTimeout("Wait_PopupMenuReady()", 100);
+    }
+    return true;
 }
 
 function Wait_PopupMenuReady() 
 {
-	if (gbWndPopupLinks != null && "object" == typeof(gbWndPopupLinks.document)) {
-		PopupMenu_InvokeReady();
-	}
-	else 
-		setTimeout("Wait_PopupMenuReady()", 100);
+    if (gbWndPopupLinks != null && "object" == typeof(gbWndPopupLinks.document)) {
+        PopupMenu_InvokeReady();
+    }
+    else 
+        setTimeout("Wait_PopupMenuReady()", 100);
 }
 
 function PopupMenu_InvokeReady()
 {
-	if (gbWndPopupLinks != null) {
-		gbWndPopupLinks.document.open("text/html");
-		gbWndPopupLinks.document.write("<html><head>");
-		if (gbBsNS2) {
-			gbWndPopupLinks.document.write("<base href=\"" + location +"\">");
-		} else {
-			//YJ: IE301,302 and NS3.x works fine
-			gbWndPopupLinks.document.write("<");
-			gbWndPopupLinks.document.write("script>");
-			gbWndPopupLinks.document.write("function gotoUrl(aUrl) {opener.window.location=aUrl; close();}");
-			gbWndPopupLinks.document.write("<");
-			gbWndPopupLinks.document.write("/script>");
-		}
-		gbWndPopupLinks.document.write("</head><body onBlur=\'self.focus();\'>");
-		gbWndPopupLinks.document.write(gbstrParaTotal);
-		gbWndPopupLinks.document.write("</body></html>");
-		gbWndPopupLinks.document.close();
+    if (gbWndPopupLinks != null) {
+        gbWndPopupLinks.document.open("text/html");
+        gbWndPopupLinks.document.write("<html><head>");
+        if (gbBsNS2) {
+            gbWndPopupLinks.document.write("<base href=\"" + location +"\">");
+        } else {
+            //YJ: IE301,302 and NS3.x works fine
+            gbWndPopupLinks.document.write("<");
+            gbWndPopupLinks.document.write("script>");
+            gbWndPopupLinks.document.write("function gotoUrl(aUrl) {opener.window.location=aUrl; close();}");
+            gbWndPopupLinks.document.write("<");
+            gbWndPopupLinks.document.write("/script>");
+        }
+        gbWndPopupLinks.document.write("</head><body onBlur=\'self.focus();\'>");
+        gbWndPopupLinks.document.write(gbstrParaTotal);
+        gbWndPopupLinks.document.write("</body></html>");
+        gbWndPopupLinks.document.close();
 
-		// Close the temporary
-		if (!gbBsNS3 && gbWndTemp != null) {
-			gbWndTemp.close();
-		}else {
-			gbWndPopupLinks.focus();
-		}
+        // Close the temporary
+        if (!gbBsNS3 && gbWndTemp != null) {
+            gbWndTemp.close();
+        }else {
+            gbWndPopupLinks.focus();
+        }
 
-		return true;
-	}
-	return false;
+        return true;
+    }
+    return false;
 }
 
 /// Section End - Embedded Stub (JavaScript 1.0)
@@ -3576,400 +3486,400 @@ function PopupMenu_InvokeReady()
 //Begin to support extended and dropdown text effects.
 function kadovIsParagraph(el)
 {
-	return( el.tagName == "P" || el.tagName.indexOf("H") == 0 ) ? true : false;
+    return( el.tagName == "P" || el.tagName.indexOf("H") == 0 ) ? true : false;
 }
 
 function kadovInitEachChild(el)
-{	
-	for(var i=0; i<getChildNodes(el).length; i++)
-	{
-		var child = getChildNodes(el)[i];
-		if( child.tagName == "SCRIPT" || child.tagName == "!" )
-			continue;
+{   
+    for(var i=0; i<getChildNodes(el).length; i++)
+    {
+        var child = getChildNodes(el)[i];
+        if( child.tagName == "SCRIPT" || child.tagName == "!" )
+            continue;
 
-		if( child.id != "" )
-		{
-			// to wipe out the onload effects
-			if (gbBsIE4&&!gbBsMac)
-			{
-				var onLoadEffect = child.style.getAttribute( "x-on-pageload" );
-				if( (onLoadEffect != null) && (onLoadEffect > "") )
-					child.style.setAttribute( "x-on-pageload", "" );
-			}
-			
-			var href = child.getAttribute("href")
-			if( href != null && href > "" && href.indexOf( "BSSCPopup" ) >= 0 )
-				kadovFilePopupInit(child.id); // Init for Popup
-			else if( child.className == "dropspot" || child.className == "expandspot" || 
-					 child.className == "glossterm" )
-				kadovTextPopupInit(child.id);// Init for Expanding/Glossary or DropDown text
-			else if( child.className == "trigger")
-				kadovInitTrigger(child.id);// Init for Trigger
-			else
-			{
-				kadovInitEffects(child.id);// Init for DHTML effects
-				CEngine.SetOneTargetInitialState( child.id );
-			}
-		}
-		
-		if( (child.tagName == "IMG") && (child.getAttribute("dynsrc") > "") )
-			child.start = "mouseover";// to start a AVI file. fileopen doesn't work
+        if( child.id != "" )
+        {
+            // to wipe out the onload effects
+            if (gbBsIE4&&!gbBsMac)
+            {
+                var onLoadEffect = child.style.getAttribute( "x-on-pageload" );
+                if( (onLoadEffect != null) && (onLoadEffect > "") )
+                    child.style.setAttribute( "x-on-pageload", "" );
+            }
+            
+            var href = child.getAttribute("href")
+            if( href != null && href > "" && href.indexOf( "BSSCPopup" ) >= 0 )
+                kadovFilePopupInit(child.id); // Init for Popup
+            else if( child.className == "dropspot" || child.className == "expandspot" || 
+                     child.className == "glossterm" )
+                kadovTextPopupInit(child.id);// Init for Expanding/Glossary or DropDown text
+            else if( child.className == "trigger")
+                kadovInitTrigger(child.id);// Init for Trigger
+            else
+            {
+                kadovInitEffects(child.id);// Init for DHTML effects
+                CEngine.SetOneTargetInitialState( child.id );
+            }
+        }
+        
+        if( (child.tagName == "IMG") && (child.getAttribute("dynsrc") > "") )
+            child.start = "mouseover";// to start a AVI file. fileopen doesn't work
 
-		kadovInitEachChild(child);
-	}
+        kadovInitEachChild(child);
+    }
 }
 
 function kadovRetrieveTextInner(el)
-{	
-	var x = "";
-	if( (!el) || (el.tagName == "!") || (el.tagName == "SCRIPT" ))
-		return x;
+{   
+    var x = "";
+    if( (!el) || (el.tagName == "!") || (el.tagName == "SCRIPT" ))
+        return x;
 
-	if( kadovIsParagraph(el) )
-	{
-		var strNewID = " ";
-		if( el.id != "" )
-			strNewID += "id=" + el.id + "_NewSpan ";
-		x = "<span" + strNewID + "style='" + el.style.cssText + "'>" + el.innerHTML + "</span>";
-	}
-	else
-	{
-		for(var i=0; i<getChildNodes(el).length; i++)
-			x += kadovRetrieveTextInner( getChildNodes(el)[i] );
-	}
-	return x;
+    if( kadovIsParagraph(el) )
+    {
+        var strNewID = " ";
+        if( el.id != "" )
+            strNewID += "id=" + el.id + "_NewSpan ";
+        x = "<span" + strNewID + "style='" + el.style.cssText + "'>" + el.innerHTML + "</span>";
+    }
+    else
+    {
+        for(var i=0; i<getChildNodes(el).length; i++)
+            x += kadovRetrieveTextInner( getChildNodes(el)[i] );
+    }
+    return x;
 }
 
 function kadovRetrieveCleanHTML( strRawHTML, strTagOpen, strTagClose, nDistance )
-{	
-	var nTagOpen = strRawHTML.indexOf( strTagOpen, 0 );
-	if( nTagOpen < 0 )
-		return strRawHTML;
+{   
+    var nTagOpen = strRawHTML.indexOf( strTagOpen, 0 );
+    if( nTagOpen < 0 )
+        return strRawHTML;
 
-	var nTagClose = strRawHTML.indexOf( strTagClose, nTagOpen);
-	if( nTagClose < nTagOpen )
-		return strRawHTML;
-		
-	if( typeof(nDistance) == "number" && nDistance > 0 )
-		if( (nTagClose - nTagOpen) != nDistance )
-			return strRawHTML;
-		
-	var strCleanOnce = strRawHTML.substring(0, nTagOpen) + strRawHTML.substr(nTagClose + strTagClose.length) ;
-	return 	kadovRetrieveCleanHTML( strCleanOnce, strTagOpen, strTagClose );
+    var nTagClose = strRawHTML.indexOf( strTagClose, nTagOpen);
+    if( nTagClose < nTagOpen )
+        return strRawHTML;
+        
+    if( typeof(nDistance) == "number" && nDistance > 0 )
+        if( (nTagClose - nTagOpen) != nDistance )
+            return strRawHTML;
+        
+    var strCleanOnce = strRawHTML.substring(0, nTagOpen) + strRawHTML.substr(nTagClose + strTagClose.length) ;
+    return  kadovRetrieveCleanHTML( strCleanOnce, strTagOpen, strTagClose );
 }
 
 function kadovAdjustObjectTag(strRawHTML, nStartPos)
 {// adjust object tag for related topics HTML control, because innerHTML misses out the item settings
-	
-	//Is there any DTC?
-	var strDTCTagOpen = '<!--Metadata type="DesignerControl" startspan';
-	var strDTCTagClose = '<!--Metadata type="DesignerControl" endspan-->';
-	var nDTCTagOpen = strRawHTML.indexOf( strDTCTagOpen, nStartPos );
-	if( nDTCTagOpen < 0 )
-		return strRawHTML;
-	var nDTCTagClose = strRawHTML.indexOf( strDTCTagClose, nDTCTagOpen );
-	if( nDTCTagClose < nDTCTagOpen)
-		return strRawHTML; // no Design Time Controls;
-		
-	//Is the DTC HTML Help Control?
-	var strRTObjTagOpen = 'classid=clsid:ADB880A6-D8FF-11CF-9377-00AA003B7A11';
-	var strRTObjTagClose = '</OBJECT>';
-	var nRTObjTagOpen = strRawHTML.indexOf( strRTObjTagOpen, nDTCTagOpen );
-	if( nRTObjTagOpen < nDTCTagOpen )
-		return strRawHTML;
-	var nRTObjTagClose = strRawHTML.indexOf( strRTObjTagClose, nRTObjTagOpen );
-	if( nRTObjTagClose < nRTObjTagOpen )
-		return strRawHTML; // is not a HTML help control
-		
-	// Is it a related Topics html help control?
-	var strRTObjLabel = '<PARAM NAME=\"Command\" VALUE=\"Related Topics';
-	if( strRawHTML.indexOf(strRTObjLabel, nRTObjTagOpen) < 0 )
-		return strRawHTML;
-	
-	// does the commented object tag contain a items parameters		
-	var strRTItemsOpen = '<param name="Items" value="';
-	var strRTItemsClose = '$$**$$" >';
-	var strRTItemsClose2 = '$$**$$">';
+    
+    //Is there any DTC?
+    var strDTCTagOpen = '<!--Metadata type="DesignerControl" startspan';
+    var strDTCTagClose = '<!--Metadata type="DesignerControl" endspan-->';
+    var nDTCTagOpen = strRawHTML.indexOf( strDTCTagOpen, nStartPos );
+    if( nDTCTagOpen < 0 )
+        return strRawHTML;
+    var nDTCTagClose = strRawHTML.indexOf( strDTCTagClose, nDTCTagOpen );
+    if( nDTCTagClose < nDTCTagOpen)
+        return strRawHTML; // no Design Time Controls;
+        
+    //Is the DTC HTML Help Control?
+    var strRTObjTagOpen = 'classid=clsid:ADB880A6-D8FF-11CF-9377-00AA003B7A11';
+    var strRTObjTagClose = '</OBJECT>';
+    var nRTObjTagOpen = strRawHTML.indexOf( strRTObjTagOpen, nDTCTagOpen );
+    if( nRTObjTagOpen < nDTCTagOpen )
+        return strRawHTML;
+    var nRTObjTagClose = strRawHTML.indexOf( strRTObjTagClose, nRTObjTagOpen );
+    if( nRTObjTagClose < nRTObjTagOpen )
+        return strRawHTML; // is not a HTML help control
+        
+    // Is it a related Topics html help control?
+    var strRTObjLabel = '<PARAM NAME=\"Command\" VALUE=\"Related Topics';
+    if( strRawHTML.indexOf(strRTObjLabel, nRTObjTagOpen) < 0 )
+        return strRawHTML;
+    
+    // does the commented object tag contain a items parameters     
+    var strRTItemsOpen = '<param name="Items" value="';
+    var strRTItemsClose = '$$**$$" >';
+    var strRTItemsClose2 = '$$**$$">';
 
-	var nRTItemsOpen = strRawHTML.indexOf(strRTItemsOpen, nDTCTagOpen);
-	if( nRTItemsOpen < nDTCTagOpen )
-		return strRawHTML;
-	var nRTItemsClose = strRawHTML.indexOf(strRTItemsClose, nRTItemsOpen);
-	if (nRTItemsClose == -1)
-		nRTItemsClose = strRawHTML.indexOf(strRTItemsClose2, nRTItemsOpen);
-	if( nRTItemsClose < nRTItemsOpen )
-		return strRawHTML;
-		
-	// found a items string
-	var strItems = strRawHTML.substring( nRTItemsOpen + strRTItemsOpen.length, nRTItemsClose);
-	if( strItems.length < 1 )
-		return strRawHTML;
-	
-	// to reconstruct the item(s) param tag(s)
-	var strItemsArray = strItems.split('$$**$$');
-	if( strItemsArray.length < 1 )
-		return strRawHTML;
-	var strRunTimeItemParam = "";
-	for( var i = 0; i < strItemsArray.length; i++ )
-	{
-		strRunTimeItemParam += '<PARAM  NAME="Item' + (i+1);
-		strRunTimeItemParam += '"' + '  VALUE="';
-		strRunTimeItemParam += strItemsArray[i];
-		strRunTimeItemParam += '">';
-	}
-	
-	// to insert the reconstructed item params into runtime object tag
-	var strAdjustedHTML = strRawHTML.substring(0,nRTObjTagClose) + strRunTimeItemParam + strRawHTML.substring(nRTObjTagClose, strRawHTML.length);
-	return kadovAdjustObjectTag(strAdjustedHTML, nDTCTagClose + strDTCTagClose.length);
+    var nRTItemsOpen = strRawHTML.indexOf(strRTItemsOpen, nDTCTagOpen);
+    if( nRTItemsOpen < nDTCTagOpen )
+        return strRawHTML;
+    var nRTItemsClose = strRawHTML.indexOf(strRTItemsClose, nRTItemsOpen);
+    if (nRTItemsClose == -1)
+        nRTItemsClose = strRawHTML.indexOf(strRTItemsClose2, nRTItemsOpen);
+    if( nRTItemsClose < nRTItemsOpen )
+        return strRawHTML;
+        
+    // found a items string
+    var strItems = strRawHTML.substring( nRTItemsOpen + strRTItemsOpen.length, nRTItemsClose);
+    if( strItems.length < 1 )
+        return strRawHTML;
+    
+    // to reconstruct the item(s) param tag(s)
+    var strItemsArray = strItems.split('$$**$$');
+    if( strItemsArray.length < 1 )
+        return strRawHTML;
+    var strRunTimeItemParam = "";
+    for( var i = 0; i < strItemsArray.length; i++ )
+    {
+        strRunTimeItemParam += '<PARAM  NAME="Item' + (i+1);
+        strRunTimeItemParam += '"' + '  VALUE="';
+        strRunTimeItemParam += strItemsArray[i];
+        strRunTimeItemParam += '">';
+    }
+    
+    // to insert the reconstructed item params into runtime object tag
+    var strAdjustedHTML = strRawHTML.substring(0,nRTObjTagClose) + strRunTimeItemParam + strRawHTML.substring(nRTObjTagClose, strRawHTML.length);
+    return kadovAdjustObjectTag(strAdjustedHTML, nDTCTagClose + strDTCTagClose.length);
 }
 
 function kadovTextPopupOnLoad( el )
 {
-	if( typeof(el) == "string" )
-		el = getElement(el);
+    if( typeof(el) == "string" )
+        el = getElement(el);
 
-	var src = el.getAttribute( "x-use-popup" );
-	var bNeedMove=true;
-	if(!src&&el.id)
-	{
-		for (var i=0;i<gPopupData.length;i++)
-			if (gPopupData[i].el==el.id)
-			{
-				src=gPopupData[i].popupId;
-				bNeedMove=false;
-				break;
-			}
-	}
-	if(!src)
-		src = el.style.getAttribute( "x-use-popup" );	
-	if (!src)	
-		return 0;
+    var src = el.getAttribute( "x-use-popup" );
+    var bNeedMove=true;
+    if(!src&&el.id)
+    {
+        for (var i=0;i<gPopupData.length;i++)
+            if (gPopupData[i].el==el.id)
+            {
+                src=gPopupData[i].popupId;
+                bNeedMove=false;
+                break;
+            }
+    }
+    if(!src)
+        src = el.style.getAttribute( "x-use-popup" );   
+    if (!src)   
+        return 0;
 
-	var name = src;
-	if( src.substr(0,1) == "#" ) 
-		name = src.substr(1, src.length-1);
-	var srcDiv = getElement(name);
-	if( !srcDiv )
-		return 1;
+    var name = src;
+    if( src.substr(0,1) == "#" ) 
+        name = src.substr(1, src.length-1);
+    var srcDiv = getElement(name);
+    if( !srcDiv )
+        return 1;
 
-	if (bNeedMove)
-	{
-		var type = el.getAttribute( "x-popup-type" );
-		if (!type)
-			type = el.style.getAttribute("x-popup-type");
-		if (!type)		
-			return 1;		
-		var setup = el.getAttribute( "x-tmp-setup" );
-		var newId = name;
-		if( newId.indexOf( "_tmp") <= 0 )
-			newId += "_tmp";
+    if (bNeedMove)
+    {
+        var type = el.getAttribute( "x-popup-type" );
+        if (!type)
+            type = el.style.getAttribute("x-popup-type");
+        if (!type)      
+            return 1;       
+        var setup = el.getAttribute( "x-tmp-setup" );
+        var newId = name;
+        if( newId.indexOf( "_tmp") <= 0 )
+            newId += "_tmp";
 
-		if( !setup)
-		{
-			el.setAttribute( "x-tmp-setup", 1 );
+        if( !setup)
+        {
+            el.setAttribute( "x-tmp-setup", 1 );
 
-			if( type == "pulldown"  )
-			{
-				var strAdjust = kadovAdjustObjectTag(srcDiv.innerHTML,0);
-				var strCleanHTML = kadovRetrieveCleanHTML(strAdjust, "<!--", "-->");
-				strCleanHTML = kadovRetrieveCleanHTML(strCleanHTML, "<SCRIPT", "/SCRIPT>");
-				
-				//work around the bug in HH.exe that highlight the phrases when use Search tab
-				//this approach is just removing the <FONT...> tag inserted by Microsoft in the runtime
-				strCleanHTML = kadovRetrieveCleanHTML(strCleanHTML, "<FONT color=#", "\">", 52);
-				
-				var strStyle = " style='display:none; position:relative;";
-				var newDiv = "<div class=droptext id=" + newId + strStyle + "'>" + strCleanHTML + "</div>";
+            if( type == "pulldown"  )
+            {
+                var strAdjust = kadovAdjustObjectTag(srcDiv.innerHTML,0);
+                var strCleanHTML = kadovRetrieveCleanHTML(strAdjust, "<!--", "-->");
+                strCleanHTML = kadovRetrieveCleanHTML(strCleanHTML, "<SCRIPT", "/SCRIPT>");
+                
+                //work around the bug in HH.exe that highlight the phrases when use Search tab
+                //this approach is just removing the <FONT...> tag inserted by Microsoft in the runtime
+                strCleanHTML = kadovRetrieveCleanHTML(strCleanHTML, "<FONT color=#", "\">", 52);
+                
+                var strStyle = " style='display:none; position:relative;";
+                var newDiv = "<div class=droptext id=" + newId + strStyle + "'>" + strCleanHTML + "</div>";
 
-				removeThis(srcDiv); // empty the original DIV tag
-				var elParentPra = kadovFindParentParagraph(el);
-				if( elParentPra )
-					insertAdjacentHTML(elParentPra, "afterEnd", newDiv );
-			}
-			else if( type == "expanding"  )
-			{
-				var inner = kadovRetrieveTextInner(srcDiv);
-				if( inner == "" )
-					inner = srcDiv.innerHTML;
-				var strAdjust = kadovAdjustObjectTag(inner,0);
-				var strCleanHTML = kadovRetrieveCleanHTML(strAdjust, "<!--", "-->");
-				strCleanHTML = kadovRetrieveCleanHTML(strCleanHTML, "<SCRIPT", "/SCRIPT>");
-				var strClassName = (el.className == "glossterm") ? "glosstext" : "expandtext";
-				var newSpan = "<span class=" + strClassName + " style='display: none;' id=" + newId + ">&nbsp;" + strCleanHTML + "</span>";
-				removeThis(srcDiv); // empty the original DIV tag
-				insertAdjacentHTML(el, "afterEnd", newSpan );
-			}
-		}
-	}
-	else
-	{
-		srcDiv.style.display = "none";
-	}
-	return 0;
+                removeThis(srcDiv); // empty the original DIV tag
+                var elParentPra = kadovFindParentParagraph(el);
+                if( elParentPra )
+                    insertAdjacentHTML(elParentPra, "afterEnd", newDiv );
+            }
+            else if( type == "expanding"  )
+            {
+                var inner = kadovRetrieveTextInner(srcDiv);
+                if( inner == "" )
+                    inner = srcDiv.innerHTML;
+                var strAdjust = kadovAdjustObjectTag(inner,0);
+                var strCleanHTML = kadovRetrieveCleanHTML(strAdjust, "<!--", "-->");
+                strCleanHTML = kadovRetrieveCleanHTML(strCleanHTML, "<SCRIPT", "/SCRIPT>");
+                var strClassName = (el.className == "glossterm") ? "glosstext" : "expandtext";
+                var newSpan = "<span class=" + strClassName + " style='display: none;' id=" + newId + ">&nbsp;" + strCleanHTML + "</span>";
+                removeThis(srcDiv); // empty the original DIV tag
+                insertAdjacentHTML(el, "afterEnd", newSpan );
+            }
+        }
+    }
+    else
+    {
+        srcDiv.style.display = "none";
+    }
+    return 0;
 }
 
 function getElementsByTag(obj,sTagName)
 {
-	if(obj.getElementsByTagName)
-		return obj.getElementsByTagName(sTagName);
-	else if(obj.all)
-		return obj.all.tags(sTagName);
-	return null;
+    if(obj.getElementsByTagName)
+        return obj.getElementsByTagName(sTagName);
+    else if(obj.all)
+        return obj.all.tags(sTagName);
+    return null;
 }
 
 function getElement(sID)
 {
-	if(document.getElementById)
-		return document.getElementById(sID);
-	else if(document.all)
-		return document.all(sID);
-	return null;
+    if(document.getElementById)
+        return document.getElementById(sID);
+    else if(document.all)
+        return document.all(sID);
+    return null;
 }
 
 function getParentNode(obj)
 {
-	if(obj.parentNode)
-		return obj.parentNode;
-	else if(obj.parentElement)
-		return obj.parentElement;
-	return null;
+    if(obj.parentNode)
+        return obj.parentNode;
+    else if(obj.parentElement)
+        return obj.parentElement;
+    return null;
 }
 
 function getChildNodes(obj)
 {
-	if(obj.childNodes)
-	{
-		var children = new Array();
-		for (var i = 0; i < obj.childNodes.length; i++)
-		{
-			if (obj.childNodes[i].nodeType == 1)
-				children[children.length] = obj.childNodes[i];
-		}
-		return children;
-	}
-	else if(obj.children)
-		return obj.children;
-	return null;	
+    if(obj.childNodes)
+    {
+        var children = new Array();
+        for (var i = 0; i < obj.childNodes.length; i++)
+        {
+            if (obj.childNodes[i].nodeType == 1)
+                children[children.length] = obj.childNodes[i];
+        }
+        return children;
+    }
+    else if(obj.children)
+        return obj.children;
+    return null;    
 }
 
 function removeThis(obj)
 {
-	if(obj.parentNode)
-		obj.parentNode.removeChild(obj);
-	else
-		obj.outerHTML="";
+    if(obj.parentNode)
+        obj.parentNode.removeChild(obj);
+    else
+        obj.outerHTML="";
 }
 
 function kadovTextPopup( el )
 {
-	if (!gbBsIE4 && !gbBsOpera7 && !gbBsSafari && !gbBsNS6 && !gbBsKonqueror3 )
-		return;
+    if (!gbBsIE4 && !gbBsOpera7 && !gbBsSafari && !gbBsNS6 && !gbBsKonqueror3 )
+        return;
 
-	var bNeedMove=true;
-	
-	if (window.event)
-		window.event.cancelBubble = true;
+    var bNeedMove=true;
+    
+    if (window.event)
+        window.event.cancelBubble = true;
 
-	if( typeof(el) == "string" )
-		el = getElement(el);
+    if( typeof(el) == "string" )
+        el = getElement(el);
 
-	if (!el||el==window)
-		return;
-	
-	var src = el.getAttribute( "x-use-popup" );
-	if(!src&&el.id)
-	{
-		for (var i=0;i<gPopupData.length;i++)
-			if (gPopupData[i].el==el.id)
-			{
-				src=gPopupData[i].popupId;
-				bNeedMove=false;
-				break;
-			}
-	}
-	if(!src)
-		src = el.style.getAttribute( "x-use-popup" );	
-	if(!src)
-		return;
-		
-	var name = src;
-	if( src.substr(0,1) == "#" ) 
-	if (bNeedMove)
-		name = src.substr(1, src.length-1) + "_tmp";
-	else
-		name = src.substr(1, src.length-1);
+    if (!el||el==window)
+        return;
+    
+    var src = el.getAttribute( "x-use-popup" );
+    if(!src&&el.id)
+    {
+        for (var i=0;i<gPopupData.length;i++)
+            if (gPopupData[i].el==el.id)
+            {
+                src=gPopupData[i].popupId;
+                bNeedMove=false;
+                break;
+            }
+    }
+    if(!src)
+        src = el.style.getAttribute( "x-use-popup" );   
+    if(!src)
+        return;
+        
+    var name = src;
+    if( src.substr(0,1) == "#" ) 
+    if (bNeedMove)
+        name = src.substr(1, src.length-1) + "_tmp";
+    else
+        name = src.substr(1, src.length-1);
 
-	var srcDiv = getElement(name);
-	if( !srcDiv )
-		return;
+    var srcDiv = getElement(name);
+    if( !srcDiv )
+        return;
 
-	if( srcDiv )
-	{
-		if( srcDiv.style.display == "" )
-			srcDiv.style.display = "none";
-		else
-		{
-			srcDiv.style.display = "";
-			if( typeof(srcDiv.bInitialized) == "undefined" )
-			{
-				srcDiv.bInitialized = true;
-				kadovInitEffects(name);
-				kadovInitEachChild(srcDiv);
-			}
-		}
-	}
-	if(gbBsIE4)
-		event.returnValue=false;
-	return;
+    if( srcDiv )
+    {
+        if( srcDiv.style.display == "" )
+            srcDiv.style.display = "none";
+        else
+        {
+            srcDiv.style.display = "";
+            if( typeof(srcDiv.bInitialized) == "undefined" )
+            {
+                srcDiv.bInitialized = true;
+                kadovInitEffects(name);
+                kadovInitEachChild(srcDiv);
+            }
+        }
+    }
+    if(gbBsIE4)
+        event.returnValue=false;
+    return;
 }
 
 function kadovFindParentParagraph( el )
 {
-	if( typeof(el) == "string" )
-		el = getElement(el);
-	if( (!el) || el.tagName == "BODY" )
-		return null;
-	if( kadovIsParagraph(getParentNode(el)) )
-		return getParentNode(el);
-	else
-		return kadovFindParentParagraph( getParentNode(el) );
+    if( typeof(el) == "string" )
+        el = getElement(el);
+    if( (!el) || el.tagName == "BODY" )
+        return null;
+    if( kadovIsParagraph(getParentNode(el)) )
+        return getParentNode(el);
+    else
+        return kadovFindParentParagraph( getParentNode(el) );
 }
 
 //Begin HTML code invoked function
 function kadovRegisterEventHandler( obj, strEvent, strEventHandler )
 {
-	if( !gbBsIE4 )
-		return;
-	CCSSP.RegisterEventHandler( obj, strEvent, strEventHandler );
+    if( !gbBsIE4 )
+        return;
+    CCSSP.RegisterEventHandler( obj, strEvent, strEventHandler );
 }
 
 function textPopupData(el, popupId)
 {
-	this.el = el;
-	this.popupId = "#"+popupId;
+    this.el = el;
+    this.popupId = "#"+popupId;
 }
 
 var gPopupData = new Array();
 
 function kadovTextPopupInit( el, popupId)
 {
-	if (!gbBsIE4 && !gbBsOpera7 && !gbBsSafari && !gbBsNS6 && !gbBsKonqueror3)
-		return;
-		
-	if( typeof(el) == "string" )
-	{
-		if (popupId)
-		{
-			gPopupData[gPopupData.length]=new textPopupData(el, popupId);
-		}
-		el = getElement(el);
-	}
-		
-	if( el != null )
-	{
-		CCSSP.RegisterEventHandler( el, "onclick", "kadovTextPopup(\"" + el.id +"\");" );
-		CCSSP.RegisterEventHandler( window, "onload", "kadovTextPopupOnLoad(\"" + el.id +"\");" );
-	}
+    if (!gbBsIE4 && !gbBsOpera7 && !gbBsSafari && !gbBsNS6 && !gbBsKonqueror3)
+        return;
+        
+    if( typeof(el) == "string" )
+    {
+        if (popupId)
+        {
+            gPopupData[gPopupData.length]=new textPopupData(el, popupId);
+        }
+        el = getElement(el);
+    }
+        
+    if( el != null )
+    {
+        CCSSP.RegisterEventHandler( el, "onclick", "kadovTextPopup(\"" + el.id +"\");" );
+        CCSSP.RegisterEventHandler( window, "onload", "kadovTextPopupOnLoad(\"" + el.id +"\");" );
+    }
 }
 //End HTML code invoked function
 
@@ -3982,183 +3892,183 @@ function kadovInitTriggersInHead( )
   {
      var x = Object.xDelayedInitElements;
      for(i=0; i<x.length; i++)
-     	kadovInitTrigger( x[i] );
+        kadovInitTrigger( x[i] );
   }
 }
 
 //Begin HTML code invoked function
 function kadovFilePopupInit( el )
 {
-	if( typeof(el) == "string" )
-		el = getElement(el);
+    if( typeof(el) == "string" )
+        el = getElement(el);
 
-	if( el != null )
-		CCSSP.RegisterEventHandler( el, "onmouseover", "BSPSPopupOnMouseOver(event);" );
+    if( el != null )
+        CCSSP.RegisterEventHandler( el, "onmouseover", "BSPSPopupOnMouseOver(event);" );
 }
 
 function kadovInitTrigger( element )
 {
-	if( !gbBsIE4 )
-		return;
-	var srcElement = element;
-	if( typeof(srcElement) == "string" )
-	{
-		srcElement = getElement(element,0);
-		if(srcElement == null)
-			return;
-	}
-	
-	if( !kadovIsParentVisible(srcElement) )
-		return;
+    if( !gbBsIE4 )
+        return;
+    var srcElement = element;
+    if( typeof(srcElement) == "string" )
+    {
+        srcElement = getElement(element,0);
+        if(srcElement == null)
+            return;
+    }
+    
+    if( !kadovIsParentVisible(srcElement) )
+        return;
 
-	var targets = srcElement.getAttribute( "x-targets" );
-	if (!targets)
-		targets = srcElement.style.getAttribute("x-targets");
-	if (!targets)
-		return;	
-	var arrOneTarget = targets.split( "," );
-	for( var i = 0; i < arrOneTarget.length; i ++ )
-		bsscFXInit( element, arrOneTarget[i], null, null, null, null );
+    var targets = srcElement.getAttribute( "x-targets" );
+    if (!targets)
+        targets = srcElement.style.getAttribute("x-targets");
+    if (!targets)
+        return; 
+    var arrOneTarget = targets.split( "," );
+    for( var i = 0; i < arrOneTarget.length; i ++ )
+        bsscFXInit( element, arrOneTarget[i], null, null, null, null );
 }
 
 function kadovIsParentVisible( el )
 {
-	if( typeof(el) == "string" )
-		el = getElement(el);
-	if( (!el) || el.tagName == "BODY" )
-		return true;
-	if( el.style.display == 'none' ) //el.visibility == 'hidden' || 
-		return false;
-	else
-		return kadovIsParentVisible( getParentNode(el) );
+    if( typeof(el) == "string" )
+        el = getElement(el);
+    if( (!el) || el.tagName == "BODY" )
+        return true;
+    if( el.style.display == 'none' ) //el.visibility == 'hidden' || 
+        return false;
+    else
+        return kadovIsParentVisible( getParentNode(el) );
 }
 
 function kadovInitEffects( element )
 {
-	if( !gbBsIE4 )
-		return;
-	var srcElement = element;
-	if( typeof(srcElement) == "string" )
-	{
-		srcElement = getElement(element,0);
-		if(srcElement == null)
-			return;
-	}
-	
-	if( !kadovIsParentVisible(srcElement) )
-		return;
-	
-	kadovInitEffect( srcElement, "x-on-hover" );
-	kadovInitEffect( srcElement, "x-on-pageclick" );
-	kadovInitEffect( srcElement, "x-on-pageload" );
-	kadovInitEffect( srcElement, "x-on-trigger-1" );
-	kadovInitEffect( srcElement, "x-on-trigger-2" );
+    if( !gbBsIE4 )
+        return;
+    var srcElement = element;
+    if( typeof(srcElement) == "string" )
+    {
+        srcElement = getElement(element,0);
+        if(srcElement == null)
+            return;
+    }
+    
+    if( !kadovIsParentVisible(srcElement) )
+        return;
+    
+    kadovInitEffect( srcElement, "x-on-hover" );
+    kadovInitEffect( srcElement, "x-on-pageclick" );
+    kadovInitEffect( srcElement, "x-on-pageload" );
+    kadovInitEffect( srcElement, "x-on-trigger-1" );
+    kadovInitEffect( srcElement, "x-on-trigger-2" );
 }
 //End HTML code invoked function
 
 function kadovInitEffect( element, prop )
 {
-	var values = null;
-	if( element.getAttribute( "currentStyle" )  && element.currentStyle.getAttribute)
-		values = element.currentStyle.getAttribute( prop );
-	else  if (element.style.getAttribute)
-		values = element.style.getAttribute( prop );
-	if( !values )
-		return;
+    var values = null;
+    if( element.getAttribute( "currentStyle" )  && element.currentStyle.getAttribute)
+        values = element.currentStyle.getAttribute( prop );
+    else  if (element.style.getAttribute)
+        values = element.style.getAttribute( prop );
+    if( !values )
+        return;
 
-	var functions = new Array();
-	var nIdx = 0, nStart = 0;
-	var nNext = values.indexOf( "\)", 0);
-	while( nNext >= 0 && nNext < values.length )
-	{
-		functions[nIdx] = values.substr( nStart, nNext-nStart+1);
-		nStart = nNext + 1;
-		nIdx++;
-		nNext = values.indexOf( "\)", nStart);
-	}
-		
-	for( var i=0; i<functions.length; i++)
-	{
-		var id = element.getAttribute( "id" );
-		var translatedProp = kadovTranslateProp(prop);
+    var functions = new Array();
+    var nIdx = 0, nStart = 0;
+    var nNext = values.indexOf( "\)", 0);
+    while( nNext >= 0 && nNext < values.length )
+    {
+        functions[nIdx] = values.substr( nStart, nNext-nStart+1);
+        nStart = nNext + 1;
+        nIdx++;
+        nNext = values.indexOf( "\)", nStart);
+    }
+        
+    for( var i=0; i<functions.length; i++)
+    {
+        var id = element.getAttribute( "id" );
+        var translatedProp = kadovTranslateProp(prop);
 
-		var lp = functions[i].indexOf( "(" );
-		var fnname = functions[i].substring(0, lp);
-		var srcargs = functions[i].substring(lp+1, functions[i].length-1);
-		
-		var nClickTimes = 1;
-		var arrForClickCount = srcargs.split( "," );
-		for( var j = 0; j < arrForClickCount.length; j++ )
-		{// to locate and get the "clicks=99" settings
-			var nPageClick = arrForClickCount[j].indexOf("clicks");
-			if( nPageClick >= 0 )
-			{
-				nPageClick = arrForClickCount[j].indexOf("=");
-				if( nPageClick > 0 )
-				{
-					nClickTimes = arrForClickCount[j].substring( nPageClick + 1, arrForClickCount[j].length) * 1;
-					break;
-				}
-			}
-		}
-		var args = srcargs;
-		if( j < arrForClickCount.length )
-		{// to strip out the "clicks=99" from the arguments string
-			args = "";
-			for( var k = 0; k < arrForClickCount.length; k ++ )
-			{
-				if( k != j )
-				{
-					args += arrForClickCount[k];
-					if( k < arrForClickCount.length - 1 )
-						args += ",";
-				}
-			}
-		}
-		bsscFXInit( null, id, translatedProp, fnname, args, nClickTimes );
-	}
+        var lp = functions[i].indexOf( "(" );
+        var fnname = functions[i].substring(0, lp);
+        var srcargs = functions[i].substring(lp+1, functions[i].length-1);
+        
+        var nClickTimes = 1;
+        var arrForClickCount = srcargs.split( "," );
+        for( var j = 0; j < arrForClickCount.length; j++ )
+        {// to locate and get the "clicks=99" settings
+            var nPageClick = arrForClickCount[j].indexOf("clicks");
+            if( nPageClick >= 0 )
+            {
+                nPageClick = arrForClickCount[j].indexOf("=");
+                if( nPageClick > 0 )
+                {
+                    nClickTimes = arrForClickCount[j].substring( nPageClick + 1, arrForClickCount[j].length) * 1;
+                    break;
+                }
+            }
+        }
+        var args = srcargs;
+        if( j < arrForClickCount.length )
+        {// to strip out the "clicks=99" from the arguments string
+            args = "";
+            for( var k = 0; k < arrForClickCount.length; k ++ )
+            {
+                if( k != j )
+                {
+                    args += arrForClickCount[k];
+                    if( k < arrForClickCount.length - 1 )
+                        args += ",";
+                }
+            }
+        }
+        bsscFXInit( null, id, translatedProp, fnname, args, nClickTimes );
+    }
 }
 
 function kadovTranslateProp( prop )
 {
-	switch( prop )
-	{
-	case "x-on-hover" :     return "bsschover";
-	case "x-on-pageclick" : return "bsscpageclick";
-	case "x-on-pageload" :  return "bsscpageload";
-	case "x-on-trigger-1" : return "bssctrigger1";
-	case "x-on-trigger-2" : return "bssctrigger2";
-	}
-	return null;
+    switch( prop )
+    {
+    case "x-on-hover" :     return "bsschover";
+    case "x-on-pageclick" : return "bsscpageclick";
+    case "x-on-pageload" :  return "bsscpageload";
+    case "x-on-trigger-1" : return "bssctrigger1";
+    case "x-on-trigger-2" : return "bssctrigger2";
+    }
+    return null;
 }
 //End to convert iWrite format to RoboEditor Format for DHTML effects
 
 //Begin the definition of one entry to DHTML effects
 function bsscFXInit( trigger_ID, target_ID, event_type, 
-	action_type, action_setting, event_addional )
+    action_type, action_setting, event_addional )
 {
-	if( (!gbBsWindows && !gbBsSunOS  && !(gbBsMac&&gbBsIE5)) || typeof(target_ID) != "string" )//MUST have a target_ID
-		return; // we don't support Navigator yet
-	
-	if( typeof(event_type) == "string" )
-		event_type = event_type.toLowerCase();
-	if( typeof(action_type) == "string" )
-		action_type = action_type.toLowerCase();
-	if( typeof(action_setting) == "string" )
-		 action_setting = action_setting.toLowerCase();
-	
-	// to get the target element then add it to the target list
-	var eleTarget = CCSSP.GetObject( target_ID );
-	if( (eleTarget != null) && (event_type != null) && (action_type != null) )
-	{
-		CEngine.AddOneTarget( target_ID, eleTarget );
-		CEngine.BuildTargetObject(target_ID, event_type, action_type, action_setting, event_addional);
-	}
-	
-	// to validate the trigger_ID parameter
-	if( typeof(trigger_ID) == "string" && trigger_ID != "" )
-		CEngine.BuildTriggerObject( trigger_ID, target_ID );
-}	
+    if( (!gbBsWindows && !gbBsSunOS  && !(gbBsMac&&gbBsIE5)) || typeof(target_ID) != "string" )//MUST have a target_ID
+        return; // we don't support Navigator yet
+    
+    if( typeof(event_type) == "string" )
+        event_type = event_type.toLowerCase();
+    if( typeof(action_type) == "string" )
+        action_type = action_type.toLowerCase();
+    if( typeof(action_setting) == "string" )
+         action_setting = action_setting.toLowerCase();
+    
+    // to get the target element then add it to the target list
+    var eleTarget = CCSSP.GetObject( target_ID );
+    if( (eleTarget != null) && (event_type != null) && (action_type != null) )
+    {
+        CEngine.AddOneTarget( target_ID, eleTarget );
+        CEngine.BuildTargetObject(target_ID, event_type, action_type, action_setting, event_addional);
+    }
+    
+    // to validate the trigger_ID parameter
+    if( typeof(trigger_ID) == "string" && trigger_ID != "" )
+        CEngine.BuildTriggerObject( trigger_ID, target_ID );
+}   
 //End the definition of one entry to DHTML effects
 
 /// Section End  - kadov DHTM (JavaScript 1.2)
@@ -4170,306 +4080,306 @@ function CCSSP(){} // constructor of CCSSP class
 
 CCSSP.GetObject = function( obj )
 {//convert object name string or reference into a valid object reference
-	if( typeof(obj) == "object" )
-		return obj;
-	else if( typeof(obj) == "string" && obj != "")
-	{
-		if( gbBsNS4 )
-			return eval("document." + obj);
-		else
-			return eval("document.all(\"" + obj + "\")");
-	}
-	else
-		return null;
+    if( typeof(obj) == "object" )
+        return obj;
+    else if( typeof(obj) == "string" && obj != "")
+    {
+        if( gbBsNS4 )
+            return eval("document." + obj);
+        else
+            return eval("document.all(\"" + obj + "\")");
+    }
+    else
+        return null;
 }
 
 CCSSP.MoveObjectTo = function(obj, x, y)
 {//positioning an object at a specific pixel coordinate
-	if( gbBsNS4 )
-		obj.moveTo(x,y);
-	else
-	{
-		obj.style.pixelLeft = x;
-		obj.style.pixelTop = y;
-	}
+    if( gbBsNS4 )
+        obj.moveTo(x,y);
+    else
+    {
+        obj.style.pixelLeft = x;
+        obj.style.pixelTop = y;
+    }
 }
 
 CCSSP.MoveObjectBy = function(obj, dx, dy)
 {//moveing a object by x and/or y pixel
-	if( gbBsNS4 )
-		obj.moveBy(dx,dy);
-	else
-	{
-		obj.style.pixelLeft += dx;
-		obj.style.pixelTop += dy;
-	}
+    if( gbBsNS4 )
+        obj.moveBy(dx,dy);
+    else
+    {
+        obj.style.pixelLeft += dx;
+        obj.style.pixelTop += dy;
+    }
 }
 
 CCSSP.SetObjectBGColor = function(obj, color)
 {//set the background color of an object
-	if( gbBsNS4 )
-		obj.bgColor = color;
-	else
-		obj.style.backgroundColor = color;
+    if( gbBsNS4 )
+        obj.bgColor = color;
+    else
+        obj.style.backgroundColor = color;
 }
 
 CCSSP.ShowObject = function(obj, bShow)
 {// set the object to be visible or invisible
-	if( gbBsNS4 )
-		obj.visibility = (bShow == true) ? 'show' : 'hide';
-	else
-		obj.style.visibility = (bShow == true) ? 'visible' : 'hidden';// when hidden, it still occupy some space.
+    if( gbBsNS4 )
+        obj.visibility = (bShow == true) ? 'show' : 'hide';
+    else
+        obj.style.visibility = (bShow == true) ? 'visible' : 'hidden';// when hidden, it still occupy some space.
 }
 
 CCSSP.GetObjectLeft = function(obj)
 {// retrieve the x coordinate of a posionable object
-	if( gbBsNS4 )
-		return obj.left;
-	else
-		return obj.style.pixelLeft;
+    if( gbBsNS4 )
+        return obj.left;
+    else
+        return obj.style.pixelLeft;
 }
 
 CCSSP.GetObjectTop = function(obj)
 {// retrieve the y coordinate of a posionable object
-	if( gbBsNS4 )
-		return obj.top;
-	else
-		return obj.style.pixelTop;
+    if( gbBsNS4 )
+        return obj.top;
+    else
+        return obj.style.pixelTop;
 }
 
 CCSSP.GetObjectContainLeft = function(obj)
 {// retrieve the x coordinate of a posionable object relative to it's parent element
-	if( gbBsNS4 )
-		return obj.pageX;
-	else
-	{
-		if( obj == document.body )
-			return obj.clientLeft;
-		else
-			return obj.offsetLeft;
-	}
+    if( gbBsNS4 )
+        return obj.pageX;
+    else
+    {
+        if( obj == document.body )
+            return obj.clientLeft;
+        else
+            return obj.offsetLeft;
+    }
 }
 
 CCSSP.GetObjectWindowLeft = function(obj)
 {// retrieve the x coordinate of a posionable object relative to browser window
-	if( gbBsNS4 )
-		return obj.pageX;
-	else
-	{
-		var nOffsetWindowLeft = 0;
-		for(var element = obj; element; element = element.offsetParent)
-			nOffsetWindowLeft += CCSSP.GetObjectContainLeft(element);
-		return nOffsetWindowLeft;
-	}
+    if( gbBsNS4 )
+        return obj.pageX;
+    else
+    {
+        var nOffsetWindowLeft = 0;
+        for(var element = obj; element; element = element.offsetParent)
+            nOffsetWindowLeft += CCSSP.GetObjectContainLeft(element);
+        return nOffsetWindowLeft;
+    }
 }
 
 CCSSP.GetObjectContainTop = function(obj)
 {// retrieve the y coordinate of a posionable object relative to it's parent element
-	if( gbBsNS4 )
-		return obj.pageY;
-	else
-	{
-		if( obj == document.body )
-			return obj.clientTop;
-		else
-			return obj.offsetTop;
-	}
+    if( gbBsNS4 )
+        return obj.pageY;
+    else
+    {
+        if( obj == document.body )
+            return obj.clientTop;
+        else
+            return obj.offsetTop;
+    }
 }
 
 CCSSP.GetObjectWindowTop = function(obj)
 {// retrieve the y coordinate of a posionable object relative to browser window
-	if( gbBsNS4 )
-		return obj.pageY;
-	else
-	{
-		var nOffsetWindowTop = 0;
-		for(var element = obj; element; element = element.offsetParent)
-			nOffsetWindowTop += CCSSP.GetObjectContainTop(element);
-		return nOffsetWindowTop;
-	}
+    if( gbBsNS4 )
+        return obj.pageY;
+    else
+    {
+        var nOffsetWindowTop = 0;
+        for(var element = obj; element; element = element.offsetParent)
+            nOffsetWindowTop += CCSSP.GetObjectContainTop(element);
+        return nOffsetWindowTop;
+    }
 }
 
 CCSSP.GetObjectHeight = function(obj)
 {// retrieve the height of a posionable object
-	if( gbBsNS4 )
-		return obj.clip.height;
-	else
-		return obj.offsetHeight;
+    if( gbBsNS4 )
+        return obj.clip.height;
+    else
+        return obj.offsetHeight;
 }
 
 CCSSP.GetObjectWidth = function(obj)
 {// retrieve the width of a posionable object
-	if( gbBsNS4 )
-		return obj.clip.width;
-	else
-		return obj.offsetWidth;
+    if( gbBsNS4 )
+        return obj.clip.width;
+    else
+        return obj.offsetWidth;
 }
 
 CCSSP.RegisterEventHandler = function( srcObj, rawEventName, funcHandler )
 { // to add the "funcHandler" as the "rawEventName" 's handler to the "srcObj" object,the original event handler will be combined
-	if (gbBsNS4 && !gbBsNS6)
-		return ;
-		
-	var oldHandler = "";
+    if (gbBsNS4 && !gbBsNS6)
+        return ;
+        
+    var oldHandler = "";
 
-	if (gbBsMac &&gbBsIE4&&!gbBsIE5)
-	{
-		if (typeof(srcObj[rawEventName.toLowerCase()])=="unknown")
-		{ //search for <SCRIPT> tag which define the event handler
-			for( var i = 0; i < document.scripts.length; i++ ) 
-			{
-				var script = document.scripts[i];
-				if( (script.htmlFor == srcObj.id || script.htmlFor == srcObj ) && script.event == rawEventName )
-				{
-					oldHandler = script.innerHTML;
-					break;
-				}
-			}
-		}
-	}
-	else
-	{
-		var oldInlineHandler = srcObj[rawEventName.toLowerCase()];
-		if( oldInlineHandler != null && typeof(oldInlineHandler) != "undefined")
-		{
-			var functionDefinition = oldInlineHandler.toString();
-			var bodyStart = functionDefinition.indexOf( "{" );
-			var bodyEnd = functionDefinition.lastIndexOf( "}" );
-			if( bodyStart > 0 || bodyEnd > bodyStart )
-				oldHandler = functionDefinition.substr( bodyStart + 1, bodyEnd - bodyStart - 2 );
-		}
-		else if( gbBsIE4 )
-		{ //search for <SCRIPT> tag which define the event handler
-			for( var i = 0; i < document.scripts.length; i++ ) 
-			{
-				var script = document.scripts[i];
-				if( (script.htmlFor == srcObj.id || script.htmlFor == srcObj ) && script.event == rawEventName )
-				{
-					oldHandler = script.innerHTML;
-					break;
-				}
-			}
-		}
-	}
-	if( oldHandler.indexOf(funcHandler) >= 0 )
-		return;// to prevent register the funtion twice.
+    if (gbBsMac &&gbBsIE4&&!gbBsIE5)
+    {
+        if (typeof(srcObj[rawEventName.toLowerCase()])=="unknown")
+        { //search for <SCRIPT> tag which define the event handler
+            for( var i = 0; i < document.scripts.length; i++ ) 
+            {
+                var script = document.scripts[i];
+                if( (script.htmlFor == srcObj.id || script.htmlFor == srcObj ) && script.event == rawEventName )
+                {
+                    oldHandler = script.innerHTML;
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        var oldInlineHandler = srcObj[rawEventName.toLowerCase()];
+        if( oldInlineHandler != null && typeof(oldInlineHandler) != "undefined")
+        {
+            var functionDefinition = oldInlineHandler.toString();
+            var bodyStart = functionDefinition.indexOf( "{" );
+            var bodyEnd = functionDefinition.lastIndexOf( "}" );
+            if( bodyStart > 0 || bodyEnd > bodyStart )
+                oldHandler = functionDefinition.substr( bodyStart + 1, bodyEnd - bodyStart - 2 );
+        }
+        else if( gbBsIE4 )
+        { //search for <SCRIPT> tag which define the event handler
+            for( var i = 0; i < document.scripts.length; i++ ) 
+            {
+                var script = document.scripts[i];
+                if( (script.htmlFor == srcObj.id || script.htmlFor == srcObj ) && script.event == rawEventName )
+                {
+                    oldHandler = script.innerHTML;
+                    break;
+                }
+            }
+        }
+    }
+    if( oldHandler.indexOf(funcHandler) >= 0 )
+        return;// to prevent register the funtion twice.
 
-	if( gbBsNS4 ) // only "onload, onresize, onfocus" apply to window
-	{// other raw events will apply to layer
-		var noOn = rawEventName.substring(2, rawEventName.length);
-		if( typeof(noOn) == "string" && noOn.length > 3 ) {
-			if (srcObj.captureEvents)
-				srcObj.captureEvents( Event[noOn.toUpperCase()] );
-		}
-	}
-	
-	var newHandler = oldHandler;
-	if( newHandler.length == 0 )
-		newHandler = funcHandler;
-	else
-		newHandler += "; " + funcHandler;
-	
-	srcObj[rawEventName.toLowerCase()] = new Function( newHandler );
+    if( gbBsNS4 ) // only "onload, onresize, onfocus" apply to window
+    {// other raw events will apply to layer
+        var noOn = rawEventName.substring(2, rawEventName.length);
+        if( typeof(noOn) == "string" && noOn.length > 3 ) {
+            if (srcObj.captureEvents)
+                srcObj.captureEvents( Event[noOn.toUpperCase()] );
+        }
+    }
+    
+    var newHandler = oldHandler;
+    if( newHandler.length == 0 )
+        newHandler = funcHandler;
+    else
+        newHandler += "; " + funcHandler;
+    
+    srcObj[rawEventName.toLowerCase()] = new Function( newHandler );
 }
 
 CCSSP.GetWindowHeight = function()
 {// retrieve the height of available content in browser window
-	if( gbBsNS4 )
-		return window.innerHeight;
-	else
-		return document.body.clientHeight;
+    if( gbBsNS4 )
+        return window.innerHeight;
+    else
+        return document.body.clientHeight;
 }
 
 CCSSP.GetWindowBottom = function()
 {// retrieve the bottom postion of browser window
-	if( gbBsNS4 )
-		return window.outerHeight + window.pageYOffset;
-	else
-		return document.body.clientHeight + document.body.scrollTop;
+    if( gbBsNS4 )
+        return window.outerHeight + window.pageYOffset;
+    else
+        return document.body.clientHeight + document.body.scrollTop;
 }
 
 CCSSP.GetWindowWidth = function()
 {// retrieve the width of available content in browser window
-	if( gbBsNS4 )
-		return window.innerWidth;
-	else
-		return document.body.clientWidth;
+    if( gbBsNS4 )
+        return window.innerWidth;
+    else
+        return document.body.clientWidth;
 }
 
 CCSSP.GetWindowRight = function()
 {// retrieve the right postion of browser window
-	if( gbBsNS4 )
-		return window.outerWidth + window.pageXOffset;
-	else
-		return document.body.clientWidth + document.body.scrollLeft;
+    if( gbBsNS4 )
+        return window.outerWidth + window.pageXOffset;
+    else
+        return document.body.clientWidth + document.body.scrollLeft;
 }
 
 CCSSP.TrimString = function( objString, subtrim )
 {// to trim the "subtrim" in the beginning and ending of a string object
-	if( typeof(subtrim) != "string" || subtrim == null )
-		return objString;
-	var strHead = objString.substring(0, 1);
-	var strRear = objString.substring(objString.length-1, objString.length);
-	if( strHead != subtrim && strRear != subtrim )
-		return objString;
-	
-	var spacePos = objString.indexOf(subtrim);
-	if( spacePos < 0 )
-		return objString;
-	else if( spacePos == objString.length - 1 )
-		return objString.substring(0, spacePos);
-	else
-	{
-		var newString = objString.substring( spacePos + 1, objString.length);
-		return CCSSP.TrimString( newString, subtrim );
-	}
+    if( typeof(subtrim) != "string" || subtrim == null )
+        return objString;
+    var strHead = objString.substring(0, 1);
+    var strRear = objString.substring(objString.length-1, objString.length);
+    if( strHead != subtrim && strRear != subtrim )
+        return objString;
+    
+    var spacePos = objString.indexOf(subtrim);
+    if( spacePos < 0 )
+        return objString;
+    else if( spacePos == objString.length - 1 )
+        return objString.substring(0, spacePos);
+    else
+    {
+        var newString = objString.substring( spacePos + 1, objString.length);
+        return CCSSP.TrimString( newString, subtrim );
+    }
 }
 
 CCSSP.TrimSpace = function( objString )
 {
-	var Trim1 = CCSSP.TrimString( objString, " ");
-	return CCSSP.TrimString( Trim1, "\'");
+    var Trim1 = CCSSP.TrimString( objString, " ");
+    return CCSSP.TrimString( Trim1, "\'");
 }
 
 CCSSP.GetEventElement = function( navEventObject )
 {// to get the element who fired the current event
-	if(gbBsNS4) 
-		if (gbBsNS6)
-			return null;
-		else
-			 navEventObject.target;
-	else
-		return event.srcElement;
+    if(gbBsNS4) 
+        if (gbBsNS6)
+            return null;
+        else
+             navEventObject.target;
+    else
+        return event.srcElement;
 }
 
 CCSSP.PrepareFilter = function( Obj )
 {//to prepare for making the filter work
-	Obj.style.filter = "";
-	if( Obj.style.width != "" || Obj.style.height != "" || Obj.style.position == "absolute" )
-		return;
-	Obj.style.height = CCSSP.GetObjectHeight(Obj);
+    Obj.style.filter = "";
+    if( Obj.style.width != "" || Obj.style.height != "" || Obj.style.position == "absolute" )
+        return;
+    Obj.style.height = CCSSP.GetObjectHeight(Obj);
 }
 
 CCSSP.IsDescendant = function( progenitor, progeny )
 {
-	if( typeof(progeny) == "undefined" || progeny == null )
-		return false;
-	else if( progeny == progenitor )
-		return true; 
-	else if( progeny.id == progenitor.id ) 
-		return true; 
-	else if( getParentNode(progeny) == getParentNode(progenitor))
-		return false;
-	else
-		return CCSSP.IsDescendant( progenitor, getParentNode(progeny));
+    if( typeof(progeny) == "undefined" || progeny == null )
+        return false;
+    else if( progeny == progenitor )
+        return true; 
+    else if( progeny.id == progenitor.id ) 
+        return true; 
+    else if( getParentNode(progeny) == getParentNode(progenitor))
+        return false;
+    else
+        return CCSSP.IsDescendant( progenitor, getParentNode(progeny));
 }
 
 CCSSP.IsTextTag = function( Obj )
 {
-	if( typeof( Obj.tagName ) == "undefined" )
-		return false;
-	return( Obj.tagName.indexOf("H") == 0 || Obj.tagName == "P" || 
-			Obj.tagName == "FONT" || Obj.tagName == "SPAN" );
+    if( typeof( Obj.tagName ) == "undefined" )
+        return false;
+    return( Obj.tagName.indexOf("H") == 0 || Obj.tagName == "P" || 
+            Obj.tagName == "FONT" || Obj.tagName == "SPAN" );
 }
 
 //End JavaScript libary for cross-platform positioning object.
@@ -4481,192 +4391,192 @@ CCSSP.IsTextTag = function( Obj )
 //Begin the definition of class CTrigger
 function CTrigger( TriggerElement )
 {
-	// object : the trigger element. Never be null. 
-	this.eleTrigger = TriggerElement;
-	
-	// number : the click counter number: only 3 values: 0,1,2;
-	this.nCounter = 0; 
-	
-	//object as associative array of string:
-	// the associate target ID strings; one element at least.			
-	this.objStrTarget = new Object();
-	this.eleTrigger.style.cursor = "hand";
-	if( this.eleTrigger.tagName == "AREA" && this.eleTrigger.getAttribute("href") == "" )
-		this.eleTrigger.setAttribute("href", "#") // to make a hand cursor for image map
+    // object : the trigger element. Never be null. 
+    this.eleTrigger = TriggerElement;
+    
+    // number : the click counter number: only 3 values: 0,1,2;
+    this.nCounter = 0; 
+    
+    //object as associative array of string:
+    // the associate target ID strings; one element at least.           
+    this.objStrTarget = new Object();
+    this.eleTrigger.style.cursor = "hand";
+    if( this.eleTrigger.tagName == "AREA" && this.eleTrigger.getAttribute("href") == "" )
+        this.eleTrigger.setAttribute("href", "#") // to make a hand cursor for image map
 }
 
 CTrigger.prototype.AddTargetID = function( strTargetID )
 {// add one target ID string to the objStrTarget
-	if( typeof(strTargetID) != "string" )
-		return ;
-	if( typeof(this.objStrTarget[strTargetID]) != "string" )
-		this.objStrTarget[strTargetID] = strTargetID;
+    if( typeof(strTargetID) != "string" )
+        return ;
+    if( typeof(this.objStrTarget[strTargetID]) != "string" )
+        this.objStrTarget[strTargetID] = strTargetID;
 }
 
 CTrigger.prototype.OnTriggerClick = function()
 {// to activate all asociated target
-	var strEventType = ( (this.nCounter++)% 2 == 0 ) ? 
-		"bssctrigger1" : "bssctrigger2";
-		
-	// to enumerate associative target element's ID string
-	for( var strTargetID in this.objStrTarget ) 
-		CEngine.SendEventToOneTarget( strTargetID, strEventType );
+    var strEventType = ( (this.nCounter++)% 2 == 0 ) ? 
+        "bssctrigger1" : "bssctrigger2";
+        
+    // to enumerate associative target element's ID string
+    for( var strTargetID in this.objStrTarget ) 
+        CEngine.SendEventToOneTarget( strTargetID, strEventType );
 }
 //End the definition of class CTrigger
 
 //Begin the definition of class CTarget
 function CTarget( TargetElement )
 {
-	// object : the target element. Never be null.
-	this.eleTarget = TargetElement;
-	this.objManager = new Object(); // object: the event manager
+    // object : the target element. Never be null.
+    this.eleTarget = TargetElement;
+    this.objManager = new Object(); // object: the event manager
 } 
 
 CTarget.nPageClickCounter = 0;// static class property.
 
 CTarget.prototype.GetAgencyObject = function(str_action_type,action_setting )
 {// return the action agency ( effect )object's refernece 
-	switch( str_action_type )
-	{
-	case "show":return new CAgencyShow( this.eleTarget, true ) ;
-	case "hide":return new CAgencyShow( this.eleTarget, false ) ;
+    switch( str_action_type )
+    {
+    case "show":return new CAgencyShow( this.eleTarget, true ) ;
+    case "hide":return new CAgencyShow( this.eleTarget, false ) ;
 
     case "flyin" : 
-    	return new CAgencyFly(this.eleTarget, action_setting, true);
+        return new CAgencyFly(this.eleTarget, action_setting, true);
     case "flyout" : 
-    	return new CAgencyFly(this.eleTarget, action_setting, false);
+        return new CAgencyFly(this.eleTarget, action_setting, false);
     case "spiralin" : 
-    	return new CAgencySpiral(this.eleTarget, action_setting, true);
+        return new CAgencySpiral(this.eleTarget, action_setting, true);
     case "spiralout" : 
-    	return new CAgencySpiral(this.eleTarget, action_setting, false);
+        return new CAgencySpiral(this.eleTarget, action_setting, false);
     case "zoomin" :
-    	return new CAgencyZoom(this.eleTarget, action_setting, true);
+        return new CAgencyZoom(this.eleTarget, action_setting, true);
     case "zoomout" : 
-    	return new CAgencyZoom(this.eleTarget, action_setting, false);
+        return new CAgencyZoom(this.eleTarget, action_setting, false);
     case "elastic" : 
-		return new CAgencyElastic(this.eleTarget, action_setting);
-		
+        return new CAgencyElastic(this.eleTarget, action_setting);
+        
     case "fadein" : 
-    	return (gbBsIE4)? new CAgencyAlpha(this.eleTarget, action_setting, true) : null;
+        return (gbBsIE4)? new CAgencyAlpha(this.eleTarget, action_setting, true) : null;
     case "fadeout" :
-    	return (gbBsIE4)? new CAgencyAlpha(this.eleTarget, action_setting, false) : null;
+        return (gbBsIE4)? new CAgencyAlpha(this.eleTarget, action_setting, false) : null;
     case "rockrollstatic" :
     case "rockroll" :
-    	return (gbBsIE4)? new CAgencyWave(this.eleTarget, action_setting, false) : null;
+        return (gbBsIE4)? new CAgencyWave(this.eleTarget, action_setting, false) : null;
  
     case "glow":
-    	return (gbBsIE4)? new CAgencyGlow(this.eleTarget,action_setting) : null;
+        return (gbBsIE4)? new CAgencyGlow(this.eleTarget,action_setting) : null;
     case "dropshadow":
-    	return (gbBsIE4)? new CAgencyDropShadow(this.eleTarget,action_setting) : null;
+        return (gbBsIE4)? new CAgencyDropShadow(this.eleTarget,action_setting) : null;
     case "transition" :
-    	return (gbBsIE4)? new CAgencyRevealTrans(this.eleTarget,action_setting) : null;
+        return (gbBsIE4)? new CAgencyRevealTrans(this.eleTarget,action_setting) : null;
     case "blur" :
-    	return (gbBsIE4)? new CAgencyBlur(this.eleTarget,action_setting) : null;
+        return (gbBsIE4)? new CAgencyBlur(this.eleTarget,action_setting) : null;
 
     case "fliph" : // all these 4 do NOT need any parameters
     case "flipv" :
     case "invert":
     case "gray" :
-    	return (gbBsIE4)? new CAgencyChangeFilter(this.eleTarget, str_action_type) : null;
+        return (gbBsIE4)? new CAgencyChangeFilter(this.eleTarget, str_action_type) : null;
     
     case "fontchange": // the effects below change the style on the fly, so won't work in Navigator
-    	return (gbBsIE4)? new CAgencyFontChange(this.eleTarget,action_setting) : null;
+        return (gbBsIE4)? new CAgencyFontChange(this.eleTarget,action_setting) : null;
     case "boderchange": 
     case "stylechange":
-    	return (gbBsIE4)? new CAgencyChangeStyle(this.eleTarget,action_setting) : null;
+        return (gbBsIE4)? new CAgencyChangeStyle(this.eleTarget,action_setting) : null;
 
-	default: return null;
-	}
+    default: return null;
+    }
 }
 
 CTarget.prototype.SetEventManager = function( 
-	one_event_type,str_action_type,action_setting,event_additional)
+    one_event_type,str_action_type,action_setting,event_additional)
 {// to set the event manager with specified action 
-	if( typeof( one_event_type ) != "string" ||	
-		typeof( str_action_type ) != "string"||
-		typeof( action_setting ) != "string" )
-		return false;
-	if( typeof(this.objManager[one_event_type]) == "undefined" )
-	{
-		this.objManager[one_event_type] = new Object();
-		this.objManager[one_event_type].length = 0;
-	}
-	
-	var eventAgency = this.GetAgencyObject(str_action_type,action_setting);
-	if( eventAgency != null )
-	{
-		var ct = this.objManager[one_event_type].length ++;
-		this.objManager[one_event_type][ct] = eventAgency;
-		
-		if( one_event_type == "bsscpageclick" )
-		{// to deal with the "number of pageclick" stuff
-			if( typeof(event_additional) == "number" )
-				this.objManager[one_event_type][ct].nPageClick = event_additional;
-			else // set the default number 
-				this.objManager[one_event_type][ct].nPageClick = 1;
-			
-			if( (typeof(this.objManager.nMinPageClickIndex) == "undefined") ||
-			    (this.objManager[one_event_type][ct].nPageClick < 
-					this.objManager[one_event_type][this.objManager.nMinPageClickIndex].nPageClick) )
-				this.objManager.nMinPageClickIndex = ct;
-		}
-		
-		//hide the object blindly,SetState function will take care of the final correct state
-		if( ((one_event_type == "bsscpageclick") && 
-			 (this.objManager[one_event_type][ct].nPageClick == 1)) ||
-			one_event_type == "bsscpageload" ||
-			one_event_type == "bssctrigger1" )
-			CCSSP.ShowObject( this.eleTarget, false );
-		
-		if( one_event_type == "bssctrigger1" || one_event_type == "bssctrigger2" )
-			if( typeof( this.strTriggerEvent ) == "undefined" )
-				this.strTriggerEvent = ( one_event_type == "bssctrigger1" ) ? "bssctrigger2" : "bssctrigger1";
-			
-		return true;
-	}
-	return false;
+    if( typeof( one_event_type ) != "string" || 
+        typeof( str_action_type ) != "string"||
+        typeof( action_setting ) != "string" )
+        return false;
+    if( typeof(this.objManager[one_event_type]) == "undefined" )
+    {
+        this.objManager[one_event_type] = new Object();
+        this.objManager[one_event_type].length = 0;
+    }
+    
+    var eventAgency = this.GetAgencyObject(str_action_type,action_setting);
+    if( eventAgency != null )
+    {
+        var ct = this.objManager[one_event_type].length ++;
+        this.objManager[one_event_type][ct] = eventAgency;
+        
+        if( one_event_type == "bsscpageclick" )
+        {// to deal with the "number of pageclick" stuff
+            if( typeof(event_additional) == "number" )
+                this.objManager[one_event_type][ct].nPageClick = event_additional;
+            else // set the default number 
+                this.objManager[one_event_type][ct].nPageClick = 1;
+            
+            if( (typeof(this.objManager.nMinPageClickIndex) == "undefined") ||
+                (this.objManager[one_event_type][ct].nPageClick < 
+                    this.objManager[one_event_type][this.objManager.nMinPageClickIndex].nPageClick) )
+                this.objManager.nMinPageClickIndex = ct;
+        }
+        
+        //hide the object blindly,SetState function will take care of the final correct state
+        if( ((one_event_type == "bsscpageclick") && 
+             (this.objManager[one_event_type][ct].nPageClick == 1)) ||
+            one_event_type == "bsscpageload" ||
+            one_event_type == "bssctrigger1" )
+            CCSSP.ShowObject( this.eleTarget, false );
+        
+        if( one_event_type == "bssctrigger1" || one_event_type == "bssctrigger2" )
+            if( typeof( this.strTriggerEvent ) == "undefined" )
+                this.strTriggerEvent = ( one_event_type == "bssctrigger1" ) ? "bssctrigger2" : "bssctrigger1";
+            
+        return true;
+    }
+    return false;
 }
 
 CTarget.prototype.OnEvent = function( strBsscEvent )
 {// response to the event ( bssc format )
-	if( typeof(this.objManager[strBsscEvent]) == "object" )
-	{ // to get the event agency from the event manager
-		var eventAgency = this.objManager[strBsscEvent];
-		for( var i = 0; i < eventAgency.length; i++ )
-		{
-			if( strBsscEvent == "bsscpageclick" && 
-			 	eventAgency[i].nPageClick != CTarget.nPageClickCounter )
-				 continue;
-			else if( strBsscEvent == "bsschover" && event.type == "mouseout" )
-				eventAgency[i].EndEffect();
-			else // to invoke the unified function in effect object	
-				eventAgency[i].UpdateEffect(); 
-		}
-	}
+    if( typeof(this.objManager[strBsscEvent]) == "object" )
+    { // to get the event agency from the event manager
+        var eventAgency = this.objManager[strBsscEvent];
+        for( var i = 0; i < eventAgency.length; i++ )
+        {
+            if( strBsscEvent == "bsscpageclick" && 
+                eventAgency[i].nPageClick != CTarget.nPageClickCounter )
+                 continue;
+            else if( strBsscEvent == "bsschover" && event.type == "mouseout" )
+                eventAgency[i].EndEffect();
+            else // to invoke the unified function in effect object 
+                eventAgency[i].UpdateEffect(); 
+        }
+    }
 }
 
 CTarget.prototype.SetState = function( strBsscEvent )
 {
-	if( typeof(this.objManager[strBsscEvent]) != "object" )
-		return false;
+    if( typeof(this.objManager[strBsscEvent]) != "object" )
+        return false;
 
-	// to get the event agency from the event manager
-	var eventAgency = this.objManager[strBsscEvent];
-	
-	if( strBsscEvent == "bsscpageclick" )
-	{// we only set the initial state for the minium number of pageclick 
-		eventAgency[this.objManager.nMinPageClickIndex].PrepareEffect();
-		return true;
-	}
-	else
-	{
-		for( var i = 0; i < eventAgency.length; i++ )
-			eventAgency[i].PrepareEffect(); // to invoke the unified function in effect object	 
-		if( i > 0 )
-			return true;
-		else
-			return false;
-	}
+    // to get the event agency from the event manager
+    var eventAgency = this.objManager[strBsscEvent];
+    
+    if( strBsscEvent == "bsscpageclick" )
+    {// we only set the initial state for the minium number of pageclick 
+        eventAgency[this.objManager.nMinPageClickIndex].PrepareEffect();
+        return true;
+    }
+    else
+    {
+        for( var i = 0; i < eventAgency.length; i++ )
+            eventAgency[i].PrepareEffect(); // to invoke the unified function in effect object   
+        if( i > 0 )
+            return true;
+        else
+            return false;
+    }
 }
 //End the definition of class CTarget
 
@@ -4682,218 +4592,218 @@ CEngine.objTarget = new Object();
 CEngine.arrAnimation = new Array();
 CEngine.PerformAnimation = function( nIndex )
 {// animation : update effects function
-	CEngine.arrAnimation[nIndex].UpdateEffect();
+    CEngine.arrAnimation[nIndex].UpdateEffect();
 }
 
 CEngine.AddOneTrigger = function(TriggerID,TriggerElement)
 {// add one Trigger object into the trigger array
-	if( typeof(TriggerID) != "string" || TriggerElement == null ||
-	    typeof(TriggerElement) != "object" )
-		return;
-	if( typeof(CEngine.objTrigger[TriggerID] ) != "object" )
-		CEngine.objTrigger[TriggerID] = new CTrigger(TriggerElement);
+    if( typeof(TriggerID) != "string" || TriggerElement == null ||
+        typeof(TriggerElement) != "object" )
+        return;
+    if( typeof(CEngine.objTrigger[TriggerID] ) != "object" )
+        CEngine.objTrigger[TriggerID] = new CTrigger(TriggerElement);
 }
-	
+    
 CEngine.AddOneTarget = function(TargetID, TargetElement)
 {// add one Target object into the target array
-	if( typeof(TargetID) != "string" || TargetElement == null ||
-		typeof(TargetElement) != "object" )
-		return;
-	if( typeof(CEngine.objTarget[TargetID]) != "object" )
-		CEngine.objTarget[TargetID] = new CTarget( TargetElement );
+    if( typeof(TargetID) != "string" || TargetElement == null ||
+        typeof(TargetElement) != "object" )
+        return;
+    if( typeof(CEngine.objTarget[TargetID]) != "object" )
+        CEngine.objTarget[TargetID] = new CTarget( TargetElement );
 }
 
 CEngine.SendEventToOneTarget = function(strTargetID, strBsscEvent )
 {// to activate one target object
-	if( typeof(CEngine.objTarget[strTargetID]) == "object" ) 
-	{
-		if( strBsscEvent == "bssctrigger1" || strBsscEvent == "bssctrigger2" )
-		{//now, the "bssctrigger1" and "bssctrigger2" work like a toggle
-			if( strBsscEvent == CEngine.objTarget[strTargetID].strTriggerEvent )
-				strBsscEvent = (strBsscEvent == "bssctrigger1") ? "bssctrigger2" : "bssctrigger1";
-			CEngine.objTarget[strTargetID].strTriggerEvent = strBsscEvent;
-		}
-		CEngine.objTarget[strTargetID].OnEvent( strBsscEvent );
-	}
+    if( typeof(CEngine.objTarget[strTargetID]) == "object" ) 
+    {
+        if( strBsscEvent == "bssctrigger1" || strBsscEvent == "bssctrigger2" )
+        {//now, the "bssctrigger1" and "bssctrigger2" work like a toggle
+            if( strBsscEvent == CEngine.objTarget[strTargetID].strTriggerEvent )
+                strBsscEvent = (strBsscEvent == "bssctrigger1") ? "bssctrigger2" : "bssctrigger1";
+            CEngine.objTarget[strTargetID].strTriggerEvent = strBsscEvent;
+        }
+        CEngine.objTarget[strTargetID].OnEvent( strBsscEvent );
+    }
 }
 
 CEngine.SendEventToAllTarget = function( strBsscEvent )
 { //to activate all target associative to the BSSC event
-	for( var strTargetID in CEngine.objTarget ) //to enumerate all target
-		CEngine.SendEventToOneTarget( strTargetID, strBsscEvent );
+    for( var strTargetID in CEngine.objTarget ) //to enumerate all target
+        CEngine.SendEventToOneTarget( strTargetID, strBsscEvent );
 }
 
 CEngine.SetOneTargetInitialState = function( strTargetID )
 {// only invoked after ALL effects for the target have been set
-	if( typeof(CEngine.objTarget[strTargetID]) == "object" ) 
-	{// to get target object
-		var objTarget = CEngine.objTarget[strTargetID];
-		if( objTarget.SetState( "bsscpageload" ) == false )
-		{
-			objTarget.SetState( "bsscpageclick" );
-			objTarget.SetState( "bssctrigger1" );
-		}
-	}
+    if( typeof(CEngine.objTarget[strTargetID]) == "object" ) 
+    {// to get target object
+        var objTarget = CEngine.objTarget[strTargetID];
+        if( objTarget.SetState( "bsscpageload" ) == false )
+        {
+            objTarget.SetState( "bsscpageclick" );
+            objTarget.SetState( "bssctrigger1" );
+        }
+    }
 }
 
 CEngine.AdjustPageClickCounter = function()
 {
-	var nAdjustedClickCounter = CTarget.nPageClickCounter;
-	var bAdjusted = false;
-	for( var strTargetID in CEngine.objTarget ) //to enumerate all target
-	{// try to find the minum pageCliclConter greater than CTarget.nPageClickCounter
-		var objEventPageClick = CEngine.objTarget[strTargetID].objManager.bsscpageclick;
-		if( objEventPageClick != null )
-		{
-			for( var i = 0; i < objEventPageClick.length; i++ )
-			{
-				var nOtherPageClick = objEventPageClick[i].nPageClick;
-				if( nOtherPageClick == CTarget.nPageClickCounter )
-					return;
-				if( nOtherPageClick > CTarget.nPageClickCounter )
-				{
-					if( !bAdjusted )
-					{
-						nAdjustedClickCounter = nOtherPageClick;
-						bAdjusted = true;
-					}
-					else if( nOtherPageClick < nAdjustedClickCounter )
-						nAdjustedClickCounter = nOtherPageClick;
-				}
-			}
-		}
-	}
-	CTarget.nPageClickCounter = nAdjustedClickCounter;
+    var nAdjustedClickCounter = CTarget.nPageClickCounter;
+    var bAdjusted = false;
+    for( var strTargetID in CEngine.objTarget ) //to enumerate all target
+    {// try to find the minum pageCliclConter greater than CTarget.nPageClickCounter
+        var objEventPageClick = CEngine.objTarget[strTargetID].objManager.bsscpageclick;
+        if( objEventPageClick != null )
+        {
+            for( var i = 0; i < objEventPageClick.length; i++ )
+            {
+                var nOtherPageClick = objEventPageClick[i].nPageClick;
+                if( nOtherPageClick == CTarget.nPageClickCounter )
+                    return;
+                if( nOtherPageClick > CTarget.nPageClickCounter )
+                {
+                    if( !bAdjusted )
+                    {
+                        nAdjustedClickCounter = nOtherPageClick;
+                        bAdjusted = true;
+                    }
+                    else if( nOtherPageClick < nAdjustedClickCounter )
+                        nAdjustedClickCounter = nOtherPageClick;
+                }
+            }
+        }
+    }
+    CTarget.nPageClickCounter = nAdjustedClickCounter;
 }
 
 CEngine.OnPageLoad = function()
-{ 	
-	// first, to set all target's initial state
-	for( var strTargetID in CEngine.objTarget )
-		CEngine.SetOneTargetInitialState( strTargetID );
-	
-	// to invoke all target's onpageload handler
-	CEngine.SendEventToAllTarget( "bsscpageload" );
+{   
+    // first, to set all target's initial state
+    for( var strTargetID in CEngine.objTarget )
+        CEngine.SetOneTargetInitialState( strTargetID );
+    
+    // to invoke all target's onpageload handler
+    CEngine.SendEventToAllTarget( "bsscpageload" );
 }
 
 CEngine.OnPageClick = function()
 { // to invoke all target's onpageclick handler
-	var src = CCSSP.GetEventElement( arguments[0] );
-	if( src == null )
-		return;
-		
-	var objClickedTrigger = null;
-	for( var strTriggerID in CEngine.objTrigger )
-	{ // to detect which trigger is clicked
-		if( CCSSP.IsDescendant( CEngine.objTrigger[strTriggerID].eleTrigger,src) )
-		{
-			objClickedTrigger = CEngine.objTrigger[strTriggerID];
-			break;
-		}
-	}
-	
-	if( objClickedTrigger != null) // the clicked trigger found
-		objClickedTrigger.OnTriggerClick();
-	else // no trigger is clicked
-	{ // to send PageClick event to all target
-		CTarget.nPageClickCounter++;
-		CEngine.AdjustPageClickCounter();
-		CEngine.SendEventToAllTarget( "bsscpageclick" );
-	}
-}	
+    var src = CCSSP.GetEventElement( arguments[0] );
+    if( src == null )
+        return;
+        
+    var objClickedTrigger = null;
+    for( var strTriggerID in CEngine.objTrigger )
+    { // to detect which trigger is clicked
+        if( CCSSP.IsDescendant( CEngine.objTrigger[strTriggerID].eleTrigger,src) )
+        {
+            objClickedTrigger = CEngine.objTrigger[strTriggerID];
+            break;
+        }
+    }
+    
+    if( objClickedTrigger != null) // the clicked trigger found
+        objClickedTrigger.OnTriggerClick();
+    else // no trigger is clicked
+    { // to send PageClick event to all target
+        CTarget.nPageClickCounter++;
+        CEngine.AdjustPageClickCounter();
+        CEngine.SendEventToAllTarget( "bsscpageclick" );
+    }
+}   
 
 CEngine.OnMouseOver = function()
 { // to invoke all target's onpageload handler
-	var src = CCSSP.GetEventElement( arguments[0] );
-	if( src == null )
-		return;
-		
-	var strHoveredTargetID = null;
-	for( var strTargetID in CEngine.objTarget )
-	{ // to detect which Target is hovering on
-		if( CCSSP.IsDescendant( CEngine.objTarget[strTargetID].eleTarget, src ) )
-	    {
-			strHoveredTargetID = strTargetID;
-			break;
-	    }
-	}
-	
-	if( strHoveredTargetID != null ) // the hovered target found
-		CEngine.SendEventToOneTarget( strHoveredTargetID, "bsschover" );
+    var src = CCSSP.GetEventElement( arguments[0] );
+    if( src == null )
+        return;
+        
+    var strHoveredTargetID = null;
+    for( var strTargetID in CEngine.objTarget )
+    { // to detect which Target is hovering on
+        if( CCSSP.IsDescendant( CEngine.objTarget[strTargetID].eleTarget, src ) )
+        {
+            strHoveredTargetID = strTargetID;
+            break;
+        }
+    }
+    
+    if( strHoveredTargetID != null ) // the hovered target found
+        CEngine.SendEventToOneTarget( strHoveredTargetID, "bsschover" );
 }
 
 CEngine.BuildTargetObject = function(target_ID,event_type,action_type,
-			action_setting, event_additional)
+            action_setting, event_additional)
 {// to build target object 
-	// to get the target object
-	if( typeof( CEngine.objTarget[target_ID] ) != "object" )
-		return false;// the engine's AddOneTarget function might have failed.
-	var TargetObject = CEngine.objTarget[target_ID];
-	
-	// to prepare the parameters for the event manager
-	var arrEvent = event_type.split("|"); // to split the combined event_type string
-	var arrAction = action_type.split("|");//to split the combined action_type string
-	for( var trim = 0; trim < arrEvent.length; trim++ )
-		arrEvent[trim] = CCSSP.TrimSpace(arrEvent[trim]);
-	
-	for( trim = 0; trim < arrAction.length; trim++ )
-		arrAction[trim] = CCSSP.TrimSpace(arrAction[trim]);
-	
-	var arrSetting = new Array(); 
-	if( typeof(action_setting) == "string" )
-		arrSetting = action_setting.split("|");// to split the combined action_setting string
-	// to calibrate the arrays
-	for( var i = arrSetting.length; i < arrAction.length; i++ )
-	{
-		if( typeof(arrSetting[i]) != "string" )
-			 arrSetting[i] = "";
-	}				 
+    // to get the target object
+    if( typeof( CEngine.objTarget[target_ID] ) != "object" )
+        return false;// the engine's AddOneTarget function might have failed.
+    var TargetObject = CEngine.objTarget[target_ID];
+    
+    // to prepare the parameters for the event manager
+    var arrEvent = event_type.split("|"); // to split the combined event_type string
+    var arrAction = action_type.split("|");//to split the combined action_type string
+    for( var trim = 0; trim < arrEvent.length; trim++ )
+        arrEvent[trim] = CCSSP.TrimSpace(arrEvent[trim]);
+    
+    for( trim = 0; trim < arrAction.length; trim++ )
+        arrAction[trim] = CCSSP.TrimSpace(arrAction[trim]);
+    
+    var arrSetting = new Array(); 
+    if( typeof(action_setting) == "string" )
+        arrSetting = action_setting.split("|");// to split the combined action_setting string
+    // to calibrate the arrays
+    for( var i = arrSetting.length; i < arrAction.length; i++ )
+    {
+        if( typeof(arrSetting[i]) != "string" )
+             arrSetting[i] = "";
+    }                
 
-	// to prepare for dealing with the absolute posioning element
-	TargetObject.eleTarget.ABSX = CCSSP.GetObjectLeft( TargetObject.eleTarget );
-	TargetObject.eleTarget.ABSY = CCSSP.GetObjectTop( TargetObject.eleTarget );
+    // to prepare for dealing with the absolute posioning element
+    TargetObject.eleTarget.ABSX = CCSSP.GetObjectLeft( TargetObject.eleTarget );
+    TargetObject.eleTarget.ABSY = CCSSP.GetObjectTop( TargetObject.eleTarget );
 
-	if( arrEvent.length > 1 )
-	{// if event is combined, it must be : "bssctrigger1 | bssctrigger2"
-		if( arrAction.length != 2 )
-			return false; // if event is combined, there must be 2 actions
-		for( i = 0 ; i < 2; i++ )
-		{
-			if( TargetObject.SetEventManager(arrEvent[i], arrAction[i], 
-				arrSetting[i], event_additional) == false )
-				return false; // the event manager has not been set up
-		}
-	}
-	else // the event_type string is not combined
-	{
-		for( i = 0 ; i < arrAction.length; i++ )
-		{
-			TargetObject.SetEventManager(event_type, arrAction[i], arrSetting[i], event_additional);
-			// to validate the event manager
-			if( typeof(TargetObject.objManager[event_type]) != "object" ||
-					typeof(TargetObject.objManager[event_type][i]) != "object" )
-				return false; // the event manager has not been set up
-		}
-	}
-	return true;
+    if( arrEvent.length > 1 )
+    {// if event is combined, it must be : "bssctrigger1 | bssctrigger2"
+        if( arrAction.length != 2 )
+            return false; // if event is combined, there must be 2 actions
+        for( i = 0 ; i < 2; i++ )
+        {
+            if( TargetObject.SetEventManager(arrEvent[i], arrAction[i], 
+                arrSetting[i], event_additional) == false )
+                return false; // the event manager has not been set up
+        }
+    }
+    else // the event_type string is not combined
+    {
+        for( i = 0 ; i < arrAction.length; i++ )
+        {
+            TargetObject.SetEventManager(event_type, arrAction[i], arrSetting[i], event_additional);
+            // to validate the event manager
+            if( typeof(TargetObject.objManager[event_type]) != "object" ||
+                    typeof(TargetObject.objManager[event_type][i]) != "object" )
+                return false; // the event manager has not been set up
+        }
+    }
+    return true;
 }
 
 CEngine.BuildTriggerObject = function(trigger_ID, target_ID)
 {// to build the trigger object
-	var arrTrigger = trigger_ID.split("|"); // to split the combined trigger_ID string
-	for( var i = 0; i < arrTrigger.length; i ++ )
-	{// to get the trigger element then add it to the trigger list
-		arrTrigger[i] = CCSSP.TrimSpace( arrTrigger[i] );
-		var eleTrigger = CCSSP.GetObject( arrTrigger[i] );
-		if( eleTrigger == null )
-			continue; // the trigger_ID string in the HTML code maybe wrong
-		CEngine.AddOneTrigger( arrTrigger[i], eleTrigger );
+    var arrTrigger = trigger_ID.split("|"); // to split the combined trigger_ID string
+    for( var i = 0; i < arrTrigger.length; i ++ )
+    {// to get the trigger element then add it to the trigger list
+        arrTrigger[i] = CCSSP.TrimSpace( arrTrigger[i] );
+        var eleTrigger = CCSSP.GetObject( arrTrigger[i] );
+        if( eleTrigger == null )
+            continue; // the trigger_ID string in the HTML code maybe wrong
+        CEngine.AddOneTrigger( arrTrigger[i], eleTrigger );
 
-		// to get the target object
-		if( typeof( this.objTrigger[arrTrigger[i]] ) != "object" )
-			continue;// the engine's AddOneTarget function might have failed.
-		CEngine.objTrigger[arrTrigger[i]].AddTargetID( target_ID );
-	}
+        // to get the target object
+        if( typeof( this.objTrigger[arrTrigger[i]] ) != "object" )
+            continue;// the engine's AddOneTarget function might have failed.
+        CEngine.objTrigger[arrTrigger[i]].AddTargetID( target_ID );
+    }
 }
 //End the definition of CEngine class
 
@@ -4906,458 +4816,458 @@ CEngine.BuildTriggerObject = function(trigger_ID, target_ID)
 //Begin of the CAgencyShow definition
 function CAgencyShow( element, bIsShow )
 {
-	this.ele = element;
-	this.bIsShow = bIsShow;
+    this.ele = element;
+    this.bIsShow = bIsShow;
 }
 
 CAgencyShow.prototype.PrepareEffect = function()
 {
-	CCSSP.ShowObject( this.ele, !this.bIsShow );
+    CCSSP.ShowObject( this.ele, !this.bIsShow );
 }
 
 CAgencyShow.prototype.UpdateEffect = function()
 {
-	CCSSP.ShowObject( this.ele, this.bIsShow );
+    CCSSP.ShowObject( this.ele, this.bIsShow );
 }
 
 CAgencyShow.prototype.EndEffect = function()
 {
-	CCSSP.ShowObject( this.ele, !this.bIsShow );
+    CCSSP.ShowObject( this.ele, !this.bIsShow );
 }
 // End of the CAgencyShow definition
 
 // Begin of CAgencyFly definition
 function CAgencyFly( element, settings, bIsIn )
 {
-	this.ele = element;
-	this.bIsIn = bIsIn;
-	this.duration = 1000; // default
-	this.direction = "right";
+    this.ele = element;
+    this.bIsIn = bIsIn;
+    this.duration = 1000; // default
+    this.direction = "right";
 
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{// to retrieve the setting
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "speed" : this.duration = 100000/arrOneSet[1]; break;
-		case "direction" : this.direction = arrOneSet[1]; break;
-		}
-	}
-		
-	if( gbBsIE5 && this.ele.style.position != "absolute" )
-		this.ele.style.position = "relative";
-	this.timer = null;
-	this.aniIndex = CEngine.arrAnimation.length;
-	CEngine.arrAnimation[this.aniIndex] = this;
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {// to retrieve the setting
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "speed" : this.duration = 100000/arrOneSet[1]; break;
+        case "direction" : this.direction = arrOneSet[1]; break;
+        }
+    }
+        
+    if( gbBsIE5 && this.ele.style.position != "absolute" )
+        this.ele.style.position = "relative";
+    this.timer = null;
+    this.aniIndex = CEngine.arrAnimation.length;
+    CEngine.arrAnimation[this.aniIndex] = this;
 }
 
 CAgencyFly.prototype.PrepareEffect = function()
 {
-	CCSSP.ShowObject(this.ele, !this.bIsIn );
+    CCSSP.ShowObject(this.ele, !this.bIsIn );
 }
 
 CAgencyFly.prototype.UpdateEffect = function()
 {
-	if( this.timer == null )
-		this.ResetParameters();
+    if( this.timer == null )
+        this.ResetParameters();
 
-	var percent = ((new Date()).getTime() - this.startTime)/this.duration;
-	if( percent >= 1.0 )
-		this.EndEffect();
-	else
-	{
-		var newX = this.startX*(1.0-percent) +  this.finalX*percent;
-		var newY = this.startY*(1.0-percent) +  this.finalY*percent;
-		CCSSP.MoveObjectTo(this.ele, newX, newY);
-		if( this.timer == null )
-			this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
-	}
+    var percent = ((new Date()).getTime() - this.startTime)/this.duration;
+    if( percent >= 1.0 )
+        this.EndEffect();
+    else
+    {
+        var newX = this.startX*(1.0-percent) +  this.finalX*percent;
+        var newY = this.startY*(1.0-percent) +  this.finalY*percent;
+        CCSSP.MoveObjectTo(this.ele, newX, newY);
+        if( this.timer == null )
+            this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
+    }
 }
 
 CAgencyFly.prototype.EndEffect = function()
 {
-	clearInterval( this.timer );
-	this.timer = null;
+    clearInterval( this.timer );
+    this.timer = null;
 
-	if( this.bIsIn ) // FlyIn
-		CCSSP.MoveObjectTo(this.ele, this.finalX, this.finalY);
-	else // FlyOut
-		CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
-	CCSSP.ShowObject(this.ele, this.bIsIn );
+    if( this.bIsIn ) // FlyIn
+        CCSSP.MoveObjectTo(this.ele, this.finalX, this.finalY);
+    else // FlyOut
+        CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
+    CCSSP.ShowObject(this.ele, this.bIsIn );
 }
 
 CAgencyFly.prototype.ResetParameters = function()
 {
-	this.PrepareEffect();
-	CCSSP.ShowObject(this.ele, true );
+    this.PrepareEffect();
+    CCSSP.ShowObject(this.ele, true );
 
-	this.startX = 0;
-	this.startY = 0;
-	this.finalX = 0;
-	this.finalY = 0; 
-	
-	var offsetLeft = CCSSP.GetObjectWindowLeft(this.ele) + this.ele.offsetWidth;
-	var offsetTop = CCSSP.GetObjectWindowTop(this.ele) + this.ele.offsetHeight;
-	var offsetRight = CCSSP.GetWindowRight();
-	var offsetBottom = CCSSP.GetWindowBottom();
+    this.startX = 0;
+    this.startY = 0;
+    this.finalX = 0;
+    this.finalY = 0; 
+    
+    var offsetLeft = CCSSP.GetObjectWindowLeft(this.ele) + this.ele.offsetWidth;
+    var offsetTop = CCSSP.GetObjectWindowTop(this.ele) + this.ele.offsetHeight;
+    var offsetRight = CCSSP.GetWindowRight();
+    var offsetBottom = CCSSP.GetWindowBottom();
 
-	if( this.bIsIn )
-	{ // FlyIn
-		this.finalX = this.ele.ABSX;
-		this.finalY = this.ele.ABSY;
+    if( this.bIsIn )
+    { // FlyIn
+        this.finalX = this.ele.ABSX;
+        this.finalY = this.ele.ABSY;
 
-		switch( this.direction )
-		{
-		case "right": this.startX = offsetRight; this.startY = this.finalY; break;
-		case "left": this.startX = -offsetLeft;  this.startY = this.finalY; break;
-		case "down": this.startY = offsetBottom; this.startX = this.finalX; break;
-		case "up":  this.startY = -offsetTop;    this.startX = this.finalX; break;
-		case "downright":
-  			this.startX = ( offsetBottom < offsetRight) ? offsetBottom : offsetRight;
-			this.startY = this.startX;		break;
-		case "upright":
-  			this.startX = (offsetTop < offsetRight)? offsetTop : offsetRight;
-			this.startY = -this.startX;		break;
-		case "upleft":
-			this.startX = -((offsetTop < offsetRight)? offsetTop : offsetRight);
-			this.startY = this.startX;		break;
-		case "downleft":
-			this.startX = -(( offsetBottom < offsetRight) ? offsetBottom : offsetRight);
-			this.startY = -this.startX;     break;
-		}
-	}
-	else
-	{ // FlyOut
-		this.startX = this.ele.ABSX;
-		this.startY = this.ele.ABSY;
+        switch( this.direction )
+        {
+        case "right": this.startX = offsetRight; this.startY = this.finalY; break;
+        case "left": this.startX = -offsetLeft;  this.startY = this.finalY; break;
+        case "down": this.startY = offsetBottom; this.startX = this.finalX; break;
+        case "up":  this.startY = -offsetTop;    this.startX = this.finalX; break;
+        case "downright":
+            this.startX = ( offsetBottom < offsetRight) ? offsetBottom : offsetRight;
+            this.startY = this.startX;      break;
+        case "upright":
+            this.startX = (offsetTop < offsetRight)? offsetTop : offsetRight;
+            this.startY = -this.startX;     break;
+        case "upleft":
+            this.startX = -((offsetTop < offsetRight)? offsetTop : offsetRight);
+            this.startY = this.startX;      break;
+        case "downleft":
+            this.startX = -(( offsetBottom < offsetRight) ? offsetBottom : offsetRight);
+            this.startY = -this.startX;     break;
+        }
+    }
+    else
+    { // FlyOut
+        this.startX = this.ele.ABSX;
+        this.startY = this.ele.ABSY;
 
-		switch( this.direction )
-		{
-		case "right": this.finalX = offsetRight;  this.finalY = this.startY; break;
-		case "left": this.finalX = -offsetLeft;   this.finalY = this.startY;  break;
-		case "down": this.finalY = offsetBottom;  this.finalX = this.startX; break;
-		case "up":  this.finalY = -offsetTop;     this.finalX = this.startX; break;
-		case "downright":
-  			this.finalX = ( offsetBottom < offsetRight) ? offsetBottom : offsetRight;
-			this.finalY = this.finalX;		break;
-		case "upright":
-  			this.finalX = (offsetTop < offsetRight)? offsetTop : offsetRight;
-			this.finalY = -this.finalX;		break;
-		case "upleft":
-			this.finalX = -((offsetTop < offsetRight)? offsetTop : offsetRight);
-			this.finalY = this.finalX;		break;
-		case "downleft":
-			this.finalX = -(( offsetBottom < offsetRight) ? offsetBottom : offsetRight);
-			this.finalY = -this.finalX;     break;
-		}
-	}
-	CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
-	this.startTime = (new Date()).getTime();
+        switch( this.direction )
+        {
+        case "right": this.finalX = offsetRight;  this.finalY = this.startY; break;
+        case "left": this.finalX = -offsetLeft;   this.finalY = this.startY;  break;
+        case "down": this.finalY = offsetBottom;  this.finalX = this.startX; break;
+        case "up":  this.finalY = -offsetTop;     this.finalX = this.startX; break;
+        case "downright":
+            this.finalX = ( offsetBottom < offsetRight) ? offsetBottom : offsetRight;
+            this.finalY = this.finalX;      break;
+        case "upright":
+            this.finalX = (offsetTop < offsetRight)? offsetTop : offsetRight;
+            this.finalY = -this.finalX;     break;
+        case "upleft":
+            this.finalX = -((offsetTop < offsetRight)? offsetTop : offsetRight);
+            this.finalY = this.finalX;      break;
+        case "downleft":
+            this.finalX = -(( offsetBottom < offsetRight) ? offsetBottom : offsetRight);
+            this.finalY = -this.finalX;     break;
+        }
+    }
+    CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
+    this.startTime = (new Date()).getTime();
 }
 // End of the CAgencyFly definition
 
 // Begin of CAgencySpiral
 function CAgencySpiral( element, settings, bIsIn )
 {
-	this.ele = element;
-	this.bIsIn = bIsIn;
-	this.duration = 1000; // default
+    this.ele = element;
+    this.bIsIn = bIsIn;
+    this.duration = 1000; // default
 
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{// to retrieve the setting
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "speed" : this.duration = 100000/arrOneSet[1]; break;
-		}
-	}
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {// to retrieve the setting
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "speed" : this.duration = 100000/arrOneSet[1]; break;
+        }
+    }
 
-	if( gbBsIE5 && this.ele.style.position != "absolute" )
-		this.ele.style.position = "relative";
-	this.timer = null;
-	this.aniIndex = CEngine.arrAnimation.length;
-	CEngine.arrAnimation[this.aniIndex] = this;
+    if( gbBsIE5 && this.ele.style.position != "absolute" )
+        this.ele.style.position = "relative";
+    this.timer = null;
+    this.aniIndex = CEngine.arrAnimation.length;
+    CEngine.arrAnimation[this.aniIndex] = this;
 }
 
 CAgencySpiral.prototype.PrepareEffect = function()
 {
-	CCSSP.ShowObject(this.ele, !this.bIsIn );
+    CCSSP.ShowObject(this.ele, !this.bIsIn );
 }
 
 CAgencySpiral.prototype.UpdateEffect = function()
 {
-	if( this.timer == null )
-		this.ResetParameters();
+    if( this.timer == null )
+        this.ResetParameters();
 
-	var percent = ((new Date()).getTime() - this.startTime)/this.duration;
-	if( percent >= 1.0 )
-		this.EndEffect();
-	else
-	{
-		var rf = (this.bIsIn)? (1.0 - percent) : percent; 
-		var t = (1.0-rf) * 4.0 * Math.PI
-		var rxP = (this.bIsIn)? this.startX : this.finalX; 
-		var ryP = (this.bIsIn)? this.startY : this.finalY; 
-		var rx = (Math.abs(rxP) < 200) ? Math.abs(rxP) : 200;
-		var ry = (Math.abs(ryP) < 200) ? Math.abs(ryP) : 200;
+    var percent = ((new Date()).getTime() - this.startTime)/this.duration;
+    if( percent >= 1.0 )
+        this.EndEffect();
+    else
+    {
+        var rf = (this.bIsIn)? (1.0 - percent) : percent; 
+        var t = (1.0-rf) * 4.0 * Math.PI
+        var rxP = (this.bIsIn)? this.startX : this.finalX; 
+        var ryP = (this.bIsIn)? this.startY : this.finalY; 
+        var rx = (Math.abs(rxP) < 200) ? Math.abs(rxP) : 200;
+        var ry = (Math.abs(ryP) < 200) ? Math.abs(ryP) : 200;
 
-		var newX = Math.ceil(-rf*Math.cos(t)*rx) + this.ele.ABSX;
-		var newY = Math.ceil(-rf*Math.sin(t)*ry) + this.ele.ABSY;
-		CCSSP.MoveObjectTo(this.ele, newX, newY);
-		if( this.timer == null )
-			this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
-	}
+        var newX = Math.ceil(-rf*Math.cos(t)*rx) + this.ele.ABSX;
+        var newY = Math.ceil(-rf*Math.sin(t)*ry) + this.ele.ABSY;
+        CCSSP.MoveObjectTo(this.ele, newX, newY);
+        if( this.timer == null )
+            this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
+    }
 }
 
 CAgencySpiral.prototype.EndEffect = function()
 {
-	clearInterval( this.timer );
-	this.timer = null;
-	
-	if( this.bIsIn ) // In
-		CCSSP.MoveObjectTo(this.ele, this.finalX, this.finalY);
-	else // Out
-		CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
-	CCSSP.ShowObject(this.ele, this.bIsIn );
+    clearInterval( this.timer );
+    this.timer = null;
+    
+    if( this.bIsIn ) // In
+        CCSSP.MoveObjectTo(this.ele, this.finalX, this.finalY);
+    else // Out
+        CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
+    CCSSP.ShowObject(this.ele, this.bIsIn );
 }
 
 CAgencySpiral.prototype.ResetParameters = function()
 {
-	this.PrepareEffect();
-	CCSSP.ShowObject(this.ele, true );
-	this.startX = (this.bIsIn)? CCSSP.GetWindowRight() : this.ele.ABSX;
-	this.startY = (this.bIsIn)? CCSSP.GetWindowBottom() : this.ele.ABSY;
-	this.finalX = (this.bIsIn)? this.ele.ABSX : CCSSP.GetWindowRight();
-	this.finalY = (this.bIsIn)? this.ele.ABSY : CCSSP.GetWindowBottom(); 
-	
-	CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
-	this.startTime = (new Date()).getTime();
+    this.PrepareEffect();
+    CCSSP.ShowObject(this.ele, true );
+    this.startX = (this.bIsIn)? CCSSP.GetWindowRight() : this.ele.ABSX;
+    this.startY = (this.bIsIn)? CCSSP.GetWindowBottom() : this.ele.ABSY;
+    this.finalX = (this.bIsIn)? this.ele.ABSX : CCSSP.GetWindowRight();
+    this.finalY = (this.bIsIn)? this.ele.ABSY : CCSSP.GetWindowBottom(); 
+    
+    CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
+    this.startTime = (new Date()).getTime();
 }
 // End of CAgencySpiral
 
 // Begin of CAgencyElastic
 function CAgencyElastic( element, settings)
 {
-	this.ele = element;
-	this.duration = 1000; // default
-	this.direction = "right";
+    this.ele = element;
+    this.duration = 1000; // default
+    this.direction = "right";
 
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{// to retrieve the setting
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "speed" : this.duration = 100000/arrOneSet[1]; break;
-		case "direction" : this.direction = arrOneSet[1]; break;
-		}
-	}
-		
-	if( gbBsIE5 && this.ele.style.position != "absolute" )
-		this.ele.style.position = "relative";
-	this.timer = null;
-	this.aniIndex = CEngine.arrAnimation.length;
-	CEngine.arrAnimation[this.aniIndex] = this;
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {// to retrieve the setting
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "speed" : this.duration = 100000/arrOneSet[1]; break;
+        case "direction" : this.direction = arrOneSet[1]; break;
+        }
+    }
+        
+    if( gbBsIE5 && this.ele.style.position != "absolute" )
+        this.ele.style.position = "relative";
+    this.timer = null;
+    this.aniIndex = CEngine.arrAnimation.length;
+    CEngine.arrAnimation[this.aniIndex] = this;
 }
 
 CAgencyElastic.prototype.PrepareEffect = function()
 {
-	CCSSP.ShowObject(this.ele, false );
+    CCSSP.ShowObject(this.ele, false );
 }
 
 CAgencyElastic.prototype.UpdateEffect = function()
 {
-	if( this.timer == null )
-		this.ResetParameters();
+    if( this.timer == null )
+        this.ResetParameters();
 
-	var percent = ((new Date()).getTime() - this.startTime)/this.duration;
-	if( percent >= 1.0 )
-		this.EndEffect();
-	else
-	{
-		var newX = this.startX;
-		var newY = this.startY;
-		var rf = Math.exp(-percent*3);
-		var t = percent * 1.5 * Math.PI
-		var rx = (Math.abs(this.startX) > Math.abs(this.startY)) ? this.startX : this.startY;
-		switch (this.direction )
-		{
-		case "left":   
-		case "right" : newX = rf*Math.cos(t)*rx + this.ele.ABSX; break;
-		case "up":	   
-		case "down" :  newY = rf*Math.cos(t)*rx + this.ele.ABSX; break;
-		}
-		CCSSP.MoveObjectTo(this.ele, newX, newY);
-		if( this.timer == null )
-			this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
-	}
+    var percent = ((new Date()).getTime() - this.startTime)/this.duration;
+    if( percent >= 1.0 )
+        this.EndEffect();
+    else
+    {
+        var newX = this.startX;
+        var newY = this.startY;
+        var rf = Math.exp(-percent*3);
+        var t = percent * 1.5 * Math.PI
+        var rx = (Math.abs(this.startX) > Math.abs(this.startY)) ? this.startX : this.startY;
+        switch (this.direction )
+        {
+        case "left":   
+        case "right" : newX = rf*Math.cos(t)*rx + this.ele.ABSX; break;
+        case "up":     
+        case "down" :  newY = rf*Math.cos(t)*rx + this.ele.ABSX; break;
+        }
+        CCSSP.MoveObjectTo(this.ele, newX, newY);
+        if( this.timer == null )
+            this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
+    }
 }
 
 CAgencyElastic.prototype.EndEffect = function()
 {
-	CCSSP.MoveObjectTo(this.ele, this.finalX, this.finalY);
-	clearInterval( this.timer );
-	this.timer = null;
+    CCSSP.MoveObjectTo(this.ele, this.finalX, this.finalY);
+    clearInterval( this.timer );
+    this.timer = null;
 }
 
 CAgencyElastic.prototype.ResetParameters = function()
 {
-	CCSSP.ShowObject(this.ele, true );
-	this.startX = this.ele.ABSX;
-	this.finalX = this.ele.ABSX;
-	this.startY = this.ele.ABSY;
-	this.finalY = this.ele.ABSY;
-	
-	switch (this.direction)
-	{ 
-	case "left":  this.startX = -this.ele.offsetWidth; break;
-	case "right": this.startX = this.ele.offsetWidth;  break;
-	case "up":    this.startY = -this.ele.offsetHeight;break;
-	case "down":  this.startY = this.ele.offsetHeight; break;
-	}
-	CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
-	this.startTime = (new Date()).getTime();
+    CCSSP.ShowObject(this.ele, true );
+    this.startX = this.ele.ABSX;
+    this.finalX = this.ele.ABSX;
+    this.startY = this.ele.ABSY;
+    this.finalY = this.ele.ABSY;
+    
+    switch (this.direction)
+    { 
+    case "left":  this.startX = -this.ele.offsetWidth; break;
+    case "right": this.startX = this.ele.offsetWidth;  break;
+    case "up":    this.startY = -this.ele.offsetHeight;break;
+    case "down":  this.startY = this.ele.offsetHeight; break;
+    }
+    CCSSP.MoveObjectTo(this.ele, this.startX, this.startY);
+    this.startTime = (new Date()).getTime();
 }
 // End of CAgencyElastic
 
 // Begin of CAgencyZoom
 function CAgencyZoom( element, settings, bIsIn)
 {
-	this.ele = element;
-	this.duration = 1000; // default
-	
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{// to retrieve the setting
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "speed" : this.duration = 100000/arrOneSet[1]; break;
-		}
-	}
+    this.ele = element;
+    this.duration = 1000; // default
+    
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {// to retrieve the setting
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "speed" : this.duration = 100000/arrOneSet[1]; break;
+        }
+    }
 
-	this.bIsIn = bIsIn;
-	this.timer = null;
-	this.aniIndex = CEngine.arrAnimation.length;
-	CEngine.arrAnimation[this.aniIndex] = this;
+    this.bIsIn = bIsIn;
+    this.timer = null;
+    this.aniIndex = CEngine.arrAnimation.length;
+    CEngine.arrAnimation[this.aniIndex] = this;
 }
 
 CAgencyZoom.prototype.PrepareEffect = function()
 {
-	CCSSP.ShowObject(this.ele, false);
+    CCSSP.ShowObject(this.ele, false);
 }
 
 CAgencyZoom.prototype.UpdateEffect = function()
 {
-	if( this.timer == null )
-		this.ResetParameters();
+    if( this.timer == null )
+        this.ResetParameters();
 
-	var percent = ((new Date()).getTime() - this.startTime)/this.duration;
-	if( percent >= 1.0 )
-		this.EndEffect();
-	else
-	{
-		var nFactorIn = Math.ceil(50+50*percent);
-		var nFactorOut = Math.ceil(100+200*(1-percent));
-		var AlterFontsize = ((this.bIsIn)? nFactorIn : nFactorOut) + "%";
-		var AlterFactor = ((this.bIsIn)? nFactorIn : nFactorOut) / 100;
-		
-		this.UpdateEffectAllChildren(this.ele, AlterFontsize, AlterFactor);
-		for(var index = 0; index < this.ele.all.length; index++)
-			this.UpdateEffectAllChildren(this.ele.all[index], AlterFontsize, AlterFactor);
-			
-		if( this.timer == null )
-			this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
-	}
+    var percent = ((new Date()).getTime() - this.startTime)/this.duration;
+    if( percent >= 1.0 )
+        this.EndEffect();
+    else
+    {
+        var nFactorIn = Math.ceil(50+50*percent);
+        var nFactorOut = Math.ceil(100+200*(1-percent));
+        var AlterFontsize = ((this.bIsIn)? nFactorIn : nFactorOut) + "%";
+        var AlterFactor = ((this.bIsIn)? nFactorIn : nFactorOut) / 100;
+        
+        this.UpdateEffectAllChildren(this.ele, AlterFontsize, AlterFactor);
+        for(var index = 0; index < this.ele.all.length; index++)
+            this.UpdateEffectAllChildren(this.ele.all[index], AlterFontsize, AlterFactor);
+            
+        if( this.timer == null )
+            this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
+    }
 }
 
 CAgencyZoom.prototype.UpdateEffectAllChildren = function(child, FontSize, Factor)
 {
-	if( CCSSP.IsTextTag(child) )
-		child.style.fontSize = FontSize;
-	else
-	{
-		if( typeof(child.orgWidth) == "number" )
-			child.style.width = Factor * child.orgWidth;
-		if( typeof(child.orgHeight) == "number" )
-			child.style.height = Factor * child.orgHeight;
-	}
+    if( CCSSP.IsTextTag(child) )
+        child.style.fontSize = FontSize;
+    else
+    {
+        if( typeof(child.orgWidth) == "number" )
+            child.style.width = Factor * child.orgWidth;
+        if( typeof(child.orgHeight) == "number" )
+            child.style.height = Factor * child.orgHeight;
+    }
 }
 
 CAgencyZoom.prototype.EndEffect = function()
 {
-	this.EndEffectAllChildren(this.ele);
-	for(var index = 0; index < this.ele.all.length; index++)
-		this.EndEffectAllChildren(this.ele.all[index]);
-	
-	clearInterval( this.timer );
-	this.timer = null;
+    this.EndEffectAllChildren(this.ele);
+    for(var index = 0; index < this.ele.all.length; index++)
+        this.EndEffectAllChildren(this.ele.all[index]);
+    
+    clearInterval( this.timer );
+    this.timer = null;
 }
 
 CAgencyZoom.prototype.EndEffectAllChildren = function( child )
-{	
-	if( CCSSP.IsTextTag(child) )
-		child.style.fontSize = child.orgFontSize;
-	else
-	{
-		if( typeof(child.intactWidth) != "undefined" )
-		{
-			child.width = child.intactWidth;
-			child.height = child.intactHeight;
-		}
-		else if( typeof(child.style.intactPixelWidth) != "undefined" )
-		{
-			child.style.pixelWidth = child.style.intactPixelWidth;
-			child.style.pixelHeight = child.style.intactPixelHeight;
-		}
-	}
+{   
+    if( CCSSP.IsTextTag(child) )
+        child.style.fontSize = child.orgFontSize;
+    else
+    {
+        if( typeof(child.intactWidth) != "undefined" )
+        {
+            child.width = child.intactWidth;
+            child.height = child.intactHeight;
+        }
+        else if( typeof(child.style.intactPixelWidth) != "undefined" )
+        {
+            child.style.pixelWidth = child.style.intactPixelWidth;
+            child.style.pixelHeight = child.style.intactPixelHeight;
+        }
+    }
 }
 
 CAgencyZoom.prototype.ResetParameters = function()
 {
-	this.PrepareEffect();
-	this.ResetParametersAllChildren( this.ele );
-	for(var index = 0; index < this.ele.all.length; index++)
-		this.ResetParametersAllChildren(this.ele.all[index]);
-		
-	this.startTime = (new Date()).getTime();
+    this.PrepareEffect();
+    this.ResetParametersAllChildren( this.ele );
+    for(var index = 0; index < this.ele.all.length; index++)
+        this.ResetParametersAllChildren(this.ele.all[index]);
+        
+    this.startTime = (new Date()).getTime();
 }
 
 CAgencyZoom.prototype.ResetParametersAllChildren = function( child )
 {
-	CCSSP.ShowObject(child, true );
-	if( (child.tagName == "DIV") && (getParentNode(child).tagName == "TD") )
-		child.width = "100%";// if the div is inside a cell of table, we need the this hack
-	
-	if( CCSSP.IsTextTag(child) )
-		child.orgFontSize = child.style.fontSize;
-	else
-	{
-		if( child.width > "" || child.height > "" )
-		{
-			child.orgWidth = child.intactWidth = child.width;
-			child.orgHeight = child.intactHeight = child.height;
-		}
-		else if( ( typeof(child.orgWidth) != "number" ) && (typeof(child.orgHeight) != "number") )
-		{
-			child.orgWidth = child.style.intactPixelWidth = child.style.pixelWidth;
-			child.orgHeight = child.style.intactPixelHeight = child.style.pixelHeight;
-		}
-	}
+    CCSSP.ShowObject(child, true );
+    if( (child.tagName == "DIV") && (getParentNode(child).tagName == "TD") )
+        child.width = "100%";// if the div is inside a cell of table, we need the this hack
+    
+    if( CCSSP.IsTextTag(child) )
+        child.orgFontSize = child.style.fontSize;
+    else
+    {
+        if( child.width > "" || child.height > "" )
+        {
+            child.orgWidth = child.intactWidth = child.width;
+            child.orgHeight = child.intactHeight = child.height;
+        }
+        else if( ( typeof(child.orgWidth) != "number" ) && (typeof(child.orgHeight) != "number") )
+        {
+            child.orgWidth = child.style.intactPixelWidth = child.style.pixelWidth;
+            child.orgHeight = child.style.intactPixelHeight = child.style.pixelHeight;
+        }
+    }
 }
 // End of CAgencyZoom
 
@@ -5365,391 +5275,391 @@ CAgencyZoom.prototype.ResetParametersAllChildren = function( child )
 // Begin of CAgencyAlpha definition
 function CAgencyAlpha( element, settings, bIsIn )
 {// because of "visual filter" style, this won't work in Navigator
-	this.ele = element;
-	this.bIsIn = bIsIn;
+    this.ele = element;
+    this.bIsIn = bIsIn;
 
-	// to set the default value
-	this.startOpacity = (this.bIsIn) ? 0 : 100;
-	this.endOpacity = (this.bIsIn) ? 100 : 0;
-	
-	this.duration = 1000; // default
-	
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{// to retrieve the setting
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "speed" : this.duration = 100000/arrOneSet[1]; break;
-		}
-	}
-	
-	this.timer = null;
-	this.aniIndex = CEngine.arrAnimation.length;
-	CEngine.arrAnimation[this.aniIndex] = this;
+    // to set the default value
+    this.startOpacity = (this.bIsIn) ? 0 : 100;
+    this.endOpacity = (this.bIsIn) ? 100 : 0;
+    
+    this.duration = 1000; // default
+    
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {// to retrieve the setting
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "speed" : this.duration = 100000/arrOneSet[1]; break;
+        }
+    }
+    
+    this.timer = null;
+    this.aniIndex = CEngine.arrAnimation.length;
+    CEngine.arrAnimation[this.aniIndex] = this;
 }
 
 CAgencyAlpha.prototype.PrepareEffect = function()
 {// to set the visual filter function
-	// the visual filter ONLY work when set by "Width and Height" or
-	// absolute position for DIV, SPAN and normal tag ( such as p )
-	// but, "absolute" cause the following elements overlap, so:
-	CCSSP.PrepareFilter( this.ele );
-	CCSSP.ShowObject(this.ele, !this.bIsIn );
+    // the visual filter ONLY work when set by "Width and Height" or
+    // absolute position for DIV, SPAN and normal tag ( such as p )
+    // but, "absolute" cause the following elements overlap, so:
+    CCSSP.PrepareFilter( this.ele );
+    CCSSP.ShowObject(this.ele, !this.bIsIn );
 }
 
 CAgencyAlpha.prototype.UpdateEffect = function()
 {// to set the visual filter function
-	if( this.timer == null )
-		this.ResetParameters();
-	if( typeof(this.ele.filters.alpha) != "object" )
-	{
-		this.EndEffect();
-		return;
-	}
+    if( this.timer == null )
+        this.ResetParameters();
+    if( typeof(this.ele.filters.alpha) != "object" )
+    {
+        this.EndEffect();
+        return;
+    }
 
-	var percent = ((new Date()).getTime() - this.startTime)/this.duration;
-	if( percent >= 1.0 )
-		this.EndEffect();
-	else if( typeof(this.ele.filters.alpha) == "object" )
-	{
-		this.ele.filters.alpha.opacity = this.startOpacity*(1.0-percent) + this.endOpacity*percent;
-		if( this.timer == null )
-			this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
-	}
+    var percent = ((new Date()).getTime() - this.startTime)/this.duration;
+    if( percent >= 1.0 )
+        this.EndEffect();
+    else if( typeof(this.ele.filters.alpha) == "object" )
+    {
+        this.ele.filters.alpha.opacity = this.startOpacity*(1.0-percent) + this.endOpacity*percent;
+        if( this.timer == null )
+            this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 20 );
+    }
 }
 
 CAgencyAlpha.prototype.EndEffect = function()
 {// to remove the visual filter function
-	clearInterval( this.timer );
-	this.timer = null;
-	this.ele.style.filter = "";
-	CCSSP.ShowObject(this.ele, this.bIsIn );
+    clearInterval( this.timer );
+    this.timer = null;
+    this.ele.style.filter = "";
+    CCSSP.ShowObject(this.ele, this.bIsIn );
 }
 
 CAgencyAlpha.prototype.ResetParameters = function()
 {
-	this.PrepareEffect();
-	CCSSP.ShowObject(this.ele, true );
-	this.ele.style.filter = "alpha(opacity=" + this.startOpacity + ")";
-	this.startTime = (new Date()).getTime();
+    this.PrepareEffect();
+    CCSSP.ShowObject(this.ele, true );
+    this.ele.style.filter = "alpha(opacity=" + this.startOpacity + ")";
+    this.startTime = (new Date()).getTime();
 }
 // End of the CAgencyAlpha definition
 
 // Begin of CAgencyWave definition
 function CAgencyWave( element, settings )
 {// because of "visual filter" style, this won't work in Navigator
-	this.ele = element;
+    this.ele = element;
 
-	this.duration = 0; // default
-	this.strength = 10;
-	this.freq = 1;
-	this.lightstrength = 1;
-	
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{// to retrieve the setting
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "duration" : this.duration = 100000/arrOneSet[1]; break;
-		case "strength" : this.strength = arrOneSet[1]; break;
-		case "freq" : this.freq = arrOneSet[1]; break;
-		case "lightstrength" : this.lightstrength = arrOneSet[1]; break;
-		}
-	}
+    this.duration = 0; // default
+    this.strength = 10;
+    this.freq = 1;
+    this.lightstrength = 1;
+    
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {// to retrieve the setting
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "duration" : this.duration = 100000/arrOneSet[1]; break;
+        case "strength" : this.strength = arrOneSet[1]; break;
+        case "freq" : this.freq = arrOneSet[1]; break;
+        case "lightstrength" : this.lightstrength = arrOneSet[1]; break;
+        }
+    }
 
-	this.timer = null;
-	this.aniIndex = CEngine.arrAnimation.length;
-	CEngine.arrAnimation[this.aniIndex] = this;
+    this.timer = null;
+    this.aniIndex = CEngine.arrAnimation.length;
+    CEngine.arrAnimation[this.aniIndex] = this;
 }
 
 CAgencyWave.prototype.PrepareEffect = function()
 {// to set the visual filter function
-	CCSSP.PrepareFilter(this.ele);
+    CCSSP.PrepareFilter(this.ele);
 
-	CCSSP.ShowObject(this.ele, true );
+    CCSSP.ShowObject(this.ele, true );
 }
 
 CAgencyWave.prototype.UpdateEffect = function()
 {// to set the visual filter function
-	if( this.timer == null )
-		this.ResetParameters();
-	if( typeof(this.ele.filters.wave) != "object" )
-	{
-		this.EndEffect();
-		return;
-	}
+    if( this.timer == null )
+        this.ResetParameters();
+    if( typeof(this.ele.filters.wave) != "object" )
+    {
+        this.EndEffect();
+        return;
+    }
 
-	if( this.duration > 0 )
-	{
-		var percent = ((new Date()).getTime() - this.startTime)/this.duration;
-		if( percent >= 1.0 )
-		{
-			this.EndEffect();
-			return;
-		}
-	}
-	
-	this.ele.filters.wave.phase += 5;
-	this.ele.filters.wave.phase %= 100;
-	if( this.timer == null )
-		this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 50 );
+    if( this.duration > 0 )
+    {
+        var percent = ((new Date()).getTime() - this.startTime)/this.duration;
+        if( percent >= 1.0 )
+        {
+            this.EndEffect();
+            return;
+        }
+    }
+    
+    this.ele.filters.wave.phase += 5;
+    this.ele.filters.wave.phase %= 100;
+    if( this.timer == null )
+        this.timer = setInterval("CEngine.PerformAnimation(" + this.aniIndex + ")", 50 );
 }
 
 CAgencyWave.prototype.EndEffect = function()
 {// to remove the visual filter function
-	this.ele.style.filter = "";
-	clearInterval( this.timer );
-	this.timer = null;
+    this.ele.style.filter = "";
+    clearInterval( this.timer );
+    this.timer = null;
 }
 
 CAgencyWave.prototype.ResetParameters = function()
 {
-	this.PrepareEffect();
-	this.ele.style.filter = "wave(strength=" + this.strength + ",freq=" + 
-	 this.freq +", lightstrength=" + this.lightstrength +",phase=0);";
-	this.startTime = (new Date()).getTime();
+    this.PrepareEffect();
+    this.ele.style.filter = "wave(strength=" + this.strength + ",freq=" + 
+     this.freq +", lightstrength=" + this.lightstrength +",phase=0);";
+    this.startTime = (new Date()).getTime();
 }
 // End of the CAgencyWave definition
 
 // Begin of CAgencyGlow definition
 function CAgencyGlow( element, settings )
 {// because of "visual filter" style, this won't work in Navigator
-	this.ele = element;
+    this.ele = element;
 
-	// to set the default value
-	this.glowColor = "green";
-	this.glowStrength = "3";
-	
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "color" : this.glowColor = arrOneSet[1]; break;
-		case "strength" : this.glowStrength = arrOneSet[1]; break;
-		}
-	}
+    // to set the default value
+    this.glowColor = "green";
+    this.glowStrength = "3";
+    
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "color" : this.glowColor = arrOneSet[1]; break;
+        case "strength" : this.glowStrength = arrOneSet[1]; break;
+        }
+    }
 }
 
 CAgencyGlow.prototype.PrepareEffect = function()
 {
-	CCSSP.PrepareFilter(this.ele);
-	CCSSP.ShowObject(this.ele, true );
-	if( this.ele.style.backgroundColor != "" )
-	{//style.backgroundColor somehow stop the visual filter
-		this.ele.intactBackgroundColor = this.ele.style.backgroundColor;
-		this.ele.style.backgroundColor = "";
-	}
+    CCSSP.PrepareFilter(this.ele);
+    CCSSP.ShowObject(this.ele, true );
+    if( this.ele.style.backgroundColor != "" )
+    {//style.backgroundColor somehow stop the visual filter
+        this.ele.intactBackgroundColor = this.ele.style.backgroundColor;
+        this.ele.style.backgroundColor = "";
+    }
 }
 
 CAgencyGlow.prototype.UpdateEffect = function()
 {// to set the visual filter function
-	this.PrepareEffect();
-	this.ele.style.filter = "glow(Color=" + this.glowColor + ", Strength=" + 
-		this.glowStrength + ", enabled=true" +")";
+    this.PrepareEffect();
+    this.ele.style.filter = "glow(Color=" + this.glowColor + ", Strength=" + 
+        this.glowStrength + ", enabled=true" +")";
 }
 
 CAgencyGlow.prototype.EndEffect = function()
 {// to remove the visual filter function
-	this.ele.style.filter = "";
-	if( typeof(this.ele.intactBackgroundColor) != "undefined" )
-		this.ele.style.backgroundColor = this.ele.intactBackgroundColor;
+    this.ele.style.filter = "";
+    if( typeof(this.ele.intactBackgroundColor) != "undefined" )
+        this.ele.style.backgroundColor = this.ele.intactBackgroundColor;
 }
 // End of the CAgencyGlow definition
 
 // Begin of CAgencyDropShadow definition
 function CAgencyDropShadow( element, settings )
 {// because of "visual filter" style, this won't work in Navigator
-	this.ele = element;
+    this.ele = element;
 
-	// to set the default value
-	this.shadowColor = "black"; 
-	this.shadowOffx = "1";
-	this.shadowOffy = "1";
-	
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "color" : this.shadowColor = arrOneSet[1]; break;
-		case "offx" : this.shadowOffx = arrOneSet[1]; break;
-		case "offy" : this.shadowOffy = arrOneSet[1]; break;
-		}
-	}
+    // to set the default value
+    this.shadowColor = "black"; 
+    this.shadowOffx = "1";
+    this.shadowOffy = "1";
+    
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "color" : this.shadowColor = arrOneSet[1]; break;
+        case "offx" : this.shadowOffx = arrOneSet[1]; break;
+        case "offy" : this.shadowOffy = arrOneSet[1]; break;
+        }
+    }
 }
 
 CAgencyDropShadow.prototype.PrepareEffect = function()
 {
-	CCSSP.PrepareFilter(this.ele);
-	CCSSP.ShowObject(this.ele, true );
-	
-	if( this.ele.style.backgroundColor != "" )
-	{//style.backgroundColor somehow stop the visual filter
-		this.ele.intactBackgroundColor = this.ele.style.backgroundColor;
-		this.ele.style.backgroundColor = "";
-	}
+    CCSSP.PrepareFilter(this.ele);
+    CCSSP.ShowObject(this.ele, true );
+    
+    if( this.ele.style.backgroundColor != "" )
+    {//style.backgroundColor somehow stop the visual filter
+        this.ele.intactBackgroundColor = this.ele.style.backgroundColor;
+        this.ele.style.backgroundColor = "";
+    }
 }
 
 CAgencyDropShadow.prototype.UpdateEffect = function()
 {// to set the visual filter function
-	this.PrepareEffect();
-	this.ele.style.filter = "dropshadow(color=" + this.shadowColor + ", offx=" + 
-		this.shadowOffx + ", offy=" + this.shadowOffy + ")";
+    this.PrepareEffect();
+    this.ele.style.filter = "dropshadow(color=" + this.shadowColor + ", offx=" + 
+        this.shadowOffx + ", offy=" + this.shadowOffy + ")";
 }
 
 CAgencyDropShadow.prototype.EndEffect = function()
 {// to remove the visual filter function
-	this.ele.style.filter = "";
-	if( typeof(this.ele.intactBackgroundColor) != "undefined" )
-		this.ele.style.backgroundColor = this.ele.intactBackgroundColor;
+    this.ele.style.filter = "";
+    if( typeof(this.ele.intactBackgroundColor) != "undefined" )
+        this.ele.style.backgroundColor = this.ele.intactBackgroundColor;
 }
 // End of the CAgencyDropShadow definition
 
 // Begin of CAgencyRevealTrans definition
 function CAgencyRevealTrans( element, settings )
 {// because of "visual filter" style, this won't work in Navigator
-	this.ele = element;
+    this.ele = element;
 
-	// to set the default value
-	this.duration = 1.0; //The value is specified in seconds.milliseconds format (0.0000).
-	this.transition = 0;
-	
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "type" : this.transition = arrOneSet[1]; break;
-		case "duration" : this.duration = 100/arrOneSet[1];	break;
-		}
-	}
+    // to set the default value
+    this.duration = 1.0; //The value is specified in seconds.milliseconds format (0.0000).
+    this.transition = 0;
+    
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "type" : this.transition = arrOneSet[1]; break;
+        case "duration" : this.duration = 100/arrOneSet[1]; break;
+        }
+    }
 }
 
 CAgencyRevealTrans.prototype.PrepareEffect = function()
 {
-	CCSSP.PrepareFilter(this.ele);
-	CCSSP.ShowObject( this.ele, false);
+    CCSSP.PrepareFilter(this.ele);
+    CCSSP.ShowObject( this.ele, false);
 }
 
 CAgencyRevealTrans.prototype.UpdateEffect = function()
 {// to set the visual filter function
-	if( typeof( this.ele.filters.RevealTrans ) == "object" )
-	{
-		if( this.ele.filters.RevealTrans.status == 2 )
-			this.ele.filters.RevealTrans.stop();  
-	}
-
-	this.PrepareEffect();
-	
-	this.ele.style.filter = "RevealTrans(duration=" + this.duration + 
-		", transition=" + this.transition + ")";
-	
     if( typeof( this.ele.filters.RevealTrans ) == "object" )
     {
-		this.ele.filters.RevealTrans.apply();
-		CCSSP.ShowObject( this.ele, true);
-		this.ele.filters.RevealTrans.play();  
-	}
-	else
-		CCSSP.ShowObject( this.ele, true);
+        if( this.ele.filters.RevealTrans.status == 2 )
+            this.ele.filters.RevealTrans.stop();  
+    }
+
+    this.PrepareEffect();
+    
+    this.ele.style.filter = "RevealTrans(duration=" + this.duration + 
+        ", transition=" + this.transition + ")";
+    
+    if( typeof( this.ele.filters.RevealTrans ) == "object" )
+    {
+        this.ele.filters.RevealTrans.apply();
+        CCSSP.ShowObject( this.ele, true);
+        this.ele.filters.RevealTrans.play();  
+    }
+    else
+        CCSSP.ShowObject( this.ele, true);
 }
 
 CAgencyRevealTrans.prototype.EndEffect = function()
 {
     if( typeof( this.ele.filters.RevealTrans ) == "object" )
-		this.ele.filters.RevealTrans.stop();  
-	this.ele.style.filter = "";
+        this.ele.filters.RevealTrans.stop();  
+    this.ele.style.filter = "";
 }
 // End of the CAgencyRevealTrans definition
 
 // Begin of CAgencyBlur definition
 function CAgencyBlur( element, settings )
 {// because of "visual filter" style, this won't work in Navigator
-	this.ele = element;
+    this.ele = element;
 
-	// to set the default value
-	this.strength = "5";
-	this.direction = "90";
-	
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "strength" : this.strength = arrOneSet[1]; break;
-		case "direction" : this.direction = arrOneSet[1]; break;
-		}
-	}
+    // to set the default value
+    this.strength = "5";
+    this.direction = "90";
+    
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "strength" : this.strength = arrOneSet[1]; break;
+        case "direction" : this.direction = arrOneSet[1]; break;
+        }
+    }
 }
 
 CAgencyBlur.prototype.PrepareEffect = function()
 {
-	CCSSP.PrepareFilter(this.ele);
-	CCSSP.ShowObject(this.ele, true );
+    CCSSP.PrepareFilter(this.ele);
+    CCSSP.ShowObject(this.ele, true );
 }
 
 CAgencyBlur.prototype.UpdateEffect = function()
 {// to set the visual filter function
-	CCSSP.PrepareFilter(this.ele);
-	this.ele.style.filter = "blur(strength=" + this.strength + 
-		", direction=" + this.direction + ")";
+    CCSSP.PrepareFilter(this.ele);
+    this.ele.style.filter = "blur(strength=" + this.strength + 
+        ", direction=" + this.direction + ")";
 }
 
 CAgencyBlur.prototype.EndEffect = function()
 {// to remove the visual filter function
-	this.ele.style.filter = "";
+    this.ele.style.filter = "";
 }
 // End of the CAgencyBlur definition
 
 // Begin of CAgencyChangeFilter definition
 function CAgencyChangeFilter( element, settings ) // flipH, flipV, invert, grey,
 {// because of "visual filter" style, this won't work in Navigator
-	this.ele = element;
+    this.ele = element;
 
-	// to set the default value
-	this.filterFunction = settings;
+    // to set the default value
+    this.filterFunction = settings;
 }
 
 CAgencyChangeFilter.prototype.PrepareEffect = function()
 {
-	CCSSP.PrepareFilter(this.ele);
-	CCSSP.ShowObject(this.ele, true );
+    CCSSP.PrepareFilter(this.ele);
+    CCSSP.ShowObject(this.ele, true );
 }
 
 CAgencyChangeFilter.prototype.UpdateEffect = function()
 {// to set the visual filter function
-	CCSSP.PrepareFilter(this.ele);
-	this.ele.style.filter = this.filterFunction;
+    CCSSP.PrepareFilter(this.ele);
+    this.ele.style.filter = this.filterFunction;
 }
 
 CAgencyChangeFilter.prototype.EndEffect = function()
 {// to remove the visual filter function
-	this.ele.style.filter = "";
+    this.ele.style.filter = "";
 }
 // End of the CAgencyChangeFilter definition
 
@@ -5758,139 +5668,139 @@ CAgencyChangeFilter.prototype.EndEffect = function()
 // Begin of CAgencyFontChange definition, 
 function CAgencyFontChange( element, settings )
 {//this class can be replace by CAgencyChangeStyle,provided the "settings" is standard CSS string.
-	this.ele = element;
-	
-	// to retrieve the original font style
-	this.RetrieveOldFont( this.ele );
-	
-	// to set the default font to change
-	this.newfontFamily = this.ele.oldFontFamily;
-	this.newfColor = this.ele.oldColor;
-	this.newtextDecoration = this.ele.oldTextDecoration;
-	this.newfontWeight = this.ele.oldFontWeight;
-	this.newfontStyle = this.ele.oldFontStyle;
-	this.newfontSize = this.ele.oldFontSize;
-	this.newBackgroundColor = this.ele.oldBackgroundColor;
-	
-	var arrAllSet = settings.split(",");
-	for( var i = 0; i < arrAllSet.length; i ++ )
-	{// to retrieve the setting
-		arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
-		var arrOneSet = arrAllSet[i].split("=");
-		for( var j = 0; j < arrOneSet.length; j++ )
-			arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
-		switch( arrOneSet[0] )
-		{
-		case "font-family" : this.newfontFamily = arrOneSet[1]; break;
-		case "color" : this.newfColor = arrOneSet[1]; break;
-		case "underline" : this.newtextDecoration = (arrOneSet[1]=="on")? "underline" : "none"; break;
-		case "bold" : this.newfontWeight = (arrOneSet[1]=="on")? "bold" : "normal"; break;
-		case "italic" : this.newfontStyle = (arrOneSet[1]=="on")? "italic" : "normal"; break;
-		case "size" : this.newfontSize = arrOneSet[1]; break;
-		case "background-color" : this.newBackgroundColor = arrOneSet[1]; break;
-		}
-	}
+    this.ele = element;
+    
+    // to retrieve the original font style
+    this.RetrieveOldFont( this.ele );
+    
+    // to set the default font to change
+    this.newfontFamily = this.ele.oldFontFamily;
+    this.newfColor = this.ele.oldColor;
+    this.newtextDecoration = this.ele.oldTextDecoration;
+    this.newfontWeight = this.ele.oldFontWeight;
+    this.newfontStyle = this.ele.oldFontStyle;
+    this.newfontSize = this.ele.oldFontSize;
+    this.newBackgroundColor = this.ele.oldBackgroundColor;
+    
+    var arrAllSet = settings.split(",");
+    for( var i = 0; i < arrAllSet.length; i ++ )
+    {// to retrieve the setting
+        arrAllSet[i] = CCSSP.TrimSpace(arrAllSet[i]);
+        var arrOneSet = arrAllSet[i].split("=");
+        for( var j = 0; j < arrOneSet.length; j++ )
+            arrOneSet[j] = CCSSP.TrimSpace(arrOneSet[j]);
+        switch( arrOneSet[0] )
+        {
+        case "font-family" : this.newfontFamily = arrOneSet[1]; break;
+        case "color" : this.newfColor = arrOneSet[1]; break;
+        case "underline" : this.newtextDecoration = (arrOneSet[1]=="on")? "underline" : "none"; break;
+        case "bold" : this.newfontWeight = (arrOneSet[1]=="on")? "bold" : "normal"; break;
+        case "italic" : this.newfontStyle = (arrOneSet[1]=="on")? "italic" : "normal"; break;
+        case "size" : this.newfontSize = arrOneSet[1]; break;
+        case "background-color" : this.newBackgroundColor = arrOneSet[1]; break;
+        }
+    }
 }
 
 CAgencyFontChange.prototype.RetrieveOldFont = function(objChild)
 {
-	if( typeof(objChild.oldFontFamily) == "undefined" )
-		objChild.oldFontFamily = objChild.style.fontFamily;
-	if( typeof(objChild.oldColor) == "undefined" )
-		objChild.oldColor = objChild.style.color;
-	if( typeof(objChild.oldTextDecoration) == "undefined" )
-		objChild.oldTextDecoration = objChild.style.textDecoration;
-	if( typeof(objChild.oldFontWeight) == "undefined" )
-		objChild.oldFontWeight = objChild.style.fontWeight;
-	if( typeof(objChild.oldFontStyle) == "undefined" )
-		objChild.oldFontStyle = objChild.style.fontStyle;
-	if( typeof(objChild.oldFontSize) == "undefined" )
-		objChild.oldFontSize = objChild.style.fontSize;
-	if( typeof(objChild.oldBackgroundColor) == "undefined" )
-		objChild.oldBackgroundColor = objChild.style.backgroundColor;
+    if( typeof(objChild.oldFontFamily) == "undefined" )
+        objChild.oldFontFamily = objChild.style.fontFamily;
+    if( typeof(objChild.oldColor) == "undefined" )
+        objChild.oldColor = objChild.style.color;
+    if( typeof(objChild.oldTextDecoration) == "undefined" )
+        objChild.oldTextDecoration = objChild.style.textDecoration;
+    if( typeof(objChild.oldFontWeight) == "undefined" )
+        objChild.oldFontWeight = objChild.style.fontWeight;
+    if( typeof(objChild.oldFontStyle) == "undefined" )
+        objChild.oldFontStyle = objChild.style.fontStyle;
+    if( typeof(objChild.oldFontSize) == "undefined" )
+        objChild.oldFontSize = objChild.style.fontSize;
+    if( typeof(objChild.oldBackgroundColor) == "undefined" )
+        objChild.oldBackgroundColor = objChild.style.backgroundColor;
 }
 
 CAgencyFontChange.prototype.PrepareEffect = function()
 {
-	// as for expanding text, the child is created after the constructor called
-	for(var index = 0; index < this.ele.all.length; index++)
-		this.RetrieveOldFont(this.ele.all[index]);
-	CCSSP.ShowObject(this.ele, true );
+    // as for expanding text, the child is created after the constructor called
+    for(var index = 0; index < this.ele.all.length; index++)
+        this.RetrieveOldFont(this.ele.all[index]);
+    CCSSP.ShowObject(this.ele, true );
 }
 
 CAgencyFontChange.prototype.UpdateEffect = function()
 {// to change the font
-	this.PrepareEffect();
-	this.UpdateEffectAllChildren( this.ele );
-	for( var index = 0; index < this.ele.all.length; index++)
-		this.UpdateEffectAllChildren(this.ele.all[index]);
+    this.PrepareEffect();
+    this.UpdateEffectAllChildren( this.ele );
+    for( var index = 0; index < this.ele.all.length; index++)
+        this.UpdateEffectAllChildren(this.ele.all[index]);
 }
 
 CAgencyFontChange.prototype.UpdateEffectAllChildren = function(objChild)
 {
-	objChild.style.fontFamily = this.newfontFamily;
-	objChild.style.color = this.newfColor;
-	objChild.style.textDecoration = this.newtextDecoration;
-	objChild.style.fontWeight = this.newfontWeight;
-	objChild.style.fontStyle = this.newfontStyle;
-	objChild.style.fontSize = this.newfontSize;
-	objChild.style.backgroundColor = this.newBackgroundColor;
+    objChild.style.fontFamily = this.newfontFamily;
+    objChild.style.color = this.newfColor;
+    objChild.style.textDecoration = this.newtextDecoration;
+    objChild.style.fontWeight = this.newfontWeight;
+    objChild.style.fontStyle = this.newfontStyle;
+    objChild.style.fontSize = this.newfontSize;
+    objChild.style.backgroundColor = this.newBackgroundColor;
 }
 
 CAgencyFontChange.prototype.EndEffect = function()
 {// to reinstate the original font style
-	this.EndEffectAllChildren( this.ele );
-	for( var index = 0; index < this.ele.all.length; index++)
-		this.EndEffectAllChildren(this.ele.all[index]);
+    this.EndEffectAllChildren( this.ele );
+    for( var index = 0; index < this.ele.all.length; index++)
+        this.EndEffectAllChildren(this.ele.all[index]);
 }
 
 CAgencyFontChange.prototype.EndEffectAllChildren = function( objChild )
 {
-	if( typeof(objChild.oldFontFamily) != "undefined" )
-		objChild.style.fontFamily = objChild.oldFontFamily;
-	if( typeof(objChild.oldColor) != "undefined" )
-		objChild.style.color = objChild.oldColor;
-	if( typeof(objChild.oldFontWeight) != "undefined" )
-		objChild.style.fontWeight = objChild.oldFontWeight;
-	if( typeof(objChild.oldFontStyle) != "undefined" )
-		objChild.style.fontStyle = objChild.oldFontStyle;
-	if( typeof(objChild.oldFontSize) != "undefined" )
-		objChild.style.fontSize = objChild.oldFontSize;
-	if( typeof(objChild.oldTextDecoration) != "undefined" )
-		objChild.style.textDecoration = objChild.oldTextDecoration;
-	if( typeof(objChild.oldBackgroundColor) != "undefined" )
-		objChild.style.backgroundColor = objChild.oldBackgroundColor;
+    if( typeof(objChild.oldFontFamily) != "undefined" )
+        objChild.style.fontFamily = objChild.oldFontFamily;
+    if( typeof(objChild.oldColor) != "undefined" )
+        objChild.style.color = objChild.oldColor;
+    if( typeof(objChild.oldFontWeight) != "undefined" )
+        objChild.style.fontWeight = objChild.oldFontWeight;
+    if( typeof(objChild.oldFontStyle) != "undefined" )
+        objChild.style.fontStyle = objChild.oldFontStyle;
+    if( typeof(objChild.oldFontSize) != "undefined" )
+        objChild.style.fontSize = objChild.oldFontSize;
+    if( typeof(objChild.oldTextDecoration) != "undefined" )
+        objChild.style.textDecoration = objChild.oldTextDecoration;
+    if( typeof(objChild.oldBackgroundColor) != "undefined" )
+        objChild.style.backgroundColor = objChild.oldBackgroundColor;
 }
 // End of the CAgencyFontChange definition
 
 // Begin of the CAgencyChangeStyle definition
 function CAgencyChangeStyle( element, settings )
 {//this class can be replace by CAgencyChangeStyle,provided the "settings" is standard CSS string.
-	this.ele = element;
-	
-	// to retrieve the original style
-	this.oldstyle = this.ele.style.cssText;
-	
-	// to set the default style
-	this.newStyle = this.oldstyle;
-	
-	if( typeof(settings) == "string" && settings.length > 1 )
-		this.newStyle = this.oldstyle + " " + settings;
+    this.ele = element;
+    
+    // to retrieve the original style
+    this.oldstyle = this.ele.style.cssText;
+    
+    // to set the default style
+    this.newStyle = this.oldstyle;
+    
+    if( typeof(settings) == "string" && settings.length > 1 )
+        this.newStyle = this.oldstyle + " " + settings;
 }
 
 CAgencyChangeStyle.prototype.PrepareEffect = function()
 {
-	CCSSP.ShowObject(this.ele, true );
+    CCSSP.ShowObject(this.ele, true );
 }
 
 CAgencyChangeStyle.prototype.UpdateEffect = function()
 {// to change the style
-	this.ele.style.cssText = this.newStyle;
+    this.ele.style.cssText = this.newStyle;
 }
 
 CAgencyChangeStyle.prototype.EndEffect = function()
 {// to reinstate the original style
-	this.ele.style.cssText = this.oldStyle;
+    this.ele.style.cssText = this.oldStyle;
 }
 // End of the CAgencyChangeStyle definition
 
@@ -5951,36 +5861,36 @@ Help\Lib Help\FAQ.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;"><span style="font-family: Verdana, sans-serif;"><!--kadov_tag{{<variable 
+            margin-top: 6px;
+            margin-bottom: 6px;"><span style="font-family: Verdana, sans-serif;"><!--kadov_tag{{<variable 
  name=title
-	x-format=default
-	x-value=FAQ>}}-->FAQ<!--kadov_tag{{</variable>}}--> (Frequently Asked 
+    x-format=default
+    x-value=FAQ>}}-->FAQ<!--kadov_tag{{</variable>}}--> (Frequently Asked 
  Questions)</span></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-weight: bold;">Q. Who are you?</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-weight: bold;">Q. Who are you?</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-style: italic;
-			text-align: justify;">I'm 40, born in Scotland and now living 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-style: italic;
+            text-align: justify;">I'm 40, born in Scotland and now living 
  in Ireland for the past 19 years. By day i work for the O2 (Retail). At 
  night i enjoy playing Counterstrike Source, and other FPS and RPG games. 
  I was a founder of a Counterstrike clan called NewWorldOrder (now disbanded) 
@@ -5990,328 +5900,328 @@ Help\Lib Help\FAQ.htm
  applications using Foxpro and Xbase languages.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">Q. Why did you write this library?</p>
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">Q. Why did you write this library?</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-style: italic;
-			text-align: justify;">For myself mainly, for use in my own 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-style: italic;
+            text-align: justify;">For myself mainly, for use in my own 
  little projects. Also i like learning by doing, having to go off and research 
  and then create/code something is fun :D</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">Q. Will you be adding to or expanding 
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">Q. Will you be adding to or expanding 
  the library?</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-style: italic;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">I may take on board suggestions to expand 
+            text-align: justify;
+            font-style: italic;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">I may take on board suggestions to expand 
  the library. If there is compelling reason to add a specific function 
  then i may do so.</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">Q. Do you accept requests to add <span 
+            text-align: justify;
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">Q. Do you accept requests to add <span 
  style="font-style: italic;">'x'</span> function to your custom library?</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-style: italic;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">See last question above. If there is a 
+            text-align: justify;
+            font-style: italic;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">See last question above. If there is a 
  valid reason to do so i may consider such requests.</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-style: italic;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-style: italic;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-style: italic;
-			font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-style: italic;
+            font-family: Verdana, sans-serif;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;">Q. I think you are wrong to write this, 
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;">Q. I think you are wrong to write this, 
  its a waste of time.</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-style: italic;
-			margin-top: 6px;
-			margin-bottom: 6px;">Maybe it is, but there are a number of 
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-style: italic;
+            margin-top: 6px;
+            margin-bottom: 6px;">Maybe it is, but there are a number of 
  reasons why i created this library so to me it isn't wasted time. And 
  hopefully it will allow others to build apon what i have started.</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-style: italic;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-style: italic;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-style: italic;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-style: italic;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;">Q. Why write in assembler?</p>
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;">Q. Why write in assembler?</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-style: italic;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-style: italic;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-style: italic;
-			margin-top: 6px;
-			margin-bottom: 6px;">Best answered by the following, from Hutch's 
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-style: italic;
+            margin-top: 6px;
+            margin-bottom: 6px;">Best answered by the following, from Hutch's 
  MASM32 Website (www.masm32.com):</p>
 
 <p style="font-size: 10pt;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-style: italic;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-style: italic;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <!--(Table)=========================================================-->
 <!--begin!kadov{{--><div align=center><!--}}end!kadov-->
 <table x-use-null-cells
-		style="x-cell-content-align: top;
-				border-left-style: Solid;
-				border-left-width: 2px;
-				border-right-style: Solid;
-				border-right-width: 2px;
-				border-top-style: Solid;
-				border-top-width: 2px;
-				border-bottom-style: Solid;
-				border-bottom-width: 2px;
-				background-color: #e9e9e9;
-				float: aligncenter;
-				width: 90.993%;
-				margin-top: 6px;
-				margin-bottom: 6px;
-				border-spacing: 0px;
-				border-spacing: 0px;"
-		cellspacing=0
-		width=90.993%
-		bgcolor=#E9E9E9>
+        style="x-cell-content-align: top;
+                border-left-style: Solid;
+                border-left-width: 2px;
+                border-right-style: Solid;
+                border-right-width: 2px;
+                border-top-style: Solid;
+                border-top-width: 2px;
+                border-bottom-style: Solid;
+                border-bottom-width: 2px;
+                background-color: #e9e9e9;
+                float: aligncenter;
+                width: 90.993%;
+                margin-top: 6px;
+                margin-bottom: 6px;
+                border-spacing: 0px;
+                border-spacing: 0px;"
+        cellspacing=0
+        width=90.993%
+        bgcolor=#E9E9E9>
 <col style="width: 100%;">
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 100%;
-			border-left-width: 1px;
-			border-left-color: #000000;
-			border-left-style: Solid;
-			border-top-style: Solid;
-			border-top-color: #000000;
-			border-top-width: 1px;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=100%>
+            border-left-width: 1px;
+            border-left-color: #000000;
+            border-left-style: Solid;
+            border-top-style: Solid;
+            border-top-color: #000000;
+            border-top-width: 1px;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=100%>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">Assembler affords the programmer 
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">Assembler affords the programmer 
  looking for additional performance a three pronged approach in the pursuit 
  of high performance software.</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">&nbsp;</p>
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">&nbsp;</p>
 <p style="font-weight: bold;
-			margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">1. High performance executable 
+            margin-left: 0px;
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">1. High performance executable 
  files.</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">&nbsp;</p>
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">&nbsp;</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">Executable programs built 
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">Executable programs built 
  with Microsoft assembler have advantages in both size and speed when written 
  correctly that is beyond the capacity of the best compilers. Performance 
  critical software is a natural target for pure assembler programs.</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">&nbsp;</p>
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">&nbsp;</p>
 <p style="font-weight: bold;
-			margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">2. Dynamic link libraries.</p>
+            margin-left: 0px;
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">2. Dynamic link libraries.</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">&nbsp;</p>
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">&nbsp;</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">MASM can build very high 
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">MASM can build very high 
  performance dynamic link libraries that can be used by MASM, Visual C/C++ 
  and Visual Basic as well as any other language that can call a DLL. This 
  puts minimum size high performance files within the reach of any language 
  that can call a DLL and allows the programmer to design processor intensive 
  algorithms that are beyond the reach of the native language they are using.</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">&nbsp;</p>
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">&nbsp;</p>
 <p style="font-weight: bold;
-			margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">3. Library modules for Microsoft 
+            margin-left: 0px;
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">3. Library modules for Microsoft 
  Visual C/C++ programs.</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">&nbsp;</p>
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">&nbsp;</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;
-			font-size: 8pt;
-			font-family: Verdana, sans-serif;">MASM produces the identical 
+            text-align: justify;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;
+            font-size: 8pt;
+            font-family: Verdana, sans-serif;">MASM produces the identical 
  object module format that is used by the Visual C+C++ compilers so the 
  C/C++ programmer can build modules or libraries in MASM and directly link 
  them into their own C/C++ programs. This allows the C/C++ programmer to 
@@ -6321,11 +6231,11 @@ Help\Lib Help\FAQ.htm
  encryption, compression and any other form of information processing that 
  is processor intensive.</p>
 <p style="margin-left: 0px;
-			text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 0.5pt;
-			margin-bottom: 0.5pt;"><span style="font-size: 8pt;">For programmers 
+            text-align: justify;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-top: 0.5pt;
+            margin-bottom: 0.5pt;"><span style="font-size: 8pt;">For programmers 
  who are not familiar with 32 bit Windows assembler, there is speed and 
  performance available that you may never have seen before and contrary 
  to popular legend, if you can write a Windows application in C/C++, Basic, 
@@ -6335,19 +6245,19 @@ Help\Lib Help\FAQ.htm
 </table>
 <!--begin!kadov{{--></div><!--}}end!kadov-->
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p>&nbsp;</p>
 
@@ -6446,97 +6356,97 @@ Help\Lib Help\HtmlHelp.css
 /*=(===============================================================)*/
 
 BODY {
-	background-color: #ffffff;
+    background-color: #ffffff;
 }
 
 P /*begin!kadov{{*/ ,LI.kadov-P /*}}end!kadov*/   {
-	font-family: Arial;
-	font-size: 12.0pt;
-	color: #000000;
+    font-family: Arial;
+    font-size: 12.0pt;
+    color: #000000;
 }
 
 H1 /*begin!kadov{{*/ ,LI.kadov-H1 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 16.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 16.0pt;
 }
 
 H2 /*begin!kadov{{*/ ,LI.kadov-H2 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 14.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 14.0pt;
 }
 
 H3 /*begin!kadov{{*/ ,LI.kadov-H3 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 H4 /*begin!kadov{{*/ ,LI.kadov-H4 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 H5 /*begin!kadov{{*/ ,LI.kadov-H5 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 H6 /*begin!kadov{{*/ ,LI.kadov-H6 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 A:link {
-	x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
-	color: #0000ff;
+    x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
+    color: #0000ff;
 }
 
 A:visited {
-	x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
-	color: #0000ff;
+    x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
+    color: #0000ff;
 }
 
 A.expandspot {
-	color: #008000;
-	cursor: hand;
-	font-style: italic;
-	text-decoration: none;
+    color: #008000;
+    cursor: hand;
+    font-style: italic;
+    text-decoration: none;
 }
 
 SPAN.expandtext {
-	font-style: italic;
-	font-weight: normal;
-	color: #ff0000;
+    font-style: italic;
+    font-weight: normal;
+    color: #ff0000;
 }
 
 A.dropspot {
-	cursor: hand;
-	color: #008000;
-	font-style: italic;
-	text-decoration: none;
+    cursor: hand;
+    color: #008000;
+    font-style: italic;
+    text-decoration: none;
 }
 
 A.glossterm {
-	color: #800000;
-	cursor: hand;
-	font-style: italic;
-	text-decoration: none;
+    color: #800000;
+    cursor: hand;
+    font-style: italic;
+    text-decoration: none;
 }
 
 SPAN.glosstext {
-	font-style: italic;
-	font-weight: normal;
-	color: #0000ff;
+    font-style: italic;
+    font-weight: normal;
+    color: #0000ff;
 }
 
 OL, UL { 
-	margin-top: 0px; 
-	margin-bottom: 0px;
+    margin-top: 0px; 
+    margin-bottom: 0px;
 }
 [*ENDTXT*]
 [*BEGINTXT*]
@@ -6583,113 +6493,113 @@ Help\Lib Help\Installation_&_Setup.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;"><!--kadov_tag{{<variable name=title
-															x-format=default
-															x-value="Installation &amp; Setup">}}-->Installation 
+            margin-top: 6px;
+            margin-bottom: 6px;"><!--kadov_tag{{<variable name=title
+                                                            x-format=default
+                                                            x-value="Installation &amp; Setup">}}-->Installation 
  &amp; Setup<!--kadov_tag{{</variable>}}--></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">It is assumed that the MASM32 package has 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">It is assumed that the MASM32 package has 
  been installed to the root of a local drive: <span style="font-style: italic;">X</span>:\MASM32, 
  where <span style="font-style: italic;">X</span> is the drive letter where 
  the MASM32 package has been installed to.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">Copy the <span style="font-family: 'Courier New', monospace; font-weight: bold;">[*PROJECTNAME*].inc</span> 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">Copy the <span style="font-family: 'Courier New', monospace; font-weight: bold;">[*PROJECTNAME*].inc</span> 
  file to <span style="font-family: 'Courier New', monospace; font-weight: bold;">X:\MASM32\Include</span> 
  folder overwriting any previous versions.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">Copy the <span style="font-family: 'Courier New', monospace; font-weight: bold;">[*PROJECTNAME*].lib</span> 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">Copy the <span style="font-family: 'Courier New', monospace; font-weight: bold;">[*PROJECTNAME*].lib</span> 
  file to <span style="font-family: 'Courier New', monospace;">X:</span><span 
  style="font-family: 'Courier New', monospace; font-weight: bold;">\MASM32\Lib</span> 
  folder overwriting any previous versions.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">You are now ready to begin using the [*PROJECTNAME*] 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">You are now ready to begin using the [*PROJECTNAME*] 
  Library in your projects. Simply add the following lines to your project:</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <!--(Table)=========================================================-->
 <table x-use-null-cells
-		style="x-cell-content-align: top;
-				margin-left: 40px;
-				width: 90.717%;
-				border-spacing: 0px;
-				border-spacing: 0px;"
-		cellspacing=0
-		width=90.717%>
+        style="x-cell-content-align: top;
+                margin-left: 40px;
+                width: 90.717%;
+                border-spacing: 0px;
+                border-spacing: 0px;"
+        cellspacing=0
+        width=90.717%>
 <col style="width: 100%;">
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 100%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e8fffe;
-			border-top-width: 1px;
-			border-top-color: #808080;
-			border-top-style: Solid;
-			border-right-width: 1px;
-			border-right-color: #808080;
-			border-right-style: Solid;
-			border-bottom-width: 1px;
-			border-bottom-color: #808080;
-			border-bottom-style: Solid;
-			border-left-width: 1px;
-			border-left-color: #808080;
-			border-left-style: Solid;"
-	bgcolor=#E8FFFE
-	width=100%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e8fffe;
+            border-top-width: 1px;
+            border-top-color: #808080;
+            border-top-style: Solid;
+            border-right-width: 1px;
+            border-right-color: #808080;
+            border-right-style: Solid;
+            border-bottom-width: 1px;
+            border-bottom-color: #808080;
+            border-bottom-style: Solid;
+            border-left-width: 1px;
+            border-left-color: #808080;
+            border-left-style: Solid;"
+    bgcolor=#E8FFFE
+    width=100%>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: 'Courier New', monospace;
-			font-size: 8pt;
-			margin-left: 0px;">include [*PROJECTNAME*].inc</p>
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;
+            margin-left: 0px;">include [*PROJECTNAME*].inc</p>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: 'Courier New', monospace;
-			font-size: 8pt;
-			margin-left: 0px;">includelib [*PROJECTNAME*].lib</td></tr>
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;
+            margin-left: 0px;">includelib [*PROJECTNAME*].lib</td></tr>
 </table>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <!--kadov_tag{{<placeholder id="footer">}}-->
 </body>
@@ -6740,388 +6650,388 @@ Help\Lib Help\introduction.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <p style="font-family: Verdana, sans-serif;
-			font-weight: bold;
-			font-size: 14pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: center;"
-	align=center>[*PROJECTNAME*] Library </p>
+            font-weight: bold;
+            font-size: 14pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: center;"
+    align=center>[*PROJECTNAME*] Library </p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-weight: bold;
-			font-size: 14pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: center;"
-	align=center>&nbsp;</p>
+            font-weight: bold;
+            font-size: 14pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: center;"
+    align=center>&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-weight: bold;
-			font-size: 14pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: center;"
-	align=center><img src="liblogo.png"
-						x-maintain-ratio=TRUE
-						style="border: none;
-								width: 100px;
-								height: 100px;
-								float: none;
-								border-style: none;
-								border-style: none;"
-						width=100
-						height=100
-						border=0></p>
+            font-weight: bold;
+            font-size: 14pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: center;"
+    align=center><img src="liblogo.png"
+                        x-maintain-ratio=TRUE
+                        style="border: none;
+                                width: 100px;
+                                height: 100px;
+                                float: none;
+                                border-style: none;
+                                border-style: none;"
+                        width=100
+                        height=100
+                        border=0></p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: center;
-			font-weight: bold;"
-	align=center>&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: center;
+            font-weight: bold;"
+    align=center>&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: center;
-			font-weight: bold;"
-	align=center>Version 1.0.0.0</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: center;
+            font-weight: bold;"
+    align=center>Version 1.0.0.0</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: center;
-			font-weight: bold;"
-	align=center>Copyright (C) 2014 by KSR aka fearless</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: center;
+            font-weight: bold;"
+    align=center>Copyright (C) 2014 by KSR aka fearless</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: center;
-			font-weight: bold;"
-	align=center>http://www.LetTheLight.in</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: center;
+            font-weight: bold;"
+    align=center>http://www.LetTheLight.in</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 12pt;">About</p>
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 12pt;">About</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">[*PROJECTNAME*] is a custom library for 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">[*PROJECTNAME*] is a custom library for 
  use in any of your projects.</p>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 12pt;">Features</p>
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 12pt;">Features</p>
 
 <ul style="list-style: disc;"
-	type=disc>
-	
-	<li class=kadov-p><p style="text-align: justify;
-								font-family: Verdana, sans-serif;
-								font-size: 10pt;
-								margin-top: 6px;
-								margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
-	
-	<li class=kadov-p><p style="text-align: justify;
-								font-family: Verdana, sans-serif;
-								font-size: 10pt;
-								margin-top: 6px;
-								margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
-	
-	<li class=kadov-p><p style="text-align: justify;
-								font-family: Verdana, sans-serif;
-								font-size: 10pt;
-								margin-top: 6px;
-								margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
-	
-	<li class=kadov-p><p style="text-align: justify;
-								font-family: Verdana, sans-serif;
-								font-size: 10pt;
-								margin-top: 6px;
-								margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
-	
-	<li class=kadov-p><p style="text-align: justify;
-								font-family: Verdana, sans-serif;
-								font-size: 10pt;
-								margin-top: 6px;
-								margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
+    type=disc>
+    
+    <li class=kadov-p><p style="text-align: justify;
+                                font-family: Verdana, sans-serif;
+                                font-size: 10pt;
+                                margin-top: 6px;
+                                margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
+    
+    <li class=kadov-p><p style="text-align: justify;
+                                font-family: Verdana, sans-serif;
+                                font-size: 10pt;
+                                margin-top: 6px;
+                                margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
+    
+    <li class=kadov-p><p style="text-align: justify;
+                                font-family: Verdana, sans-serif;
+                                font-size: 10pt;
+                                margin-top: 6px;
+                                margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
+    
+    <li class=kadov-p><p style="text-align: justify;
+                                font-family: Verdana, sans-serif;
+                                font-size: 10pt;
+                                margin-top: 6px;
+                                margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
+    
+    <li class=kadov-p><p style="text-align: justify;
+                                font-family: Verdana, sans-serif;
+                                font-size: 10pt;
+                                margin-top: 6px;
+                                margin-bottom: 6px;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p></li>
 </ul>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 12pt;">Pre-requisites</p>
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 12pt;">Pre-requisites</p>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Some pre-requisites are required for making 
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Some pre-requisites are required for making 
  full use of the [*PROJECTNAME*] library:</p>
 
 <!--(Table)=========================================================-->
 <table x-use-null-cells
-		style="x-cell-content-align: top;
-				width: 100%;
-				border-spacing: 0px;
-				border-spacing: 0px;"
-		cellspacing=0
-		width=100%>
+        style="x-cell-content-align: top;
+                width: 100%;
+                border-spacing: 0px;
+                border-spacing: 0px;"
+        cellspacing=0
+        width=100%>
 <col style="width: 35.013%;">
 <col style="width: 64.987%;">
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 35.013%;
-			background-color: #000000;
-			border-top-width: 1px;
-			border-top-style: Solid;
-			border-top-color: #ffffff;
-			border-right-width: 2px;
-			border-right-color: #ffffff;
-			border-right-style: Solid;
-			border-bottom-width: 1px;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			padding-right: 10px;
-			padding-left: 10px;"
-	bgcolor=#000000
-	width=35.013%>
+            background-color: #000000;
+            border-top-width: 1px;
+            border-top-style: Solid;
+            border-top-color: #ffffff;
+            border-right-width: 2px;
+            border-right-color: #ffffff;
+            border-right-style: Solid;
+            border-bottom-width: 1px;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            padding-right: 10px;
+            padding-left: 10px;"
+    bgcolor=#000000
+    width=35.013%>
 <p style="color: #ffffff;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			vertical-align: Super;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			font-size: 10pt;">Pre-Requisite</td>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            vertical-align: Super;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            font-size: 10pt;">Pre-Requisite</td>
 <td style="width: 64.987%;
-			background-color: #000000;
-			border-top-width: 1px;
-			border-top-style: Solid;
-			border-top-color: #ffffff;
-			border-bottom-width: 1px;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			padding-right: 10px;
-			padding-left: 10px;"
-	bgcolor=#000000
-	width=64.987%>
+            background-color: #000000;
+            border-top-width: 1px;
+            border-top-style: Solid;
+            border-top-color: #ffffff;
+            border-bottom-width: 1px;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            padding-right: 10px;
+            padding-left: 10px;"
+    bgcolor=#000000
+    width=64.987%>
 <p style="color: #ffffff;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			vertical-align: Super;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			font-size: 10pt;
-			text-align: justify;">Description</td></tr>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            vertical-align: Super;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            font-size: 10pt;
+            text-align: justify;">Description</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 35.013%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-style: Solid;
-			border-left-color: #000000;
-			border-left-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;"
-	width=35.013%>
+    rowspan=1
+    style="width: 35.013%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-style: Solid;
+            border-left-color: #000000;
+            border-left-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;"
+    width=35.013%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">MASM32 Package</td>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">MASM32 Package</td>
 <td colspan=1
-	rowspan=1
-	style="width: 64.987%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;"
-	width=64.987%>
+    rowspan=1
+    style="width: 64.987%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;"
+    width=64.987%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">The current release version is 12. This 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">The current release version is 12. This 
  can be downloaded from <a href="http://www.masm32.com/masmdl.htm">www.masm32.com/masmdl.htm</a></p>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">&nbsp;</td></tr>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 35.013%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-width: 1px;
-			border-left-color: #000000;
-			border-left-style: Solid;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;"
-	width=35.013%>
+    rowspan=1
+    style="width: 35.013%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-width: 1px;
+            border-left-color: #000000;
+            border-left-style: Solid;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;"
+    width=35.013%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;"><span style="font-family: Verdana, sans-serif; font-size: 10pt;">RadASM 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;"><span style="font-family: Verdana, sans-serif; font-size: 10pt;">RadASM 
  IDE</span></p>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 64.987%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;"
-	width=64.987%>
+    rowspan=1
+    style="width: 64.987%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;"
+    width=64.987%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">Used to build your assembler applications. 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">Used to build your assembler applications. 
  The IDE can be downloaded from <a href="http://radasm.110mb.com/">http://radasm.110mb.com</a> 
  or <a href="http://www.oby.ro/rad_asm/">http://www.oby.ro/rad_asm</a></p>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			text-align: justify;">&nbsp;</td></tr>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            text-align: justify;">&nbsp;</td></tr>
 </table>
 
 <p style="text-align: justify;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 12pt;
-			font-weight: bold;
-			margin-top: 6px;
-			margin-bottom: 6px;">Other Information</p>
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 6px;">Other Information</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Written and designed by fearless using 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Written and designed by fearless using 
  the following:</p>
 
 <ul style="list-style: disc;"
-	type=disc>
-	
-	<li class=kadov-p><p style="font-family: Verdana, sans-serif;
-								font-size: 10pt;
-								margin-top: 6px;
-								margin-bottom: 6px;">Hutch's MASM32 package 
+    type=disc>
+    
+    <li class=kadov-p><p style="font-family: Verdana, sans-serif;
+                                font-size: 10pt;
+                                margin-top: 6px;
+                                margin-bottom: 6px;">Hutch's MASM32 package 
  </p></li>
-	
-	<li class=kadov-p><p style="font-family: Verdana, sans-serif;
-								font-size: 10pt;
-								margin-top: 6px;
-								margin-bottom: 6px;">KetilO's RadASM IDE</p></li>
+    
+    <li class=kadov-p><p style="font-family: Verdana, sans-serif;
+                                font-size: 10pt;
+                                margin-top: 6px;
+                                margin-bottom: 6px;">KetilO's RadASM IDE</p></li>
 </ul>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">For license information please see the 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">For license information please see the 
  <a href="License.htm">license</a> section.</p>
 
 <p>&nbsp;</p>
@@ -23098,37 +23008,37 @@ Help\Lib Help\Lib Help.syn
 Help\Lib Help\Lib Help.xpj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<projectproperties>
-		<projecttitle>[*PROJECTNAME*]</projecttitle>
-		<homepage>introduction.htm</homepage>
-		<primarylayout>Microsoft HTML Help</primarylayout>
-		<Flags>24</Flags>
-		<language>1033</language>
-	</projectproperties>
-	<miscproperties/>
-	<CompileOptions>
-		<Flags>4</Flags>
-	</CompileOptions>
-	<Collections>
-		<FolderCollectionFilename>root.fpj</FolderCollectionFilename>
-		<SkinCollectionFilename>rhskins.apj</SkinCollectionFilename>
-		<BaggageCollectionFilename>rhbag.apj</BaggageCollectionFilename>
-		<WindowCollectionFilename>rhwnd.apj</WindowCollectionFilename>
-		<TemplateCollectionFilename>rhtemplate.apj</TemplateCollectionFilename>
-		<BuildTagCollectionFilename>rhbuildtag.apj</BuildTagCollectionFilename>
-		<MapFileCollectionFilename>rhmapfile.apj</MapFileCollectionFilename>
-		<ColorCollectionFilename>rhcolor.apj</ColorCollectionFilename>
-		<FontSetCollectionFilename>rhfontset.apj</FontSetCollectionFilename>
-		<ExternalFileCollectionFilename>rhextern.apj</ExternalFileCollectionFilename>
-		<LayoutCollectionFilename>rhlayout.apj</LayoutCollectionFilename>
-		<AKeywordCollectionFilename>rhakeyword.apj</AKeywordCollectionFilename>
-		<KKeywordCollectionFilename>rhkkeyword.apj</KKeywordCollectionFilename>
-		<PopupTopicCollectionFilename>rhpopup.apj</PopupTopicCollectionFilename>
-		<FramesetCollectionFilename>rhframeset.apj</FramesetCollectionFilename>
-		<MergedHelpCollectionFilename>rhmhelp.apj</MergedHelpCollectionFilename>
-		<InfoTypeCollectionFilename>rhinfotype.apj</InfoTypeCollectionFilename>
-	</Collections>
-	<mergedhelpfiles/>
+    <projectproperties>
+        <projecttitle>[*PROJECTNAME*]</projecttitle>
+        <homepage>introduction.htm</homepage>
+        <primarylayout>Microsoft HTML Help</primarylayout>
+        <Flags>24</Flags>
+        <language>1033</language>
+    </projectproperties>
+    <miscproperties/>
+    <CompileOptions>
+        <Flags>4</Flags>
+    </CompileOptions>
+    <Collections>
+        <FolderCollectionFilename>root.fpj</FolderCollectionFilename>
+        <SkinCollectionFilename>rhskins.apj</SkinCollectionFilename>
+        <BaggageCollectionFilename>rhbag.apj</BaggageCollectionFilename>
+        <WindowCollectionFilename>rhwnd.apj</WindowCollectionFilename>
+        <TemplateCollectionFilename>rhtemplate.apj</TemplateCollectionFilename>
+        <BuildTagCollectionFilename>rhbuildtag.apj</BuildTagCollectionFilename>
+        <MapFileCollectionFilename>rhmapfile.apj</MapFileCollectionFilename>
+        <ColorCollectionFilename>rhcolor.apj</ColorCollectionFilename>
+        <FontSetCollectionFilename>rhfontset.apj</FontSetCollectionFilename>
+        <ExternalFileCollectionFilename>rhextern.apj</ExternalFileCollectionFilename>
+        <LayoutCollectionFilename>rhlayout.apj</LayoutCollectionFilename>
+        <AKeywordCollectionFilename>rhakeyword.apj</AKeywordCollectionFilename>
+        <KKeywordCollectionFilename>rhkkeyword.apj</KKeywordCollectionFilename>
+        <PopupTopicCollectionFilename>rhpopup.apj</PopupTopicCollectionFilename>
+        <FramesetCollectionFilename>rhframeset.apj</FramesetCollectionFilename>
+        <MergedHelpCollectionFilename>rhmhelp.apj</MergedHelpCollectionFilename>
+        <InfoTypeCollectionFilename>rhinfotype.apj</InfoTypeCollectionFilename>
+    </Collections>
+    <mergedhelpfiles/>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
@@ -23174,35 +23084,35 @@ Help\Lib Help\Lib.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;">[*PROJECTNAME*] Library</h1>
+            margin-top: 6px;
+            margin-bottom: 6px;">[*PROJECTNAME*] Library</h1>
 
 <p>&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;"><!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}--></p>
 
 <!--kadov_tag{{<placeholder id="footer">}}-->
 </body>
@@ -23252,81 +23162,81 @@ Help\Lib Help\Lib_Constants.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 16pt;"><!--kadov_tag{{<variable name=title
-														x-format=default
-														x-value="[*PROJECTNAME*] Constants">}}-->[*PROJECTNAME*] 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 16pt;"><!--kadov_tag{{<variable name=title
+                                                        x-format=default
+                                                        x-value="[*PROJECTNAME*] Constants">}}-->[*PROJECTNAME*] 
  Constants<!--kadov_tag{{</variable>}}--></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-weight: bold;">Messages</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-weight: bold;">Messages</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-family: 'Courier New', monospace;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-family: 'Courier New', monospace;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: 'Courier New', monospace;
-			font-size: 8pt;">WM_ <!--kadov_tag{{<spaces>}}-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<!--kadov_tag{{</spaces>}}-->EQU 
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;">WM_ <!--kadov_tag{{<spaces>}}-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<!--kadov_tag{{</spaces>}}-->EQU 
  0h ; </p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: 'Courier New', monospace;
-			font-size: 8pt;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-family: 'Courier New', monospace;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-family: 'Courier New', monospace;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-family: 'Courier New', monospace;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-family: 'Courier New', monospace;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;">Notifications</p>
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;">Notifications</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-family: 'Courier New', monospace;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-family: 'Courier New', monospace;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: 'Courier New', monospace;
-			font-size: 8pt;">NM_ <!--kadov_tag{{<spaces>}}-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<!--kadov_tag{{</spaces>}}-->EQU 
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;">NM_ <!--kadov_tag{{<spaces>}}-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<!--kadov_tag{{</spaces>}}-->EQU 
  0h <!--kadov_tag{{<spaces>}}-->&nbsp;<!--kadov_tag{{</spaces>}}-->; </p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: 'Courier New', monospace;
-			font-size: 8pt;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-family: 'Courier New', monospace;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-family: 'Courier New', monospace;">&nbsp;</p>
 
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-family: 'Courier New', monospace;">&nbsp;</p>
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-family: 'Courier New', monospace;">&nbsp;</p>
 
 <p>&nbsp;</p>
 
@@ -23378,29 +23288,29 @@ Help\Lib Help\Lib_Functions_Overview.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1><!--kadov_tag{{<variable name=title
-							x-format=default
-							x-value="[*PROJECTNAME*] Functions Overview">}}-->[*PROJECTNAME*] 
+                            x-format=default
+                            x-value="[*PROJECTNAME*] Functions Overview">}}-->[*PROJECTNAME*] 
  Functions Overview<!--kadov_tag{{</variable>}}--></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <!--kadov_tag{{<placeholder id="footer">}}-->
 </body>
@@ -23450,595 +23360,595 @@ Help\Lib Help\Lib_Messages.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;"><span style="font-family: Verdana, sans-serif;"><!--kadov_tag{{<variable 
+            margin-top: 6px;
+            margin-bottom: 6px;"><span style="font-family: Verdana, sans-serif;"><!--kadov_tag{{<variable 
  name=title
-	x-format=default
-	x-value="[*PROJECTNAME*] Messages">}}-->[*PROJECTNAME*] Messages<!--kadov_tag{{</variable>}}--></span></h1>
+    x-format=default
+    x-value="[*PROJECTNAME*] Messages">}}-->[*PROJECTNAME*] Messages<!--kadov_tag{{</variable>}}--></span></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <!--(Table)=========================================================-->
 <table x-use-null-cells
-		style="x-cell-content-align: top;
-				width: 100%;
-				border-spacing: 0px;"
-		cellspacing=0
-		width=100%>
+        style="x-cell-content-align: top;
+                width: 100%;
+                border-spacing: 0px;"
+        cellspacing=0
+        width=100%>
 <col style="width: 33.952%;">
 <col style="width: 66.048%;">
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 33.952%;
-			background-color: #000000;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-top-color: #c0c0c0;
-			border-top-style: Solid;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-top-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#000000
-	width=33.952%>
+            background-color: #000000;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-top-color: #c0c0c0;
+            border-top-style: Solid;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-top-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#000000
+    width=33.952%>
 <p style="color: #ffffff;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			line-height: Normal;
-			vertical-align: Super;
-			margin-top: 12px;
-			margin-bottom: 12px;
-			font-size: 12pt;">Message</td>
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            line-height: Normal;
+            vertical-align: Super;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            font-size: 12pt;">Message</td>
 <td style="width: 66.048%;
-			background-color: #000000;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-top-color: #c0c0c0;
-			border-top-style: Solid;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-top-width: 1px;
-			border-right-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#000000
-	width=66.048%>
+            background-color: #000000;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-top-color: #c0c0c0;
+            border-top-style: Solid;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-top-width: 1px;
+            border-right-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#000000
+    width=66.048%>
 <p style="color: #ffffff;
-			font-weight: bold;
-			font-family: Verdana, sans-serif;
-			line-height: Normal;
-			vertical-align: Super;
-			margin-top: 12px;
-			margin-bottom: 12px;">Message Description</td></tr>
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            line-height: Normal;
+            vertical-align: Super;
+            margin-top: 12px;
+            margin-bottom: 12px;">Message Description</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+    rowspan=1
+    style="width: 33.952%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+    rowspan=1
+    style="width: 66.048%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-bottom-width: 1px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-bottom-width: 1px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;
-			border-right-width: 1px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;
+            border-right-width: 1px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #ffffff;
-			border-left-width: 1px;
-			border-left-color: #c0c0c0;
-			border-left-style: Solid;
-			border-right-width: 1px;
-			border-right-color: #c0c0c0;
-			border-right-style: Solid;
-			border-bottom-width: 1px;
-			border-bottom-color: #c0c0c0;
-			border-bottom-style: Solid;"
-	bgcolor=#FFFFFF
-	width=33.952%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #ffffff;
+            border-left-width: 1px;
+            border-left-color: #c0c0c0;
+            border-left-style: Solid;
+            border-right-width: 1px;
+            border-right-color: #c0c0c0;
+            border-right-style: Solid;
+            border-bottom-width: 1px;
+            border-bottom-color: #c0c0c0;
+            border-bottom-style: Solid;"
+    bgcolor=#FFFFFF
+    width=33.952%>
 <p>&nbsp;</td>
 <td style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #ffffff;
-			border-right-width: 1px;
-			border-right-color: #c0c0c0;
-			border-right-style: Solid;
-			border-bottom-width: 1px;
-			border-bottom-color: #c0c0c0;
-			border-bottom-style: Solid;"
-	bgcolor=#FFFFFF
-	width=66.048%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #ffffff;
+            border-right-width: 1px;
+            border-right-color: #c0c0c0;
+            border-right-style: Solid;
+            border-bottom-width: 1px;
+            border-bottom-color: #c0c0c0;
+            border-bottom-style: Solid;"
+    bgcolor=#FFFFFF
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-width: 1px;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-width: 1px;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-bottom-width: 1px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-bottom-width: 1px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;
-			border-right-width: 1px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;
+            border-right-width: 1px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-width: 1px;
-			border-left-color: #c0c0c0;
-			border-left-style: Solid;
-			border-right-width: 1px;
-			border-right-color: #c0c0c0;
-			border-right-style: Solid;
-			border-bottom-width: 1px;
-			border-bottom-color: #c0c0c0;
-			border-bottom-style: Solid;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-width: 1px;
+            border-left-color: #c0c0c0;
+            border-left-style: Solid;
+            border-right-width: 1px;
+            border-right-color: #c0c0c0;
+            border-right-style: Solid;
+            border-bottom-width: 1px;
+            border-bottom-color: #c0c0c0;
+            border-bottom-style: Solid;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-width: 1px;
-			border-right-color: #c0c0c0;
-			border-right-style: Solid;
-			border-bottom-width: 1px;
-			border-bottom-color: #c0c0c0;
-			border-bottom-style: Solid;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-width: 1px;
+            border-right-color: #c0c0c0;
+            border-right-style: Solid;
+            border-bottom-width: 1px;
+            border-bottom-color: #c0c0c0;
+            border-bottom-style: Solid;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-bottom-width: 1px;
-			background-color: #ffffff;"
-	bgcolor=#FFFFFF
-	width=33.952%>
+    rowspan=1
+    style="width: 33.952%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-bottom-width: 1px;
+            background-color: #ffffff;"
+    bgcolor=#FFFFFF
+    width=33.952%>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;
-			border-right-width: 1px;
-			background-color: #ffffff;"
-	bgcolor=#FFFFFF
-	width=66.048%>
+    rowspan=1
+    style="width: 66.048%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;
+            border-right-width: 1px;
+            background-color: #ffffff;"
+    bgcolor=#FFFFFF
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-bottom-width: 1px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+    rowspan=1
+    style="width: 33.952%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-bottom-width: 1px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;
-			border-right-width: 1px;
-			background-color: #e4e4e4;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+    rowspan=1
+    style="width: 66.048%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;
+            border-right-width: 1px;
+            background-color: #e4e4e4;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-color: #c0c0c0;
-			border-left-style: Solid;
-			border-left-width: 1px;
-			border-right-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-width: 1px;
-			border-bottom-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+    rowspan=1
+    style="width: 33.952%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-color: #c0c0c0;
+            border-left-style: Solid;
+            border-left-width: 1px;
+            border-right-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-width: 1px;
+            border-bottom-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-width: 1px;
-			border-bottom-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+    rowspan=1
+    style="width: 66.048%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-width: 1px;
+            border-bottom-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-width: 1px;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+    rowspan=1
+    style="width: 33.952%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-width: 1px;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+    rowspan=1
+    style="width: 66.048%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #ffffff;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-left-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#FFFFFF
-	width=33.952%>
+    rowspan=1
+    style="width: 33.952%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #ffffff;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-left-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#FFFFFF
+    width=33.952%>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #ffffff;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-right-width: 1px;
-			border-bottom-width: 1px;"
-	bgcolor=#FFFFFF
-	width=66.048%>
+    rowspan=1
+    style="width: 66.048%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #ffffff;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-right-width: 1px;
+            border-bottom-width: 1px;"
+    bgcolor=#FFFFFF
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;
-			border-right-width: 1px;
-			border-left-width: 1px;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+    rowspan=1
+    style="width: 33.952%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;
+            border-right-width: 1px;
+            border-left-width: 1px;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;
-			border-right-width: 1px;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+    rowspan=1
+    style="width: 66.048%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;
+            border-right-width: 1px;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 33.952%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-left-style: Solid;
-			border-left-color: #c0c0c0;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;
-			border-right-width: 1px;
-			border-left-width: 1px;"
-	bgcolor=#E4E4E4
-	width=33.952%>
+    rowspan=1
+    style="width: 33.952%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-left-style: Solid;
+            border-left-color: #c0c0c0;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;
+            border-right-width: 1px;
+            border-left-width: 1px;"
+    bgcolor=#E4E4E4
+    width=33.952%>
 <p>&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 66.048%;
-			padding-right: 10px;
-			padding-left: 10px;
-			background-color: #e4e4e4;
-			border-right-style: Solid;
-			border-right-color: #c0c0c0;
-			border-bottom-style: Solid;
-			border-bottom-color: #c0c0c0;
-			border-bottom-width: 1px;
-			border-right-width: 1px;"
-	bgcolor=#E4E4E4
-	width=66.048%>
+    rowspan=1
+    style="width: 66.048%;
+            padding-right: 10px;
+            padding-left: 10px;
+            background-color: #e4e4e4;
+            border-right-style: Solid;
+            border-right-color: #c0c0c0;
+            border-bottom-style: Solid;
+            border-bottom-color: #c0c0c0;
+            border-bottom-width: 1px;
+            border-right-width: 1px;"
+    bgcolor=#E4E4E4
+    width=66.048%>
 <p>&nbsp;</td></tr>
 </table>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p>&nbsp;</p>
 
@@ -24141,67 +24051,67 @@ Help\Lib Help\License.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;"><!--kadov_tag{{<variable name=title
-															x-format=default
-															x-value=License>}}-->License<!--kadov_tag{{</variable>}}--></h1>
+            margin-top: 6px;
+            margin-bottom: 6px;"><!--kadov_tag{{<variable name=title
+                                                            x-format=default
+                                                            x-value=License>}}-->License<!--kadov_tag{{</variable>}}--></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">[*PROJECTNAME*] Library</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">[*PROJECTNAME*] Library</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">Copyright (c) 2014 by KSR aka fearless</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">Copyright (c) 2014 by KSR aka fearless</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">All Rights Reserved</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">All Rights Reserved</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">http://www.LetTheLight.in</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">http://www.LetTheLight.in</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			text-align: justify;">This software is provided 'as-is', without 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            text-align: justify;">This software is provided 'as-is', without 
  any express or implied warranty. In no event will the author be held liable 
  for any damages arising from the use of this software.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			text-align: justify;">Permission is granted to anyone to use 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            text-align: justify;">Permission is granted to anyone to use 
  this software for any non-commercial program. <span style="font-family: Verdana, sans-serif;
-															margin-top: 6px;
-															margin-bottom: 6px;
-															font-size: 10pt;
-															text-align: justify;">If 
+                                                            margin-top: 6px;
+                                                            margin-bottom: 6px;
+                                                            font-size: 10pt;
+                                                            text-align: justify;">If 
  you use the library in an application, an acknowledgement in the application 
  or documentation is appreciated but not required. </span></p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			text-align: justify;">You are allowed to make modifications 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            text-align: justify;">You are allowed to make modifications 
  to the source code, but you must leave the original copyright notices 
  intact and not mispresent the origin of the software. It is not allowed 
  to claim you wrote the original software. Modified files must have a clear 
@@ -24209,33 +24119,33 @@ Help\Lib Help\License.htm
  includes the name of the person(s) who modified the code. </p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			text-align: justify;">If you want to distribute or redistribute 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            text-align: justify;">If you want to distribute or redistribute 
  any portion of this package, you will need to include the full package 
  in it's original state, including this license and all the copyrights. 
  </p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			text-align: justify;">While distributing this package (in it's 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            text-align: justify;">While distributing this package (in it's 
  original state) is allowed, it is not allowed to charge anything for this. 
  You may not sell or include the package in any commercial package without 
  having permission of the author. Neither is it allowed to redistribute 
  any of the package's components with commercial applications. </p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <!--kadov_tag{{<placeholder id="footer">}}-->
 </body>
@@ -24286,536 +24196,536 @@ Help\Lib Help\Links.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;"><span>L</span><span><!--kadov_tag{{<variable 
+            margin-top: 6px;
+            margin-bottom: 6px;"><span>L</span><span><!--kadov_tag{{<variable 
  name=title
-	x-format=default
-	x-value=links>}}-->inks<!--kadov_tag{{</variable>}}--></span></h1>
+    x-format=default
+    x-value=links>}}-->inks<!--kadov_tag{{</variable>}}--></span></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">Links to various websites of interest:</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">Links to various websites of interest:</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <!--(Table)=========================================================-->
 <table x-use-null-cells
-		style="x-cell-content-align: top;
-				width: 100%;
-				border-spacing: 0px;
-				border-spacing: 0px;"
-		cellspacing=0
-		width=100%>
+        style="x-cell-content-align: top;
+                width: 100%;
+                border-spacing: 0px;
+                border-spacing: 0px;"
+        cellspacing=0
+        width=100%>
 <col style="width: 21.222%;">
 <col style="width: 39.389%;">
 <col style="width: 39.389%;">
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 21.222%;
-			background-color: #000000;
-			border-top-width: 1px;
-			border-top-style: Solid;
-			border-top-color: #ffffff;
-			border-right-width: 2px;
-			border-right-color: #ffffff;
-			border-right-style: Solid;
-			border-bottom-width: 1px;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			padding-right: 10px;
-			padding-left: 10px;"
-	bgcolor=#000000
-	width=21.222%>
+            background-color: #000000;
+            border-top-width: 1px;
+            border-top-style: Solid;
+            border-top-color: #ffffff;
+            border-right-width: 2px;
+            border-right-color: #ffffff;
+            border-right-style: Solid;
+            border-bottom-width: 1px;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            padding-right: 10px;
+            padding-left: 10px;"
+    bgcolor=#000000
+    width=21.222%>
 <p style="color: #ffffff;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			vertical-align: Super;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			font-size: 10pt;">Website Name</td>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            vertical-align: Super;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            font-size: 10pt;">Website Name</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			background-color: #000000;
-			border-top-width: 1px;
-			border-top-style: Solid;
-			border-top-color: #ffffff;
-			border-bottom-width: 1px;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			padding-right: 10px;
-			padding-left: 10px;"
-	bgcolor=#000000
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            background-color: #000000;
+            border-top-width: 1px;
+            border-top-style: Solid;
+            border-top-color: #ffffff;
+            border-bottom-width: 1px;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            padding-right: 10px;
+            padding-left: 10px;"
+    bgcolor=#000000
+    width=39.389%>
 <p style="color: #ffffff;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			vertical-align: Super;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			font-size: 10pt;
-			text-align: justify;">Website URL</td>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            vertical-align: Super;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            font-size: 10pt;
+            text-align: justify;">Website URL</td>
 <td style="width: 39.389%;
-			background-color: #000000;
-			border-top-width: 1px;
-			border-top-style: Solid;
-			border-top-color: #ffffff;
-			border-bottom-width: 1px;
-			border-bottom-style: Solid;
-			border-bottom-color: #ffffff;
-			padding-right: 10px;
-			padding-left: 10px;"
-	bgcolor=#000000
-	width=39.389%>
+            background-color: #000000;
+            border-top-width: 1px;
+            border-top-style: Solid;
+            border-top-color: #ffffff;
+            border-bottom-width: 1px;
+            border-bottom-style: Solid;
+            border-bottom-color: #ffffff;
+            padding-right: 10px;
+            padding-left: 10px;"
+    bgcolor=#000000
+    width=39.389%>
 <p style="color: #ffffff;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			vertical-align: Super;
-			font-family: Verdana, sans-serif;
-			font-weight: bold;
-			font-size: 10pt;
-			text-align: justify;">Description/Notes</td></tr>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            vertical-align: Super;
+            font-family: Verdana, sans-serif;
+            font-weight: bold;
+            font-size: 10pt;
+            text-align: justify;">Description/Notes</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 21.222%;
-			border-left-style: Solid;
-			border-left-color: #000000;
-			border-left-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=21.222%>
+            border-left-style: Solid;
+            border-left-color: #000000;
+            border-left-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=21.222%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Hutch's Masm32 Package</td>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Hutch's Masm32 Package</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=39.389%>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;"><a href="http://www.masm32.com/masmdl.htm">http://www.masm32.com/masmdl.htm</a></p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;"><a href="http://www.masm32.com/masmdl.htm">http://www.masm32.com/masmdl.htm</a></p>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;">&nbsp;</td>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;">&nbsp;</td>
 <td style="width: 39.389%;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=39.389%>
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">The current release version is v11.</td></tr>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">The current release version is v11.</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 21.222%;
-			border-left-style: Solid;
-			border-left-color: #000000;
-			border-left-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=21.222%>
+    rowspan=1
+    style="width: 21.222%;
+            border-left-style: Solid;
+            border-left-color: #000000;
+            border-left-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=21.222%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Asm Community</td>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Asm Community</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=39.389%>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;"><a href="http://www.asmcommunity.net">http://www.asmcommunity.net</a></p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;"><a href="http://www.asmcommunity.net">http://www.asmcommunity.net</a></p>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;">&nbsp;</td>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;">&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Asm Community. (Now a static resource)</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Asm Community. (Now a static resource)</p>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</td></tr>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td style="width: 21.222%;
-			border-left-style: Solid;
-			border-left-color: #000000;
-			border-left-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=21.222%>
+            border-left-style: Solid;
+            border-left-color: #000000;
+            border-left-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=21.222%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">KetilO's RadASM IDE</td>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">KetilO's RadASM IDE</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=39.389%>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;"><a href="http://radasm.110mb.com/">http://radasm.110mb.com</a> 
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;"><a href="http://radasm.110mb.com/">http://radasm.110mb.com</a> 
  or <a href="http://www.oby.ro/rad_asm/">http://www.oby.ro/rad_asm</a></p>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;">&nbsp;</td>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;">&nbsp;</td>
 <td style="width: 39.389%;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;
-			padding-right: 10px;
-			padding-left: 10px;"
-	width=39.389%>
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;
+            padding-right: 10px;
+            padding-left: 10px;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Rapid Application Development IDE for 
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Rapid Application Development IDE for 
  Win32 assembler and other languages.</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 21.222%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-style: Solid;
-			border-left-color: #000000;
-			border-left-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;"
-	width=21.222%>
+    rowspan=1
+    style="width: 21.222%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-style: Solid;
+            border-left-color: #000000;
+            border-left-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;"
+    width=21.222%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">fearless's website</td>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">fearless's website</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;"
+    width=39.389%>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;"><a href="http://www.LetTheLight.in">http://www.LetTheLight.in</a></p>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;"><a href="http://www.LetTheLight.in">http://www.LetTheLight.in</a></p>
 <p style="margin-top: 6px;
-			margin-bottom: 6px;
-			font-family: Verdana, sans-serif;
-			font-size: 10pt;">&nbsp;</td>
+            margin-bottom: 6px;
+            font-family: Verdana, sans-serif;
+            font-size: 10pt;">&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;">fearless's programming website for my 
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;">fearless's programming website for my 
  projects.</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 21.222%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-width: 1px;
-			border-left-color: #000000;
-			border-left-style: Solid;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;"
-	width=21.222%>
+    rowspan=1
+    style="width: 21.222%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-width: 1px;
+            border-left-color: #000000;
+            border-left-style: Solid;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;"
+    width=21.222%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Masm32 forum</td>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Masm32 forum</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;"><a href="http://www.masm32.com/board/index.php">http://www.masm32.com/board/index.php</a></p>
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;"><a href="http://www.masm32.com/board/index.php">http://www.masm32.com/board/index.php</a></p>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</td>
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;">Masm32 forum board</p>
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;">Masm32 forum board</p>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</td></tr>
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 21.222%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-style: Solid;
-			border-left-color: #000000;
-			border-left-width: 1px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;"
-	width=21.222%>
+    rowspan=1
+    style="width: 21.222%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-style: Solid;
+            border-left-color: #000000;
+            border-left-width: 1px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;"
+    width=21.222%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Japheth's site</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Japheth's site</p>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</td>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;"><a href="http://www.japheth.de">http://www.japheth.de</a></td>
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;"><a href="http://www.japheth.de">http://www.japheth.de</a></td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-style: Solid;
-			border-right-color: #000000;
-			border-right-width: 1px;
-			border-bottom-width: 1px;
-			border-bottom-color: #000000;
-			border-bottom-style: Solid;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-style: Solid;
+            border-right-color: #000000;
+            border-right-width: 1px;
+            border-bottom-width: 1px;
+            border-bottom-color: #000000;
+            border-bottom-style: Solid;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;">Lots of assembly utilities and examples 
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;">Lots of assembly utilities and examples 
  and also home of JWASM</td></tr>
 
 <tr style="x-cell-content-align: top;"
-	valign=top>
+    valign=top>
 <td colspan=1
-	rowspan=1
-	style="width: 21.222%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-left-width: 1px;
-			border-left-color: #000000;
-			border-left-style: Solid;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;"
-	width=21.222%>
+    rowspan=1
+    style="width: 21.222%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-left-width: 1px;
+            border-left-color: #000000;
+            border-left-style: Solid;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;"
+    width=21.222%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">Donkey's Stable</p>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">Donkey's Stable</p>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			margin-top: 6px;
-			margin-bottom: 6px;">&nbsp;</td>
+            font-size: 10pt;
+            margin-top: 6px;
+            margin-bottom: 6px;">&nbsp;</td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;"><a href="http://www.donkeysstable.com">http://www.donkeysstable.com</a></td>
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;"><a href="http://www.donkeysstable.com">http://www.donkeysstable.com</a></td>
 <td colspan=1
-	rowspan=1
-	style="width: 39.389%;
-			padding-right: 10px;
-			padding-left: 10px;
-			border-right-width: 1px;
-			border-right-color: #000000;
-			border-right-style: Solid;
-			border-bottom-style: Solid;
-			border-bottom-color: #000000;
-			border-bottom-width: 1px;"
-	width=39.389%>
+    rowspan=1
+    style="width: 39.389%;
+            padding-right: 10px;
+            padding-left: 10px;
+            border-right-width: 1px;
+            border-right-color: #000000;
+            border-right-style: Solid;
+            border-bottom-style: Solid;
+            border-bottom-color: #000000;
+            border-bottom-width: 1px;"
+    width=39.389%>
 <p style="font-family: Verdana, sans-serif;
-			font-size: 10pt;
-			text-align: justify;
-			margin-top: 6px;
-			margin-bottom: 6px;">Assembly tools, utilities &amp; libraries. 
+            font-size: 10pt;
+            text-align: justify;
+            margin-top: 6px;
+            margin-bottom: 6px;">Assembly tools, utilities &amp; libraries. 
  </td></tr>
 </table>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <!--kadov_tag{{<placeholder id="footer">}}-->
 </body>
@@ -24902,1514 +24812,1514 @@ Help\Lib Help\MS_Help.css
 /*=(===============================================================)*/
 
 BODY {
-	background-color: #ffffff;
+    background-color: #ffffff;
 }
 
 P /*begin!kadov{{*/ ,LI.kadov-P /*}}end!kadov*/   {
-	font-family: Verdana;
-	font-size: 10.0pt;
-	color: #000000;
+    font-family: Verdana;
+    font-size: 10.0pt;
+    color: #000000;
 }
 
 H1 /*begin!kadov{{*/ ,LI.kadov-H1 /*}}end!kadov*/   {
-	font-family: Verdana;
-	font-weight: bold;
-	font-size: 12.0pt;
-	color: #000000;
+    font-family: Verdana;
+    font-weight: bold;
+    font-size: 12.0pt;
+    color: #000000;
 }
 
 H2 /*begin!kadov{{*/ ,LI.kadov-H2 /*}}end!kadov*/   {
-	font-family: Verdana;
-	font-weight: bold;
-	font-size: 10.0pt;
-	color: #000000;
+    font-family: Verdana;
+    font-weight: bold;
+    font-size: 10.0pt;
+    color: #000000;
 }
 
 H3 /*begin!kadov{{*/ ,LI.kadov-H3 /*}}end!kadov*/   {
-	font-family: Verdana;
-	font-weight: normal;
-	font-size: 10.0pt;
-	color: #000000;
+    font-family: Verdana;
+    font-weight: normal;
+    font-size: 10.0pt;
+    color: #000000;
 }
 
 H4 /*begin!kadov{{*/ ,LI.kadov-H4 /*}}end!kadov*/   {
-	font-family: Verdana;
-	font-weight: normal;
-	font-size: 10.0pt;
-	color: #000000;
+    font-family: Verdana;
+    font-weight: normal;
+    font-size: 10.0pt;
+    color: #000000;
 }
 
 H5 /*begin!kadov{{*/ ,LI.kadov-H5 /*}}end!kadov*/   {
-	font-family: Verdana;
-	font-weight: normal;
-	font-size: 10.0pt;
-	color: #000000;
+    font-family: Verdana;
+    font-weight: normal;
+    font-size: 10.0pt;
+    color: #000000;
 }
 
 H6 /*begin!kadov{{*/ ,LI.kadov-H6 /*}}end!kadov*/   {
-	font-family: Verdana;
-	font-weight: normal;
-	font-size: 10.0pt;
-	color: #000000;
+    font-family: Verdana;
+    font-weight: normal;
+    font-size: 10.0pt;
+    color: #000000;
 }
 
 A:link {
-	x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
-	color: #0000ff;
+    x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
+    color: #0000ff;
 }
 
 A:visited {
-	x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
-	color: #0000ff;
+    x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
+    color: #0000ff;
 }
 
 A.expandspot {
-	color: #008000;
-	cursor: hand;
-	font-style: italic;
-	text-decoration: none;
+    color: #008000;
+    cursor: hand;
+    font-style: italic;
+    text-decoration: none;
 }
 
 SPAN.expandtext {
-	font-style: italic;
-	font-weight: normal;
-	color: #ff0000;
+    font-style: italic;
+    font-weight: normal;
+    color: #ff0000;
 }
 
 A.dropspot {
-	cursor: hand;
-	color: #008000;
-	font-style: italic;
-	text-decoration: none;
+    cursor: hand;
+    color: #008000;
+    font-style: italic;
+    text-decoration: none;
 }
 
 A.glossterm {
-	color: #800000;
-	cursor: hand;
-	font-style: italic;
-	text-decoration: none;
+    color: #800000;
+    cursor: hand;
+    font-style: italic;
+    text-decoration: none;
 }
 
 SPAN.glosstext {
-	font-style: italic;
-	font-weight: normal;
-	color: #0000ff;
+    font-style: italic;
+    font-weight: normal;
+    color: #0000ff;
 }
 
 OL, UL { 
-	margin-top: 0px; 
-	margin-bottom: 0px;
+    margin-top: 0px; 
+    margin-bottom: 0px;
 }
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhakeyword.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<keywords/>
+    <keywords/>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhbag.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<files>
-		<file>
-			<name>eHelp.xml</name>
-			<usercreated>false</usercreated>
-			<comments/>
-		</file>
-		<file>
-			<name>RoboHHRE.lng</name>
-			<usercreated>false</usercreated>
-			<comments/>
-		</file>
-	</files>
+    <files>
+        <file>
+            <name>eHelp.xml</name>
+            <usercreated>false</usercreated>
+            <comments/>
+        </file>
+        <file>
+            <name>RoboHHRE.lng</name>
+            <usercreated>false</usercreated>
+            <comments/>
+        </file>
+    </files>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhbuildtag.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<buildtags>
-		<buildtag>
-			<name>Print</name>
-			<colorref>255</colorref>
-			<comments/>
-		</buildtag>
-		<buildtag>
-			<name>Online</name>
-			<colorref>65280</colorref>
-			<comments/>
-		</buildtag>
-	</buildtags>
+    <buildtags>
+        <buildtag>
+            <name>Print</name>
+            <colorref>255</colorref>
+            <comments/>
+        </buildtag>
+        <buildtag>
+            <name>Online</name>
+            <colorref>65280</colorref>
+            <comments/>
+        </buildtag>
+    </buildtags>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhcolor.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<colors>
-		<color>
-			<name>Black</name>
-			<colorref>0</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Red</name>
-			<colorref>255</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Lime</name>
-			<colorref>65280</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Blue</name>
-			<colorref>16711680</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Maroon</name>
-			<colorref>128</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Green</name>
-			<colorref>32768</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Navy</name>
-			<colorref>8388608</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Gray</name>
-			<colorref>8421504</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>White</name>
-			<colorref>16777215</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Fuchsia</name>
-			<colorref>16711935</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Aqua</name>
-			<colorref>16776960</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Yellow</name>
-			<colorref>65535</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Purple</name>
-			<colorref>8388736</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Olive</name>
-			<colorref>32896</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Teal</name>
-			<colorref>8421376</colorref>
-			<type>standard</type>
-		</color>
-		<color>
-			<name>Silver</name>
-			<colorref>12632256</colorref>
-			<type>standard</type>
-		</color>
-	</colors>
+    <colors>
+        <color>
+            <name>Black</name>
+            <colorref>0</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Red</name>
+            <colorref>255</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Lime</name>
+            <colorref>65280</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Blue</name>
+            <colorref>16711680</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Maroon</name>
+            <colorref>128</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Green</name>
+            <colorref>32768</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Navy</name>
+            <colorref>8388608</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Gray</name>
+            <colorref>8421504</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>White</name>
+            <colorref>16777215</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Fuchsia</name>
+            <colorref>16711935</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Aqua</name>
+            <colorref>16776960</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Yellow</name>
+            <colorref>65535</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Purple</name>
+            <colorref>8388736</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Olive</name>
+            <colorref>32896</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Teal</name>
+            <colorref>8421376</colorref>
+            <type>standard</type>
+        </color>
+        <color>
+            <name>Silver</name>
+            <colorref>12632256</colorref>
+            <type>standard</type>
+        </color>
+    </colors>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhfontset.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<fontsets>
-		<fontset>
-			<name>Marlett</name>
-			<fontlist>Marlett</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial</name>
-			<fontlist>Arial</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arabic Transparent</name>
-			<fontlist>Arabic Transparent</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial Baltic</name>
-			<fontlist>Arial Baltic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial CE</name>
-			<fontlist>Arial CE</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial CYR</name>
-			<fontlist>Arial CYR</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial Greek</name>
-			<fontlist>Arial Greek</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial TUR</name>
-			<fontlist>Arial TUR</fontlist>
-		</fontset>
-		<fontset>
-			<name>Batang</name>
-			<fontlist>Batang</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Batang</name>
-			<fontlist>@Batang</fontlist>
-		</fontset>
-		<fontset>
-			<name>BatangChe</name>
-			<fontlist>BatangChe</fontlist>
-		</fontset>
-		<fontset>
-			<name>@BatangChe</name>
-			<fontlist>@BatangChe</fontlist>
-		</fontset>
-		<fontset>
-			<name>Gungsuh</name>
-			<fontlist>Gungsuh</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Gungsuh</name>
-			<fontlist>@Gungsuh</fontlist>
-		</fontset>
-		<fontset>
-			<name>GungsuhChe</name>
-			<fontlist>GungsuhChe</fontlist>
-		</fontset>
-		<fontset>
-			<name>@GungsuhChe</name>
-			<fontlist>@GungsuhChe</fontlist>
-		</fontset>
-		<fontset>
-			<name>Courier New</name>
-			<fontlist>Courier New</fontlist>
-		</fontset>
-		<fontset>
-			<name>Courier New Baltic</name>
-			<fontlist>Courier New Baltic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Courier New CE</name>
-			<fontlist>Courier New CE</fontlist>
-		</fontset>
-		<fontset>
-			<name>Courier New CYR</name>
-			<fontlist>Courier New CYR</fontlist>
-		</fontset>
-		<fontset>
-			<name>Courier New Greek</name>
-			<fontlist>Courier New Greek</fontlist>
-		</fontset>
-		<fontset>
-			<name>Courier New TUR</name>
-			<fontlist>Courier New TUR</fontlist>
-		</fontset>
-		<fontset>
-			<name>DaunPenh</name>
-			<fontlist>DaunPenh</fontlist>
-		</fontset>
-		<fontset>
-			<name>DokChampa</name>
-			<fontlist>DokChampa</fontlist>
-		</fontset>
-		<fontset>
-			<name>Estrangelo Edessa</name>
-			<fontlist>Estrangelo Edessa</fontlist>
-		</fontset>
-		<fontset>
-			<name>Euphemia</name>
-			<fontlist>Euphemia</fontlist>
-		</fontset>
-		<fontset>
-			<name>Gautami</name>
-			<fontlist>Gautami</fontlist>
-		</fontset>
-		<fontset>
-			<name>Vani</name>
-			<fontlist>Vani</fontlist>
-		</fontset>
-		<fontset>
-			<name>Gulim</name>
-			<fontlist>Gulim</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Gulim</name>
-			<fontlist>@Gulim</fontlist>
-		</fontset>
-		<fontset>
-			<name>GulimChe</name>
-			<fontlist>GulimChe</fontlist>
-		</fontset>
-		<fontset>
-			<name>@GulimChe</name>
-			<fontlist>@GulimChe</fontlist>
-		</fontset>
-		<fontset>
-			<name>Dotum</name>
-			<fontlist>Dotum</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Dotum</name>
-			<fontlist>@Dotum</fontlist>
-		</fontset>
-		<fontset>
-			<name>DotumChe</name>
-			<fontlist>DotumChe</fontlist>
-		</fontset>
-		<fontset>
-			<name>@DotumChe</name>
-			<fontlist>@DotumChe</fontlist>
-		</fontset>
-		<fontset>
-			<name>Impact</name>
-			<fontlist>Impact</fontlist>
-		</fontset>
-		<fontset>
-			<name>Iskoola Pota</name>
-			<fontlist>Iskoola Pota</fontlist>
-		</fontset>
-		<fontset>
-			<name>Kalinga</name>
-			<fontlist>Kalinga</fontlist>
-		</fontset>
-		<fontset>
-			<name>Kartika</name>
-			<fontlist>Kartika</fontlist>
-		</fontset>
-		<fontset>
-			<name>Khmer UI</name>
-			<fontlist>Khmer UI</fontlist>
-		</fontset>
-		<fontset>
-			<name>Lao UI</name>
-			<fontlist>Lao UI</fontlist>
-		</fontset>
-		<fontset>
-			<name>Latha</name>
-			<fontlist>Latha</fontlist>
-		</fontset>
-		<fontset>
-			<name>Lucida Console</name>
-			<fontlist>Lucida Console</fontlist>
-		</fontset>
-		<fontset>
-			<name>Malgun Gothic</name>
-			<fontlist>Malgun Gothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Malgun Gothic</name>
-			<fontlist>@Malgun Gothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Mangal</name>
-			<fontlist>Mangal</fontlist>
-		</fontset>
-		<fontset>
-			<name>Meiryo</name>
-			<fontlist>Meiryo</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Meiryo</name>
-			<fontlist>@Meiryo</fontlist>
-		</fontset>
-		<fontset>
-			<name>Meiryo UI</name>
-			<fontlist>Meiryo UI</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Meiryo UI</name>
-			<fontlist>@Meiryo UI</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft Himalaya</name>
-			<fontlist>Microsoft Himalaya</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft JhengHei</name>
-			<fontlist>Microsoft JhengHei</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Microsoft JhengHei</name>
-			<fontlist>@Microsoft JhengHei</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft YaHei</name>
-			<fontlist>Microsoft YaHei</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Microsoft YaHei</name>
-			<fontlist>@Microsoft YaHei</fontlist>
-		</fontset>
-		<fontset>
-			<name>MingLiU</name>
-			<fontlist>MingLiU</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MingLiU</name>
-			<fontlist>@MingLiU</fontlist>
-		</fontset>
-		<fontset>
-			<name>PMingLiU</name>
-			<fontlist>PMingLiU</fontlist>
-		</fontset>
-		<fontset>
-			<name>@PMingLiU</name>
-			<fontlist>@PMingLiU</fontlist>
-		</fontset>
-		<fontset>
-			<name>MingLiU_HKSCS</name>
-			<fontlist>MingLiU_HKSCS</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MingLiU_HKSCS</name>
-			<fontlist>@MingLiU_HKSCS</fontlist>
-		</fontset>
-		<fontset>
-			<name>MingLiU-ExtB</name>
-			<fontlist>MingLiU-ExtB</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MingLiU-ExtB</name>
-			<fontlist>@MingLiU-ExtB</fontlist>
-		</fontset>
-		<fontset>
-			<name>PMingLiU-ExtB</name>
-			<fontlist>PMingLiU-ExtB</fontlist>
-		</fontset>
-		<fontset>
-			<name>@PMingLiU-ExtB</name>
-			<fontlist>@PMingLiU-ExtB</fontlist>
-		</fontset>
-		<fontset>
-			<name>MingLiU_HKSCS-ExtB</name>
-			<fontlist>MingLiU_HKSCS-ExtB</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MingLiU_HKSCS-ExtB</name>
-			<fontlist>@MingLiU_HKSCS-ExtB</fontlist>
-		</fontset>
-		<fontset>
-			<name>Mongolian Baiti</name>
-			<fontlist>Mongolian Baiti</fontlist>
-		</fontset>
-		<fontset>
-			<name>MS Gothic</name>
-			<fontlist>MS Gothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MS Gothic</name>
-			<fontlist>@MS Gothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>MS PGothic</name>
-			<fontlist>MS PGothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MS PGothic</name>
-			<fontlist>@MS PGothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>MS UI Gothic</name>
-			<fontlist>MS UI Gothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MS UI Gothic</name>
-			<fontlist>@MS UI Gothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>MS Mincho</name>
-			<fontlist>MS Mincho</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MS Mincho</name>
-			<fontlist>@MS Mincho</fontlist>
-		</fontset>
-		<fontset>
-			<name>MS PMincho</name>
-			<fontlist>MS PMincho</fontlist>
-		</fontset>
-		<fontset>
-			<name>@MS PMincho</name>
-			<fontlist>@MS PMincho</fontlist>
-		</fontset>
-		<fontset>
-			<name>MV Boli</name>
-			<fontlist>MV Boli</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft New Tai Lue</name>
-			<fontlist>Microsoft New Tai Lue</fontlist>
-		</fontset>
-		<fontset>
-			<name>Nyala</name>
-			<fontlist>Nyala</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft PhagsPa</name>
-			<fontlist>Microsoft PhagsPa</fontlist>
-		</fontset>
-		<fontset>
-			<name>Plantagenet Cherokee</name>
-			<fontlist>Plantagenet Cherokee</fontlist>
-		</fontset>
-		<fontset>
-			<name>Raavi</name>
-			<fontlist>Raavi</fontlist>
-		</fontset>
-		<fontset>
-			<name>Segoe Script</name>
-			<fontlist>Segoe Script</fontlist>
-		</fontset>
-		<fontset>
-			<name>Segoe UI</name>
-			<fontlist>Segoe UI</fontlist>
-		</fontset>
-		<fontset>
-			<name>Segoe UI Semibold</name>
-			<fontlist>Segoe UI Semibold</fontlist>
-		</fontset>
-		<fontset>
-			<name>Segoe UI Light</name>
-			<fontlist>Segoe UI Light</fontlist>
-		</fontset>
-		<fontset>
-			<name>Segoe UI Symbol</name>
-			<fontlist>Segoe UI Symbol</fontlist>
-		</fontset>
-		<fontset>
-			<name>Shruti</name>
-			<fontlist>Shruti</fontlist>
-		</fontset>
-		<fontset>
-			<name>SimSun</name>
-			<fontlist>SimSun</fontlist>
-		</fontset>
-		<fontset>
-			<name>@SimSun</name>
-			<fontlist>@SimSun</fontlist>
-		</fontset>
-		<fontset>
-			<name>NSimSun</name>
-			<fontlist>NSimSun</fontlist>
-		</fontset>
-		<fontset>
-			<name>@NSimSun</name>
-			<fontlist>@NSimSun</fontlist>
-		</fontset>
-		<fontset>
-			<name>SimSun-ExtB</name>
-			<fontlist>SimSun-ExtB</fontlist>
-		</fontset>
-		<fontset>
-			<name>@SimSun-ExtB</name>
-			<fontlist>@SimSun-ExtB</fontlist>
-		</fontset>
-		<fontset>
-			<name>Sylfaen</name>
-			<fontlist>Sylfaen</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft Tai Le</name>
-			<fontlist>Microsoft Tai Le</fontlist>
-		</fontset>
-		<fontset>
-			<name>Times New Roman</name>
-			<fontlist>Times New Roman</fontlist>
-		</fontset>
-		<fontset>
-			<name>Times New Roman Baltic</name>
-			<fontlist>Times New Roman Baltic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Times New Roman CE</name>
-			<fontlist>Times New Roman CE</fontlist>
-		</fontset>
-		<fontset>
-			<name>Times New Roman CYR</name>
-			<fontlist>Times New Roman CYR</fontlist>
-		</fontset>
-		<fontset>
-			<name>Times New Roman Greek</name>
-			<fontlist>Times New Roman Greek</fontlist>
-		</fontset>
-		<fontset>
-			<name>Times New Roman TUR</name>
-			<fontlist>Times New Roman TUR</fontlist>
-		</fontset>
-		<fontset>
-			<name>Tunga</name>
-			<fontlist>Tunga</fontlist>
-		</fontset>
-		<fontset>
-			<name>Vrinda</name>
-			<fontlist>Vrinda</fontlist>
-		</fontset>
-		<fontset>
-			<name>Shonar Bangla</name>
-			<fontlist>Shonar Bangla</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft Yi Baiti</name>
-			<fontlist>Microsoft Yi Baiti</fontlist>
-		</fontset>
-		<fontset>
-			<name>Tahoma</name>
-			<fontlist>Tahoma</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft Sans Serif</name>
-			<fontlist>Microsoft Sans Serif</fontlist>
-		</fontset>
-		<fontset>
-			<name>Angsana New</name>
-			<fontlist>Angsana New</fontlist>
-		</fontset>
-		<fontset>
-			<name>Aparajita</name>
-			<fontlist>Aparajita</fontlist>
-		</fontset>
-		<fontset>
-			<name>Cordia New</name>
-			<fontlist>Cordia New</fontlist>
-		</fontset>
-		<fontset>
-			<name>Ebrima</name>
-			<fontlist>Ebrima</fontlist>
-		</fontset>
-		<fontset>
-			<name>Gisha</name>
-			<fontlist>Gisha</fontlist>
-		</fontset>
-		<fontset>
-			<name>Kokila</name>
-			<fontlist>Kokila</fontlist>
-		</fontset>
-		<fontset>
-			<name>Leelawadee</name>
-			<fontlist>Leelawadee</fontlist>
-		</fontset>
-		<fontset>
-			<name>Microsoft Uighur</name>
-			<fontlist>Microsoft Uighur</fontlist>
-		</fontset>
-		<fontset>
-			<name>MoolBoran</name>
-			<fontlist>MoolBoran</fontlist>
-		</fontset>
-		<fontset>
-			<name>Symbol</name>
-			<fontlist>Symbol</fontlist>
-		</fontset>
-		<fontset>
-			<name>Utsaah</name>
-			<fontlist>Utsaah</fontlist>
-		</fontset>
-		<fontset>
-			<name>Vijaya</name>
-			<fontlist>Vijaya</fontlist>
-		</fontset>
-		<fontset>
-			<name>Wingdings</name>
-			<fontlist>Wingdings</fontlist>
-		</fontset>
-		<fontset>
-			<name>Andalus</name>
-			<fontlist>Andalus</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arabic Typesetting</name>
-			<fontlist>Arabic Typesetting</fontlist>
-		</fontset>
-		<fontset>
-			<name>Simplified Arabic</name>
-			<fontlist>Simplified Arabic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Simplified Arabic Fixed</name>
-			<fontlist>Simplified Arabic Fixed</fontlist>
-		</fontset>
-		<fontset>
-			<name>Sakkal Majalla</name>
-			<fontlist>Sakkal Majalla</fontlist>
-		</fontset>
-		<fontset>
-			<name>Traditional Arabic</name>
-			<fontlist>Traditional Arabic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Aharoni</name>
-			<fontlist>Aharoni</fontlist>
-		</fontset>
-		<fontset>
-			<name>David</name>
-			<fontlist>David</fontlist>
-		</fontset>
-		<fontset>
-			<name>FrankRuehl</name>
-			<fontlist>FrankRuehl</fontlist>
-		</fontset>
-		<fontset>
-			<name>Levenim MT</name>
-			<fontlist>Levenim MT</fontlist>
-		</fontset>
-		<fontset>
-			<name>Miriam</name>
-			<fontlist>Miriam</fontlist>
-		</fontset>
-		<fontset>
-			<name>Miriam Fixed</name>
-			<fontlist>Miriam Fixed</fontlist>
-		</fontset>
-		<fontset>
-			<name>Narkisim</name>
-			<fontlist>Narkisim</fontlist>
-		</fontset>
-		<fontset>
-			<name>Rod</name>
-			<fontlist>Rod</fontlist>
-		</fontset>
-		<fontset>
-			<name>FangSong</name>
-			<fontlist>FangSong</fontlist>
-		</fontset>
-		<fontset>
-			<name>@FangSong</name>
-			<fontlist>@FangSong</fontlist>
-		</fontset>
-		<fontset>
-			<name>SimHei</name>
-			<fontlist>SimHei</fontlist>
-		</fontset>
-		<fontset>
-			<name>@SimHei</name>
-			<fontlist>@SimHei</fontlist>
-		</fontset>
-		<fontset>
-			<name>KaiTi</name>
-			<fontlist>KaiTi</fontlist>
-		</fontset>
-		<fontset>
-			<name>@KaiTi</name>
-			<fontlist>@KaiTi</fontlist>
-		</fontset>
-		<fontset>
-			<name>AngsanaUPC</name>
-			<fontlist>AngsanaUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>Browallia New</name>
-			<fontlist>Browallia New</fontlist>
-		</fontset>
-		<fontset>
-			<name>BrowalliaUPC</name>
-			<fontlist>BrowalliaUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>CordiaUPC</name>
-			<fontlist>CordiaUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>DilleniaUPC</name>
-			<fontlist>DilleniaUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>EucrosiaUPC</name>
-			<fontlist>EucrosiaUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>FreesiaUPC</name>
-			<fontlist>FreesiaUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>IrisUPC</name>
-			<fontlist>IrisUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>JasmineUPC</name>
-			<fontlist>JasmineUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>KodchiangUPC</name>
-			<fontlist>KodchiangUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>LilyUPC</name>
-			<fontlist>LilyUPC</fontlist>
-		</fontset>
-		<fontset>
-			<name>DFKai-SB</name>
-			<fontlist>DFKai-SB</fontlist>
-		</fontset>
-		<fontset>
-			<name>@DFKai-SB</name>
-			<fontlist>@DFKai-SB</fontlist>
-		</fontset>
-		<fontset>
-			<name>Lucida Sans Unicode</name>
-			<fontlist>Lucida Sans Unicode</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial Black</name>
-			<fontlist>Arial Black</fontlist>
-		</fontset>
-		<fontset>
-			<name>Calibri</name>
-			<fontlist>Calibri</fontlist>
-		</fontset>
-		<fontset>
-			<name>Cambria</name>
-			<fontlist>Cambria</fontlist>
-		</fontset>
-		<fontset>
-			<name>Cambria Math</name>
-			<fontlist>Cambria Math</fontlist>
-		</fontset>
-		<fontset>
-			<name>Candara</name>
-			<fontlist>Candara</fontlist>
-		</fontset>
-		<fontset>
-			<name>Comic Sans MS</name>
-			<fontlist>Comic Sans MS</fontlist>
-		</fontset>
-		<fontset>
-			<name>Consolas</name>
-			<fontlist>Consolas</fontlist>
-		</fontset>
-		<fontset>
-			<name>Constantia</name>
-			<fontlist>Constantia</fontlist>
-		</fontset>
-		<fontset>
-			<name>Corbel</name>
-			<fontlist>Corbel</fontlist>
-		</fontset>
-		<fontset>
-			<name>Franklin Gothic Medium</name>
-			<fontlist>Franklin Gothic Medium</fontlist>
-		</fontset>
-		<fontset>
-			<name>Gabriola</name>
-			<fontlist>Gabriola</fontlist>
-		</fontset>
-		<fontset>
-			<name>Georgia</name>
-			<fontlist>Georgia</fontlist>
-		</fontset>
-		<fontset>
-			<name>Palatino Linotype</name>
-			<fontlist>Palatino Linotype</fontlist>
-		</fontset>
-		<fontset>
-			<name>Segoe Print</name>
-			<fontlist>Segoe Print</fontlist>
-		</fontset>
-		<fontset>
-			<name>Trebuchet MS</name>
-			<fontlist>Trebuchet MS</fontlist>
-		</fontset>
-		<fontset>
-			<name>Verdana</name>
-			<fontlist>Verdana</fontlist>
-		</fontset>
-		<fontset>
-			<name>Webdings</name>
-			<fontlist>Webdings</fontlist>
-		</fontset>
-		<fontset>
-			<name>Calibri Light</name>
-			<fontlist>Calibri Light</fontlist>
-		</fontset>
-		<fontset>
-			<name>FatCow</name>
-			<fontlist>FatCow</fontlist>
-		</fontset>
-		<fontset>
-			<name>Source Code Pro Black</name>
-			<fontlist>Source Code Pro Black</fontlist>
-		</fontset>
-		<fontset>
-			<name>Source Code Pro Semibold</name>
-			<fontlist>Source Code Pro Semibold</fontlist>
-		</fontset>
-		<fontset>
-			<name>Source Code Pro</name>
-			<fontlist>Source Code Pro</fontlist>
-		</fontset>
-		<fontset>
-			<name>Source Code Pro Light</name>
-			<fontlist>Source Code Pro Light</fontlist>
-		</fontset>
-		<fontset>
-			<name>Source Code Pro ExtraLight</name>
-			<fontlist>Source Code Pro ExtraLight</fontlist>
-		</fontset>
-		<fontset>
-			<name>Samba is Dead</name>
-			<fontlist>Samba is Dead</fontlist>
-		</fontset>
-		<fontset>
-			<name>Dyno</name>
-			<fontlist>Dyno</fontlist>
-		</fontset>
-		<fontset>
-			<name>Emmanuelle</name>
-			<fontlist>Emmanuelle</fontlist>
-		</fontset>
-		<fontset>
-			<name>franschi</name>
-			<fontlist>franschi</fontlist>
-		</fontset>
-		<fontset>
-			<name>Freak out Go bananas</name>
-			<fontlist>Freak out Go bananas</fontlist>
-		</fontset>
-		<fontset>
-			<name>Groovy Fast</name>
-			<fontlist>Groovy Fast</fontlist>
-		</fontset>
-		<fontset>
-			<name>Lowvetica</name>
-			<fontlist>Lowvetica</fontlist>
-		</fontset>
-		<fontset>
-			<name>Matthan Sans</name>
-			<fontlist>Matthan Sans</fontlist>
-		</fontset>
-		<fontset>
-			<name>Not Just Groovy</name>
-			<fontlist>Not Just Groovy</fontlist>
-		</fontset>
-		<fontset>
-			<name>DejaVu Sans</name>
-			<fontlist>DejaVu Sans</fontlist>
-		</fontset>
-		<fontset>
-			<name>Open Sans</name>
-			<fontlist>Open Sans</fontlist>
-		</fontset>
-		<fontset>
-			<name>OpenSymbol</name>
-			<fontlist>OpenSymbol</fontlist>
-		</fontset>
-		<fontset>
-			<name>Source Sans Pro</name>
-			<fontlist>Source Sans Pro</fontlist>
-		</fontset>
-		<fontset>
-			<name>Linux Biolinum G</name>
-			<fontlist>Linux Biolinum G</fontlist>
-		</fontset>
-		<fontset>
-			<name>PT Serif</name>
-			<fontlist>PT Serif</fontlist>
-		</fontset>
-		<fontset>
-			<name>Gentium Basic</name>
-			<fontlist>Gentium Basic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Liberation Mono</name>
-			<fontlist>Liberation Mono</fontlist>
-		</fontset>
-		<fontset>
-			<name>Liberation Sans Narrow</name>
-			<fontlist>Liberation Sans Narrow</fontlist>
-		</fontset>
-		<fontset>
-			<name>DejaVu Sans Light</name>
-			<fontlist>DejaVu Sans Light</fontlist>
-		</fontset>
-		<fontset>
-			<name>DejaVu Sans Condensed</name>
-			<fontlist>DejaVu Sans Condensed</fontlist>
-		</fontset>
-		<fontset>
-			<name>DejaVu Sans Mono</name>
-			<fontlist>DejaVu Sans Mono</fontlist>
-		</fontset>
-		<fontset>
-			<name>DejaVu Serif</name>
-			<fontlist>DejaVu Serif</fontlist>
-		</fontset>
-		<fontset>
-			<name>DejaVu Serif Condensed</name>
-			<fontlist>DejaVu Serif Condensed</fontlist>
-		</fontset>
-		<fontset>
-			<name>Gentium Book Basic</name>
-			<fontlist>Gentium Book Basic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Liberation Sans</name>
-			<fontlist>Liberation Sans</fontlist>
-		</fontset>
-		<fontset>
-			<name>Liberation Serif</name>
-			<fontlist>Liberation Serif</fontlist>
-		</fontset>
-		<fontset>
-			<name>Linux Libertine Display G</name>
-			<fontlist>Linux Libertine Display G</fontlist>
-		</fontset>
-		<fontset>
-			<name>Linux Libertine G</name>
-			<fontlist>Linux Libertine G</fontlist>
-		</fontset>
-		<fontset>
-			<name>Century Gothic</name>
-			<fontlist>Century Gothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Garamond</name>
-			<fontlist>Garamond</fontlist>
-		</fontset>
-		<fontset>
-			<name>Monotype Corsiva</name>
-			<fontlist>Monotype Corsiva</fontlist>
-		</fontset>
-		<fontset>
-			<name>Bookman Old Style</name>
-			<fontlist>Bookman Old Style</fontlist>
-		</fontset>
-		<fontset>
-			<name>Algerian</name>
-			<fontlist>Algerian</fontlist>
-		</fontset>
-		<fontset>
-			<name>Baskerville Old Face</name>
-			<fontlist>Baskerville Old Face</fontlist>
-		</fontset>
-		<fontset>
-			<name>Bauhaus 93</name>
-			<fontlist>Bauhaus 93</fontlist>
-		</fontset>
-		<fontset>
-			<name>Bell MT</name>
-			<fontlist>Bell MT</fontlist>
-		</fontset>
-		<fontset>
-			<name>Berlin Sans FB</name>
-			<fontlist>Berlin Sans FB</fontlist>
-		</fontset>
-		<fontset>
-			<name>Berlin Sans FB Demi</name>
-			<fontlist>Berlin Sans FB Demi</fontlist>
-		</fontset>
-		<fontset>
-			<name>Bernard MT Condensed</name>
-			<fontlist>Bernard MT Condensed</fontlist>
-		</fontset>
-		<fontset>
-			<name>Bodoni MT Poster Compressed</name>
-			<fontlist>Bodoni MT Poster Compressed</fontlist>
-		</fontset>
-		<fontset>
-			<name>Britannic Bold</name>
-			<fontlist>Britannic Bold</fontlist>
-		</fontset>
-		<fontset>
-			<name>Broadway</name>
-			<fontlist>Broadway</fontlist>
-		</fontset>
-		<fontset>
-			<name>Brush Script MT</name>
-			<fontlist>Brush Script MT</fontlist>
-		</fontset>
-		<fontset>
-			<name>Californian FB</name>
-			<fontlist>Californian FB</fontlist>
-		</fontset>
-		<fontset>
-			<name>Centaur</name>
-			<fontlist>Centaur</fontlist>
-		</fontset>
-		<fontset>
-			<name>Chiller</name>
-			<fontlist>Chiller</fontlist>
-		</fontset>
-		<fontset>
-			<name>Colonna MT</name>
-			<fontlist>Colonna MT</fontlist>
-		</fontset>
-		<fontset>
-			<name>Cooper Black</name>
-			<fontlist>Cooper Black</fontlist>
-		</fontset>
-		<fontset>
-			<name>Footlight MT Light</name>
-			<fontlist>Footlight MT Light</fontlist>
-		</fontset>
-		<fontset>
-			<name>Freestyle Script</name>
-			<fontlist>Freestyle Script</fontlist>
-		</fontset>
-		<fontset>
-			<name>Harlow Solid Italic</name>
-			<fontlist>Harlow Solid Italic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Harrington</name>
-			<fontlist>Harrington</fontlist>
-		</fontset>
-		<fontset>
-			<name>High Tower Text</name>
-			<fontlist>High Tower Text</fontlist>
-		</fontset>
-		<fontset>
-			<name>Jokerman</name>
-			<fontlist>Jokerman</fontlist>
-		</fontset>
-		<fontset>
-			<name>Juice ITC</name>
-			<fontlist>Juice ITC</fontlist>
-		</fontset>
-		<fontset>
-			<name>Kristen ITC</name>
-			<fontlist>Kristen ITC</fontlist>
-		</fontset>
-		<fontset>
-			<name>Kunstler Script</name>
-			<fontlist>Kunstler Script</fontlist>
-		</fontset>
-		<fontset>
-			<name>Lucida Bright</name>
-			<fontlist>Lucida Bright</fontlist>
-		</fontset>
-		<fontset>
-			<name>Lucida Calligraphy</name>
-			<fontlist>Lucida Calligraphy</fontlist>
-		</fontset>
-		<fontset>
-			<name>Lucida Fax</name>
-			<fontlist>Lucida Fax</fontlist>
-		</fontset>
-		<fontset>
-			<name>Lucida Handwriting</name>
-			<fontlist>Lucida Handwriting</fontlist>
-		</fontset>
-		<fontset>
-			<name>Magneto</name>
-			<fontlist>Magneto</fontlist>
-		</fontset>
-		<fontset>
-			<name>Matura MT Script Capitals</name>
-			<fontlist>Matura MT Script Capitals</fontlist>
-		</fontset>
-		<fontset>
-			<name>Mistral</name>
-			<fontlist>Mistral</fontlist>
-		</fontset>
-		<fontset>
-			<name>Modern No. 20</name>
-			<fontlist>Modern No. 20</fontlist>
-		</fontset>
-		<fontset>
-			<name>Niagara Engraved</name>
-			<fontlist>Niagara Engraved</fontlist>
-		</fontset>
-		<fontset>
-			<name>Niagara Solid</name>
-			<fontlist>Niagara Solid</fontlist>
-		</fontset>
-		<fontset>
-			<name>Old English Text MT</name>
-			<fontlist>Old English Text MT</fontlist>
-		</fontset>
-		<fontset>
-			<name>Onyx</name>
-			<fontlist>Onyx</fontlist>
-		</fontset>
-		<fontset>
-			<name>Parchment</name>
-			<fontlist>Parchment</fontlist>
-		</fontset>
-		<fontset>
-			<name>Playbill</name>
-			<fontlist>Playbill</fontlist>
-		</fontset>
-		<fontset>
-			<name>Poor Richard</name>
-			<fontlist>Poor Richard</fontlist>
-		</fontset>
-		<fontset>
-			<name>Ravie</name>
-			<fontlist>Ravie</fontlist>
-		</fontset>
-		<fontset>
-			<name>Informal Roman</name>
-			<fontlist>Informal Roman</fontlist>
-		</fontset>
-		<fontset>
-			<name>Showcard Gothic</name>
-			<fontlist>Showcard Gothic</fontlist>
-		</fontset>
-		<fontset>
-			<name>Snap ITC</name>
-			<fontlist>Snap ITC</fontlist>
-		</fontset>
-		<fontset>
-			<name>Stencil</name>
-			<fontlist>Stencil</fontlist>
-		</fontset>
-		<fontset>
-			<name>Tempus Sans ITC</name>
-			<fontlist>Tempus Sans ITC</fontlist>
-		</fontset>
-		<fontset>
-			<name>Viner Hand ITC</name>
-			<fontlist>Viner Hand ITC</fontlist>
-		</fontset>
-		<fontset>
-			<name>Vivaldi</name>
-			<fontlist>Vivaldi</fontlist>
-		</fontset>
-		<fontset>
-			<name>Vladimir Script</name>
-			<fontlist>Vladimir Script</fontlist>
-		</fontset>
-		<fontset>
-			<name>Wide Latin</name>
-			<fontlist>Wide Latin</fontlist>
-		</fontset>
-		<fontset>
-			<name>Century</name>
-			<fontlist>Century</fontlist>
-		</fontset>
-		<fontset>
-			<name>Wingdings 2</name>
-			<fontlist>Wingdings 2</fontlist>
-		</fontset>
-		<fontset>
-			<name>Wingdings 3</name>
-			<fontlist>Wingdings 3</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial Unicode MS</name>
-			<fontlist>Arial Unicode MS</fontlist>
-		</fontset>
-		<fontset>
-			<name>@Arial Unicode MS</name>
-			<fontlist>@Arial Unicode MS</fontlist>
-		</fontset>
-		<fontset>
-			<name>Arial Narrow</name>
-			<fontlist>Arial Narrow</fontlist>
-		</fontset>
-		<fontset>
-			<name>Fountain Pen Frenzy</name>
-			<fontlist>Fountain Pen Frenzy</fontlist>
-		</fontset>
-		<fontset>
-			<name>MT Extra</name>
-			<fontlist>MT Extra</fontlist>
-		</fontset>
-		<fontset>
-			<name>Open Sans Semibold</name>
-			<fontlist>Open Sans Semibold</fontlist>
-		</fontset>
-		<fontset>
-			<name>Nirmala UI</name>
-			<fontlist>Nirmala UI</fontlist>
-		</fontset>
-		<fontset>
-			<name>Book Antiqua</name>
-			<fontlist>Book Antiqua</fontlist>
-		</fontset>
-		<fontset>
-			<name>Bradley Hand ITC</name>
-			<fontlist>Bradley Hand ITC</fontlist>
-		</fontset>
-		<fontset>
-			<name>Bookshelf Symbol 7</name>
-			<fontlist>Bookshelf Symbol 7</fontlist>
-		</fontset>
-		<fontset>
-			<name>French Script MT</name>
-			<fontlist>French Script MT</fontlist>
-		</fontset>
-		<fontset>
-			<name>Gadugi</name>
-			<fontlist>Gadugi</fontlist>
-		</fontset>
-		<fontset>
-			<name>Papyrus</name>
-			<fontlist>Papyrus</fontlist>
-		</fontset>
-		<fontset>
-			<name>Pristina</name>
-			<fontlist>Pristina</fontlist>
-		</fontset>
-		<fontset>
-			<name>MS Reference Sans Serif</name>
-			<fontlist>MS Reference Sans Serif</fontlist>
-		</fontset>
-		<fontset>
-			<name>MS Reference Specialty</name>
-			<fontlist>MS Reference Specialty</fontlist>
-		</fontset>
-		<fontset>
-			<name>Segoe UI Semilight</name>
-			<fontlist>Segoe UI Semilight</fontlist>
-		</fontset>
-	</fontsets>
+    <fontsets>
+        <fontset>
+            <name>Marlett</name>
+            <fontlist>Marlett</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial</name>
+            <fontlist>Arial</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arabic Transparent</name>
+            <fontlist>Arabic Transparent</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial Baltic</name>
+            <fontlist>Arial Baltic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial CE</name>
+            <fontlist>Arial CE</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial CYR</name>
+            <fontlist>Arial CYR</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial Greek</name>
+            <fontlist>Arial Greek</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial TUR</name>
+            <fontlist>Arial TUR</fontlist>
+        </fontset>
+        <fontset>
+            <name>Batang</name>
+            <fontlist>Batang</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Batang</name>
+            <fontlist>@Batang</fontlist>
+        </fontset>
+        <fontset>
+            <name>BatangChe</name>
+            <fontlist>BatangChe</fontlist>
+        </fontset>
+        <fontset>
+            <name>@BatangChe</name>
+            <fontlist>@BatangChe</fontlist>
+        </fontset>
+        <fontset>
+            <name>Gungsuh</name>
+            <fontlist>Gungsuh</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Gungsuh</name>
+            <fontlist>@Gungsuh</fontlist>
+        </fontset>
+        <fontset>
+            <name>GungsuhChe</name>
+            <fontlist>GungsuhChe</fontlist>
+        </fontset>
+        <fontset>
+            <name>@GungsuhChe</name>
+            <fontlist>@GungsuhChe</fontlist>
+        </fontset>
+        <fontset>
+            <name>Courier New</name>
+            <fontlist>Courier New</fontlist>
+        </fontset>
+        <fontset>
+            <name>Courier New Baltic</name>
+            <fontlist>Courier New Baltic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Courier New CE</name>
+            <fontlist>Courier New CE</fontlist>
+        </fontset>
+        <fontset>
+            <name>Courier New CYR</name>
+            <fontlist>Courier New CYR</fontlist>
+        </fontset>
+        <fontset>
+            <name>Courier New Greek</name>
+            <fontlist>Courier New Greek</fontlist>
+        </fontset>
+        <fontset>
+            <name>Courier New TUR</name>
+            <fontlist>Courier New TUR</fontlist>
+        </fontset>
+        <fontset>
+            <name>DaunPenh</name>
+            <fontlist>DaunPenh</fontlist>
+        </fontset>
+        <fontset>
+            <name>DokChampa</name>
+            <fontlist>DokChampa</fontlist>
+        </fontset>
+        <fontset>
+            <name>Estrangelo Edessa</name>
+            <fontlist>Estrangelo Edessa</fontlist>
+        </fontset>
+        <fontset>
+            <name>Euphemia</name>
+            <fontlist>Euphemia</fontlist>
+        </fontset>
+        <fontset>
+            <name>Gautami</name>
+            <fontlist>Gautami</fontlist>
+        </fontset>
+        <fontset>
+            <name>Vani</name>
+            <fontlist>Vani</fontlist>
+        </fontset>
+        <fontset>
+            <name>Gulim</name>
+            <fontlist>Gulim</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Gulim</name>
+            <fontlist>@Gulim</fontlist>
+        </fontset>
+        <fontset>
+            <name>GulimChe</name>
+            <fontlist>GulimChe</fontlist>
+        </fontset>
+        <fontset>
+            <name>@GulimChe</name>
+            <fontlist>@GulimChe</fontlist>
+        </fontset>
+        <fontset>
+            <name>Dotum</name>
+            <fontlist>Dotum</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Dotum</name>
+            <fontlist>@Dotum</fontlist>
+        </fontset>
+        <fontset>
+            <name>DotumChe</name>
+            <fontlist>DotumChe</fontlist>
+        </fontset>
+        <fontset>
+            <name>@DotumChe</name>
+            <fontlist>@DotumChe</fontlist>
+        </fontset>
+        <fontset>
+            <name>Impact</name>
+            <fontlist>Impact</fontlist>
+        </fontset>
+        <fontset>
+            <name>Iskoola Pota</name>
+            <fontlist>Iskoola Pota</fontlist>
+        </fontset>
+        <fontset>
+            <name>Kalinga</name>
+            <fontlist>Kalinga</fontlist>
+        </fontset>
+        <fontset>
+            <name>Kartika</name>
+            <fontlist>Kartika</fontlist>
+        </fontset>
+        <fontset>
+            <name>Khmer UI</name>
+            <fontlist>Khmer UI</fontlist>
+        </fontset>
+        <fontset>
+            <name>Lao UI</name>
+            <fontlist>Lao UI</fontlist>
+        </fontset>
+        <fontset>
+            <name>Latha</name>
+            <fontlist>Latha</fontlist>
+        </fontset>
+        <fontset>
+            <name>Lucida Console</name>
+            <fontlist>Lucida Console</fontlist>
+        </fontset>
+        <fontset>
+            <name>Malgun Gothic</name>
+            <fontlist>Malgun Gothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Malgun Gothic</name>
+            <fontlist>@Malgun Gothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Mangal</name>
+            <fontlist>Mangal</fontlist>
+        </fontset>
+        <fontset>
+            <name>Meiryo</name>
+            <fontlist>Meiryo</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Meiryo</name>
+            <fontlist>@Meiryo</fontlist>
+        </fontset>
+        <fontset>
+            <name>Meiryo UI</name>
+            <fontlist>Meiryo UI</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Meiryo UI</name>
+            <fontlist>@Meiryo UI</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft Himalaya</name>
+            <fontlist>Microsoft Himalaya</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft JhengHei</name>
+            <fontlist>Microsoft JhengHei</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Microsoft JhengHei</name>
+            <fontlist>@Microsoft JhengHei</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft YaHei</name>
+            <fontlist>Microsoft YaHei</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Microsoft YaHei</name>
+            <fontlist>@Microsoft YaHei</fontlist>
+        </fontset>
+        <fontset>
+            <name>MingLiU</name>
+            <fontlist>MingLiU</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MingLiU</name>
+            <fontlist>@MingLiU</fontlist>
+        </fontset>
+        <fontset>
+            <name>PMingLiU</name>
+            <fontlist>PMingLiU</fontlist>
+        </fontset>
+        <fontset>
+            <name>@PMingLiU</name>
+            <fontlist>@PMingLiU</fontlist>
+        </fontset>
+        <fontset>
+            <name>MingLiU_HKSCS</name>
+            <fontlist>MingLiU_HKSCS</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MingLiU_HKSCS</name>
+            <fontlist>@MingLiU_HKSCS</fontlist>
+        </fontset>
+        <fontset>
+            <name>MingLiU-ExtB</name>
+            <fontlist>MingLiU-ExtB</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MingLiU-ExtB</name>
+            <fontlist>@MingLiU-ExtB</fontlist>
+        </fontset>
+        <fontset>
+            <name>PMingLiU-ExtB</name>
+            <fontlist>PMingLiU-ExtB</fontlist>
+        </fontset>
+        <fontset>
+            <name>@PMingLiU-ExtB</name>
+            <fontlist>@PMingLiU-ExtB</fontlist>
+        </fontset>
+        <fontset>
+            <name>MingLiU_HKSCS-ExtB</name>
+            <fontlist>MingLiU_HKSCS-ExtB</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MingLiU_HKSCS-ExtB</name>
+            <fontlist>@MingLiU_HKSCS-ExtB</fontlist>
+        </fontset>
+        <fontset>
+            <name>Mongolian Baiti</name>
+            <fontlist>Mongolian Baiti</fontlist>
+        </fontset>
+        <fontset>
+            <name>MS Gothic</name>
+            <fontlist>MS Gothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MS Gothic</name>
+            <fontlist>@MS Gothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>MS PGothic</name>
+            <fontlist>MS PGothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MS PGothic</name>
+            <fontlist>@MS PGothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>MS UI Gothic</name>
+            <fontlist>MS UI Gothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MS UI Gothic</name>
+            <fontlist>@MS UI Gothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>MS Mincho</name>
+            <fontlist>MS Mincho</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MS Mincho</name>
+            <fontlist>@MS Mincho</fontlist>
+        </fontset>
+        <fontset>
+            <name>MS PMincho</name>
+            <fontlist>MS PMincho</fontlist>
+        </fontset>
+        <fontset>
+            <name>@MS PMincho</name>
+            <fontlist>@MS PMincho</fontlist>
+        </fontset>
+        <fontset>
+            <name>MV Boli</name>
+            <fontlist>MV Boli</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft New Tai Lue</name>
+            <fontlist>Microsoft New Tai Lue</fontlist>
+        </fontset>
+        <fontset>
+            <name>Nyala</name>
+            <fontlist>Nyala</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft PhagsPa</name>
+            <fontlist>Microsoft PhagsPa</fontlist>
+        </fontset>
+        <fontset>
+            <name>Plantagenet Cherokee</name>
+            <fontlist>Plantagenet Cherokee</fontlist>
+        </fontset>
+        <fontset>
+            <name>Raavi</name>
+            <fontlist>Raavi</fontlist>
+        </fontset>
+        <fontset>
+            <name>Segoe Script</name>
+            <fontlist>Segoe Script</fontlist>
+        </fontset>
+        <fontset>
+            <name>Segoe UI</name>
+            <fontlist>Segoe UI</fontlist>
+        </fontset>
+        <fontset>
+            <name>Segoe UI Semibold</name>
+            <fontlist>Segoe UI Semibold</fontlist>
+        </fontset>
+        <fontset>
+            <name>Segoe UI Light</name>
+            <fontlist>Segoe UI Light</fontlist>
+        </fontset>
+        <fontset>
+            <name>Segoe UI Symbol</name>
+            <fontlist>Segoe UI Symbol</fontlist>
+        </fontset>
+        <fontset>
+            <name>Shruti</name>
+            <fontlist>Shruti</fontlist>
+        </fontset>
+        <fontset>
+            <name>SimSun</name>
+            <fontlist>SimSun</fontlist>
+        </fontset>
+        <fontset>
+            <name>@SimSun</name>
+            <fontlist>@SimSun</fontlist>
+        </fontset>
+        <fontset>
+            <name>NSimSun</name>
+            <fontlist>NSimSun</fontlist>
+        </fontset>
+        <fontset>
+            <name>@NSimSun</name>
+            <fontlist>@NSimSun</fontlist>
+        </fontset>
+        <fontset>
+            <name>SimSun-ExtB</name>
+            <fontlist>SimSun-ExtB</fontlist>
+        </fontset>
+        <fontset>
+            <name>@SimSun-ExtB</name>
+            <fontlist>@SimSun-ExtB</fontlist>
+        </fontset>
+        <fontset>
+            <name>Sylfaen</name>
+            <fontlist>Sylfaen</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft Tai Le</name>
+            <fontlist>Microsoft Tai Le</fontlist>
+        </fontset>
+        <fontset>
+            <name>Times New Roman</name>
+            <fontlist>Times New Roman</fontlist>
+        </fontset>
+        <fontset>
+            <name>Times New Roman Baltic</name>
+            <fontlist>Times New Roman Baltic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Times New Roman CE</name>
+            <fontlist>Times New Roman CE</fontlist>
+        </fontset>
+        <fontset>
+            <name>Times New Roman CYR</name>
+            <fontlist>Times New Roman CYR</fontlist>
+        </fontset>
+        <fontset>
+            <name>Times New Roman Greek</name>
+            <fontlist>Times New Roman Greek</fontlist>
+        </fontset>
+        <fontset>
+            <name>Times New Roman TUR</name>
+            <fontlist>Times New Roman TUR</fontlist>
+        </fontset>
+        <fontset>
+            <name>Tunga</name>
+            <fontlist>Tunga</fontlist>
+        </fontset>
+        <fontset>
+            <name>Vrinda</name>
+            <fontlist>Vrinda</fontlist>
+        </fontset>
+        <fontset>
+            <name>Shonar Bangla</name>
+            <fontlist>Shonar Bangla</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft Yi Baiti</name>
+            <fontlist>Microsoft Yi Baiti</fontlist>
+        </fontset>
+        <fontset>
+            <name>Tahoma</name>
+            <fontlist>Tahoma</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft Sans Serif</name>
+            <fontlist>Microsoft Sans Serif</fontlist>
+        </fontset>
+        <fontset>
+            <name>Angsana New</name>
+            <fontlist>Angsana New</fontlist>
+        </fontset>
+        <fontset>
+            <name>Aparajita</name>
+            <fontlist>Aparajita</fontlist>
+        </fontset>
+        <fontset>
+            <name>Cordia New</name>
+            <fontlist>Cordia New</fontlist>
+        </fontset>
+        <fontset>
+            <name>Ebrima</name>
+            <fontlist>Ebrima</fontlist>
+        </fontset>
+        <fontset>
+            <name>Gisha</name>
+            <fontlist>Gisha</fontlist>
+        </fontset>
+        <fontset>
+            <name>Kokila</name>
+            <fontlist>Kokila</fontlist>
+        </fontset>
+        <fontset>
+            <name>Leelawadee</name>
+            <fontlist>Leelawadee</fontlist>
+        </fontset>
+        <fontset>
+            <name>Microsoft Uighur</name>
+            <fontlist>Microsoft Uighur</fontlist>
+        </fontset>
+        <fontset>
+            <name>MoolBoran</name>
+            <fontlist>MoolBoran</fontlist>
+        </fontset>
+        <fontset>
+            <name>Symbol</name>
+            <fontlist>Symbol</fontlist>
+        </fontset>
+        <fontset>
+            <name>Utsaah</name>
+            <fontlist>Utsaah</fontlist>
+        </fontset>
+        <fontset>
+            <name>Vijaya</name>
+            <fontlist>Vijaya</fontlist>
+        </fontset>
+        <fontset>
+            <name>Wingdings</name>
+            <fontlist>Wingdings</fontlist>
+        </fontset>
+        <fontset>
+            <name>Andalus</name>
+            <fontlist>Andalus</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arabic Typesetting</name>
+            <fontlist>Arabic Typesetting</fontlist>
+        </fontset>
+        <fontset>
+            <name>Simplified Arabic</name>
+            <fontlist>Simplified Arabic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Simplified Arabic Fixed</name>
+            <fontlist>Simplified Arabic Fixed</fontlist>
+        </fontset>
+        <fontset>
+            <name>Sakkal Majalla</name>
+            <fontlist>Sakkal Majalla</fontlist>
+        </fontset>
+        <fontset>
+            <name>Traditional Arabic</name>
+            <fontlist>Traditional Arabic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Aharoni</name>
+            <fontlist>Aharoni</fontlist>
+        </fontset>
+        <fontset>
+            <name>David</name>
+            <fontlist>David</fontlist>
+        </fontset>
+        <fontset>
+            <name>FrankRuehl</name>
+            <fontlist>FrankRuehl</fontlist>
+        </fontset>
+        <fontset>
+            <name>Levenim MT</name>
+            <fontlist>Levenim MT</fontlist>
+        </fontset>
+        <fontset>
+            <name>Miriam</name>
+            <fontlist>Miriam</fontlist>
+        </fontset>
+        <fontset>
+            <name>Miriam Fixed</name>
+            <fontlist>Miriam Fixed</fontlist>
+        </fontset>
+        <fontset>
+            <name>Narkisim</name>
+            <fontlist>Narkisim</fontlist>
+        </fontset>
+        <fontset>
+            <name>Rod</name>
+            <fontlist>Rod</fontlist>
+        </fontset>
+        <fontset>
+            <name>FangSong</name>
+            <fontlist>FangSong</fontlist>
+        </fontset>
+        <fontset>
+            <name>@FangSong</name>
+            <fontlist>@FangSong</fontlist>
+        </fontset>
+        <fontset>
+            <name>SimHei</name>
+            <fontlist>SimHei</fontlist>
+        </fontset>
+        <fontset>
+            <name>@SimHei</name>
+            <fontlist>@SimHei</fontlist>
+        </fontset>
+        <fontset>
+            <name>KaiTi</name>
+            <fontlist>KaiTi</fontlist>
+        </fontset>
+        <fontset>
+            <name>@KaiTi</name>
+            <fontlist>@KaiTi</fontlist>
+        </fontset>
+        <fontset>
+            <name>AngsanaUPC</name>
+            <fontlist>AngsanaUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>Browallia New</name>
+            <fontlist>Browallia New</fontlist>
+        </fontset>
+        <fontset>
+            <name>BrowalliaUPC</name>
+            <fontlist>BrowalliaUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>CordiaUPC</name>
+            <fontlist>CordiaUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>DilleniaUPC</name>
+            <fontlist>DilleniaUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>EucrosiaUPC</name>
+            <fontlist>EucrosiaUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>FreesiaUPC</name>
+            <fontlist>FreesiaUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>IrisUPC</name>
+            <fontlist>IrisUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>JasmineUPC</name>
+            <fontlist>JasmineUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>KodchiangUPC</name>
+            <fontlist>KodchiangUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>LilyUPC</name>
+            <fontlist>LilyUPC</fontlist>
+        </fontset>
+        <fontset>
+            <name>DFKai-SB</name>
+            <fontlist>DFKai-SB</fontlist>
+        </fontset>
+        <fontset>
+            <name>@DFKai-SB</name>
+            <fontlist>@DFKai-SB</fontlist>
+        </fontset>
+        <fontset>
+            <name>Lucida Sans Unicode</name>
+            <fontlist>Lucida Sans Unicode</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial Black</name>
+            <fontlist>Arial Black</fontlist>
+        </fontset>
+        <fontset>
+            <name>Calibri</name>
+            <fontlist>Calibri</fontlist>
+        </fontset>
+        <fontset>
+            <name>Cambria</name>
+            <fontlist>Cambria</fontlist>
+        </fontset>
+        <fontset>
+            <name>Cambria Math</name>
+            <fontlist>Cambria Math</fontlist>
+        </fontset>
+        <fontset>
+            <name>Candara</name>
+            <fontlist>Candara</fontlist>
+        </fontset>
+        <fontset>
+            <name>Comic Sans MS</name>
+            <fontlist>Comic Sans MS</fontlist>
+        </fontset>
+        <fontset>
+            <name>Consolas</name>
+            <fontlist>Consolas</fontlist>
+        </fontset>
+        <fontset>
+            <name>Constantia</name>
+            <fontlist>Constantia</fontlist>
+        </fontset>
+        <fontset>
+            <name>Corbel</name>
+            <fontlist>Corbel</fontlist>
+        </fontset>
+        <fontset>
+            <name>Franklin Gothic Medium</name>
+            <fontlist>Franklin Gothic Medium</fontlist>
+        </fontset>
+        <fontset>
+            <name>Gabriola</name>
+            <fontlist>Gabriola</fontlist>
+        </fontset>
+        <fontset>
+            <name>Georgia</name>
+            <fontlist>Georgia</fontlist>
+        </fontset>
+        <fontset>
+            <name>Palatino Linotype</name>
+            <fontlist>Palatino Linotype</fontlist>
+        </fontset>
+        <fontset>
+            <name>Segoe Print</name>
+            <fontlist>Segoe Print</fontlist>
+        </fontset>
+        <fontset>
+            <name>Trebuchet MS</name>
+            <fontlist>Trebuchet MS</fontlist>
+        </fontset>
+        <fontset>
+            <name>Verdana</name>
+            <fontlist>Verdana</fontlist>
+        </fontset>
+        <fontset>
+            <name>Webdings</name>
+            <fontlist>Webdings</fontlist>
+        </fontset>
+        <fontset>
+            <name>Calibri Light</name>
+            <fontlist>Calibri Light</fontlist>
+        </fontset>
+        <fontset>
+            <name>FatCow</name>
+            <fontlist>FatCow</fontlist>
+        </fontset>
+        <fontset>
+            <name>Source Code Pro Black</name>
+            <fontlist>Source Code Pro Black</fontlist>
+        </fontset>
+        <fontset>
+            <name>Source Code Pro Semibold</name>
+            <fontlist>Source Code Pro Semibold</fontlist>
+        </fontset>
+        <fontset>
+            <name>Source Code Pro</name>
+            <fontlist>Source Code Pro</fontlist>
+        </fontset>
+        <fontset>
+            <name>Source Code Pro Light</name>
+            <fontlist>Source Code Pro Light</fontlist>
+        </fontset>
+        <fontset>
+            <name>Source Code Pro ExtraLight</name>
+            <fontlist>Source Code Pro ExtraLight</fontlist>
+        </fontset>
+        <fontset>
+            <name>Samba is Dead</name>
+            <fontlist>Samba is Dead</fontlist>
+        </fontset>
+        <fontset>
+            <name>Dyno</name>
+            <fontlist>Dyno</fontlist>
+        </fontset>
+        <fontset>
+            <name>Emmanuelle</name>
+            <fontlist>Emmanuelle</fontlist>
+        </fontset>
+        <fontset>
+            <name>franschi</name>
+            <fontlist>franschi</fontlist>
+        </fontset>
+        <fontset>
+            <name>Freak out Go bananas</name>
+            <fontlist>Freak out Go bananas</fontlist>
+        </fontset>
+        <fontset>
+            <name>Groovy Fast</name>
+            <fontlist>Groovy Fast</fontlist>
+        </fontset>
+        <fontset>
+            <name>Lowvetica</name>
+            <fontlist>Lowvetica</fontlist>
+        </fontset>
+        <fontset>
+            <name>Matthan Sans</name>
+            <fontlist>Matthan Sans</fontlist>
+        </fontset>
+        <fontset>
+            <name>Not Just Groovy</name>
+            <fontlist>Not Just Groovy</fontlist>
+        </fontset>
+        <fontset>
+            <name>DejaVu Sans</name>
+            <fontlist>DejaVu Sans</fontlist>
+        </fontset>
+        <fontset>
+            <name>Open Sans</name>
+            <fontlist>Open Sans</fontlist>
+        </fontset>
+        <fontset>
+            <name>OpenSymbol</name>
+            <fontlist>OpenSymbol</fontlist>
+        </fontset>
+        <fontset>
+            <name>Source Sans Pro</name>
+            <fontlist>Source Sans Pro</fontlist>
+        </fontset>
+        <fontset>
+            <name>Linux Biolinum G</name>
+            <fontlist>Linux Biolinum G</fontlist>
+        </fontset>
+        <fontset>
+            <name>PT Serif</name>
+            <fontlist>PT Serif</fontlist>
+        </fontset>
+        <fontset>
+            <name>Gentium Basic</name>
+            <fontlist>Gentium Basic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Liberation Mono</name>
+            <fontlist>Liberation Mono</fontlist>
+        </fontset>
+        <fontset>
+            <name>Liberation Sans Narrow</name>
+            <fontlist>Liberation Sans Narrow</fontlist>
+        </fontset>
+        <fontset>
+            <name>DejaVu Sans Light</name>
+            <fontlist>DejaVu Sans Light</fontlist>
+        </fontset>
+        <fontset>
+            <name>DejaVu Sans Condensed</name>
+            <fontlist>DejaVu Sans Condensed</fontlist>
+        </fontset>
+        <fontset>
+            <name>DejaVu Sans Mono</name>
+            <fontlist>DejaVu Sans Mono</fontlist>
+        </fontset>
+        <fontset>
+            <name>DejaVu Serif</name>
+            <fontlist>DejaVu Serif</fontlist>
+        </fontset>
+        <fontset>
+            <name>DejaVu Serif Condensed</name>
+            <fontlist>DejaVu Serif Condensed</fontlist>
+        </fontset>
+        <fontset>
+            <name>Gentium Book Basic</name>
+            <fontlist>Gentium Book Basic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Liberation Sans</name>
+            <fontlist>Liberation Sans</fontlist>
+        </fontset>
+        <fontset>
+            <name>Liberation Serif</name>
+            <fontlist>Liberation Serif</fontlist>
+        </fontset>
+        <fontset>
+            <name>Linux Libertine Display G</name>
+            <fontlist>Linux Libertine Display G</fontlist>
+        </fontset>
+        <fontset>
+            <name>Linux Libertine G</name>
+            <fontlist>Linux Libertine G</fontlist>
+        </fontset>
+        <fontset>
+            <name>Century Gothic</name>
+            <fontlist>Century Gothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Garamond</name>
+            <fontlist>Garamond</fontlist>
+        </fontset>
+        <fontset>
+            <name>Monotype Corsiva</name>
+            <fontlist>Monotype Corsiva</fontlist>
+        </fontset>
+        <fontset>
+            <name>Bookman Old Style</name>
+            <fontlist>Bookman Old Style</fontlist>
+        </fontset>
+        <fontset>
+            <name>Algerian</name>
+            <fontlist>Algerian</fontlist>
+        </fontset>
+        <fontset>
+            <name>Baskerville Old Face</name>
+            <fontlist>Baskerville Old Face</fontlist>
+        </fontset>
+        <fontset>
+            <name>Bauhaus 93</name>
+            <fontlist>Bauhaus 93</fontlist>
+        </fontset>
+        <fontset>
+            <name>Bell MT</name>
+            <fontlist>Bell MT</fontlist>
+        </fontset>
+        <fontset>
+            <name>Berlin Sans FB</name>
+            <fontlist>Berlin Sans FB</fontlist>
+        </fontset>
+        <fontset>
+            <name>Berlin Sans FB Demi</name>
+            <fontlist>Berlin Sans FB Demi</fontlist>
+        </fontset>
+        <fontset>
+            <name>Bernard MT Condensed</name>
+            <fontlist>Bernard MT Condensed</fontlist>
+        </fontset>
+        <fontset>
+            <name>Bodoni MT Poster Compressed</name>
+            <fontlist>Bodoni MT Poster Compressed</fontlist>
+        </fontset>
+        <fontset>
+            <name>Britannic Bold</name>
+            <fontlist>Britannic Bold</fontlist>
+        </fontset>
+        <fontset>
+            <name>Broadway</name>
+            <fontlist>Broadway</fontlist>
+        </fontset>
+        <fontset>
+            <name>Brush Script MT</name>
+            <fontlist>Brush Script MT</fontlist>
+        </fontset>
+        <fontset>
+            <name>Californian FB</name>
+            <fontlist>Californian FB</fontlist>
+        </fontset>
+        <fontset>
+            <name>Centaur</name>
+            <fontlist>Centaur</fontlist>
+        </fontset>
+        <fontset>
+            <name>Chiller</name>
+            <fontlist>Chiller</fontlist>
+        </fontset>
+        <fontset>
+            <name>Colonna MT</name>
+            <fontlist>Colonna MT</fontlist>
+        </fontset>
+        <fontset>
+            <name>Cooper Black</name>
+            <fontlist>Cooper Black</fontlist>
+        </fontset>
+        <fontset>
+            <name>Footlight MT Light</name>
+            <fontlist>Footlight MT Light</fontlist>
+        </fontset>
+        <fontset>
+            <name>Freestyle Script</name>
+            <fontlist>Freestyle Script</fontlist>
+        </fontset>
+        <fontset>
+            <name>Harlow Solid Italic</name>
+            <fontlist>Harlow Solid Italic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Harrington</name>
+            <fontlist>Harrington</fontlist>
+        </fontset>
+        <fontset>
+            <name>High Tower Text</name>
+            <fontlist>High Tower Text</fontlist>
+        </fontset>
+        <fontset>
+            <name>Jokerman</name>
+            <fontlist>Jokerman</fontlist>
+        </fontset>
+        <fontset>
+            <name>Juice ITC</name>
+            <fontlist>Juice ITC</fontlist>
+        </fontset>
+        <fontset>
+            <name>Kristen ITC</name>
+            <fontlist>Kristen ITC</fontlist>
+        </fontset>
+        <fontset>
+            <name>Kunstler Script</name>
+            <fontlist>Kunstler Script</fontlist>
+        </fontset>
+        <fontset>
+            <name>Lucida Bright</name>
+            <fontlist>Lucida Bright</fontlist>
+        </fontset>
+        <fontset>
+            <name>Lucida Calligraphy</name>
+            <fontlist>Lucida Calligraphy</fontlist>
+        </fontset>
+        <fontset>
+            <name>Lucida Fax</name>
+            <fontlist>Lucida Fax</fontlist>
+        </fontset>
+        <fontset>
+            <name>Lucida Handwriting</name>
+            <fontlist>Lucida Handwriting</fontlist>
+        </fontset>
+        <fontset>
+            <name>Magneto</name>
+            <fontlist>Magneto</fontlist>
+        </fontset>
+        <fontset>
+            <name>Matura MT Script Capitals</name>
+            <fontlist>Matura MT Script Capitals</fontlist>
+        </fontset>
+        <fontset>
+            <name>Mistral</name>
+            <fontlist>Mistral</fontlist>
+        </fontset>
+        <fontset>
+            <name>Modern No. 20</name>
+            <fontlist>Modern No. 20</fontlist>
+        </fontset>
+        <fontset>
+            <name>Niagara Engraved</name>
+            <fontlist>Niagara Engraved</fontlist>
+        </fontset>
+        <fontset>
+            <name>Niagara Solid</name>
+            <fontlist>Niagara Solid</fontlist>
+        </fontset>
+        <fontset>
+            <name>Old English Text MT</name>
+            <fontlist>Old English Text MT</fontlist>
+        </fontset>
+        <fontset>
+            <name>Onyx</name>
+            <fontlist>Onyx</fontlist>
+        </fontset>
+        <fontset>
+            <name>Parchment</name>
+            <fontlist>Parchment</fontlist>
+        </fontset>
+        <fontset>
+            <name>Playbill</name>
+            <fontlist>Playbill</fontlist>
+        </fontset>
+        <fontset>
+            <name>Poor Richard</name>
+            <fontlist>Poor Richard</fontlist>
+        </fontset>
+        <fontset>
+            <name>Ravie</name>
+            <fontlist>Ravie</fontlist>
+        </fontset>
+        <fontset>
+            <name>Informal Roman</name>
+            <fontlist>Informal Roman</fontlist>
+        </fontset>
+        <fontset>
+            <name>Showcard Gothic</name>
+            <fontlist>Showcard Gothic</fontlist>
+        </fontset>
+        <fontset>
+            <name>Snap ITC</name>
+            <fontlist>Snap ITC</fontlist>
+        </fontset>
+        <fontset>
+            <name>Stencil</name>
+            <fontlist>Stencil</fontlist>
+        </fontset>
+        <fontset>
+            <name>Tempus Sans ITC</name>
+            <fontlist>Tempus Sans ITC</fontlist>
+        </fontset>
+        <fontset>
+            <name>Viner Hand ITC</name>
+            <fontlist>Viner Hand ITC</fontlist>
+        </fontset>
+        <fontset>
+            <name>Vivaldi</name>
+            <fontlist>Vivaldi</fontlist>
+        </fontset>
+        <fontset>
+            <name>Vladimir Script</name>
+            <fontlist>Vladimir Script</fontlist>
+        </fontset>
+        <fontset>
+            <name>Wide Latin</name>
+            <fontlist>Wide Latin</fontlist>
+        </fontset>
+        <fontset>
+            <name>Century</name>
+            <fontlist>Century</fontlist>
+        </fontset>
+        <fontset>
+            <name>Wingdings 2</name>
+            <fontlist>Wingdings 2</fontlist>
+        </fontset>
+        <fontset>
+            <name>Wingdings 3</name>
+            <fontlist>Wingdings 3</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial Unicode MS</name>
+            <fontlist>Arial Unicode MS</fontlist>
+        </fontset>
+        <fontset>
+            <name>@Arial Unicode MS</name>
+            <fontlist>@Arial Unicode MS</fontlist>
+        </fontset>
+        <fontset>
+            <name>Arial Narrow</name>
+            <fontlist>Arial Narrow</fontlist>
+        </fontset>
+        <fontset>
+            <name>Fountain Pen Frenzy</name>
+            <fontlist>Fountain Pen Frenzy</fontlist>
+        </fontset>
+        <fontset>
+            <name>MT Extra</name>
+            <fontlist>MT Extra</fontlist>
+        </fontset>
+        <fontset>
+            <name>Open Sans Semibold</name>
+            <fontlist>Open Sans Semibold</fontlist>
+        </fontset>
+        <fontset>
+            <name>Nirmala UI</name>
+            <fontlist>Nirmala UI</fontlist>
+        </fontset>
+        <fontset>
+            <name>Book Antiqua</name>
+            <fontlist>Book Antiqua</fontlist>
+        </fontset>
+        <fontset>
+            <name>Bradley Hand ITC</name>
+            <fontlist>Bradley Hand ITC</fontlist>
+        </fontset>
+        <fontset>
+            <name>Bookshelf Symbol 7</name>
+            <fontlist>Bookshelf Symbol 7</fontlist>
+        </fontset>
+        <fontset>
+            <name>French Script MT</name>
+            <fontlist>French Script MT</fontlist>
+        </fontset>
+        <fontset>
+            <name>Gadugi</name>
+            <fontlist>Gadugi</fontlist>
+        </fontset>
+        <fontset>
+            <name>Papyrus</name>
+            <fontlist>Papyrus</fontlist>
+        </fontset>
+        <fontset>
+            <name>Pristina</name>
+            <fontlist>Pristina</fontlist>
+        </fontset>
+        <fontset>
+            <name>MS Reference Sans Serif</name>
+            <fontlist>MS Reference Sans Serif</fontlist>
+        </fontset>
+        <fontset>
+            <name>MS Reference Specialty</name>
+            <fontlist>MS Reference Specialty</fontlist>
+        </fontset>
+        <fontset>
+            <name>Segoe UI Semilight</name>
+            <fontlist>Segoe UI Semilight</fontlist>
+        </fontset>
+    </fontsets>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhinfotype.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<infotypes/>
+    <infotypes/>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhkkeyword.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<keywords/>
+    <keywords/>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhlayout.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<layouts>
-		<layout>
-			<name>XML Output</name>
-			<type>16</type>
-			<id>16</id>
-		</layout>
-		<layout>
-			<name>Printed Documentation</name>
-			<type>13</type>
-			<id>13</id>
-		</layout>
-		<layout>
-			<name>WebHelp Pro</name>
-			<type>0</type>
-			<id>0</id>
-		</layout>
-		<layout>
-			<name>FlashHelp</name>
-			<type>15</type>
-			<id>15</id>
-		</layout>
-		<layout>
-			<name>Microsoft HTML Help</name>
-			<type>5</type>
-			<id>5</id>
-		</layout>
-		<layout>
-			<name>WebHelp</name>
-			<type>6</type>
-			<id>6</id>
-		</layout>
-	</layouts>
+    <layouts>
+        <layout>
+            <name>XML Output</name>
+            <type>16</type>
+            <id>16</id>
+        </layout>
+        <layout>
+            <name>Printed Documentation</name>
+            <type>13</type>
+            <id>13</id>
+        </layout>
+        <layout>
+            <name>WebHelp Pro</name>
+            <type>0</type>
+            <id>0</id>
+        </layout>
+        <layout>
+            <name>FlashHelp</name>
+            <type>15</type>
+            <id>15</id>
+        </layout>
+        <layout>
+            <name>Microsoft HTML Help</name>
+            <type>5</type>
+            <id>5</id>
+        </layout>
+        <layout>
+            <name>WebHelp</name>
+            <type>6</type>
+            <id>6</id>
+        </layout>
+    </layouts>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhmapfile.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<maps>
-		<map>
-			<filename>BSSCDefault.h</filename>
-			<locked>false</locked>
-		</map>
-	</maps>
+    <maps>
+        <map>
+            <filename>BSSCDefault.h</filename>
+            <locked>false</locked>
+        </map>
+    </maps>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhpopup.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<textpopuptopics/>
+    <textpopuptopics/>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhskins.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<skins>
-		<skin>
-			<filename>!SkinSubFolder!\Default\Default.skn</filename>
-		</skin>
-		<skin>
-			<filename>!SkinSubFolder!\FlashHelp_Default\FlashHelp_Default.fhs</filename>
-		</skin>
-	</skins>
+    <skins>
+        <skin>
+            <filename>!SkinSubFolder!\Default\Default.skn</filename>
+        </skin>
+        <skin>
+            <filename>!SkinSubFolder!\FlashHelp_Default\FlashHelp_Default.fhs</filename>
+        </skin>
+    </skins>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhtemplate.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<files>
-		<file>
-			<name>Code Function.htt</name>
-			<comments></comments>
-		</file>
-		<file>
-			<name>Default.htt</name>
-			<comments></comments>
-		</file>
-	</files>
+    <files>
+        <file>
+            <name>Code Function.htt</name>
+            <comments></comments>
+        </file>
+        <file>
+            <name>Default.htt</name>
+            <comments></comments>
+        </file>
+    </files>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
 Help\Lib Help\rhwnd.apj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<windows>
-		<window>
-			<name>NewWindow</name>
-			<caption>[*PROJECTNAME*] Library</caption>
-			<tocfile></tocfile>
-			<indexfile></indexfile>
-			<defaultfile></defaultfile>
-			<homefile></homefile>
-			<jump1filename/>
-			<jump1text/>
-			<jump2filename/>
-			<jump2text/>
-			<flags>1074267424</flags>
-			<navpanewidth>230</navpanewidth>
-			<buttons>12364</buttons>
-			<windowplacement>
-				<left>5</left>
-				<top>5</top>
-				<right>844</right>
-				<bottom>507</bottom>
-			</windowplacement>
-			<windowstyle>720896</windowstyle>
-			<windowstyleex>0</windowstyleex>
-			<expandedstate>0</expandedstate>
-			<defaulttab>0</defaulttab>
-			<tabposition>0</tabposition>
-			<showwindow>0</showwindow>
-		</window>
-	</windows>
+    <windows>
+        <window>
+            <name>NewWindow</name>
+            <caption>[*PROJECTNAME*] Library</caption>
+            <tocfile></tocfile>
+            <indexfile></indexfile>
+            <defaultfile></defaultfile>
+            <homefile></homefile>
+            <jump1filename/>
+            <jump1text/>
+            <jump2filename/>
+            <jump2text/>
+            <flags>1074267424</flags>
+            <navpanewidth>230</navpanewidth>
+            <buttons>12364</buttons>
+            <windowplacement>
+                <left>5</left>
+                <top>5</top>
+                <right>844</right>
+                <bottom>507</bottom>
+            </windowplacement>
+            <windowstyle>720896</windowstyle>
+            <windowstyleex>0</windowstyleex>
+            <expandedstate>0</expandedstate>
+            <defaulttab>0</defaulttab>
+            <tabposition>0</tabposition>
+            <showwindow>0</showwindow>
+        </window>
+    </windows>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
@@ -26520,59 +26430,59 @@ TocPageTitleStyleName=Table of Contents Page Title
 Help\Lib Help\root.fpj
 <?xml version="1.0" encoding="windows-1252"?>
 <rhpml majorversion="1" minorversion="0">
-	<folders/>
-	<topics>
-		<topic>
-			<name>Lib.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>Lib_Functions_Overview.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>Lib_Messages.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>Lib_Constants.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>Whats_New.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>Introduction.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>FAQ.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>Installation_&amp;_Setup.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>License.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-		<topic>
-			<name>Links.htm</name>
-			<comments></comments>
-			<frameset>0</frameset>
-		</topic>
-	</topics>
+    <folders/>
+    <topics>
+        <topic>
+            <name>Lib.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>Lib_Functions_Overview.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>Lib_Messages.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>Lib_Constants.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>Whats_New.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>Introduction.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>FAQ.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>Installation_&amp;_Setup.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>License.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+        <topic>
+            <name>Links.htm</name>
+            <comments></comments>
+            <frameset>0</frameset>
+        </topic>
+    </topics>
 </rhpml>
 [*ENDTXT*]
 [*BEGINTXT*]
@@ -26584,99 +26494,99 @@ Help\Lib Help\w95help.css
 /*=(===============================================================)*/
 
 BODY {
-	background-color: #ffffff;
+    background-color: #ffffff;
 }
 
 P /*begin!kadov{{*/ ,LI.kadov-P /*}}end!kadov*/   {
-	font-family: Arial;
-	font-size: 12.0pt;
-	color: #000000;
+    font-family: Arial;
+    font-size: 12.0pt;
+    color: #000000;
 }
 
 H1 /*begin!kadov{{*/ ,LI.kadov-H1 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 16.0pt;
-	color: #000080;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 16.0pt;
+    color: #000080;
 }
 
 H2 /*begin!kadov{{*/ ,LI.kadov-H2 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 14.0pt;
-	color: #000080;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 14.0pt;
+    color: #000080;
 }
 
 H3 /*begin!kadov{{*/ ,LI.kadov-H3 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 H4 /*begin!kadov{{*/ ,LI.kadov-H4 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 H5 /*begin!kadov{{*/ ,LI.kadov-H5 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 H6 /*begin!kadov{{*/ ,LI.kadov-H6 /*}}end!kadov*/   {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: 12.0pt;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 12.0pt;
 }
 
 A:link {
-	x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
-	color: #008000;
+    x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
+    color: #008000;
 }
 
 A:visited {
-	x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
-	color: #008000;
+    x-text-underline: normal;/*begin!kadov{{*/ text-decoration: underline; /*}}end!kadov*/ 
+    color: #008000;
 }
 
 A.expandspot {
-	color: #008000;
-	cursor: hand;
-	font-style: italic;
-	text-decoration: none;
+    color: #008000;
+    cursor: hand;
+    font-style: italic;
+    text-decoration: none;
 }
 
 SPAN.expandtext {
-	font-style: italic;
-	font-weight: normal;
-	color: #ff0000;
+    font-style: italic;
+    font-weight: normal;
+    color: #ff0000;
 }
 
 A.dropspot {
-	cursor: hand;
-	color: #008000;
-	font-style: italic;
-	text-decoration: none;
+    cursor: hand;
+    color: #008000;
+    font-style: italic;
+    text-decoration: none;
 }
 
 A.glossterm {
-	color: #800000;
-	cursor: hand;
-	font-style: italic;
-	text-decoration: none;
+    color: #800000;
+    cursor: hand;
+    font-style: italic;
+    text-decoration: none;
 }
 
 SPAN.glosstext {
-	font-style: italic;
-	font-weight: normal;
-	color: #0000ff;
+    font-style: italic;
+    font-weight: normal;
+    color: #0000ff;
 }
 
 OL, UL { 
-	margin-top: 0px; 
-	margin-bottom: 0px;
+    margin-top: 0px; 
+    margin-bottom: 0px;
 }
 [*ENDTXT*]
 [*BEGINTXT*]
@@ -26888,124 +26798,124 @@ Help\Lib Help\Whats_New.htm
 
 <!--kadov_tag{{<placeholder id="header">}}-->
 <h1 style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;"><span style="font-family: Verdana, sans-serif;"><!--kadov_tag{{<variable 
+            margin-top: 6px;
+            margin-bottom: 6px;"><span style="font-family: Verdana, sans-serif;"><!--kadov_tag{{<variable 
  name=title
-	x-format=default
-	x-value="Whats New">}}-->Whats New<!--kadov_tag{{</variable>}}--></span></h1>
+    x-format=default
+    x-value="Whats New">}}-->Whats New<!--kadov_tag{{</variable>}}--></span></h1>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-weight: bold;">Version 1.0.0.0</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-weight: bold;">Version 1.0.0.0</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			font-weight: normal;">- First release.</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            font-weight: normal;">- First release.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">- Documentation .chm released with this 
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">- Documentation .chm released with this 
  update.</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;
-			margin-left: 0px;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            margin-left: 0px;">&nbsp;</p>
 
 <p style="font-family: Verdana, sans-serif;
-			margin-top: 6px;
-			margin-bottom: 6px;
-			font-size: 10pt;">&nbsp;</p>
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 10pt;">&nbsp;</p>
 
 <p>&nbsp;</p>
 
@@ -27023,83 +26933,3 @@ DE0000002B744558744372656174696F6E2054696D650053756E203920466562
 0000000467414D410000B18F0BFC61050000000C4944415478DA636868680000
 03040181752E01BC0000000049454E44AE426082
 [*ENDBIN*]
-[*BEGINTXT*]
-Notes.txt
-=========================================================================================
-[*PROJECTNAME*] Notes
-=========================================================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-[*ENDTXT*]

@@ -75,7 +75,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=13
+MilestoneOnDateDate=18
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=18
@@ -99,18 +99,18 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=79479892
+PTimer=84969564
 [Collapse]
 2=
-1=2147483636,1503695391,3407857,3803273
+1=2147483616,1495302687,1310705,3819649
 3=
 5=
 7=
 6=
 4=
 [Size]
-2=0,0,0,0,3729
-1=0,0,0,0,23803
+2=0,0,0,0,145
+1=0,0,0,0,18986
 3=0,0,0,0,1150
 5=0,0,0,0,2123
 4=0,0,0,0,1011
@@ -132,13 +132,13 @@ GroupExpand=1,1,0
 [BreakPoint]
 0=
 [Find]
-1="EQU "
-2=";-------------------------------------------------------------------------------------------------------------"
-3=";-------------------------------------------------------------------------------------"
-4=";--------------------------------------------------------------------------------------------------------------------------------------"
-5="SetWindowLong"
-6="Invoke MUISetIntProperty, hControl, @SmartPanelCurrentPanel"
-7="MUISetExtProperty"
-8="MUIGetExtProperty"
-9="@SmartPanelPanelsArray"
-10="hinstance"
+1="NM_MUISMARTPANEL"
+2="EQU "
+3=";-------------------------------------------------------------------------------------------------------------"
+4=";-------------------------------------------------------------------------------------"
+5=";--------------------------------------------------------------------------------------------------------------------------------------"
+6="SetWindowLong"
+7="Invoke MUISetIntProperty, hControl, @SmartPanelCurrentPanel"
+8="MUISetExtProperty"
+9="MUIGetExtProperty"
+10="@SmartPanelPanelsArray"

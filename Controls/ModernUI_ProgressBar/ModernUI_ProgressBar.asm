@@ -2,7 +2,7 @@
 ;
 ; ModernUI Control - ModernUI_ProgressBar
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -146,6 +146,9 @@ ALIGN 4
 szMUIProgressBarClass           DB 'ModernUI_ProgressBar',0     ; Class name for creating our ModernUI_ProgressBar control
 szMUIProgressBarFont            DB 'Segoe UI',0                 ; Font used for ModernUI_ProgressBar text
 hMUIProgressBarFont             DD 0                            ; Handle to ModernUI_ProgressBar font (segoe ui)
+
+szMUIPBPercentSign              DB "%",0
+szMUIPBSpace                    DB " ",0
 
 ; start with 186,39,33
 ; increase G (39) by 1 until matches R (186) 186,186,33
@@ -491,8 +494,6 @@ _MUI_ProgressBarPaint PROC hWin:DWORD
     LOCAL hdc:HDC
     LOCAL hdcMem:HDC
     LOCAL hBufferBitmap:DWORD
-    LOCAL hBrush:DWORD
-    LOCAL hOldBrush:DWORD
     LOCAL Percent:DWORD
     LOCAL TextColor:DWORD
     LOCAL BackColor:DWORD
@@ -583,7 +584,7 @@ _MUI_ProgressBarPaint PROC hWin:DWORD
     ;----------------------------------------------------------
     ; Finish Double Buffering & Cleanup
     ;----------------------------------------------------------    
-    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, hBrush, 0    
+    Invoke MUIGDIDoubleBufferFinish, hdcMem, hBufferBitmap, 0, 0, 0, 0    
 
     Invoke EndPaint, hWin, Addr ps
 
@@ -625,7 +626,7 @@ _MUI_ProgressBarPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, dwTextColor:
     Invoke MUIGetExtProperty, hWin, @ProgressBarPercent
     mov dwPercent, eax
     Invoke _MUI_ProgressBarDwordToAscii, dwPercent, Addr szPercentText
-    Invoke lstrcat, Addr szPercentText, CTEXT("%")
+    Invoke lstrcat, Addr szPercentText, Addr szMUIPBPercentSign ;CTEXT("%")
     Invoke lstrlen, Addr szPercentText
     mov dwLenPercentText, eax
     
@@ -641,7 +642,7 @@ _MUI_ProgressBarPaintText PROC hWin:DWORD, hdc:DWORD, lpRect:DWORD, dwTextColor:
     Invoke SelectObject, hdc, hFont
     mov hFontOld, eax
     
-    Invoke GetTextExtentPoint32, hdc, CTEXT(" "), 1, Addr szspace
+    Invoke GetTextExtentPoint32, hdc, Addr szMUIPBSpace, 1, Addr szspace ;  CTEXT(" ")
     Invoke GetTextExtentPoint32, hdc, Addr szPercentText, dwLenPercentText, Addr sz
     mov eax, sz.x
     .IF eax <= dwWidth

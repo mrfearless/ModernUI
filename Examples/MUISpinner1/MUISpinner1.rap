@@ -132,13 +132,13 @@ AutoLoad=2,1,4
 Settings=1148
 Milestones=129
 MilestoneEvery=10
-MilestoneEveryCurrent=1
+MilestoneEveryCurrent=2
 MilestoneOnBuild=0.0.0.0
 MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=22
+MilestoneOnDateDate=19
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=31
@@ -162,7 +162,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=122900017
+PTimer=122907314
 [Collapse]
 1=
 2=

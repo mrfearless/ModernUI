@@ -1,8 +1,8 @@
 ;==============================================================================
 ;
-; ModernUI Library v0.0.0.6
+; ModernUI Library v0.0.0.7
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -75,6 +75,10 @@ Include .\..\ModernUI\ModernUI.inc
 ; Base
 Include .\..\ModernUI\_ModernUI_Base.asm
 
+; Class
+Include .\..\ModernUI\MUIRegister.asm
+Include .\..\ModernUI\MUISuperclass.asm
+
 ; DPI
 Include .\..\ModernUI\ModernUI_DPI.asm
 
@@ -86,10 +90,11 @@ Include .\..\ModernUI\_ModernUI_GDIDoubleBuffer.asm
 Include .\..\ModernUI\MUIGDIBlend.asm
 Include .\..\ModernUI\MUIGDIBlendBitmaps.asm
 Include .\..\ModernUI\MUIGDICreateBitmapMask.asm
+Include .\..\ModernUI\MUIGDIPaintBrush.asm
 Include .\..\ModernUI\MUIGDIPaintFill.asm
 Include .\..\ModernUI\MUIGDIPaintFrame.asm
-Include .\..\ModernUI\MUIGDIPaintBrush.asm
 Include .\..\ModernUI\MUIGDIPaintGradient.asm
+Include .\..\ModernUI\MUIGDIPaintRectangle.asm
 Include .\..\ModernUI\MUIGDIRotateBitmap.asm
 Include .\..\ModernUI\MUIGDIStretchBitmap.asm
 Include .\..\ModernUI\MUIGDIStretchImage.asm
@@ -124,14 +129,16 @@ Include .\..\ModernUI\MUIPaintBackground.asm
 Include .\..\ModernUI\MUIPaintBackgroundImage.asm
 Include .\..\ModernUI\MUIPaintBorder.asm
 
+;Region
+Include .\..\ModernUI\MUILoadRegionFromResource.asm
+Include .\..\ModernUI\MUISetRegionFromResource.asm
+
 ; Window
 Include .\..\ModernUI\MUIApplyToDialog.asm
 Include .\..\ModernUI\MUICenterWindow.asm
 Include .\..\ModernUI\MUIGetParentRelativeWindowRect.asm
-
-;Region
-Include .\..\ModernUI\MUILoadRegionFromResource.asm
-Include .\..\ModernUI\MUISetRegionFromResource.asm
+Include .\..\ModernUI\MUIModifyStyle.asm
+Include .\..\ModernUI\MUIModifyStyleEx.asm
 
 ;--------------------------------------
 ; ModernUI Controls:

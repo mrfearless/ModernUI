@@ -75,7 +75,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=7
+MilestoneOnDateDate=18
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=19
@@ -99,18 +99,18 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=75995804
+PTimer=92880029
 [Collapse]
 2=
-1=65541,1345061128,14
+1=1210286081,1478754560,14
 5=
 7=
 6=
 4=
 3=
 [Size]
-2=0,0,0,0,0
-1=0,0,0,0,37904
+2=0,0,0,0,146
+1=0,0,0,0,146
 5=0,0,0,0,2
 4=0,0,0,0,316
 3=0,0,0,0,315
@@ -132,13 +132,13 @@ GroupExpand=1,1,0
 [BreakPoint]
 0=
 [Find]
-1="EQU "
-2="PROGRESS_HEARTBEAT_TIME"
-3=">"
-4="0,"
-5="@ProgressBarStep"
-6=";-------------------------------------------------------------------------------------"
-7=";--------------------------------------------------------------------------------------------------------------------------------------"
-8="dwMouseOver"
-9="@ProgressBarWidth"
-10="_MUI_ProgressBarCalcWidth"
+1="CTEXT"
+2="szMUIProgressBarFont"
+3="EQU "
+4="PROGRESS_HEARTBEAT_TIME"
+5=">"
+6="0,"
+7="@ProgressBarStep"
+8=";-------------------------------------------------------------------------------------"
+9=";--------------------------------------------------------------------------------------------------------------------------------------"
+10="dwMouseOver"

@@ -2,7 +2,7 @@
 ;
 ; ModernUI Control - ModernUI_SmartPanel
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -43,15 +43,15 @@
 option casemap:none
 include \masm32\macros\macros.asm
 
-DEBUG32 EQU 1
-
-IFDEF DEBUG32
-    PRESERVEXMMREGS equ 1
-    includelib M:\Masm32\lib\Debug32.lib
-    DBG32LIB equ 1
-    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
-    include M:\Masm32\include\debug32.inc
-ENDIF
+;DEBUG32 EQU 1
+;
+;IFDEF DEBUG32
+;    PRESERVEXMMREGS equ 1
+;    includelib M:\Masm32\lib\Debug32.lib
+;    DBG32LIB equ 1
+;    DEBUGEXE textequ <'M:\Masm32\DbgWin.exe'>
+;    include M:\Masm32\include\debug32.inc
+;ENDIF
 
 include windows.inc
 include user32.inc

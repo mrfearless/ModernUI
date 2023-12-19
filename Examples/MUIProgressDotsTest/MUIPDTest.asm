@@ -137,7 +137,7 @@ WndProc proc hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
         ret
 
     .ELSEIF eax == WM_PAINT
-        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), MUI_RGBCOLOR(12,12,12)
+        Invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), MUI_RGBCOLOR(12,12,12)
         mov eax, 0
         ret
     ;-----------------------------------------------------------------------------------------------------

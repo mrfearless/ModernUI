@@ -2,11 +2,7 @@
 ;
 ; ModernUI Control - ModernUI_TrayMenu
 ;
-; Copyright (c) 2018 by fearless
-;
-; All Rights Reserved
-;
-; http://www.LetTheLight.in
+; Copyright (c) 2023 by fearless
 ;
 ; http://github.com/mrfearless/ModernUI
 ;
@@ -177,7 +173,9 @@ IFNDEF MUITRAYMENU_END         ; Used with TrayMenuCreate and/or TrayMenuAssignM
 MUITRAYMENU_END                TEXTEQU <DB 0FFh,0FFh,0FFh,0FFh>
 ENDIF
 
-
-
-
-
+;	
+; https://masm32.com/board/index.php?topic=7972.0
+;	HWND hWndTray = FindWindow(TEXT("Shell_TrayWnd"), NULL);
+;	hWndTray = GetWindow(hWndTray, GW_CHILD);	//notification area
+;	PostMessage(hWndTray, WM_PAINT , 0, 0);
+;	

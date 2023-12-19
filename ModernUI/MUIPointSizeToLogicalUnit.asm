@@ -2,7 +2,7 @@
 ;
 ; ModernUI Library
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -33,6 +33,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Convert font point size eg '12' to logical unit size for use with CreateFont,
 ; CreateFontIndirect
+; Corresponds to value passsed to nHeight (logical height of font) parameter 
 ;------------------------------------------------------------------------------
 MUIPointSizeToLogicalUnit PROC hWin:MUIWND, PointSize:MUIVALUE
     LOCAL hdc:HDC

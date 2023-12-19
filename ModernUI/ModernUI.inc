@@ -1,11 +1,11 @@
 ;==============================================================================
 ;
-; ModernUI Library v0.0.0.6
+; ModernUI Library v0.0.0.7
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
-;
+; 
 ; http://github.com/mrfearless/ModernUI
 ;
 ;
@@ -50,6 +50,8 @@ MUIPROPERTY                     TYPEDEF QWORD       ; Typedef for MUIGetIntPrope
 MUIPROPERTYVALUE                TYPEDEF QWORD       ; Typedef for MUISetIntProperty/MUISetExtProperty PropertyValue parameter
 MUIVALUE                        TYPEDEF QWORD       ; QWORD in x64
 LPMUIVALUE                      TYPEDEF PTR MUIVALUE; Pointer to MUIVALUE
+MUILPVALUE                      TYPEDEF PTR MUIVALUE; Pointer to MUIVALUE
+MUILPSTRING                     TYPEDEF QWORD       ; Pointer to zero terminated string
 MUIIT                           TYPEDEF QWORD       ; Image type
 MUIIL                           TYPEDEF QWORD       ; Image location
 MUIPFS                          TYPEDEF QWORD       ; Paint frame style
@@ -77,6 +79,8 @@ MUIPROPERTY                     TYPEDEF DWORD       ; Typedef for MUIGetIntPrope
 MUIPROPERTYVALUE                TYPEDEF DWORD       ; Typedef for MUISetIntProperty/MUISetExtProperty PropertyValue parameter
 MUIVALUE                        TYPEDEF DWORD       ; DWORD in x86
 LPMUIVALUE                      TYPEDEF PTR MUIVALUE; Pointer to MUIVALUE
+MUILPVALUE                      TYPEDEF PTR MUIVALUE; Pointer to MUIVALUE
+MUILPSTRING                     TYPEDEF DWORD       ; Pointer to zero terminated string
 MUIIT                           TYPEDEF DWORD       ; Image type
 MUIIL                           TYPEDEF DWORD       ; Image location
 MUIPFS                          TYPEDEF DWORD       ; Paint frame style
@@ -97,6 +101,25 @@ LPHDC                           TYPEDEF PTR HDC     ; Pointer to HDC
 POINTER                         TYPEDEF DWORD       ; DWORD in x86
 RESID                           TYPEDEF DWORD       ; Resource ID 
 ENDIF
+
+;------------------------------------------------------------------------------------
+; UNICODE SUPPORT
+;------------------------------------------------------------------------------------
+; To explicitly enable unicode support uncomment the define for MUI_UNICODE below
+; This will force all controls that are built to use the unicode versions of the 
+; ModernUI Library functions.
+;
+; If you wish to just compile one specific control as unicode, add the MUI_UNICODE
+; define in the control's source before the include ModernUI.inc like below:
+;------------------------------------------------------------------------------------
+;MUI_UNICODE TEXTEQU <__UNICODE__>
+;IFDEF MUI_UNICODE
+;__UNICODE__ EQU 1
+;ECHO ModernUI UNICODE
+;ELSE
+;ECHO ModernUI ANSI
+;ENDIF
+;------------------------------------------------------------------------------------
 
 .CONST
 ;------------------------------------------
@@ -123,11 +146,11 @@ ENDIF
 ; ModernUI Property Constants 
 ;------------------------------------------
 IFDEF _WIN64
-MUI_INTERNAL_PROPERTIES         EQU 0               ; cbWndExtra offset for internal properties pointer
-MUI_EXTERNAL_PROPERTIES         EQU 8               ; cbWndExtra offset for external properties pointer
-MUI_INTERNAL_PROPERTIES_EXTRA   EQU 16              ; cbWndExtra offset for extra internal properties pointer
-MUI_EXTERNAL_PROPERTIES_EXTRA   EQU 24              ; cbWndExtra offset for extra external properties pointer
-MUI_PROPERTY_ADDRESS            EQU 80000000h       ; OR with Property in MUIGetIntProperty/MUIGetExtProperty to return address of property
+;MUI_INTERNAL_PROPERTIES         EQU 0               ; cbWndExtra offset for internal properties pointer
+;MUI_EXTERNAL_PROPERTIES         EQU 8               ; cbWndExtra offset for external properties pointer
+;MUI_INTERNAL_PROPERTIES_EXTRA   EQU 16              ; cbWndExtra offset for extra internal properties pointer
+;MUI_EXTERNAL_PROPERTIES_EXTRA   EQU 24              ; cbWndExtra offset for extra external properties pointer
+;MUI_PROPERTY_ADDRESS            EQU 8000000000000000h ; OR with Property in MUIGetIntProperty/MUIGetExtProperty to return address of property
 ELSE ; WIN32 x86
 MUI_INTERNAL_PROPERTIES         EQU 0               ; cbWndExtra offset for internal properties pointer
 MUI_EXTERNAL_PROPERTIES         EQU 4               ; cbWndExtra offset for external properties pointer
@@ -218,20 +241,39 @@ LPGDIPRECT                      TYPEDEF PTR GDIPRECT; Pointer to GDIPRECT
 ; ModernUI Prototypes
 ;------------------------------------------------------------------------------
 ; ModernUI Base Functions:
-MUIGetExtProperty               PROTO hWin:MUIWND, Property:MUIPROPERTY
-MUISetExtProperty               PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
-MUIGetIntProperty               PROTO hWin:MUIWND, Property:MUIPROPERTY
-MUISetIntProperty               PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+MUIGetPropertyA                 PROTO hWin:MUIWND, cbWndExtraOffset:MUIPROPERTIES, Property:MUIPROPERTY
+MUISetPropertyA                 PROTO hWin:MUIWND, cbWndExtraOffset:MUIPROPERTIES, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+MUIGetExtPropertyA              PROTO hWin:MUIWND, Property:MUIPROPERTY
+MUISetExtPropertyA              PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+MUIGetIntPropertyA              PROTO hWin:MUIWND, Property:MUIPROPERTY
+MUISetIntPropertyA              PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
 
-MUIGetExtPropertyEx             PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY
-MUISetExtPropertyEx             PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY, ChildProperty:MUIPROPERTYVALUE
-MUIGetIntPropertyEx             PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY
-MUISetIntPropertyEx             PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY, ChildProperty:MUIPROPERTYVALUE
+MUIGetExtPropertyExA            PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY
+MUISetExtPropertyExA            PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY, ChildProperty:MUIPROPERTYVALUE
+MUIGetIntPropertyExA            PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY
+MUISetIntPropertyExA            PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY, ChildProperty:MUIPROPERTYVALUE
 
-MUIGetExtPropertyExtra          PROTO hWin:MUIWND, Property:MUIPROPERTY
-MUISetExtPropertyExtra          PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
-MUIGetIntPropertyExtra          PROTO hWin:MUIWND, Property:MUIPROPERTY
-MUISetIntPropertyExtra          PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+MUIGetExtPropertyExtraA         PROTO hWin:MUIWND, Property:MUIPROPERTY
+MUISetExtPropertyExtraA         PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+MUIGetIntPropertyExtraA         PROTO hWin:MUIWND, Property:MUIPROPERTY
+MUISetIntPropertyExtraA         PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+
+MUIGetPropertyW                 PROTO hWin:MUIWND, cbWndExtraOffset:MUIPROPERTIES, Property:MUIPROPERTY
+MUISetPropertyW                 PROTO hWin:MUIWND, cbWndExtraOffset:MUIPROPERTIES, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+MUIGetExtPropertyW              PROTO hWin:MUIWND, Property:MUIPROPERTY
+MUISetExtPropertyW              PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+MUIGetIntPropertyW              PROTO hWin:MUIWND, Property:MUIPROPERTY
+MUISetIntPropertyW              PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+
+MUIGetExtPropertyExW            PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY
+MUISetExtPropertyExW            PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY, ChildProperty:MUIPROPERTYVALUE
+MUIGetIntPropertyExW            PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY
+MUISetIntPropertyExW            PROTO hWin:MUIWND, Property:MUIPROPERTY, ParentProperty:MUIPROPERTY, ChildProperty:MUIPROPERTYVALUE
+
+MUIGetExtPropertyExtraW         PROTO hWin:MUIWND, Property:MUIPROPERTY
+MUISetExtPropertyExtraW         PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
+MUIGetIntPropertyExtraW         PROTO hWin:MUIWND, Property:MUIPROPERTY
+MUISetIntPropertyExtraW         PROTO hWin:MUIWND, Property:MUIPROPERTY, PropertyValue:MUIPROPERTYVALUE
 
 ; ModernUI Memory Functions:
 MUIAllocMemProperties           PROTO hWin:MUIWND, cbWndExtraOffset:MUIPROPERTIES, SizeToAllocate:MUIVALUE
@@ -248,6 +290,7 @@ MUIGDIStretchImage              PROTO hImage:MUIIMAGE, ImageHandleType:MUIIT, lp
 MUIGDIRotateCenterBitmap        PROTO hWin:MUIWND, hBitmap:HBITMAP, Angle:MUIVALUE, BackColor:MUICOLORRGB
 MUIGDIPaintFill                 PROTO hdc:HDC, lpFillRect:LPRECT, FillColor:MUICOLORRGB
 MUIGDIPaintFrame                PROTO hdc:HDC, lpFrameRect:LPRECT, FrameColor:MUICOLORRGB, FrameStyle:MUIPFS
+MUIGDIPaintRectangle            PROTO hdc:HDC, lpRect:LPRECT, FrameColor:MUICOLORRGB, FillColor:MUICOLORRGB
 MUIGDIPaintBrush                PROTO hdc:HDC, lpBrushRect:LPRECT, hBrushBitmap:HBITMAP, dwBrushOrgX:MUIVALUE, dwBrushOrgY:MUIVALUE
 MUIGDIPaintGradient             PROTO hdc:HDC, lpGradientRect:LPRECT, GradientColorFrom:MUICOLORRGB, GradientColorTo:MUICOLORRGB, HorzVertGradient:MUIPGS
 MUIGDICreateBitmapMask          PROTO hBitmap:HBITMAP, TransparentColor:MUICOLORRGB
@@ -286,10 +329,17 @@ MUIGetParentBackgroundColor     PROTO hWin:MUIWND
 MUIGetParentBackgroundBitmap    PROTO hWin:MUIWND
 
 ; ModernUI Window/Dialog Functions:
-MUIApplyToDialog                PROTO hWin:MUIWND, bDropShadow:BOOL, bClipping:BOOL
 MUICenterWindow                 PROTO hWndChild:MUIWND, hWndParent:MUIWND
 MUIGetParentRelativeWindowRect  PROTO hWin:MUIWND, lpRectControl:LPRECT
 MUIChangeScreenResolution       PROTO ScreenWidth:MUIVALUE, ScreenHeight:MUIVALUE, bitsPerPixel:MUIVALUE
+
+MUIApplyToDialogA               PROTO hWin:MUIWND, bDropShadow:BOOL, bClipping:BOOL
+MUIModifyStyleA                 PROTO hWin:MUIWND, dwRemove:MUIVALUE, dwAdd:MUIVALUE, bFrameChanged:BOOL
+MUIModifyStyleExA               PROTO hWin:MUIWND, dwRemove:MUIVALUE, dwAdd:MUIVALUE, bFrameChanged:BOOL
+
+MUIApplyToDialogW               PROTO hWin:MUIWND, bDropShadow:BOOL, bClipping:BOOL
+MUIModifyStyleW                 PROTO hWin:MUIWND, dwRemove:MUIVALUE, dwAdd:MUIVALUE, bFrameChanged:BOOL
+MUIModifyStyleExW               PROTO hWin:MUIWND, dwRemove:MUIVALUE, dwAdd:MUIVALUE, bFrameChanged:BOOL
 
 ; ModernUI Region Functions:
 MUILoadRegionFromResource       PROTO hInst:HINSTANCE, idRgnRes:RESID, lpRegionData:POINTER, lpSizeRegionData:LPMUIVALUE 
@@ -315,9 +365,70 @@ MUIDPIScaleY                    PROTO ValueY:MUIVALUE
 MUIDPIScaleRect                 PROTO lpRect:LPRECT
 MUIDPIScaleControl              PROTO lpLeft:LPMUIVALUE, lpTop:LPMUIVALUE, lpWidth:LPMUIVALUE, lpHeight:LPMUIVALUE
 MUIDPIScaleFontSize             PROTO PointSize:MUIVALUE
-MUIDPIScaleFont                 PROTO hFontToScale:HFONT 
 MUIDPIScaledScreen              PROTO lpScreenWidth:LPMUIVALUE, lpScreenHeight:LPMUIVALUE
-MUIDPISetDPIAware               PROTO
+
+MUIDPIScaleFontA                PROTO hFontToScale:HFONT 
+MUIDPISetDPIAwareA              PROTO
+
+MUIDPIScaleFontW                PROTO hFontToScale:HFONT 
+MUIDPISetDPIAwareW              PROTO
+
+; ModernUI Class Functions
+MUIRegisterA                    PROTO lpszClassName:MUILPSTRING, lpClassWndProc:POINTER, lpCursorName:MUIVALUE, cbWndExtra:MUIVALUE
+MUISuperclassA                  PROTO lpszExistingClassName:MUILPSTRING, lpdwExistingClassWndProc:POINTER, lpszSuperclassName:MUILPSTRING, lpSuperclassWndProc:POINTER, lpSuperclassCursorName:MUIVALUE, cbSuperclassWndExtra:MUIVALUE, lpcbWndExtraOffset:LPMUIVALUE
+
+MUIRegisterW                    PROTO lpszClassName:MUILPSTRING, lpClassWndProc:POINTER, lpCursorName:MUIVALUE, cbWndExtra:MUIVALUE
+MUISuperclassW                  PROTO lpszExistingClassName:MUILPSTRING, lpdwExistingClassWndProc:POINTER, lpszSuperclassName:MUILPSTRING, lpSuperclassWndProc:POINTER, lpSuperclassCursorName:MUIVALUE, cbSuperclassWndExtra:MUIVALUE, lpcbWndExtraOffset:LPMUIVALUE
+
+
+
+IFNDEF MUI_UNICODE
+MUIGetProperty                  EQU <MUIGetPropertyA>
+MUISetProperty                  EQU <MUISetPropertyA>
+MUIGetExtProperty               EQU <MUIGetExtPropertyA>
+MUISetExtProperty               EQU <MUISetExtPropertyA>
+MUIGetIntProperty               EQU <MUIGetIntPropertyA>
+MUISetIntProperty               EQU <MUISetIntPropertyA>
+MUIGetExtPropertyEx             EQU <MUIGetExtPropertyExA>
+MUISetExtPropertyEx             EQU <MUISetExtPropertyExA>
+MUIGetIntPropertyEx             EQU <MUIGetIntPropertyExA>
+MUISetIntPropertyEx             EQU <MUISetIntPropertyExA>
+MUIGetExtPropertyExtra          EQU <MUIGetExtPropertyExtraA>
+MUISetExtPropertyExtra          EQU <MUISetExtPropertyExtraA>
+MUIGetIntPropertyExtra          EQU <MUIGetIntPropertyExtraA>
+MUISetIntPropertyExtra          EQU <MUISetIntPropertyExtraA>
+MUIDPIScaleFont                 EQU <MUIDPIScaleFontA>
+MUIDPISetDPIAware               EQU <MUIDPISetDPIAwareA>
+MUIApplyToDialog                EQU <MUIApplyToDialogA>
+MUIModifyStyle                  EQU <MUIModifyStyleA>
+MUIModifyStyleEx                EQU <MUIModifyStyleExA>
+MUIRegister                     EQU <MUIRegisterA>
+MUISuperclass                   EQU <MUISuperclassA>
+ENDIF
+
+IFDEF MUI_UNICODE
+MUIGetProperty                  EQU <MUIGetPropertyW>
+MUISetProperty                  EQU <MUISetPropertyW>
+MUIGetExtProperty               EQU <MUIGetExtPropertyW>
+MUISetExtProperty               EQU <MUISetExtPropertyW>
+MUIGetIntProperty               EQU <MUIGetIntPropertyW>
+MUISetIntProperty               EQU <MUISetIntPropertyW>
+MUIGetExtPropertyEx             EQU <MUIGetExtPropertyExW>
+MUISetExtPropertyEx             EQU <MUISetExtPropertyExW>
+MUIGetIntPropertyEx             EQU <MUIGetIntPropertyExW>
+MUISetIntPropertyEx             EQU <MUISetIntPropertyExW>
+MUIGetExtPropertyExtra          EQU <MUIGetExtPropertyExtraW>
+MUISetExtPropertyExtra          EQU <MUISetExtPropertyExtraW>
+MUIGetIntPropertyExtra          EQU <MUIGetIntPropertyExtraW>
+MUISetIntPropertyExtra          EQU <MUISetIntPropertyExtraW>
+MUIApplyToDialog                EQU <MUIApplyToDialogW>
+MUIModifyStyle                  EQU <MUIModifyStyleW>
+MUIModifyStyleEx                EQU <MUIModifyStyleExW>
+MUIDPIScaleFont                 EQU <MUIDPIScaleFontW>
+MUIDPISetDPIAware               EQU <MUIDPISetDPIAwareW>
+MUIRegister                     EQU <MUIRegisterW>
+MUISuperclass                   EQU <MUISuperclassW>
+ENDIF
 
 
 ;------------------------------------------
@@ -350,15 +461,7 @@ MUIDPISetDPIAware               PROTO
 ;------------------------------------------
 
 
-;------------------------------------------
-; Remove comment to include unicode support
-;------------------------------------------
-;MUI_UNICODE TEXTEQU <__UNICODE__>
-;IFDEF MUI_UNICODE
-;__UNICODE__ EQU 1
-;ECHO MUI_UNICODE BUILD
-;ENDIF
-;------------------------------------------
+
 
 
 

@@ -2,7 +2,7 @@
 ;
 ; ModernUI Library
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -50,11 +50,11 @@ MUIChangeScreenResolution PROC ScreenWidth:MUIVALUE, ScreenHeight:MUIVALUE, bits
     .ENDIF
     mov dmScreenSettings.dmBitsPerPel, eax
     
-    mov eax, (DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT)  ;; (040000h or 080000h or 0100000h)
+    ;mov eax, (DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT)  ;; (040000h or 080000h or 0100000h)
     
     mov dmScreenSettings.dmFields, DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
     mov dmScreenSettings.dmDisplayFrequency, 60
-    Invoke  ChangeDisplaySettings, Addr dmScreenSettings, CDS_FULLSCREEN
+    Invoke ChangeDisplaySettings, Addr dmScreenSettings, CDS_FULLSCREEN
     .IF (eax != DISP_CHANGE_SUCCESSFUL)
         xor eax, eax
     .ELSE

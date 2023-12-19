@@ -2,7 +2,7 @@
 ;
 ; ModernUI Library
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -301,7 +301,7 @@ MUI_ALIGN
 ; Set DPI aware try for per monitor v2 and depending on OS try each possible
 ; option from SetProcessDpiAwarenessContext down to basic SetProcessDpiAware
 ;------------------------------------------------------------------------------
-MUIDPISetDPIAware PROC
+MUIDPISetDPIAwareA PROC
     LOCAL hUser32:DWORD
     LOCAL setDPIAware:DWORD
     LOCAL setDPIAwareness:DWORD
@@ -310,7 +310,7 @@ MUIDPISetDPIAware PROC
     LOCAL getAwarenessFromDpiAwarenessContext:DWORD
     LOCAL dwResult:DWORD
     
-    Invoke LoadLibrary, Addr szMUIDPIUser32DLL
+    Invoke LoadLibraryA, Addr szMUIDPIUser32DLL
     
     .IF eax == 0
         mov eax, FALSE
@@ -388,7 +388,7 @@ MUIDPISetDPIAware PROC
     Invoke FreeLibrary, hUser32
     mov eax, dwResult
     ret
-MUIDPISetDPIAware ENDP
+MUIDPISetDPIAwareA ENDP
 
 MUI_ALIGN
 ;------------------------------------------------------------------------------
@@ -427,7 +427,10 @@ MUIDPIScaleFontSize PROC PointSize:MUIVALUE
 MUIDPIScaleFontSize ENDP
 
 MUI_ALIGN
-MUIDPIScaleFont PROC hFontToScale:HFONT
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+MUIDPIScaleFontA PROC hFontToScale:HFONT
     LOCAL lf:LOGFONT
 
     .IF hFontToScale == 0
@@ -435,18 +438,138 @@ MUIDPIScaleFont PROC hFontToScale:HFONT
         ret
     .ENDIF
 
-    Invoke GetObject, hFontToScale, SIZEOF LOGFONT, Addr lf
+    Invoke GetObjectA, hFontToScale, SIZEOF LOGFONT, Addr lf
     mov eax, lf.lfHeight
     Invoke MUIDPIScaleFontSize, eax
     mov lf.lfHeight, eax
-    Invoke CreateFontIndirect, Addr lf
+    Invoke CreateFontIndirectA, Addr lf
     ret
-MUIDPIScaleFont ENDP
+MUIDPIScaleFontA ENDP
 
+
+;==============================================================================
+; UNICODE
+;==============================================================================
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+; Set DPI aware try for per monitor v2 and depending on OS try each possible
+; option from SetProcessDpiAwarenessContext down to basic SetProcessDpiAware
+;------------------------------------------------------------------------------
+MUIDPISetDPIAwareW PROC
+    LOCAL hUser32:DWORD
+    LOCAL setDPIAware:DWORD
+    LOCAL setDPIAwareness:DWORD
+    LOCAL setDPIAwarenessContext:DWORD
+    LOCAL getThreadDpiAwarenessContext:DWORD
+    LOCAL getAwarenessFromDpiAwarenessContext:DWORD
+    LOCAL dwResult:DWORD
+    
+    Invoke LoadLibraryW, Addr szMUIDPIUser32DLL
+    
+    .IF eax == 0
+        mov eax, FALSE
+        ret
+    .ENDIF
+    mov hUser32, eax
+    
+    Invoke GetProcAddress, hUser32, Addr szMUIDPISPDA
+    mov setDPIAware, eax
+    
+    Invoke GetProcAddress, hUser32, Addr szMUIDPISPDAS
+    mov setDPIAwareness, eax
+    
+    Invoke GetProcAddress, hUser32, Addr szMUIDPISPDAC
+    mov setDPIAwarenessContext, eax    
+
+    Invoke GetProcAddress, hUser32, Addr szMUIDPIGTDAC
+    mov getThreadDpiAwarenessContext, eax   
+
+    Invoke GetProcAddress, hUser32, Addr szMUIDPIGAFDAC
+    mov getAwarenessFromDpiAwarenessContext, eax   
+
+    .IF getThreadDpiAwarenessContext != 0
+        call getThreadDpiAwarenessContext
+        mov DPI_AWARENESS_CONTEXT, eax
+        .IF getAwarenessFromDpiAwarenessContext != 0
+            push DPI_AWARENESS_CONTEXT
+            call getAwarenessFromDpiAwarenessContext
+            .IF eax > 0 ; already set
+                mov eax, TRUE
+                ret
+            .ENDIF
+        .ENDIF
+    .ENDIF
+
+    .IF setDPIAwarenessContext != 0
+        push DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+        call setDPIAwarenessContext
+        .IF eax == FALSE
+            push DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE
+            call setDPIAwarenessContext
+            .IF eax == FALSE
+                .IF setDPIAwareness != 0
+                    push PROCESS_PER_MONITOR_DPI_AWARE
+                    call setDPIAwareness
+                    .IF eax == FALSE
+                        .IF setDPIAware != 0
+                            call setDPIAware
+                        .ENDIF
+                    .ENDIF
+                .ENDIF
+            .ENDIF
+        .ENDIF
+        mov dwResult, eax
+        
+    .ELSEIF setDPIAwareness != 0
+        push PROCESS_PER_MONITOR_DPI_AWARE
+        call setDPIAwareness
+        .IF eax == FALSE
+            .IF setDPIAware != 0
+                call setDPIAware
+            .ENDIF
+        .ENDIF
+        mov dwResult, eax
+        
+    .ELSEIF setDPIAware != 0
+        call setDPIAware
+        mov dwResult, eax
+        
+    .ELSE
+        mov dwResult, FALSE
+        
+    .ENDIF
+    
+    Invoke FreeLibrary, hUser32
+    mov eax, dwResult
+    ret
+MUIDPISetDPIAwareW ENDP
+
+MUI_ALIGN
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+MUIDPIScaleFontW PROC hFontToScale:HFONT
+    LOCAL lf:LOGFONT
+
+    .IF hFontToScale == 0
+        mov eax, 0
+        ret
+    .ENDIF
+
+    Invoke GetObjectW, hFontToScale, SIZEOF LOGFONT, Addr lf
+    mov eax, lf.lfHeight
+    Invoke MUIDPIScaleFontSize, eax
+    mov lf.lfHeight, eax
+    Invoke CreateFontIndirectW, Addr lf
+    ret
+MUIDPIScaleFontW ENDP
 
 
 
 MODERNUI_LIBEND
+
+
 
 ;// Definition: relative pixel = 1 pixel at 96 DPI and scaled based on actual DPI.
 ;class CDPI

@@ -2,7 +2,7 @@
 ;
 ; ModernUI Control - ModernUI_Text
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -402,7 +402,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Set property for ModernUI_Text control
 ;------------------------------------------------------------------------------
-MUITextSetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
+MUITextSetProperty PROC hControl:DWORD, dwProperty:DWORD, dwPropertyValue:DWORD
     Invoke SendMessage, hControl, MUI_SETPROPERTY, dwProperty, dwPropertyValue
     ret
 MUITextSetProperty ENDP
@@ -412,7 +412,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; Get property for ModernUI_Text control
 ;------------------------------------------------------------------------------
-MUITextGetProperty PROC PUBLIC hControl:DWORD, dwProperty:DWORD
+MUITextGetProperty PROC hControl:DWORD, dwProperty:DWORD
     Invoke SendMessage, hControl, MUI_GETPROPERTY, dwProperty, NULL
     ret
 MUITextGetProperty ENDP
@@ -424,7 +424,7 @@ MUI_ALIGN
 ; can be used at start of program for use with RadASM custom control
 ; Custom control class must be set as ModernUI_Text
 ;------------------------------------------------------------------------------
-MUITextRegister PROC PUBLIC
+MUITextRegister PROC 
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
     
@@ -462,7 +462,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; MUITextCreate - Returns handle in eax of newly created control
 ;------------------------------------------------------------------------------
-MUITextCreate PROC PUBLIC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
+MUITextCreate PROC hWndParent:DWORD, lpszText:DWORD, xpos:DWORD, ypos:DWORD, controlwidth:DWORD, controlheight:DWORD, dwResourceID:DWORD, dwStyle:DWORD
     LOCAL wc:WNDCLASSEX
     LOCAL hinstance:DWORD
     LOCAL hControl:DWORD
@@ -494,7 +494,7 @@ MUI_ALIGN
 ;------------------------------------------------------------------------------
 ; _MUI_TextWndProc - Main processing window for our control
 ;------------------------------------------------------------------------------
-_MUI_TextWndProc PROC PRIVATE USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
+_MUI_TextWndProc PROC USES EBX hWin:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     LOCAL TE:TRACKMOUSEEVENT
     LOCAL lpUTF8String:DWORD
 
@@ -822,22 +822,22 @@ _MUI_TextPaint PROC PRIVATE hWin:DWORD
     LOCAL BackColor:DWORD
     LOCAL hBackBrush:DWORD
 
-    Invoke BeginPaint, hWin, Addr ps
-    mov hdc, eax
-
     Invoke IsWindowVisible, hWin
     .IF eax == FALSE
         ;PrintText 'IsWindowVisible Not Visible'
-        Invoke EndPaint, hWin, Addr ps
+        ;Invoke EndPaint, hWin, Addr ps
         ret
     .ENDIF
     
     Invoke GetWindowLong, hWin, 0
     .IF eax == 0
         ;PrintText 'Property Mem Not Allocated Yet'
-        Invoke EndPaint, hWin, Addr ps
+        ;Invoke EndPaint, hWin, Addr ps
         ret
     .ENDIF
+
+    Invoke BeginPaint, hWin, Addr ps
+    mov hdc, eax
 
     ;----------------------------------------------------------
     ; Get some property values
@@ -1073,6 +1073,8 @@ _MUI_TextPaintText PROC PRIVATE hWin:DWORD, hdc:DWORD, lpRect:DWORD, bEnabledSta
     
     .IF lpMUITextBuffer != 0
         Invoke GetWindowText, hWin, lpMUITextBuffer, MUI_TEXT_MAX_CHARS ; length of string is returned in eax
+    .ELSE
+        mov eax, 0
     .ENDIF
     mov LenText, eax
 

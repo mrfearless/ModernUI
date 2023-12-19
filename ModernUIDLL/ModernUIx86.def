@@ -1,8 +1,8 @@
 ;==============================================================================
 ;
-; ModernUI Library v0.0.0.6
+; ModernUI Library v0.0.0.7
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -43,35 +43,67 @@ EXPORTS
 	; ModernUI Library
 	;--------------------------------------
 	; ModernUI Base Functions:
-	MUIGetExtProperty
-	MUISetExtProperty
-	MUIGetIntProperty
-	MUISetIntProperty
-	MUIGetExtPropertyEx
-	MUISetExtPropertyEx
-	MUIGetIntPropertyEx
-	MUISetIntPropertyEx
-	MUIGetExtPropertyExtra
-	MUISetExtPropertyExtra
-	MUIGetIntPropertyExtra
-	MUISetIntPropertyExtra
-	; ModernUI Memory Functions:
-	MUIAllocMemProperties
-	MUIFreeMemProperties
-	MUIAllocStructureMemory
+    MUIGetPropertyA
+    MUISetPropertyA
+	MUIGetExtPropertyA
+	MUISetExtPropertyA
+	MUIGetIntPropertyA
+	MUISetIntPropertyA
+	MUIGetExtPropertyExA
+	MUISetExtPropertyExA
+	MUIGetIntPropertyExA
+	MUISetIntPropertyExA
+	MUIGetExtPropertyExtraA
+	MUISetExtPropertyExtraA
+	MUIGetIntPropertyExtraA
+	MUISetIntPropertyExtraA
+    MUIGetPropertyW
+    MUISetPropertyW
+	MUIGetExtPropertyW
+	MUISetExtPropertyW
+	MUIGetIntPropertyW
+	MUISetIntPropertyW
+	MUIGetExtPropertyExW
+	MUISetExtPropertyExW
+	MUIGetIntPropertyExW
+	MUISetIntPropertyExW
+	MUIGetExtPropertyExtraW
+	MUISetExtPropertyExtraW
+	MUIGetIntPropertyExtraW
+	MUISetIntPropertyExtraW
+	; ModernUI Class Functions:
+	MUIRegisterA
+	MUISuperclassA
+	MUIRegisterW
+	MUISuperclassW
+	; ModernUI DPI & Scaling Functions:
+	MUIDPI
+	MUIDPIScaleX
+	MUIDPIScaleY
+	MUIDPIScaleRect
+	MUIDPIScaleControl
+	MUIDPIScaleFontSize
+	MUIDPIScaledScreen
+    MUIDPIScaleFontA
+    MUIDPISetDPIAwareA
+    MUIDPIScaleFontW
+    MUIDPISetDPIAwareW
+	; ModernUI Font Functions:
+	MUIPointSizeToLogicalUnit
 	; ModernUI GDI Functions:
-	MUIGDIDoubleBufferStart
-	MUIGDIDoubleBufferFinish
 	MUIGDIBlend
 	MUIGDIBlendBitmaps
-	MUIGDIStretchBitmap
-	MUIGDIStretchImage
-	MUIGDIRotateCenterBitmap
+	MUIGDICreateBitmapMask
+	MUIGDIDoubleBufferStart
+	MUIGDIDoubleBufferFinish
+	MUIGDIPaintBrush
     MUIGDIPaintFill
     MUIGDIPaintFrame
-    MUIGDIPaintBrush
     MUIGDIPaintGradient
-    MUIGDICreateBitmapMask
+    MUIGDIPaintRectangle
+    MUIGDIRotateCenterBitmap
+	MUIGDIStretchBitmap
+	MUIGDIStretchImage
 	; ModernUI GDIPlus Functions:
 	MUIGDIPlusStart
 	MUIGDIPlusFinish
@@ -84,40 +116,38 @@ EXPORTS
     MUIGDIPlusPaintFrameI
     MUILoadPngFromResource
     MUIGDIPlusRectToGdipRect
+	; ModernUI Image Functions:
+	MUICreateBitmapFromMemory
+	MUICreateCursorFromMemory
+	MUICreateIconFromMemory
+	MUIGetImageSize
+	MUIGetImageSizeEx
+	MUILoadBitmapFromResource
+	MUILoadIconFromResource
+	MUILoadImageFromResource
+	; ModernUI Memory Functions:
+	MUIAllocMemProperties
+	MUIFreeMemProperties
+	MUIAllocStructureMemory
 	; ModernUI Painting & Color Functions:
+	MUIGetParentBackgroundBitmap
+	MUIGetParentBackgroundColor
 	MUIPaintBackground
 	MUIPaintBackgroundImage
 	MUIPaintBorder
-	MUIGetParentBackgroundColor
-	MUIGetParentBackgroundBitmap
-	; ModernUI Window/Dialog Functions:
-	MUIApplyToDialog
-	MUICenterWindow
-	MUIGetParentRelativeWindowRect
 	; ModernUI Region Functions:
 	MUILoadRegionFromResource
 	MUISetRegionFromResource
-	; ModernUI Font Functions:
-	MUIPointSizeToLogicalUnit
-	; ModernUI Image Functions:
-	MUIGetImageSize
-	MUIGetImageSizeEx
-	MUICreateIconFromMemory
-	MUICreateCursorFromMemory
-	MUICreateBitmapFromMemory
-	MUILoadImageFromResource
-	MUILoadBitmapFromResource
-	MUILoadIconFromResource
-	; ModernUI DPI & Scaling Functions:
-	MUIDPI
-	MUIDPIScaleX
-	MUIDPIScaleY
-	MUIDPIScaleRect
-	MUIDPIScaleControl
-	MUIDPIScaleFontSize
-	MUIDPIScaleFont
-	MUIDPIScaledScreen
-	MUIDPISetDPIAware
+	; ModernUI Window/Dialog Functions:
+	MUIApplyToDialogA
+	MUIApplyToDialogW
+	MUICenterWindow
+	MUIGetParentRelativeWindowRect
+    MUIModifyStyleA
+    MUIModifyStyleExA
+    MUIModifyStyleW
+    MUIModifyStyleExW
+
 	;--------------------------------------
 	; ModernUI_Button Control
 	;--------------------------------------
@@ -256,3 +286,5 @@ EXPORTS
 	MUITrayIconSetTooltipText
 	MUITrayIconShowNotification
 	MUITrayIconSetTrayIconText
+    
+    

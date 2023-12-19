@@ -2,7 +2,7 @@
 
  ModernUI Library
 
- Copyright (c) 2019 by fearless
+ Copyright (c) 2023 by fearless
 
  All Rights Reserved
 
@@ -30,6 +30,8 @@ typedef size_t MUIPROPERTY;         // Typedef for MUI(Get/Set)(Int/Ext)Property
 typedef size_t MUIPROPERTYVALUE;    // Typedef for MUISetIntProperty/MUISetExtProperty PropertyValue parameter
 typedef size_t MUIVALUE;            // QWORD in x64
 typedef MUIVALUE * LPMUIVALUE;      // Pointer to MUIVALUE
+typedef MUIVALUE * MUILPVALUE;      // Pointer to MUIVALUE
+typedef size_t * MUILPSTRING;       // Pointer to zero terminated string
 typedef size_t MUIIT;               // Image type
 typedef size_t MUIIL;               // Image location
 typedef size_t MUIPFS;              // Paint frame style
@@ -57,7 +59,7 @@ typedef size_t RESID;               // Resource ID
 #define MUI_EXTERNAL_PROPERTIES         8           // cbWndExtra offset for external properties pointer
 #define MUI_INTERNAL_PROPERTIES_EXTRA   16          // cbWndExtra offset for extra internal properties pointer
 #define MUI_EXTERNAL_PROPERTIES_EXTRA   24          // cbWndExtra offset for extra external properties pointer
-#define MUI_PROPERTY_ADDRESS            0x80000000  // OR with Property in MUIGetIntProperty/MUIGetExtProperty to return address of property
+#define MUI_PROPERTY_ADDRESS            0x8000000000000000 // OR with Property in MUIGetIntProperty/MUIGetExtProperty to return address of property
 #else // WIN32 x86
 #define MUI_INTERNAL_PROPERTIES         0           // cbWndExtra offset for internal properties pointer
 #define MUI_EXTERNAL_PROPERTIES         4           // cbWndExtra offset for external properties pointer
@@ -127,20 +129,39 @@ typedef GDIPRECT * LPGDIPRECT;           // Pointer to GDIPRECT
 // ModernUI Prototypes
 //----------------------------------------------------------------------------*/
 // ModernUI Base Functions:
-MUIPROPERTY MUI_EXPORT MUIGetExtProperty(MUIWND hWin, MUIPROPERTY Property);
-MUIPROPERTY MUI_EXPORT MUISetExtProperty(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
-MUIPROPERTY MUI_EXPORT MUIGetIntProperty(MUIWND hWin, MUIPROPERTY Property);
-MUIPROPERTY MUI_EXPORT MUISetIntProperty(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUIGetPropertyA(MUIWND hWin, MUIPROPERTIES cbWndExtraOffset, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUISetPropertyA(MUIWND hWin, MUIPROPERTIES cbWndExtraOffset, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUIGetExtPropertyA(MUIWND hWin, MUIPROPERTY Property);
+MUIVALUE MUI_EXPORT MUISetExtPropertyA(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUIGetIntPropertyA(MUIWND hWin, MUIPROPERTY Property);
+MUIVALUE MUI_EXPORT MUISetIntPropertyA(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
 
-MUIPROPERTY MUI_EXPORT MUIGetExtPropertyEx(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY);
-MUIPROPERTY MUI_EXPORT MUISetExtPropertyEx(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY, ChildProperty MUIPROPERTYVALUE);
-MUIPROPERTY MUI_EXPORT MUIGetIntPropertyEx(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY);
-MUIPROPERTY MUI_EXPORT MUISetIntPropertyEx(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY, ChildProperty MUIPROPERTYVALUE);
+MUIVALUE MUI_EXPORT MUIGetExtPropertyExA(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY);
+MUIVALUE MUI_EXPORT MUISetExtPropertyExA(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY, ChildProperty MUIPROPERTYVALUE);
+MUIVALUE MUI_EXPORT MUIGetIntPropertyExA(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY);
+MUIVALUE MUI_EXPORT MUISetIntPropertyExA(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY, ChildProperty MUIPROPERTYVALUE);
 
-MUIPROPERTY MUI_EXPORT MUIGetExtPropertyExtra(MUIWND hWin, MUIPROPERTY Property);
-MUIPROPERTY MUI_EXPORT MUISetExtPropertyExtra(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
-MUIPROPERTY MUI_EXPORT MUIGetIntPropertyExtra(MUIWND hWin, MUIPROPERTY Property);
-MUIPROPERTY MUI_EXPORT MUISetIntPropertyExtra(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUIGetExtPropertyExtraA(MUIWND hWin, MUIPROPERTY Property);
+MUIVALUE MUI_EXPORT MUISetExtPropertyExtraA(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUIGetIntPropertyExtraA(MUIWND hWin, MUIPROPERTY Property);
+MUIVALUE MUI_EXPORT MUISetIntPropertyExtraA(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+
+MUIVALUE MUI_EXPORT MUIGetPropertyW(MUIWND hWin, MUIPROPERTIES cbWndExtraOffset, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUISetPropertyW(MUIWND hWin, MUIPROPERTIES cbWndExtraOffset, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUIGetExtPropertyW(MUIWND hWin, MUIPROPERTY Property);
+MUIVALUE MUI_EXPORT MUISetExtPropertyW(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUIGetIntPropertyW(MUIWND hWin, MUIPROPERTY Property);
+MUIVALUE MUI_EXPORT MUISetIntPropertyW(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+
+MUIVALUE MUI_EXPORT MUIGetExtPropertyExW(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY);
+MUIVALUE MUI_EXPORT MUISetExtPropertyExW(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY, ChildProperty MUIPROPERTYVALUE);
+MUIVALUE MUI_EXPORT MUIGetIntPropertyExW(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY);
+MUIVALUE MUI_EXPORT MUISetIntPropertyExW(MUIWND hWin, MUIPROPERTY Property, ParentProperty MUIPROPERTY, ChildProperty MUIPROPERTYVALUE);
+
+MUIVALUE MUI_EXPORT MUIGetExtPropertyExtraW(MUIWND hWin, MUIPROPERTY Property);
+MUIVALUE MUI_EXPORT MUISetExtPropertyExtraW(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
+MUIVALUE MUI_EXPORT MUIGetIntPropertyExtraW(MUIWND hWin, MUIPROPERTY Property);
+MUIVALUE MUI_EXPORT MUISetIntPropertyExtraW(MUIWND hWin, MUIPROPERTY Property, MUIPROPERTYVALUE PropertyValue);
 
 // ModernUI Memory Functions 
 bool MUI_EXPORT MUIAllocMemProperties(MUIWND hWin, MUIPROPERTIES cbWndExtraOffset, MUIVALUE SizeToAllocate);
@@ -157,6 +178,7 @@ MUIIMAGE MUI_EXPORT MUIGDIStretchImage(MUIIMAGE hImage, MUIIT ImageHandleType, R
 HBITMAP MUI_EXPORT MUIGDIRotateCenterBitmap(MUIWND hWin, HBITMAP hBitmap, MUIVALUE Angle, MUICOLORRGB BackColor);
 void MUI_EXPORT MUIGDIPaintFill(HDC hdc, RECT *lpFillRect, MUICOLORRGB FillColor);
 void MUI_EXPORT MUIGDIPaintFrame(HDC hdc, RECT *lpFrameRect, MUICOLORRGB FrameColor, MUIPFS FrameStyle);
+void MUI_EXPORT MUIGDIPaintRectangle(HDC hdc, LPRECT *lpRect, MUICOLORRGB FrameColor, MUICOLORRGB FillColor);
 
 // ModernUI GDIPlus Functions 
 void MUI_EXPORT MUIGDIPlusStart();
@@ -191,9 +213,16 @@ MUICOLORRGB MUI_EXPORT MUIGetParentBackgroundColor(MUIWND hWin);
 HBITMAP MUI_EXPORT MUIGetParentBackgroundBitmap(MUIWND hWin);
 
 // ModernUI Window/Dialog Functions 
-void MUI_EXPORT MUIApplyToDialog(MUIWND hWin, BOOL bDropShadow, BOOL bClipping);
 void MUI_EXPORT MUICenterWindow(hWndChild MUIWND, hWndParent MUIWND);
 void MUI_EXPORT MUIGetParentRelativeWindowRect(MUIWND hWin, RECT *lpRectControl);
+
+void MUI_EXPORT MUIApplyToDialogA(MUIWND hWin, BOOL bDropShadow, BOOL bClipping);
+void MUI_EXPORT MUIModifyStyleA(MUIWND hWin, MUIVALUE dwRemove, MUIVALUE dwAdd, BOOL bFrameChanged);
+void MUI_EXPORT MUIModifyStyleExA(MUIWND hWin, MUIVALUE dwRemove, MUIVALUE dwAdd, BOOL bFrameChanged);
+
+void MUI_EXPORT MUIApplyToDialogW(MUIWND hWin, BOOL bDropShadow, BOOL bClipping);
+void MUI_EXPORT MUIModifyStyleW(MUIWND hWin, MUIVALUE dwRemove, MUIVALUE dwAdd, BOOL bFrameChanged);
+void MUI_EXPORT MUIModifyStyleExW(MUIWND hWin, MUIVALUE dwRemove, MUIVALUE dwAdd, BOOL bFrameChanged);
 
 // ModernUI Region Functions 
 bool MUI_EXPORT MUILoadRegionFromResource(HINSTANCE hInst, RESID idRgnRes, POINTER *lpRegionData, MUIVALUE *lpSizeRegionData);
@@ -222,6 +251,60 @@ void MUI_EXPORT MUIDPIScaleFontSize(MUIVALUE PointSize);
 void MUI_EXPORT MUIDPIScaleFont(HFONT hFont);
 void MUI_EXPORT MUIDPIScaledScreen(MUIVALUE * lpScreenWidth, MUIVALUE * lpScreenHeight);
 bool MUI_EXPORT MUIDPISetDPIAware();
+
+// ModernUI Class Functions
+bool MUI_EXPORT MUIRegisterA(MUILPSTRING *lpszClassName, POINTER *lpClassWndProc, MUIVALUE lpCursorName, MUIVALUE cbWndExtra);
+bool MUI_EXPORT MUISuperclassA(MUILPSTRING *lpszExistingClassName, POINTER *lpdwExistingClassWndProc, MUILPSTRING *lpszSuperclassName, POINTER *lpSuperclassWndProc, MUIVALUE lpSuperclassCursorName, cbSuperclassWndExtra:MUIVALUE, LPMUIVALUE lpcbWndExtraOffset);
+
+bool MUI_EXPORT MUIRegisterW(MUILPSTRING *lpszClassName, POINTER *lpClassWndProc, MUIVALUE lpCursorName, MUIVALUE cbWndExtra);
+bool MUI_EXPORT MUISuperclassW(MUILPSTRING *lpszExistingClassName, POINTER *lpdwExistingClassWndProc, MUILPSTRING *lpszSuperclassName, POINTER *lpSuperclassWndProc, MUIVALUE lpSuperclassCursorName, cbSuperclassWndExtra:MUIVALUE, LPMUIVALUE lpcbWndExtraOffset);
+
+
+#ifdef UNICODE
+#define MUIGetProperty          MUIGetPropertyW
+#define MUISetProperty          MUISetPropertyW
+#define MUIGetExtProperty       MUIGetExtPropertyW
+#define MUISetExtProperty       MUISetExtPropertyW
+#define MUIGetIntProperty       MUIGetIntPropertyW
+#define MUISetIntProperty       MUISetIntPropertyW
+#define MUIGetExtPropertyEx     MUIGetExtPropertyExW
+#define MUISetExtPropertyEx     MUISetExtPropertyExW
+#define MUIGetIntPropertyEx     MUIGetIntPropertyExW
+#define MUISetIntPropertyEx     MUISetIntPropertyExW
+#define MUIGetExtPropertyExtra  MUIGetExtPropertyExtraW
+#define MUISetExtPropertyExtra  MUISetExtPropertyExtraW
+#define MUIGetIntPropertyExtra  MUIGetIntPropertyExtraW
+#define MUISetIntPropertyExtra  MUISetIntPropertyExtraW
+#define MUIApplyToDialog        MUIApplyToDialogW
+#define MUIModifyStyle          MUIModifyStyleW
+#define MUIModifyStyleEx        MUIModifyStyleExW
+#define MUIDPIScaleFont         MUIDPIScaleFontW
+#define MUIDPISetDPIAware       MUIDPISetDPIAwareW
+#define MUIRegister             MUIRegisterW
+#define MUISuperclass           MUISuperclassW
+#else
+#define MUIGetProperty          MUIGetPropertyA
+#define MUISetProperty          MUISetPropertyA
+#define MUIGetExtProperty       MUIGetExtPropertyA
+#define MUISetExtProperty       MUISetExtPropertyA
+#define MUIGetIntProperty       MUIGetIntPropertyA
+#define MUISetIntProperty       MUISetIntPropertyA
+#define MUIGetExtPropertyEx     MUIGetExtPropertyExA
+#define MUISetExtPropertyEx     MUISetExtPropertyExA
+#define MUIGetIntPropertyEx     MUIGetIntPropertyExA
+#define MUISetIntPropertyEx     MUISetIntPropertyExA
+#define MUIGetExtPropertyExtra  MUIGetExtPropertyExtraA
+#define MUISetExtPropertyExtra  MUISetExtPropertyExtraA
+#define MUIGetIntPropertyExtra  MUIGetIntPropertyExtraA
+#define MUISetIntPropertyExtra  MUISetIntPropertyExtraA
+#define MUIDPIScaleFont         MUIDPIScaleFontA
+#define MUIDPISetDPIAware       MUIDPISetDPIAwareA
+#define MUIApplyToDialog        MUIApplyToDialogA
+#define MUIModifyStyle          MUIModifyStyleA
+#define MUIModifyStyleEx        MUIModifyStyleExA
+#define MUIRegister             MUIRegisterA
+#define MUISuperclass           MUISuperclassA
+#endif // !UNICODE
 
 
 /*-----------------------------------------

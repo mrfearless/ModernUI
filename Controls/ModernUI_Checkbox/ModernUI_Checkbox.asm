@@ -2,11 +2,7 @@
 ;
 ; ModernUI Control - ModernUI_Checkbox
 ;
-; Copyright (c) 2018 by fearless
-;
-; All Rights Reserved
-;
-; http://www.LetTheLight.in
+; Copyright (c) 2023 by fearless
 ;
 ; http://github.com/mrfearless/ModernUI
 ;

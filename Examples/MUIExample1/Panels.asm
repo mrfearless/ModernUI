@@ -162,14 +162,14 @@ Panel1Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
     ;-----------------------------------------------------------------------------------------------------
     ; ModernUI - Color background and border
     ;-----------------------------------------------------------------------------------------------------
-    .ELSEIF eax == WM_ERASEBKGND
-        mov eax, 1
-        ret
-
-    .ELSEIF eax == WM_PAINT
-        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), 0
-        mov eax, 0
-        ret
+;    .ELSEIF eax == WM_ERASEBKGND
+;        mov eax, 1
+;        ret
+;
+;    .ELSEIF eax == WM_PAINT
+;        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), 0
+;        mov eax, 0
+;        ret
     ;-----------------------------------------------------------------------------------------------------
 
     .ELSEIF eax==WM_CLOSE
@@ -254,14 +254,14 @@ Panel2Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
     ;-----------------------------------------------------------------------------------------------------
     ; ModernUI - Color background and border
     ;-----------------------------------------------------------------------------------------------------
-    .ELSEIF eax == WM_ERASEBKGND
-        mov eax, 1
-        ret
-
-    .ELSEIF eax == WM_PAINT
-        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), 0
-        mov eax, 0
-        ret
+;    .ELSEIF eax == WM_ERASEBKGND
+;        mov eax, 1
+;        ret
+;
+;    .ELSEIF eax == WM_PAINT
+;        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), 0
+;        mov eax, 0
+;        ret
     ;-----------------------------------------------------------------------------------------------------
 
     .ELSEIF eax==WM_CLOSE
@@ -337,14 +337,14 @@ Panel3Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
     ;-----------------------------------------------------------------------------------------------------
     ; ModernUI - Color background and border
     ;-----------------------------------------------------------------------------------------------------
-    .ELSEIF eax == WM_ERASEBKGND
-        mov eax, 1
-        ret
-
-    .ELSEIF eax == WM_PAINT
-        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), 0
-        mov eax, 0
-        ret
+;    .ELSEIF eax == WM_ERASEBKGND
+;        mov eax, 1
+;        ret
+;
+;    .ELSEIF eax == WM_PAINT
+;        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), 0
+;        mov eax, 0
+;        ret
     ;-----------------------------------------------------------------------------------------------------
 
     .ELSEIF eax==WM_CLOSE
@@ -409,14 +409,14 @@ Panel4Proc PROC hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
     ;-----------------------------------------------------------------------------------------------------
     ; ModernUI - Color background and border
     ;-----------------------------------------------------------------------------------------------------
-    .ELSEIF eax == WM_ERASEBKGND
-        mov eax, 1
-        ret
-
-    .ELSEIF eax == WM_PAINT
-        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), 0
-        mov eax, 0
-        ret
+;    .ELSEIF eax == WM_ERASEBKGND
+;        mov eax, 1
+;        ret
+;
+;    .ELSEIF eax == WM_PAINT
+;        invoke MUIPaintBackground, hWin, MUI_RGBCOLOR(45,45,48), 0
+;        mov eax, 0
+;        ret
     ;-----------------------------------------------------------------------------------------------------
 
     .ELSEIF eax==WM_CLOSE

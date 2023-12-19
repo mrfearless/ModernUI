@@ -1,8 +1,8 @@
 ;==============================================================================
 ;
-; ModernUI Library v0.0.0.6
+; ModernUI Library v0.0.0.7
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;

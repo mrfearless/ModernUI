@@ -2,7 +2,7 @@
 ;
 ; ModernUI Library
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;
@@ -89,7 +89,6 @@ MUIGDIPaintGradient PROC USES EBX hdc:HDC, lpGradientRect:LPRECT, GradientColorF
     ;--------------------------------------------------------------------------
     ; Seperate GradientFrom ColorRef to 3 dwords for Red, Green & Blue
     ;--------------------------------------------------------------------------
-    xor eax, eax
     mov eax, GradientColorFrom
     xor ebx, ebx
     mov bh, al
@@ -108,13 +107,13 @@ MUIGDIPaintGradient PROC USES EBX hdc:HDC, lpGradientRect:LPRECT, GradientColorF
     ; fill x from rect left
     mov ebx, lpGradientRect
     mov eax, [ebx].RECT.left
-    lea ebx, vertex
+    lea ebx, vertex ; point to 1st vertex
     mov [ebx].TRIVERTEX.x, eax
 
     ; fill y from rect top
     mov ebx, lpGradientRect
     mov eax, [ebx].RECT.top
-    lea ebx, vertex
+    lea ebx, vertex ; point to 1st vertex
     mov [ebx].TRIVERTEX.y, eax
 
     ; fill colors from seperated colorref
@@ -129,7 +128,7 @@ MUIGDIPaintGradient PROC USES EBX hdc:HDC, lpGradientRect:LPRECT, GradientColorF
     ;--------------------------------------------------------------------------
     ; Seperate GradientFrom ColorRef to 3 dwords for Red, Green & Blue
     ;--------------------------------------------------------------------------   
-    xor eax, eax
+
     mov eax, GradientColorTo
     xor ebx, ebx
     mov bh, al
@@ -149,14 +148,14 @@ MUIGDIPaintGradient PROC USES EBX hdc:HDC, lpGradientRect:LPRECT, GradientColorF
     mov ebx, lpGradientRect
     mov eax, [ebx].RECT.right
     lea ebx, vertex
-    add ebx, sizeof TRIVERTEX
+    add ebx, sizeof TRIVERTEX ; point to 2nd vertex
     mov [ebx].TRIVERTEX.x, eax
     
     ; fill x from rect right
     mov ebx, lpGradientRect
     mov eax, [ebx].RECT.bottom
     lea ebx, vertex
-    add ebx, sizeof TRIVERTEX
+    add ebx, sizeof TRIVERTEX ; point to 2nd vertex
     mov [ebx].TRIVERTEX.y, eax
     
     ; fill colors from seperated colorref

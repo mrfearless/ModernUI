@@ -64,7 +64,7 @@ Group=Assembly,Misc
 7=1
 8=2
 [AutoLoad]
-AutoLoad=2,4,1,5
+AutoLoad=2,4,1,5,7
 [RADebugBP]
 2=
 1=
@@ -72,10 +72,10 @@ AutoLoad=2,4,1,5
 3=
 [Size]
 3=0,0,0,0,5203
-1=0,0,0,0,41574
-2=0,0,0,0,5057
+1=0,0,0,0,37386
+2=0,0,0,0,6188
 4=0,0,0,0,561
-7=0,0,0,0,2121
+7=0,0,0,0,139
 6=0,0,0,0,310
 5=0,0,0,0,1196
 8=0,0,0,0,0
@@ -89,7 +89,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=26
+MilestoneOnDateDate=19
 MilestoneOnDateTimeYear=2017
 MilestoneOnDateTimeMonth=2
 MilestoneOnDateTimeDate=22
@@ -113,9 +113,9 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=1106197413
+PTimer=1116694290
 [Collapse]
-1=1092684564,2129952,67648,106496
+1=,,2112,32768
 2=
 3=
 4=
@@ -139,13 +139,13 @@ GroupExpand=1,1,0
 [BreakPoint]
 0=
 [Find]
-1="lstrlen"
-2="masm32"
-3=";"
-4="EQU "
-5="@"
-6="@TextFont"
-7="ListLevel"
-8="MUI_UNICODE"
-9=";-------------------------------------------------------------------------------------"
-10=";--------------------------------------------------------------------------------------------------------------------------------------"
+1="@TextBuffer"
+2="@@TextBufferSize"
+3="http://www.LetTheLight.in"
+4="lstrlen"
+5="masm32"
+6=";"
+7="EQU "
+8="@"
+9="@TextFont"
+10="ListLevel"

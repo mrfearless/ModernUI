@@ -2,7 +2,7 @@
 ;
 ; ModernUI Control - ModernUI_ProgressBar
 ;
-; Copyright (c) 2019 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
 ;

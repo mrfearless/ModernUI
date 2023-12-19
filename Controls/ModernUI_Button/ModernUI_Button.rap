@@ -76,7 +76,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=15
+MilestoneOnDateDate=18
 MilestoneOnDateTimeYear=2016
 MilestoneOnDateTimeMonth=5
 MilestoneOnDateTimeDate=30
@@ -100,9 +100,9 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=419071088
+PTimer=456695932
 [Collapse]
-1=4726848,,1006649598,,581632,131072,,131072,16787456,8456,,1063424
+1=20971520,,939524215,,17358848,,33554432,131072,16787456,270592,34816,14336
 2=
 3=
 4=
@@ -110,8 +110,8 @@ PTimer=419071088
 6=
 7=
 [Size]
-1=0,0,0,0,112437
-2=0,0,0,0,36986
+1=0,0,0,0,154
+2=0,0,0,0,154
 3=0,0,0,0,1323
 4=0,0,0,0,3372
 5=0,0,0,0,8385
@@ -133,13 +133,13 @@ GroupExpand=1,1,0
 [BreakPoint]
 0=
 [Find]
-1="@ButtonBrush"
-2="@ButtonDPI"
-3="PUBLIC "
-4="PRIVATE "
-5="MUI_BUTTON_DEFAULT_THEME"
-6="TextExtent"
-7=";"
-8="@"
-9="EQU "
-10="EQU"
+1="WS_CLIP"
+2="MUIBM_NOTIFY"
+3="COLOR"
+4="@ButtonBrush"
+5="@ButtonDPI"
+6="PUBLIC "
+7="PRIVATE "
+8="MUI_BUTTON_DEFAULT_THEME"
+9="TextExtent"
+10=";"

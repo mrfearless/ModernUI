@@ -2,11 +2,9 @@
 ;
 ; ModernUI Control - ModernUI_Region
 ;
-; Copyright (c) 2018 by fearless
+; Copyright (c) 2023 by fearless
 ;
 ; All Rights Reserved
-;
-; http://www.LetTheLight.in
 ;
 ; http://github.com/mrfearless/ModernUI
 ;

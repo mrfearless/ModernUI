@@ -5,7 +5,7 @@ Description=ModernUI_TrayMenu
 Backup=$P\Bak\
 Group=1
 GroupExpand=1
-Debug=1
+Debug=0
 [Files]
 1=ModernUI_TrayMenu.asm
 2=ModernUI_TrayMenu.inc
@@ -76,7 +76,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=26
+MilestoneOnDateDate=18
 MilestoneOnDateTimeYear=2017
 MilestoneOnDateTimeMonth=7
 MilestoneOnDateTimeDate=16
@@ -100,9 +100,9 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=73694137
+PTimer=77078634
 [Collapse]
-1=873071168,270819712,68609,107347968,432905920,15876
+1=873071168,270819712,68609,107347968,427917888,14336
 2=
 3=
 7=
@@ -110,8 +110,8 @@ PTimer=73694137
 5=
 4=
 [Size]
-1=0,0,0,0,38424
-2=0,0,0,0,6603
+1=0,0,0,0,158
+2=0,0,0,0,158
 3=0,0,0,0,0
 5=0,0,0,0,991
 4=0,0,0,0,1166
@@ -133,13 +133,13 @@ GroupExpand=1,1,0
 [BreakPoint]
 0=
 [Find]
-1="Invoke _MUI_TM_IconText"
-2="Timeout"
-3="Shell_NotifyIcon"
-4="MUITrayMenuSetTrayIconText"
-5="KillTimer"
-6="_MUI_TM_IconText"
-7="@TrayParent"
-8="_MUI_TM_RestoreFromTray"
-9="MUITrayMenuSetMenuItemText"
-10="_MUI_TM_AddIconAndTooltip"
+1="_MUI_TrayMenuInit"
+2="WM_INITSUBCLASS"
+3="_MUI_TrayMenuSetSubclass"
+4="Invoke _MUI_TM_IconText"
+5="Timeout"
+6="Shell_NotifyIcon"
+7="MUITrayMenuSetTrayIconText"
+8="KillTimer"
+9="_MUI_TM_IconText"
+10="@TrayParent"
